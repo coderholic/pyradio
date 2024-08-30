@@ -490,13 +490,13 @@ class PyRadio(object):
             '/html_next': self._html_play_next_station,
             '/stop': self._stop_player,
             '/html_stop': self._html_stop_player,
-            '/start': self._start_player,
+            '/start': self._text_start_player,
             '/html_start': self._html_start_player,
             '/jump': self._jump_and_play_selection,
             'open_history': self._open_playlist_and_station_from_station_history,
-            '/log': self._toggle_titles_logging,
+            '/log': self._text_toggle_titles_logging,
             '/html_log': self._html_toggle_titles_logging,
-            '/like': self._tag_a_title,
+            '/like': self._text_tag_a_title,
             '/html_like': self._html_tag_a_title,
             '/title': self._html_song_title,
             '/html_info': self._html_info,
@@ -5674,8 +5674,18 @@ ____Using |fallback| theme.''')
         else:
             return True
 
+    def _text_toggle_titles_logging(self):
+        if not self.toggle_titles_logging():
+            return 'Error: Recording dir does not exist!'
+        self.log.write_start_log_station_and_title()
+        if self._cnf.titles_log.titles_handler:
+            return 'Titles Logging Enabled'
+        else:
+            return 'Titles Logging Disabled'
+
     def _html_toggle_titles_logging(self):
-        self.toggle_titles_logging()
+        if not self.toggle_titles_logging():
+            return '<div class="alert alert-danger"><b>Error!</b><br />Recording dir does <b>not exist!</b></div>'
         self.log.write_start_log_station_and_title()
         if self._cnf.titles_log.titles_handler:
             return '<div class="alert alert-success">Title Log <b>Enabled</b></div>'
@@ -5683,19 +5693,45 @@ ____Using |fallback| theme.''')
             return '<div class="alert alert-success">Title Log <b>Disabled</b></div>'
 
     def _toggle_titles_logging(self):
-        self.toggle_titles_logging()
-        self.log.write_start_log_station_and_title()
-        if self._cnf.titles_log.titles_handler:
-            self._show_delayed_notification('___Title Log Enabled___')
+        if self.toggle_titles_logging():
+            self.log.write_start_log_station_and_title()
+            if self._cnf.titles_log.titles_handler:
+                self._show_delayed_notification('___Titles Log Enabled___')
+            else:
+                self._show_delayed_notification('___Titles Log Disabled___')
         else:
-            self._show_delayed_notification('___Title Log Disabled___')
+            self._show_delayed_notification(
+                '___|Error|: Recording dir does |not exist|!___',
+                delay=1.5
+            )
+
+    def _text_tag_a_title(self):
+        return self._tag_a_title(text=True)
 
     def _html_tag_a_title(self):
         return self._tag_a_title(html=True)
 
-    def _tag_a_title(self, html=False):
+    def _tag_a_title(self, html=False, text=False):
         if self.player.isPlaying():
             if self._cnf.can_like_a_station():
+                if not path.exists(self._cnf.recording_dir):
+                    try:
+                        makedirs(self._cnf.recording_dir)
+                    except:
+                        pass
+                if not path.exists(self._cnf.recording_dir):
+                    if logger.isEnabledFor(logging.ERROR):
+                        logger.error('cannot like title; directory "{}" does not exist'.format(self._cnf.recording_dir))
+                    if text:
+                        return 'Error: Recodring dir does not exist!'
+                    elif html:
+                        return '<div class="alert alert-danger"><b>Error!</b><br />Recording dir does <b>not exist!</b></div>'
+                    else:
+                        self._show_delayed_notification(
+                            '___|Error|: Recording dir does |not exist|!___',
+                            delay=1.5
+                        )
+                        return
                 toggled = False
                 if self._cnf.titles_log.titles_handler is None:
                     self.toggle_titles_logging()
@@ -5707,22 +5743,30 @@ ____Using |fallback| theme.''')
             else:
                 ret = 2
             if ret == 0:
-                if html:
+                if text:
+                    return 'Title tagged as liked!'
+                elif html:
                     return '<div class="alert alert-success">Title <b>tagged</b> as liked!</div>'
                 else:
                     self._show_delayed_notification('___Title tagged as liked___')
             elif ret == 1:
-                if html:
+                if text:
+                    return 'Error liking Title'
+                elif html:
                     return '<div class="alert alert-danger"><b>Error</b> liking Title</div>'
                 else:
                     self._show_delayed_notification('___Error liking Title___', delay=1.2)
             else:
-                if html:
+                if text:
+                    return 'Title already tagged as liked!'
+                elif html:
                     return '<div class="alert alert-info">Title <b>already tagged</b> as liked!</div>'
                 else:
                     self._show_delayed_notification('___Title already tagged as liked___')
         else:
-            if html:
+            if text:
+                return 'Player is stopped!'
+            elif html:
                 return '<div class="alert alert-danger">Player is <b>stopped!</b></div>'
             else:
                 self._show_delayed_notification('___Error: Player not in playback___', delay=1.2)
@@ -9118,17 +9162,59 @@ ____Using |fallback| theme.''')
                 self._put_selection_in_the_middle(force=force_center)
                 self.jumpnr = ''
 
+    def _return_server_response_for_start_player(self, mode=None):
+        if self.player.recording > 0:
+            if not os.path.exists(self._cnf.recording_dir):
+                try:
+                    os.makedirs(self._cnf.recording_dir)
+                except:
+                    pass
+            if not os.path.exists(self._cnf.recording_dir):
+                    if mode == 'text':
+                        return 'Error: Recording not available; Recording dir does not exist!'
+                    elif mode == 'html':
+                        return '<div class="alert alert-danger"><b>Error!</b><br />Recording <b>not available!</b><br />Recording dir does <b>not exist!</b></div>'
+        return None
+
+    def _text_start_player(self):
+        self._reset_status_bar_right()
+        ret = self._html_check_op_mode()
+        if ret is not None:
+            return ret
+        if self._return_server_response_for_start_player(mode='text'):
+            return ret
+        if self.number_of_items > 0:
+            self._start_player(mode='text')
+            return 'Playing "{}"!'.format(self.stations[self.selection][0])
+        return 'No stations in Playlist!!'
+
     def _html_start_player(self):
         self._reset_status_bar_right()
         ret = self._html_check_op_mode()
         if ret is not None:
             return ret
+        if self._return_server_response_for_start_player(mode='text'):
+            return ret
         if self.number_of_items > 0:
-            self._start_player()
+            self._start_player(mode='html')
             return '<div class="alert alert-success">Playing <b>{}</b>!</div>'.format(self.stations[self.selection][0])
         return '<div class="alert alert-danger"><b>No stations in Playlist!</b>!</div>'
 
-    def _start_player(self):
+    def _start_player(self, mode=None):
+        if self.player.recording > 0:
+            if not os.path.exists(self._cnf.recording_dir):
+                try:
+                    makedirs(self._cnf.recording_dir)
+                except:
+                    pass
+            if not os.path.exists(self._cnf.recording_dir):
+                if self._return_server_response_for_start_player(mode):
+                    return ret
+                self._show_delayed_notification(
+                    '___Recording |not| available!___\n_Recording dir does |not exist|!',
+                    delay=1.5
+                )
+                return False
         self.player.already_playing = False
         self._reset_status_bar_right()
         # with self._buffering_lock:
@@ -9138,6 +9224,7 @@ ____Using |fallback| theme.''')
         if self.number_of_items > 0:
             self.playSelection()
             self.refreshBody()
+        return True
 
     def _html_stop_player(self):
         self._reset_status_bar_right()
@@ -10072,7 +10159,7 @@ ____Using |fallback| theme.''')
             return True
 
     def toggle_titles_logging(self):
-        self._cnf.titles_log.configure_logger(
+        return self._cnf.titles_log.configure_logger(
                 recording_dir=self._cnf.recording_dir,
                 titles=not self._cnf.titles_log.log_titles
                 )

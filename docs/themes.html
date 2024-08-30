@@ -45,7 +45,10 @@ a:visited{color: SaddleBrown;}
 <ul>
 <li><a href="#pyradio-themes">PyRadio Themes</a>
 <ul>
-<li><a href="#virtual-terminal-restrictions">Virtual terminal restrictions</a></li>
+<li><a href="#virtual-terminal-restrictions">Virtual terminal restrictions</a>
+<ul>
+<li><a href="#workaround-for-not-supported-terminals">Workaround for not supported terminals</a></li>
+</ul></li>
 <li><a href="#css-color-themes-restrictions">CSS color themes restrictions</a></li>
 <li><a href="#secondary-windows-background">Secondary windows background</a>
 <ul>
@@ -108,8 +111,8 @@ A clasic theme by <a target="_blank" href="https://github.com/OpenBSDGuy">The Op
 Two themes by <a target="_blank" href="https://github.com/edunfelt">edunfelt</a> inspired by the <a target="_blank" href="https://github.com/base16-project">base16</a> project.</li>
 <li><strong>dracula_by_Plyply99</strong><br />
 A theme based of the Dracula theme by <a target="_blank" href="https://github.com/Plyply99">Plyply99</a>.</li>
-<li><strong>gruvbox_dark_by_sng</strong> and <strong>gruvbox_light_by_sng</strong><br />
-Two themes based on the <a target="_blank" href="https://github.com/morhetz/gruvbox">gruvbox</a> theme.</li>
+<li><em>gruvbox_dark_by_farparticul</em>, <strong>gruvbox_dark_by_sng</strong> and <strong>gruvbox_light_by_sng</strong><br />
+Three themes based on the <a target="_blank" href="https://github.com/morhetz/gruvbox">gruvbox</a> theme.</li>
 <li><strong>hyprland_amber_gold</strong> and <strong>hyprland_dracula</strong><br />
 Two themes by <a target="_blank" href="https://github.com/mechatour">mechatour</a>, from <a target="_blank" href="https://github.com/mechatour/hyprland_amber_gold">hyprland_amber_gold</a> and <a href="%5Bhttps://github.com/mechatour/hyprland_dotfiles">hyprland_dotfiles</a>.</li>
 <li><strong>minima_by_ben_chile</strong><br />
@@ -180,6 +183,12 @@ transparency        0</pre>
 <p><strong>PyRadio</strong> will try to detect these terminals and disable themes (after displaying a relative message). Then the default theme will be used.</p>
 <p>Some of the terminals that work ok, are: <em>gnome-terminal</em>, <em>mate-terminal</em>, <em>xfce4-terminal</em>, <em>lxterminal</em>, <em>terminator</em>, <em>termite</em>, <em>kitty</em>, <em>alacritty</em>, <em>sakura</em>, <em>roxterm</em>, <em>tilix</em>, <em>lilyterm</em>, <em>st</em>, <em>xst</em>, <em>rxvt</em>, <em>urxvt</em>, <em>uxterm</em>, <em>xterm</em>.</p>
 <p>If you want to make <strong>PyRadio</strong> start in one of these terminal, just follow the instructions given at <a href="#specifying-the-terminal-to-use">Desktop File: Specifying the terminal to use</a>.</p>
+<h4 id="workaround-for-not-supported-terminals">Workaround for not supported terminals</h4>
+<p>Thanks to github user <a target="_blank" href="https://github.com/troyvit">troyvit</a>, it is now possible to use <strong>PyRadio</strong> with full color support on most of the terminals that originally will not display colors correctly.</p>
+<p>Following his <a target="_blank" href="https://github.com/coderholic/pyradio/issues/254">report</a>, which proposes to execute <strong>PyRadio</strong> within a <a target="_blank" href="https://github.com/tmux/tmux/wiki">tmux</a> session, a <a target="_blank" href="https://gist.github.com/s-n-g/2f1ef5c764222d26e5bb0075b2adddb1">bash srciprt</a> has been written to accomplish the task: it is called “<strong>tmux_pyradio</strong>” and comes in the form of a github gist.</p>
+<p>Using “<strong>tmux_pyradio</strong>” on can execute <strong>PyRadio</strong> in any terminal (it has been tested in all the terminals referenced above); one can even run a second <strong>PyRadio</strong> instance throught it. For more info, download it and execute:</p>
+<pre>tmux_pyradio -h</pre>
+<p>There is a catch though; if <strong>PyRadio</strong> terminates prematurely, the output will not be visible to the user, since <strong>tmux</strong> will also terminate and clear the screen on exit. In this case, just add a “<em>-d</em>” before a “<em>–</em>” (or combine it with the custom tmux session name). Yhis will add a <em>pause</em> before exiting <strong>tmux</strong>, so you can observe the output.</p>
 <h3 id="css-color-themes-restrictions">CSS color themes restrictions</h3>
 <p>Using CSS colors imposes a couple of restrictions on the type of terminals <strong>PyRadio</strong> will be able to run:</p>
 <ol type="1">

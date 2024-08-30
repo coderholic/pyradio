@@ -87,5 +87,15 @@ a:visited{color: SaddleBrown;}
 <p>Pre 0.9.3 installations will use ~/.config/pyradio/data/recordings as the recording directory, by default.</p>
 <p>After updating to v. 0.9.3 (and newer), <strong>PyRadio</strong> will move this directory to the user’s home folder and rename it to “<strong>pyradio-recordings</strong>”.</p>
 <p>Then the user can change the folder’s location from <em>Config / General options / Recording dir</em>.</p>
+<h2 id="post-0.9.3.10-behavior">Post 0.9.3.10 behavior <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>Up until <strong>v. 0.9.3.10, Ryradio</strong> would create the “<em>recording directory</em>” upon startup, no matter where it would be located, making it available for the recording and titles’ log function.</p>
+<p>This eventually creates the following problem:</p>
+<p>A user who never wants to use the recording or the titles’ log function, ends up with an empty directory in his home folder, which will be recreated every time <strong>PyRadio</strong> is executed (even if deleted before that), as described in <a target="_blank" href="https://github.com/coderholic/pyradio/issues/253">issue No. 253</a>.</p>
+<p>The solution is that <strong>PyRadio</strong> will remove the “<em>recording directory</em>” upon execution, if</p>
+<ol type="1">
+<li>the default location is used</li>
+<li>the directory is empty</li>
+</ol>
+<p>As a consequence, both the recording and the titles’ log function will make sure the directory actually exists (and create it if it does not), before trying to save any data to it.</p>
 </body>
 </html>

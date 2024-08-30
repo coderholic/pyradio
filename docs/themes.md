@@ -5,6 +5,7 @@
 
 * [PyRadio Themes](#pyradio-themes)
     * [Virtual terminal restrictions](#virtual-terminal-restrictions)
+        * [Workaround for not supported terminals](#workaround-for-not-supported-terminals)
     * [CSS color themes restrictions](#css-color-themes-restrictions)
     * [Secondary windows background](#secondary-windows-background)
         * [Theme defined secondary windows color](#theme-defined-secondary-windows-color)
@@ -57,8 +58,8 @@ A clasic theme by [The OpenBSD Guy](https://github.com/OpenBSDGuy), originally c
 Two themes by [edunfelt](https://github.com/edunfelt) inspired by the [base16](https://github.com/base16-project) project.
 - **dracula_by_Plyply99** \
 A theme based of the Dracula theme by [Plyply99](https://github.com/Plyply99).
-- **gruvbox_dark_by_sng** and **gruvbox_light_by_sng** \
-Two themes based on the [gruvbox](https://github.com/morhetz/gruvbox) theme.
+- *gruvbox_dark_by_farparticul*, **gruvbox_dark_by_sng** and **gruvbox_light_by_sng** \
+Three themes based on the [gruvbox](https://github.com/morhetz/gruvbox) theme.
 - **hyprland_amber_gold** and **hyprland_dracula** \
 Two themes by [mechatour](https://github.com/mechatour), from [hyprland_amber_gold](https://github.com/mechatour/hyprland_amber_gold) and [hyprland_dotfiles]([https://github.com/mechatour/hyprland_dotfiles).
 - **minima_by_ben_chile** \
@@ -145,6 +146,18 @@ Now, I do not know whether this is because of the terminals themselves, python c
 Some of the terminals that work ok, are: *gnome-terminal*, *mate-terminal*, *xfce4-terminal*, *lxterminal*, *terminator*, *termite*, *kitty*, *alacritty*, *sakura*, *roxterm*, *tilix*, *lilyterm*, *st*, *xst*, *rxvt*, *urxvt*, *uxterm*, *xterm*.
 
 If you want to make **PyRadio** start in one of these terminal, just follow the instructions given at [Desktop File: Specifying the terminal to use](#specifying-the-terminal-to-use).
+
+#### Workaround for not supported terminals
+
+Thanks to github user [troyvit](https://github.com/troyvit), it is now possible to use **PyRadio** with full color support on most of the terminals that originally will not display colors correctly.
+
+Following his [report](https://github.com/coderholic/pyradio/issues/254), which proposes to execute **PyRadio** within a [tmux](https://github.com/tmux/tmux/wiki) session, a [bash srciprt](https://gist.github.com/s-n-g/2f1ef5c764222d26e5bb0075b2adddb1) has been written to accomplish the task: it is called "**tmux_pyradio**" and comes in the form of a github gist.
+
+Using "**tmux_pyradio**" on can execute **PyRadio** in any terminal (it has been tested in all the terminals referenced above); one can even run a second **PyRadio** instance throught it. For more info, download it and execute:
+
+    tmux_pyradio -h
+
+There is a catch though; if **PyRadio** terminates prematurely, the output will not be visible to the user, since **tmux** will also terminate and clear the screen on exit. In this case, just add a "*-d*" before a "*--*" (or combine it with the custom tmux session name). Yhis will add a *pause* before exiting **tmux**, so you can observe the output.
 
 ### CSS color themes restrictions
 

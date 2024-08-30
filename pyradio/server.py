@@ -937,8 +937,6 @@ Restricted Commands (Main mode only)
         '/error': 'Error in parameter',
         '/perm': 'Operation not permitted (not in Main Mode)',
         '/perm_html': '<div class="alert alert-danger">Operation not permitted (not in <b>Main Mode</b>)</div>',
-        '/log': 'Stations logging toggled',
-        '/like': 'Station tagged (liked)',
     }
 
     def __init__(self, bind_ip, bind_port, config, player, commands):
@@ -1157,8 +1155,8 @@ Restricted Commands (Main mode only)
                 # logger.error('received = "{}"'.format(received))
                 self._send_raw(received)
             else:
-                self._commands['/log']()
-                self._send_text(self._text['/log'])
+                received = self._commands['/log']()
+                self._send_text(received)
 
         elif self._path in ('/like', '/l'):
             if self._is_html:
@@ -1166,11 +1164,9 @@ Restricted Commands (Main mode only)
                 # logger.error('received = "{}"'.format(received))
                 self._send_raw(received)
             else:
-                if self.sel()[1] > -1:
-                    self._commands['/like']()
-                    self._send_text(self._text['/like'])
-                else:
-                    self._send_text(self._text['/idle'])
+                received = self._commands['/like']()
+                # logger.error('received = "{}"'.format(received))
+                self._send_text(received)
 
         elif self._path in ('/mute', '/m'):
             if self._is_html:

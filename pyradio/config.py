@@ -2420,23 +2420,25 @@ class PyRadioConfig(PyRadioStations):
                 except:
                     pass
             self._first_read = False
-            logger.error('\n\nfile = {0}\nplayer extra params = {1}\n\n'.format(self.player_params_file, self.params))
+            # logger.error('\n\nfile = {0}\nplayer extra params = {1}\n\n'.format(self.player_params_file, self.params))
 
         # do this here to get proper schedule config filepath if XDG is on
         self.schedule_file = path.join(self.data_dir, 'schedule.json')
 
 
     def _make_sure_dirs_exist(self):
+        home_rec_dir = path.join(path.expanduser('~'), 'pyradio-recordings')
         if self.opts['recording_dir'][1] == '':
             self.opts['recording_dir'][1] = path.join(path.expanduser('~'), 'pyradio-recordings')
         ch_dir = CheckDir(
             self.opts['recording_dir'][1],
-            path.join(path.expanduser('~'), 'pyradio-recordings')
+            home_rec_dir,
+            remove_after_validation=True
         )
-        if not ch_dir.is_dir:
+        if not ch_dir.can_be_created:
             print('Error: Recordings directory is for a folder: "{}"'.format(self.opts['recording_dir'][1]))
             sys.exit(1)
-        elif not ch_dir.is_writable:
+        elif not ch_dir.can_be_writable:
             print('Error: Recordings directory is not writable: "{}"'.format(self.opts['recording_dir'][1]))
             sys.exit(1)
 
@@ -2461,6 +2463,12 @@ class PyRadioConfig(PyRadioStations):
                     migrate=True,
                     first_read=path.join(self.stations_dir, 'data', 'recordings')
             )
+
+        # remove recordings dir from home dir if it is empty, as per #253
+        if path.exists(self.opts['recording_dir'][1]) and \
+                self.opts['recording_dir'][1] ==  home_rec_dir and  \
+                len(listdir(self.opts['recording_dir'][1])) == 0:
+            remove_tree(self.opts['recording_dir'][1])
 
     def get_last_playlist(self):
         ''' read last opened playlist
@@ -3360,24 +3368,37 @@ class PyRadioLog(object):
                 self.log_degub = True
 
             if titles and not self.log_titles:
-                logger.error('setting up pyradio-titles.py')
-                self.titles_handler = logging.handlers.RotatingFileHandler(
-                    path.join(
-                        recording_dir,
-                        'pyradio-titles.log'),
-                    maxBytes=50000,
-                    backupCount=5)
-                self.titles_handler.setFormatter(logging.Formatter(
-                    fmt=self.PATTERN_TITLE,
-                    datefmt='%b %d (%a) %H:%M')
-                )
-                self.titles_handler.setLevel(logging.CRITICAL)
-                #l = logging.getLogger()
-                logger.addHandler(self.titles_handler)
-                self.log_titles = True
-                logger.critical('=== Logging started')
                 if logger.isEnabledFor(logging.INFO):
-                    logger.info('starting titles logg on: "{}"'.format(recording_dir))
+                    logger.info('setting up pyradio-titles.log')
+                if not path.exists(recording_dir):
+                    try:
+                        makedirs(recording_dir)
+                    except:
+                        pass
+                if not path.exists(recording_dir):
+                    self.log_titles = False
+                    self.titles_handler = None
+                    if logger.isEnabledFor(logging.ERROR):
+                        logger.error('cannot start titles log on: "{}"; directory does not exist'.format(recording_dir))
+                    return False
+                else:
+                    self.titles_handler = logging.handlers.RotatingFileHandler(
+                        path.join(
+                            recording_dir,
+                            'pyradio-titles.log'),
+                        maxBytes=50000,
+                        backupCount=5)
+                    self.titles_handler.setFormatter(logging.Formatter(
+                        fmt=self.PATTERN_TITLE,
+                        datefmt='%b %d (%a) %H:%M')
+                    )
+                    self.titles_handler.setLevel(logging.CRITICAL)
+                    #l = logging.getLogger()
+                    logger.addHandler(self.titles_handler)
+                    self.log_titles = True
+                    logger.critical('=== Logging started')
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('starting titles log on: "{}"'.format(recording_dir))
 
         if (not titles) and self.log_titles:
             if self.titles_handler:
@@ -3389,6 +3410,7 @@ class PyRadioLog(object):
         logging.raiseExceptions = False
         logging.lastResort = None
         # logger.info('self.log_titles = {}'.format(self.log_titles))
+        return True
 
     def tag_title(self, the_log):
         ''' tags a title

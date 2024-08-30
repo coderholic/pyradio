@@ -670,6 +670,9 @@ class XdgDirs(object):
 
 
 class CheckDir(object):
+    _is_writable = False
+    _can_be_writable = False
+    _can_be_created = False
 
     def __init__(self, a_path, default=None, remove_after_validation=False):
         self._remove_after_validation = remove_after_validation
@@ -681,6 +684,14 @@ class CheckDir(object):
             if not self._validate_path():
                 expanded_default = self._replace_tilde(default)
                 self.dir_path = self._replace_tilde(expanded_default)
+
+    @property
+    def can_be_created(self):
+        return self._can_be_created
+
+    @property
+    def can_be_writable(self):
+        return self._can_be_writable
 
     @property
     def is_writable(self):
@@ -707,7 +718,9 @@ class CheckDir(object):
             a_path = self.dir_path
         # make sure path exists and is writable
         self._is_writable = False
-        if not path.exists(self.dir_path):
+        if path.exists(self.dir_path):
+            self._can_be_created = True
+        else:
             if system().lower() == 'windows':
                 splited_path = self.dir_path.split(path.sep)
                 existing = splited_path[0]
@@ -725,8 +738,10 @@ class CheckDir(object):
             # it does not exist, try to create it
             try:
                 makedirs(self.dir_path)
+                self._can_be_created = True
                 created = True
             except:
+                self._can_be_created = False
                 return False
         ret = False
         if path.isdir(self.dir_path):
@@ -737,6 +752,7 @@ class CheckDir(object):
                     pass
                 remove(test_file)
                 self._is_writable = True
+                self._can_be_writable = True
                 ret = True
             except:
                 pass

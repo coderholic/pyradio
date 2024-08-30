@@ -215,6 +215,22 @@ a:visited{color: SaddleBrown;}
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
 
+2024-08-30 s-n-g
+    * version 0.9.3.10
+    * do not enable xdg compliant if user_config_dir is specified
+    * do not create the default recording directory until it is
+      actually needed (to save data in it)
+    * when saving players' extra parameters reduce the list by removing
+      the unused porifles from the list
+    * Fixing player_params_file and schedule_file location when XDG
+      compliance is ON
+    * fixing a pyradio-client crash when no command is specified
+    * fixing: MPV Volume resets to 0% when trying to increase
+      beyond maximum #251
+    * fixing a help crash: adding H_CONFIG_PLAYER help key
+    * added a gruvbox variation system theme
+    * updating docs and fixing broken links
+
 2024-06-04 s-n-g
     * version 0.9.3.9
     * fixing a crash when adding a station to favorites

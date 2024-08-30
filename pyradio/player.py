@@ -2030,6 +2030,7 @@ class Player(object):
                 logger.info('Executing command: {}'.format(' '.join(opts)))
             except:
                 pass
+
         if platform.startswith('win') and self.PLAYER_NAME == 'vlc':
             self.stop_win_vlc_status_update_thread = False
             ''' Launches vlc windowless '''

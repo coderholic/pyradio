@@ -39,3 +39,17 @@ After updating to v. 0.9.3 (and newer), **PyRadio** will move this directory to 
 
 Then the user can change the folder's location from *Config / General options / Recording dir*.
 
+## Post 0.9.3.10 behavior
+
+Up until **v. 0.9.3.10, Ryradio** would create the "*recording directory*" upon startup, no matter where it would be located, making it available for the recording and titles' log function.
+
+This eventually creates the following problem:
+
+A user who never wants to use the recording or the titles' log function, ends up with an empty directory in his home folder, which will be recreated every time **PyRadio** is executed (even if deleted before that), as described in [issue No. 253](https://github.com/coderholic/pyradio/issues/253).
+
+The solution is that **PyRadio** will remove the "*recording directory*" upon execution, if
+
+1. the default location is used
+2. the directory is empty
+
+As a consequence, both the recording and the titles' log function will make sure the directory actually exists (and create it if it does not), before trying to save any data to it.
