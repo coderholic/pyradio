@@ -6125,6 +6125,16 @@ ____Using |fallback| theme.''')
                 self.refreshBody()
             elif ret == 0:
                 ''' open dir '''
+                if self._open_dir_win.dir == path.join(path.expanduser('~'), 'pyradio-recordings'):
+                    if not path.exists(self._open_dir_win.dir):
+                        try:
+                            makedirs(self._open_dir_win.dir)
+                        except:
+                            self._show_delayed_notification(
+                                '___|Error|: Recording dir does |not exist|!___',
+                                delay=1.5
+                            )
+                            return
                 self._cnf.open_a_dir(self._open_dir_win.dir)
             elif ret == 1:
                 ''' continue '''
