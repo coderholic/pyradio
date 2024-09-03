@@ -2468,7 +2468,11 @@ class PyRadioConfig(PyRadioStations):
         if path.exists(self.opts['recording_dir'][1]) and \
                 self.opts['recording_dir'][1] ==  home_rec_dir and  \
                 len(listdir(self.opts['recording_dir'][1])) == 0:
-            remove_tree(self.opts['recording_dir'][1])
+            # fix for #255
+            try:
+                remove_tree(self.opts['recording_dir'][1])
+            except:
+                pass
 
     def get_last_playlist(self):
         ''' read last opened playlist
