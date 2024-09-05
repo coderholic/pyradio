@@ -1180,6 +1180,9 @@ class PyRadioSimpleScheduleWindow(object):
         #     logger.error('self._error_num = {}'.format(self._error_num))
         #     return self._error_num
 
+        # logger.error(f'{self._focus = }')
+        # logger.error(f'{char = }')
+
         if self._widgets[self._focus].w_id == 22:
             ret = self._widgets[22].keypress(self._win, char)
             logger.error('return = {}'.format(ret))
@@ -1362,8 +1365,8 @@ class PyRadioSimpleScheduleWindow(object):
             elif self._widgets[self._focus].w_id == 20 \
                     and not ret:
                 ''' OK '''
-                self._error_num= self._validate_selection()
-                if self._error_num== 0:
+                self._error_num = self._validate_selection()
+                if self._error_num == 0:
                     logger.error('return 1')
                     # TODO: create an entry
                     return 1
@@ -1422,6 +1425,14 @@ class PyRadioSimpleScheduleWindow(object):
                         self._widgets[12].checked = True
                     elif self._focus == 12:
                         self._widgets[10].checked = True
+            if self._widgets[2].checked:
+                self._widgets[3].enabled = self._widgets[4].checked
+            else:
+                self._widgets[3].enabled = False
+            if self._widgets[8].checked:
+                self._widgets[9].enabled = self._widgets[10].checked
+            else:
+                self._widgets[9].enabled = False
 
         self.show()
         return 0
