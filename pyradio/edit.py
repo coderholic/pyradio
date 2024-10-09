@@ -19,6 +19,7 @@ from .server import IPsWithNumbers
 from .cjkwrap import cjkslices
 from .xdg import CheckDir
 from .html_help import HtmlHelp
+from .keyboard import kbkey
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -736,20 +737,20 @@ class PyRadioEditor(object):
         """
         ret = 0
         if self._too_small:
-            if char in (curses.KEY_EXIT, 27, ord('q')):
+            if char in (curses.KEY_EXIT, 27, kbkey['q']):
                 self.new_station = None
                 self._reset_editors_modes()
                 ret = -1
         else:
-            if char in (curses.KEY_EXIT, 27, ord('q')) and \
+            if char in (curses.KEY_EXIT, 27, kbkey['q']) and \
                     self.focus > 2:
                 self.new_station = None
                 self._reset_editors_modes()
                 ret = -1
-            elif char in (ord('\t'), 9, curses.KEY_DOWN):
+            elif char in (ord('\t'), 9, curses.KEY_DOWN, kbkey['tab']):
                 self.focus +=1
                 self._reset_editors_escape_mode()
-            elif char in (curses.KEY_UP, curses.KEY_BTAB):
+            elif char in (curses.KEY_UP, curses.KEY_BTAB, kbkey['stab']):
                 self.focus -= 1
                 self._reset_editors_escape_mode()
             elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
@@ -775,12 +776,12 @@ class PyRadioEditor(object):
                     self.new_station = None
                     ret = -1
                 self._reset_editors_escape_mode()
-            elif char == ord('s') and self._focus > 2:
+            elif char == kbkey['s'] and self._focus > 2:
                 ret = self._return_station()
                 self.focus = abs(ret + 2)
                 self._reset_editors_modes()
             elif (char in (curses.ascii.DC2, 18) and not self._adding) or \
-                    (char == ord('r') and not self._adding and self.focus > 2):
+                    (char == kbkey['revert_saved'] and not self._adding and self.focus > 2):
                 # ^R, revert to saved
                 self.item = self._orig_item
                 if self.item[2]:
@@ -1182,7 +1183,7 @@ class PyRadioRecordingDir(object):
         """
         ret = 0
         if self._too_small:
-            if char in (curses.KEY_EXIT, 27, ord('q')):
+            if char in (curses.KEY_EXIT, 27, kbkey['q']):
                 return -1, None, False
             return 0, None, False
         else:
@@ -1194,20 +1195,19 @@ class PyRadioRecordingDir(object):
                     ''' ESCAPE '''
                     return -1, None, False
                 curses.ungetch(char_esc)
-            if char == ord('q') and self._focus > 0:
+            if char == kbkey['q'] and self._focus > 0:
                 return -1, None, False
-            elif char == ord('?') and self.focus == 0:
+            elif char == kbkey['?'] and self.focus == 0:
                 return 2, None, False
-            elif char == ord('?') and self.focus > 0:
+            elif char == kbkey['?'] and self.focus > 0:
                 return 4, None, False
-            elif char in (ord(' '), ord('l'), curses.KEY_RIGHT,
-                          curses.KEY_ENTER, ord('\n'),
-                          ord('\r')) and self._focus == 1:
+            elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
+                          kbkey['pause'], kbkey['l'], curses.KEY_RIGHT) and self._focus == 1:
                 # check boxes
                 self._widgets[self._focus].toggle_checked()
-            elif char in (ord('\t'), 9, curses.KEY_DOWN, ord('L')):
+            elif char in (ord('\t'), 9, curses.KEY_DOWN, kbkey['tab']):
                 self._focus_next()
-            elif char in (curses.KEY_UP, curses.KEY_BTAB, ord('H')):
+            elif char in (curses.KEY_UP, curses.KEY_BTAB, kbkey['stab']):
                 self._focus_previous()
             elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
                 if self._focus == 0:
@@ -1225,14 +1225,14 @@ class PyRadioRecordingDir(object):
                 elif self._focus == 3:
                     # cancel
                     return -1, None, False
-            elif char == ord('s') and self._focus > 0:
+            elif char == kbkey['s'] and self._focus > 0:
                 # s, execute
                 if self._line_editor.string.startswith(self._orig_path):
                     return 3, None, False
                 elif self._widgets[-2].enabled:
                     return self._get_result(ret)
                 return 0, None, False
-            elif char == ord('h') and self._focus > 0:
+            elif char == kbkey['html_help'] and self._focus > 0:
                 html = HtmlHelp()
                 html.open_filename(a_file='rec-dir.html')
             elif self._focus == 0:
@@ -1285,7 +1285,7 @@ class PyRadioResourceOpener(object):
             self._global_functions = {}
         else:
             self._global_functions = dict(global_functions)
-        self._global_functions[ord('d')] = self._revert_to_default
+        self._global_functions[kbkey['revert_def']] = self._revert_to_default
         # self._global_functions[ord('s')] = self._get_result
 
     def __del__(self):
@@ -1610,7 +1610,7 @@ class PyRadioResourceOpener(object):
         """
         ret = 0
         if self._too_small:
-            if char in (curses.KEY_EXIT, 27, ord('q')):
+            if char in (curses.KEY_EXIT, 27, kbkey['q']):
                 return -1, None, False
             return 0, None
         else:
@@ -1622,15 +1622,15 @@ class PyRadioResourceOpener(object):
                     ''' ESCAPE '''
                     return -1, None
                 curses.ungetch(char_esc)
-            if char == ord('q') and self._focus > 0:
+            if char == kbkey['q'] and self._focus > 0:
                 return -1, None
-            elif char == ord('?') and self.focus == 0:
+            elif char == kbkey['?'] and self.focus == 0:
                 return 2, None
-            elif char == ord('?') and self.focus > 0:
+            elif char == kbkey['?'] and self.focus > 0:
                 return 4, None
-            elif char in (ord('\t'), 9, curses.KEY_DOWN, ord('L')):
+            elif char in (ord('\t'), 9, curses.KEY_DOWN, kbkey['tab']):
                 self._focus_next()
-            elif char in (curses.KEY_UP, curses.KEY_BTAB, ord('H')):
+            elif char in (curses.KEY_UP, curses.KEY_BTAB, kbkey['stab']):
                 self._focus_previous()
             elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
                 if self._focus == 0:
@@ -1642,10 +1642,10 @@ class PyRadioResourceOpener(object):
                 elif self._focus == 2:
                     # cancel
                     return -1, None
-            elif char == ord('s') and self._focus > 0:
+            elif char == kbkey['s'] and self._focus > 0:
                 # s, execute
                 return self._get_result()
-            elif char == ord('d') and self._focus > 0:
+            elif char == kbkey['revert_def'] and self._focus > 0:
                 # d, revert to default
                 return self._revert_to_default()
             elif self._focus == 0:
@@ -2142,25 +2142,25 @@ class PyRadioRenameFile(object):
         """
         ret = 0
         if self._too_small:
-            if char in (curses.KEY_EXIT, 27, ord('q')):
+            if char in (curses.KEY_EXIT, 27, kbkey['q']):
                 return -1, '', '', False, False, False
             return 0, '', '', False, False, False
         else:
             logger.error('self.focus = {}'.format(self.focus))
-            if char in (curses.KEY_EXIT, 27, ord('q')) and \
+            if char in (curses.KEY_EXIT, 27, kbkey['q']) and \
                     self.focus > 0:
                 return -1, '', '', False, False, False
-            elif char in (ord(' '), ord('l'), curses.KEY_RIGHT,
-                          curses.KEY_ENTER, ord('\n'),
-                          ord('\r')) and self._focus in (1, 2):
+            elif char in (kbkey['pause'], kbkey['l'], curses.KEY_RIGHT,
+                          curses.KEY_ENTER, ord('\n'), ord('\r')
+                          ) and self._focus in (1, 2):
                 # check boxes
                 self._widgets[self._focus].toggle_checked()
                 if self._focus == 1 and self._opened_from_editor:
                     self._widgets[2].enabled = self._widgets[1].checked
                 logger.error('len widgets = {}'.format(len(self._widgets)))
-            elif char in (ord('\t'), 9, curses.KEY_DOWN):
+            elif char in (ord('\t'), 9, curses.KEY_DOWN, kbkey['tab']):
                 self._focus_next()
-            elif char in (curses.KEY_UP, curses.KEY_BTAB):
+            elif char in (curses.KEY_UP, curses.KEY_BTAB, kbkey['stab']):
                 self._focus_previous()
             elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
                 if self._focus == 0:
@@ -2176,7 +2176,7 @@ class PyRadioRenameFile(object):
                 elif self._focus == 4:
                     # cancel
                     return -1, '', '', False, False, False
-            elif char == ord('s') and self._focus > 0:
+            elif char == kbkey['s'] and self._focus > 0:
                 # s, execute
                 if self._widgets[-2].enabled:
                     ret = self._act_on_file()
@@ -2310,25 +2310,25 @@ class PyRadioBuffering(object):
         if char in self._global_functions.keys():
             self._global_functions[char]()
 
-        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'), ord('s')):
+        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'), kbkey['s']):
             self._cache_data.delay = self._delay
             return 1, self._cache_data.cache
 
-        elif char in (curses.KEY_EXIT, 27, ord('q'), ord('h'), curses.KEY_LEFT):
+        elif char in (curses.KEY_EXIT, 27, kbkey['q'], kbkey['h'], curses.KEY_LEFT):
             return -1, []
 
-        elif char in (ord('j'), curses.KEY_UP,
-                      ord('k'), curses.KEY_DOWN,
+        elif char in (kbkey['j'], curses.KEY_UP,
+                      kbkey['k'], curses.KEY_DOWN,
                       curses.KEY_NPAGE, curses.KEY_PPAGE,
                       ord('z'), ord('r')
                       ):
             if char == ord('r'):
                 self._delay = self._cache_data.delay
-            elif char in (ord('k'), curses.KEY_UP):
+            elif char in (kbkey['k'], curses.KEY_UP):
                 self._delay += self._step
                 if self._delay < self._min:
                     self._delay = self._min
-            elif char in (ord('j'), curses.KEY_DOWN):
+            elif char in (kbkey['j'], curses.KEY_DOWN):
                 self._delay -= self._step
                 if self._delay < self._min:
                     self._delay = 0
@@ -2432,13 +2432,13 @@ class PyRadioConnectionType(object):
         if char in self._global_functions.keys():
             self._global_functions[char]()
 
-        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'), ord('s')):
+        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'), kbkey['s']):
             return 1
 
-        elif char in (curses.KEY_EXIT, 27, ord('q'), ord('h'), curses.KEY_LEFT):
+        elif char in (curses.KEY_EXIT, 27, kbkey['q'], kbkey['h'], curses.KEY_LEFT):
             return -1
 
-        elif char in (ord('j'), ord('k'), ord('l'), ord(' '),
+        elif char in (kbkey['j'], kbkey['k'], kbkey['l'], kbkey['pause'],
                       curses.KEY_RIGHT, curses.KEY_UP, curses.KEY_DOWN):
             self.connection_type = not self.connection_type
             self._win.addstr(2, len(self._text) + 3, '{}'.format(self.connection_type), curses.color_pair(3))
@@ -2607,32 +2607,26 @@ class PyRadioServerWindow(object):
              1: go on
         '''
         if self._selection == 0 and \
-                char in (
-                    ord(' '), ord('\n'),
-                    curses.KEY_ENTER,
-                    ord('l'),
-                    curses.KEY_RIGHT,
-                ):
+                char in (ord('\n'), ord('\r'), curses.KEY_ENTER,
+                         kbkey['pause'], kbkey['l'], curses.KEY_RIGHT):
             self._the_ip = self._nips.next()
             self._win.addstr(4, self._field_x, self._the_ip.ljust(self._field_width), curses.color_pair(6))
             self._refresh()
         elif self._selection == 0 and \
-                char in (
-                    ord('h'),
-                    curses.KEY_LEFT,
-                ):
+                char in (kbkey['h'], curses.KEY_LEFT,
+                         ):
             self._the_ip = self._nips.previous()
             self._win.addstr(4, self._field_x, self._the_ip.ljust(self._field_width), curses.color_pair(6))
             self._refresh()
 
-        elif char == ord('r'):
+        elif char == kbkey['revert_saved']:
             self._the_ip = self._cnf.active_remote_control_server_ip
             self._nips.set(self._the_ip)
             self._the_port = self._cnf.active_remote_control_server_port
             self._editor.string = self._the_port
             self._refresh()
 
-        elif char == ord('d'):
+        elif char == kbkey['revert_def']:
             self._the_ip = 'localhost'
             self._nips.set('localhost')
             self._the_port = '9998'
@@ -2640,12 +2634,12 @@ class PyRadioServerWindow(object):
             self._refresh()
 
         elif char in (
-            ord('j'), curses.KEY_UP,
-            ord('k'), curses.KEY_DOWN
+            kbkey['j'], curses.KEY_UP,
+            kbkey['k'], curses.KEY_DOWN
         ):
             self._toggle_selection()
 
-        elif char in (ord('s'), ):
+        elif char == kbkey['s']:
             if self._validate_port():
                 return 0
             else:

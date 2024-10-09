@@ -22,7 +22,7 @@ from .cjkwrap import cjklen
 from .countries import countries
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesWidgetColumns, SimpleCursesCheckBox, SimpleCursesCounter, SimpleCursesBoolean, DisabledWidget, SimpleCursesString, SimpleCursesWidget
 from .ping import ping
-
+from .keyboard import kbkey, ctrl_code_to_simple_code
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
@@ -433,8 +433,8 @@ class RadioBrowser(PyRadioStationsBrowser):
         self._global_functions = {}
         if global_functions is not None:
             self._global_functions = dict(global_functions)
-            if ord('t') in self._global_functions.keys():
-                del self._global_functions[ord('t')]
+            if kbkey['t'] in self._global_functions.keys():
+                del self._global_functions[kbkey['t']]
             # if 'T' in self._global_functions.keys():
             #     del self._global_functions['T']
 
@@ -1897,10 +1897,10 @@ class RadioBrowserConfigWindow(object):
         self._global_functions = {}
         if global_functions is not None:
             self._global_functions = global_functions.copy()
-            if ord('d') in self._global_functions.keys():
-                del self._global_functions[ord('d')]
-            if ord('t') in self._global_functions.keys():
-                del self._global_functions[ord('t')]
+            if kbkey['revert_def'] in self._global_functions.keys():
+                del self._global_functions[kbkey['revert_def']]
+            if kbkey['t'] in self._global_functions.keys():
+                del self._global_functions[kbkey['t']]
         # self._print_params()
 
     @property
@@ -2352,7 +2352,7 @@ class RadioBrowserConfigWindow(object):
         '''
         if self._too_small:
             if char in (
-                curses.KEY_EXIT, 27, ord('q')
+                curses.KEY_EXIT, 27, kbkey['q']
             ):
                 return -1
             return 1
@@ -2371,44 +2371,45 @@ class RadioBrowserConfigWindow(object):
             return 1
 
         elif char in (
-            curses.KEY_EXIT, 27, ord('q')
+            curses.KEY_EXIT, 27, kbkey['q']
         ):
             return -1
 
-        elif char in (ord(' '), curses.KEY_ENTER, ord('\n'),
-                      ord('\r')) and self._focus == len(self._widgets) - 2:
+        elif char in (kbkey['pause'], curses.KEY_ENTER,
+                      ord('\n'), ord('\r')
+                      ) and self._focus == len(self._widgets) - 2:
             ''' enter on ok button  '''
             ret = self._handle_new_or_existing_search_term()
             # self._print_params()
             return 0 if ret == 1 else ret
 
-        elif char == ord('?'):
+        elif char == kbkey['?']:
             return 2
 
-        elif char in (ord('\t'), 9):
+        elif char in (ord('\t'), 9, kbkey['tab']):
             self._focus_next()
             self.calculate_dirty()
 
-        elif char in (curses.KEY_BTAB, ):
+        elif char in (curses.KEY_BTAB, kbkey['stab']):
             self._focus_previous()
             self.calculate_dirty()
 
-        elif char == ord('s'):
+        elif char == kbkey['s']:
             return self.save_config()
 
-        elif char == ord('r'):
+        elif char == kbkey['revert_def']:
             self._revert_to_saved_params()
             self.calculate_dirty()
 
-        elif char == ord('d'):
+        elif char == kbkey['revert_def']:
             self._revert_to_default_params()
             self.calculate_dirty()
 
-        elif char in (curses.KEY_UP, ord('j')):
+        elif char in (curses.KEY_UP, kbkey['j']):
             self._focus_previous()
             self.calculate_dirty()
 
-        elif char in (curses.KEY_DOWN, ord('k')):
+        elif char in (curses.KEY_DOWN, kbkey['k']):
             self._focus_next()
             self.calculate_dirty()
 
@@ -2440,8 +2441,8 @@ class RadioBrowserConfigWindow(object):
 
             elif self._focused == 4:
                 ''' server '''
-                if char in (ord(' '), curses.KEY_ENTER, ord('\n'),
-                            ord('\r'), ord('l'), curses.KEY_RIGHT):
+                if char in (kbkey['pause'], ord('\r'), curses.KEY_ENTER, ord('\n'),
+                            kbkey['pause'], kbkey['l'], curses.KEY_RIGHT):
                     ''' open server selection window '''
                     return 3
             elif self._focused == 5:
@@ -2553,8 +2554,8 @@ class RadioBrowserSearchWindow(object):
 
         if global_functions is not None:
             self._global_functions = dict(global_functions)
-            if ord('t') in self._global_functions.keys():
-                del self._global_functions[ord('t')]
+            if kbkey['t'] in self._global_functions.keys():
+                del self._global_functions[kbkey['t']]
 
     def __del__(self):
         for a_widget in self._widgets:
@@ -3290,14 +3291,12 @@ class RadioBrowserSearchWindow(object):
                 4 - Error in search paremeter
                 5 - Save search history
         '''
-        if char in (
-            curses.KEY_EXIT, 27
-        ):
+        if char in (curses.KEY_EXIT, 27):
             return -1
 
         class_name = type(self._widgets[self._focus]).__name__
 
-        if char == ord('q') and \
+        if char == kbkey['q'] and \
                 class_name != 'SimpleCursesLineEdit':
             return -1
 
@@ -3318,51 +3317,50 @@ class RadioBrowserSearchWindow(object):
         elif char in (curses.KEY_NPAGE, ) and self._focus != len(self._widgets) -3:
             self._jump_history_down()
 
-        elif char in (ord('\t'), 9):
+        elif char in (ord('\t'), 9, kbkey['tab']):
             self._focus_next()
 
-        elif char in (curses.KEY_BTAB, ):
+        elif char in (curses.KEY_BTAB, kbkey['stab'] ):
             self._focus_previous()
 
-        elif char in (ord(' '), curses.KEY_ENTER, ord('\n'),
-                      ord('\r')) and self._focus == len(self._widgets) - 1:
+        elif char in (kbkey['pause'], curses.KEY_ENTER, ord('\n'), ord('\r')
+                      ) and self._focus == len(self._widgets) - 1:
             ''' enter on cancel button  '''
             return -1
 
-        elif char in (ord(' '), curses.KEY_ENTER, ord('\n'),
-                      ord('\r')) and self._focus == len(self._widgets) - 2:
+        elif char in (kbkey['pause'], curses.KEY_ENTER, ord('\n'), ord('\r')
+                      ) and self._focus == len(self._widgets) - 2:
             ''' enter on ok button  '''
             ret = self._handle_new_or_existing_search_term()
             return 0 if ret == 1 else ret
 
-        elif char in (curses.ascii.SO, ):
+        elif char == kbkey['rb_h_next']:
             ''' ^N - Next history item '''
             self._ctrl_n()
 
-        elif char in (curses.ascii.DLE, ):
+        elif char == kbkey['rb_h_prev']:
             ''' ^P - Previous history item '''
             self._ctrl_p()
 
-        # elif char in (curses.ascii.ETB, ):
-        elif char in (curses.ascii.ENQ, ):
+        elif char == kbkey['rb_h_save']:
             ''' ^E - Save search history '''
             self._handle_new_or_existing_search_term()
             ''' Save search history '''
             return 5
 
-        elif char in (curses.ascii.EM, ):
+        elif char == kbkey['rb_h_add']:
             ''' ^Y - Add history item '''
             self._handle_new_or_existing_search_term()
 
-        elif char in (curses.ascii.CAN, ):
+        elif char == kbkey['rb_h_del']:
             ''' ^X - Delete history item '''
             self._ctrl_x()
 
-        elif char in (curses.ascii.STX, ):
+        elif char == kbkey['rb_h_def']:
             ''' ^B - Set default item '''
             self._ctrl_b()
 
-        elif char in (curses.ascii.ACK, ):
+        elif char == kbkey['rb_h_0']:
             ''' ^F - Go to template (item 0) '''
             self._ctrl_f()
 
@@ -3409,7 +3407,7 @@ class RadioBrowserSearchWindow(object):
                 elif ret < 2:
                     return 1
 
-            if char in (ord('s'), ):
+            if char in (kbkey['s'], ):
                 ''' prerform search '''
                 self._reset_page_function()
                 ret = self._handle_new_or_existing_search_term()
@@ -3418,45 +3416,45 @@ class RadioBrowserSearchWindow(object):
             elif char == curses.KEY_HOME:
                 self._goto_first_history_item()
 
-            elif char in (curses.KEY_END, ord('g')):
+            elif char in (curses.KEY_END, kbkey['g']):
                 self._goto_last_history_item()
 
-            elif char in (ord('n'), ):
+            elif char == ctrl_code_to_simple_code(kbkey['rb_h_next']):
                 ''' ^N - Next history item '''
                 self._ctrl_n()
 
-            elif char in (ord('p'), ):
+            elif char == ctrl_code_to_simple_code(kbkey['rb_h_prev']):
                 ''' ^P - Previous history item '''
                 self._ctrl_p()
 
-            elif char in (ord('e'), ):
+            elif char == ctrl_code_to_simple_code(kbkey['rb_h_save']):
                 ''' ^E - Save search history '''
                 self._handle_new_or_existing_search_term()
                 return 5
 
-            elif char in (ord('f'), ):
+            elif char == ctrl_code_to_simple_code(kbkey['rb_h_0']):
                 ''' ^F - Go to template (item 0) '''
                 self._ctrl_f()
 
-            elif char in (ord('x'), ):
+            elif char == ctrl_code_to_simple_code(kbkey['rb_h_del']):
                 ''' ^X - Delete history item '''
                 self._ctrl_x()
 
-            elif char in (ord('b'), ):
+            elif char == ctrl_code_to_simple_code(kbkey['rb_h_def']):
                 ''' ^B - Set default item '''
                 self._ctrl_b()
 
-            elif char in (ord('y'), ):
+            elif char == ctrl_code_to_simple_code(kbkey['rb_h_add']):
                 ''' ^Y - Add current item to history'''
                 self._handle_new_or_existing_search_term()
 
-            elif char in (ord('k'), curses.KEY_UP) and \
+            elif char in (kbkey['k'], curses.KEY_UP) and \
                     class_name != 'SimpleCursesWidgetColumns':
                 self._focus_up()
-            elif char in (ord('j'), curses.KEY_DOWN) and \
+            elif char in (kbkey['j'], curses.KEY_DOWN) and \
                     class_name != 'SimpleCursesWidgetColumns':
                 self._focus_down()
-            elif char in (ord('l'), curses.KEY_RIGHT) and \
+            elif char in (kbkey['l'], curses.KEY_RIGHT) and \
                     class_name not in ('SimpleCursesWidgetColumns',
                                        'SimpleCursesLineEdit'):
                 if 5 <= self._widgets[self._focus].id <= 13:
@@ -3468,7 +3466,7 @@ class RadioBrowserSearchWindow(object):
                     self._apply_new_focus(new_focus)
                 else:
                     self._focus_next()
-            elif char in (ord('h'), curses.KEY_LEFT) and \
+            elif char in (kbkey['h'], curses.KEY_LEFT) and \
                     class_name not in ('SimpleCursesWidgetColumns',
                                        'SimpleCursesLineEdit'):
                 if 5 <= self._widgets[self._focus].id <= 13:
@@ -3481,7 +3479,7 @@ class RadioBrowserSearchWindow(object):
                 else:
                     self._focus_previous()
 
-        if char == ord('?'):
+        if char == kbkey['?']:
             ''' display help '''
             return 2
 
@@ -4025,14 +4023,14 @@ class RadioBrowserSort(object):
             return 1
 
         if char in (
-            curses.KEY_EXIT, ord('q'), 27,
-            ord('h'), curses.KEY_LEFT
+            curses.KEY_EXIT, kbkey['q'], 27,
+            kbkey['h'], curses.KEY_LEFT
         ):
             return -1
 
         elif char in (
-            ord('l'), ord(' '), ord('\n'), ord('\r'),
-            curses.KEY_RIGHT, curses.KEY_ENTER
+            kbkey['l'], kbkey['pause'], curses.KEY_RIGHT,
+            ord('\n'), ord('\r'), curses.KEY_ENTER
         ):
             for i, n in enumerate(self.items.keys()):
                 if i == self.selection:
@@ -4041,11 +4039,11 @@ class RadioBrowserSort(object):
                     break
             return 0
 
-        elif char in (ord('g'), curses.KEY_HOME):
+        elif char in (kbkey['g'], curses.KEY_HOME):
             self.selection = 0
             self._refresh()
 
-        elif char in (ord('G'), curses.KEY_END):
+        elif char in (kbkey['G'], curses.KEY_END):
             self.selection = len(self.items) - 1
             self._refresh()
 
@@ -4067,13 +4065,13 @@ class RadioBrowserSort(object):
                     self.selection = len(self.items) - 1
             self._refresh()
 
-        elif char in (ord('k'), curses.KEY_UP):
+        elif char in (kbkey['k'], curses.KEY_UP):
             self.selection -= 1
             if self.selection < 0:
                 self.selection = len(self.items) - 1
             self._refresh()
 
-        elif char in (ord('j'), curses.KEY_DOWN):
+        elif char in (kbkey['j'], curses.KEY_DOWN):
             self.selection += 1
             if self.selection == len(self.items):
                 self.selection = 0
@@ -4201,7 +4199,7 @@ class RadioBrowserServersSelect(object):
         '''
 
         if self._too_small:
-            if char in (curses.KEY_EXIT, 27, ord('q')):
+            if char in (curses.KEY_EXIT, 27, kbkey['q']):
                 return -1
             return 1
 
@@ -4344,14 +4342,14 @@ class RadioBrowserServers(object):
             self._global_functions[char]()
             return 1
         elif char in (
-            curses.KEY_EXIT, ord('q'), 27,
-            ord('h'), curses.KEY_LEFT
+            curses.KEY_EXIT, kbkey['q'], 27,
+            kbkey['h'], curses.KEY_LEFT
         ):
             return -1
 
         elif char in (
-            ord('l'), ord(' '), ord('\n'), ord('\r'),
-            curses.KEY_RIGHT, curses.KEY_ENTER
+            kbkey['l'], kbkey['pause'], curses.KEY_RIGHT,
+            ord('\n'), ord('\r'), curses.KEY_ENTER
         ):
             for i, n in enumerate(self.items):
                 if i == self.selection:
@@ -4363,14 +4361,14 @@ class RadioBrowserServers(object):
                     break
             return 0
 
-        elif char in (ord('?'), ):
+        elif char in (kbkey['?'], ):
             return 2
 
-        elif char in (ord('g'), curses.KEY_HOME):
+        elif char in (kbkey['g'], curses.KEY_HOME):
             self.selection = 0
             self.show()
 
-        elif char in (ord('G'), curses.KEY_END):
+        elif char in (kbkey['G'], curses.KEY_END):
             self.selection = len(self.items) - 1
             self.show()
 
@@ -4392,13 +4390,13 @@ class RadioBrowserServers(object):
                     self.selection = len(self.items) - 1
             self.show()
 
-        elif char in (ord('k'), curses.KEY_UP):
+        elif char in (kbkey['k'], curses.KEY_UP):
             self.selection -= 1
             if self.selection < 0:
                 self.selection = len(self.items) - 1
             self.show()
 
-        elif char in (ord('j'), curses.KEY_DOWN):
+        elif char in (kbkey['j'], curses.KEY_DOWN):
             self.selection += 1
             if self.selection == len(self.items):
                 self.selection = 0
@@ -4848,33 +4846,33 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
                 2    : help
         """
         if self._too_small:
-            if char in (curses.KEY_EXIT, 27, ord('q')):
+            if char in (curses.KEY_EXIT, 27, kbkey['q']):
                 return -1
             return 1
-        if char == ord('?'):
+        if char == kbkey['?']:
             return 2
-        elif char == ord('x'):
+        elif char == kbkey['del']:
             if len(self._items) > 2:
                 self._remove_item()
             else:
                 self._cannot_delete_function()
-        elif char in (ord(' '), ):
+        elif char in (kbkey['pause'], ):
             if self._items:
                 self._default = self._selection
                 self.show()
-        elif char in (curses.KEY_LEFT, ord('h'), ord('p')):
+        elif char in (curses.KEY_LEFT, kbkey['h'], ord('p')):
             self._go_up()
-        elif char in (curses.KEY_RIGHT, ord('l'), ord('n')):
+        elif char in (curses.KEY_RIGHT, kbkey['l'], ord('n')):
             self._go_down()
-        elif char in (curses.KEY_HOME, ord('g'), ord('0'), ord('^')):
+        elif char in (curses.KEY_HOME, kbkey['g'], ord('0'), ord('^')):
             self._go_home()
-        elif char in (curses.KEY_END, ord('G'), ord('$')):
+        elif char in (curses.KEY_END, kbkey['G'], ord('$')):
             self._go_end()
         elif char in (curses.KEY_NPAGE, ):
             self._jump_down()
         elif char in (curses.KEY_PPAGE, ):
             self._jump_up()
-        elif char in (curses.KEY_EXIT, 27, ord('q')):
+        elif char in (curses.KEY_EXIT, 27, kbkey['q']):
             return -1
         return 1
 

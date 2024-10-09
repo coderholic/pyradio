@@ -1118,13 +1118,14 @@ if __name__ == '__main__':
 
 
     my_list = [{
+        'name': 'A test',
         'type': 1,
         'start_type': 0,
-        'start_date': [2023, 11, 19],
+        'start_date': [2024, 11, 19],
         'start_time': (18, 23, 0, 0),
         'start_duration': (1, 32, 15, 0),
         'end_type': 0,
-        'end_date': [2023, 11, 19],
+        'end_date': [2024, 11, 19],
         'end_time': (20, 1, 2, 0),
         'end_duration': (3, 15, 2, 0),
         'player': 'mpv',
@@ -1135,9 +1136,12 @@ if __name__ == '__main__':
         'station': 'The UK 1940s Radio Station  1920s 1930s 1940s',
         'token': 'LhhO\x0c@>BET'
     }]
-    # x = PyRadioScheduleList(a_file='', a_list=my_list)
-    x = PyRadioScheduleList(a_file='/home/spiros/.config/pyradio/data/schedule.json')
+    x = PyRadioScheduleList(a_file='', a_list=my_list)
+    # x = PyRadioScheduleList(a_file='/home/spiros/.config/pyradio/data/schedule.json')
     out = x.get_list_of_active_items()
+    print(type(out))
+    print(out)
+    print('\n\nper item')
     for n in out:
         print(n)
     print('\n\n')
@@ -1146,8 +1150,10 @@ if __name__ == '__main__':
     if x._schedule_list == []:
         x._list_to_schedule_items()
 
+    print(type(x))
+    y = PyRadioScheduleItem(x)
     print('active_item')
-    print(x._schedule_list[0].get_active_item())
+    print(y.get_active_item())
 
 
     print('Repeating dates')

@@ -11,6 +11,7 @@ from math import sqrt
 import colorsys
 from .log import Log
 from .common import *
+from .keyboard import kbkey
 
 logger = logging.getLogger(__name__)
 
@@ -944,10 +945,10 @@ class PyRadioThemeSelector(object):
         self._global_functions = {}
         if global_functions is not None:
             self._global_functions = dict(global_functions)
-            if ord('t') in self._global_functions.keys():
-                del self._global_functions[ord('t')]
-            if ord('T') in self._global_functions.keys():
-                del self._global_functions[ord('T')]
+            if kbkey['t'] in self._global_functions.keys():
+                del self._global_functions[kbkey['t']]
+            if kbkey['transp'] in self._global_functions.keys():
+                del self._global_functions[kbkey['transp']]
 
     def show(self, touch_selection=True):
         if self._cnf.locked:
@@ -1335,7 +1336,7 @@ class PyRadioThemeSelector(object):
         if char in self._global_functions.keys():
             self._global_functions[char]()
             return -3, False
-        if char in (ord('e'), ):
+        if char in (kbkey['edit'], ):
             ''' edit theme '''
             pass
             # if self._themes[self._selection][1] == '' or \
@@ -1344,14 +1345,13 @@ class PyRadioThemeSelector(object):
             #     return -2, False
             # else:
             #     pass
-        elif char in (ord('a'), ):
+        elif char in (kbkey['add'], ):
             ''' new theme '''
             pass
-        elif char in (ord('r'), ):
+        elif char == kbkey['reload']:
             return -4, False
-        elif char in (curses.KEY_ENTER, ord('\n'),
-                      ord('\r'), ord('l'),
-                      curses.KEY_RIGHT):
+        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
+                      kbkey['l'], curses.KEY_RIGHT):
             self._applied_theme = self._selection
             self._applied_theme_name = self._themes[self._selection][0]
             #if self.changed_from_config:
@@ -1359,14 +1359,14 @@ class PyRadioThemeSelector(object):
             #    self._config_theme_name = self._themes[self._selection][0]
             self.refresh()
             return self._selection, False
-        elif char in (ord(' '), ord('s'), ord('c'), ord('C')):
+        elif char in (kbkey['pause'], kbkey['s'], kbkey['watch_theme']):
             self._applied_theme = self._selection
             self._applied_theme_name = self._themes[self._selection][0]
             if not self.changed_from_config:
                 self._config_theme = self._selection
                 self._config_theme_name = self._themes[self._selection][0]
             self._theme_is_watched = False
-            if char == ord('c'):
+            if char == kbkey['watch_theme']:
                 if self._selection > self._first_theme_to_watch and \
                         self._themes[self._selection][1]:
                     ''' we are at "User Themes" '''
@@ -1385,16 +1385,16 @@ class PyRadioThemeSelector(object):
                             logger.debug('Theme set to auto update: "{}"'.format(self._applied_theme_name))
             self.refresh()
             return self._selection, True
-        elif char in (curses.KEY_UP, ord('k')):
+        elif char in (curses.KEY_UP, kbkey['k']):
             self.jumpnr = ''
             self._go_up()
-        elif char in (curses.KEY_DOWN, ord('j')):
+        elif char in (curses.KEY_DOWN, kbkey['j']):
             self.jumpnr = ''
             self._go_down()
-        elif char in (curses.KEY_HOME, ord('g')):
+        elif char in (curses.KEY_HOME, kbkey['g']):
             self.jumpnr = ''
             self._go_home()
-        elif char in (curses.KEY_END, ord('G')):
+        elif char in (curses.KEY_END, kbkey['G']):
             if self.jumpnr == '':
                 self._go_end()
             else:
@@ -1426,7 +1426,7 @@ class PyRadioThemeSelector(object):
             self.selection = sel
         elif char in map(ord,map(str,range(0, 10))):
             self.jumpnr += chr(char)
-        elif char in (curses.KEY_EXIT, 27, ord('q'), ord('h'), curses.KEY_LEFT):
+        elif char in (curses.KEY_EXIT, 27, kbkey['q'], kbkey['h'], curses.KEY_LEFT):
             self.jumpnr = ''
             self._win.nodelay(True)
             char = self._win.getch()

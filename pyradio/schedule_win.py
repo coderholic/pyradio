@@ -1307,14 +1307,14 @@ class PyRadioSimpleScheduleWindow(object):
             return -1
 
         elif self._focus == 0 and char in (
-                ord(' '), curses.KEY_ENTER, ord('\n'),
-                curses.KEY_RIGHT, ord('l'), ord('\r'),
+                curses.KEY_ENTER, ord('\n'), ord('\r'),
+                curses.KEY_RIGHT, ord('l'), ord(' ')
                 ) and self._widgets[2].checked:
             return 4
 
         elif self._focus == 1 and char in (
-                ord(' '), curses.KEY_ENTER, ord('\n'),
-                curses.KEY_RIGHT, ord('l'), ord('\r'),
+                curses.KEY_ENTER, ord('\n'), ord('\r'),
+                curses.KEY_RIGHT, ord(' '), ord('l'),
                 ) and self._widgets[2].checked:
             return 5
 
@@ -1337,13 +1337,13 @@ class PyRadioSimpleScheduleWindow(object):
         elif char in (ord('j'), curses.KEY_DOWN):
             self._go_down()
 
-        elif char in (9, ord('L')):
+        elif char in (ord('\t'), 9, kbkey['tab']):
             if self._widgets[self._focus].w_id in (3, 5, 7, 9, 11, 13):
                 self._widgets[self._focus].keypress(char)
             else:
                 self._next_widget()
 
-        elif char in (curses.KEY_BTAB, ord('H')):
+        elif char in (curses.KEY_BTAB, kbkey['stab']):
             if self._widgets[self._focus].w_id in (3, 5, 7, 9, 11, 13):
                 self._widgets[self._focus].keypress(char)
             else:

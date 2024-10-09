@@ -64,6 +64,7 @@ locale.setlocale(locale.LC_ALL, "")
 logger = logging.getLogger(__name__)
 
 from .server import IPs, PyRadioServer, HAS_NETIFACES
+from .keyboard import kbkey
 
 def rel(path):
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
@@ -235,24 +236,23 @@ class SelectPlayer(object):
     def keypress(self, char):
         # select player keypress
         if char in (
-            ord('j'), curses.KEY_DOWN,
-            ord('k'), curses.KEY_UP
+            kbkey['j'], curses.KEY_DOWN,
+            kbkey['k'], curses.KEY_UP
         ):
             self._selected = 1 if self._selected == 0 else 0
             self._update_selection()
         elif char in (
-            curses.KEY_ENTER,
-            ord('\n'), ord('\r'),
-            ord('s'), ord(' '),
-            ord('l'), curses.KEY_RIGHT
+            curses.KEY_ENTER, ord('\n'), ord('\r'),
+            kbkey['s'], kbkey['pause'],
+            kbkey['l'], curses.KEY_RIGHT
         ):
             if not (self._no_vlc and \
                     self._available_players[self._selected] == 'vlc'):
                 return self._available_players[self._selected]
             else:
                 self._vlc_no_recording()
-        elif char in (ord('h'), curses.KEY_LEFT,
-                      ord('q'), curses.KEY_EXIT, 27):
+        elif char in (kbkey['h'], curses.KEY_LEFT,
+                      kbkey['q'], curses.KEY_EXIT, 27):
             return None
         return ''
 
@@ -301,18 +301,15 @@ class PyRadio(object):
 
     ''' Characters to be "ignored" by windows, so that certain
         functions still work (like changing volume) '''
-    # _chars_to_bypass = (ord('m'), ord('v'), ord('.'),
-    #                     ord(','), ord('+'), ord('-'),
-    #                     ord('?'), ord('#'), curses.KEY_RESIZE)
-    _chars_to_bypass = (ord('?'), )
+    _chars_to_bypass = (kbkey['?'], )
 
     ''' Characters to be "ignored" by windows that support search'''
-    _chars_to_bypass_for_search = (ord('/'), ord('n'), ord('N'))
+    _chars_to_bypass_for_search = (kbkey['search'], kbkey['search_next'], kbkey['search_prev'])
 
     ''' Characters to "ignore" when station editor window
         is onen and focus is not in line editor '''
-    _chars_to_bypass_on_editor = (ord('m'), ord('v'), ord('.'),
-                                  ord(','), ord('+'), ord('-'))
+    _chars_to_bypass_on_editor = ( kbkey['mute'], kbkey['s_vol'], kbkey['v_up1'],
+            kbkey['v_up2'], kbkey['v_up3'], kbkey['v_dn1'], kbkey['v_dn2'])
     ''' Number of stations to change with the page up/down keys '''
     pageChange = 5
 
@@ -715,26 +712,30 @@ class PyRadio(object):
         }
 
         self._global_functions = {
-            ord('w'): self._tag_a_title,
-            ord('W'): self._toggle_titles_logging,
-            ord('T'): self._toggle_transparency,
-            ord('+'): self._volume_up,
-            ord('='): self._volume_up,
-            ord('.'): self._volume_up,
-            ord('-'): self._volume_down,
-            ord(','): self._volume_down,
-            ord('m'): self._volume_mute,
-            ord('v'): self._volume_save,
-            ord('~'): self._toggle_claculated_colors,
-            ord('<'): self._stations_history_previous,
-            ord('>'): self._stations_history_next,
-            curses.ascii.DLE: self._play_previous_station,
-            curses.KEY_PREVIOUS: self._play_previous_station,
-            curses.ascii.SO: self._play_next_station,
-            curses.KEY_NEXT: self._play_next_station,
-            ord('#'): self._resize_with_number_sign,
+            kbkey['tag']: self._tag_a_title,
+            kbkey['t_tag']: self._toggle_titles_logging,
+            kbkey['transp']: self._toggle_transparency,
+            kbkey['v_up1']: self._volume_up,
+            kbkey['v_up2']: self._volume_up,
+            kbkey['v_up3']: self._volume_up,
+            kbkey['v_dn1']: self._volume_down,
+            kbkey['v_dn2']: self._volume_down,
+            kbkey['mute']: self._volume_mute,
+            kbkey['s_vol']: self._volume_save,
+            kbkey['t_calc_col']: self._toggle_claculated_colors,
+            kbkey['resize']: self._resize_with_number_sign,
             # ord('d'): self._html_song_title,
             ord('b'): self._show_schedule_editor,
+        }
+
+        self._local_functions = {
+            # functions to execute in self.ws.NORMAL_MODE only
+            kbkey['hist_prev']: self._stations_history_previous,
+            kbkey['hist_next']: self._stations_history_next,
+            kbkey['p_prev']: self._play_previous_station,           # ^P
+            curses.KEY_PREVIOUS: self._play_previous_station,
+            kbkey['p_next']: self._play_next_station,               # ^N
+            curses.KEY_NEXT: self._play_next_station,
         }
 
         self._remote_control_server = self._remote_control_server_thread = None
@@ -743,11 +744,11 @@ class PyRadio(object):
         self._cls_update_stations_message = ''
 
         if platform.startswith('win'):
-            self._browser_page_chars = (curses.KEY_F3, curses.KEY_F2)
-            self._browser_first_page_chars = (278, )
-        else:
-            self._browser_page_chars = (ord(']'), ord('['))
-            self._browser_first_page_chars = (ord('{'), )
+            kbkey['rb_p_next'] = curses.KEY_F3
+            kbkey['rb_p_prev'] = curses.KEY_F2
+            kbkey['rb_p_first'] = 278
+        self._browser_page_chars = (kbkey['rb_p_next'], kbkey['rb_p_prev'])
+        self._browser_first_page_chars = (kbkey['rb_p_first'], )
 
         self._messaging_win = PyRadioMessagesSystem(
                 self._cnf,
@@ -5890,9 +5891,9 @@ ____Using |fallback| theme.''')
                 self.ws.operation_mode = self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE
             self._remote_control_window.show(self.outerBodyWin)
 
-    def _reload_playlist_after_confirmation(self, char=121):
-        if char in (ord('y'), ord('Y')):
-            if not self._cnf.locked and char == ord('Y'):
+    def _reload_playlist_after_confirmation(self, char):
+        if char in (kbkey['y'], kbkey['Y']):
+            if not self._cnf.locked and char == kbkey['Y']:
                 self._cnf.confirm_playlist_reload = False
             self.reloadCurrentPlaylist(self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE)
             self.ws.close_window()
@@ -5905,17 +5906,19 @@ ____Using |fallback| theme.''')
             self.ws.close_window()
             self.refreshBody()
 
-    def _remove_station(self, char=121):
+    def _remove_station(self, char=None):
         ''' removes a station
             char=121 is ord('y')
         '''
+        if char is None:
+            char = kbkey['y']
         self._set_active_stations()
         deleted_station, self.number_of_items = self._cnf.remove_station(self.selection)
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Deleted station: "{}"'.format(deleted_station[0]))
         self.ws.close_window()
         self._align_stations_and_refresh(self.ws.REMOVE_STATION_MODE)
-        if not self._cnf.locked and char == ord('Y'):
+        if not self._cnf.locked and char == kbkey['Y']:
             self._cnf.confirm_station_deletion = False
         self._cnf.stations_history.remove_station(deleted_station[0])
 
@@ -6031,6 +6034,7 @@ ____Using |fallback| theme.''')
         return ''
 
     def keypress(self, char):
+        ''' main keypress function '''
         # # logger.error('\n\nparams\n{}\n\n'.format(self._cnf.params))
         # # logger.error('\n\nsaved params\n{}\n\n'.format(self._cnf.saved_params))
         # # logger.error('\n\nbackup params\n{}\n\n'.format(self._cnf.backup_player_params))
@@ -6054,8 +6058,8 @@ ____Using |fallback| theme.''')
             return -1
 
         if self._cnf.headless and char not in (
-            ord('O'),
-            ord('q'),
+            kbkey['open_online'],
+            kbkey['q']
         ):
             self._show_notification_with_delay(
                     txt='''________Operation not supported____
@@ -6075,7 +6079,7 @@ ____Using |fallback| theme.''')
 
         ''' if small exit '''
         if self._limited_height_mode or self._limited_width_mode:
-            if char == ord(' '):
+            if char == kbkey['pause']:
                 if self.player.isPlaying() and \
                         self.player.playback_is_on and \
                         self.player.recording and \
@@ -6087,10 +6091,9 @@ ____Using |fallback| theme.''')
 
             elif char in self._global_functions.keys():
                 self._global_functions[char]()
-            return
 
         if self.ws.operation_mode == self.ws.NO_THEMES_MODE:
-            if char == ord('x'):
+            if char == kbkey['no_show']:
                 self._cnf.show_no_themes_message = False
                 self._cnf.dirty_config = True
                 self._cnf.save_config()
@@ -6103,7 +6106,7 @@ ____Using |fallback| theme.''')
                 self._global_functions[char]()
             else:
                 self.ws.close_window()
-                if char in (ord('y'), ):
+                if char in (kbkey['y'], ):
                     return -1
                 else:
                     self._cnf.WIN_UNINSTALL = False
@@ -6159,7 +6162,7 @@ ____Using |fallback| theme.''')
         if self.ws.operation_mode == self.ws.WIN_PRINT_EXE_LOCATION_MODE:
             if char in self._global_functions.keys():
                 self._global_functions[char]()
-            elif char in (ord('q'), curses.KEY_EXIT, 27):
+            elif char in (kbkey['q'], curses.KEY_EXIT, 27):
                 self.ws.close_window()
                 curses.ungetch('q')
                 #self.refreshBody()
@@ -6195,7 +6198,7 @@ ____Using |fallback| theme.''')
             return -1
 
         elif (self.jumpnr or self._cnf.jump_tag > -1) and \
-                char in (curses.KEY_EXIT, ord('q'), 27) and \
+                char in (curses.KEY_EXIT, kbkey['q'], 27) and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
             ''' Reset jumpnr '''
             self._update_status_bar_right(status_suffix='')
@@ -6210,14 +6213,14 @@ ____Using |fallback| theme.''')
                 Open Register - char = '
 
             '''
-        elif not self._register_open_pressed and char == ord('\'') and \
+        elif not self._register_open_pressed and char == kbkey['open_regs'] and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
             ''' ' pressed - get into open register mode '''
             if self._cnf.browsing_station_service:
                 self._update_status_bar_right(reg_open_pressed=False, status_suffix='')
                 self._print_not_applicable()
                 return
-            self._update_status_bar_right(reg_open_pressed=True, status_suffix='\'')
+            self._update_status_bar_right(reg_open_pressed=True, status_suffix=chr(kbkey['open_regs']))
             self._do_display_notify()
             self.jumpnr = ''
             self._cnf.jump_tag = -1
@@ -6225,16 +6228,16 @@ ____Using |fallback| theme.''')
             return
         elif (self._register_open_pressed
                 and self.ws.operation_mode == self.ws.NORMAL_MODE):
-            if char == ord('?'):
+            if char == kbkey['?']:
                 self._open_message_win_by_key('H_REGISTERS')
                 return
             ''' get station to register - accept a-z, 0-9 and - '''
-            if char == ord('\''):
+            if char == kbkey['open_regs']:
                 self._set_active_stations()
                 self.saved_active_stations = self.active_stations[:]
                 logger.error('self.saved_active_stations = {}'.format(self.saved_active_stations))
-                self._status_suffix = "'"
-                self._update_status_bar_right(status_suffix="'")
+                self._status_suffix = chr(kbkey['open_regs'])
+                self._update_status_bar_right(status_suffix=chr(kbkey['open_regs']))
                 self._cnf.open_register_list = True
                 ''' set selections 0,1,2 to saved values '''
                 self.selections[self.ws.REGISTER_MODE][:-1] = self.playlist_selections[self.ws.REGISTER_MODE][:]
@@ -6256,11 +6259,11 @@ ____Using |fallback| theme.''')
 
                 Extra Commands - char = \
             '''
-        elif not self._backslash_pressed and char == ord('\\') and \
+        elif not self._backslash_pressed and char == kbkey['open_extra'] and \
                 self.ws.operation_mode in (self.ws.NORMAL_MODE,
                     self.ws.PLAYLIST_MODE):
             ''' \\ pressed '''
-            self._update_status_bar_right(backslash=True, status_suffix='\\')
+            self._update_status_bar_right(backslash=True, status_suffix=chr(kbkey['open_extra']))
             self._do_display_notify()
             self.jumpnr = ''
             self._cnf.jump_tag = -1
@@ -6270,13 +6273,13 @@ ____Using |fallback| theme.''')
                 self.ws.operation_mode in (self.ws.NORMAL_MODE,
                 self.ws.PLAYLIST_MODE):
 
-            if char == ord('o'):
+            if char == kbkey['open_dirs']:
                 ''' open dir window '''
                 self._backslash_pressed = False
                 self._update_status_bar_right(status_suffix='')
                 self._show_open_dir_window()
 
-            elif char == ord('m') and \
+            elif char == kbkey['change_player'] and \
                     self.ws.operation_mode == self.ws.NORMAL_MODE:
                 ''' change player  '''
                 self._update_status_bar_right(status_suffix='')
@@ -6292,7 +6295,7 @@ ____Using |fallback| theme.''')
                     )
                     self._change_player.show()
 
-            elif char == ord('s') and \
+            elif char == kbkey['open_remote_control'] and \
                     self.ws.operation_mode == self.ws.NORMAL_MODE:
                 ''' open remote control '''
                 self._update_status_bar_right(status_suffix='')
@@ -6304,7 +6307,7 @@ ____Using |fallback| theme.''')
                 else:
                     self._print_netifaces_not_installed_error()
 
-            elif char in (ord('h'), ):
+            elif char in (kbkey['html_help'], ):
                 ''' open html help '''
                 self._update_status_bar_right(status_suffix='')
                 html = HtmlHelp()
@@ -6313,7 +6316,7 @@ ____Using |fallback| theme.''')
                         browser=self._cnf.browsing_station_service
                         )
 
-            elif char == ord('r'):
+            elif char == kbkey['rename_playlist']:
                 ''' rename playlist '''
                 self._update_status_bar_right(status_suffix='')
                 if self._cnf.browsing_station_service:
@@ -6340,7 +6343,7 @@ ____Using |fallback| theme.''')
                     self._rename_playlist_dialog.show()
                     self.ws.operation_mode = self.ws.RENAME_PLAYLIST_MODE
 
-            elif char == ord('n'):
+            elif char == kbkey['new_playlist']:
                 ''' create new playlist '''
                 self._update_status_bar_right(status_suffix='')
                 if self._cnf.browsing_station_service:
@@ -6361,7 +6364,7 @@ ____Using |fallback| theme.''')
                     self._rename_playlist_dialog.show()
                     self.ws.operation_mode = self.ws.CREATE_PLAYLIST_MODE
 
-            elif char == ord('l'):
+            elif char == kbkey['last_playlist']:
                 self._update_status_bar_right(status_suffix='')
                 self._cnf.open_last_playlist = not self._cnf.open_last_playlist
                 self._show_notification_with_delay(
@@ -6371,7 +6374,7 @@ ____Using |fallback| theme.''')
                         mode_to_set=self.ws.operation_mode,
                         callback_function=self.refreshBody)
 
-            elif char == ord('p'):
+            elif char == kbkey['paste']:
                 ''' paste '''
                 self._update_status_bar_right(status_suffix='')
                 if self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -6396,16 +6399,16 @@ ____Using |fallback| theme.''')
                 else:
                     self._paste(playlist=self.stations[self.selection][-1])
 
-            elif char == ord('?'):
+            elif char == kbkey['?']:
                 self._open_message_win_by_key('H_EXTRA')
                 return
 
-            elif char == ord('u'):
+            elif char == kbkey['unnamed']:
                 self._update_status_bar_right(status_suffix='')
                 self._show_unnamed_register()
                 return
 
-            elif char == ord('\\'):
+            elif char == kbkey['open_extra']:
                 ''' \\ pressed - go back in history '''
                 if self._cnf.dirty_playlist:
                     if self._cnf.auto_save_playlist:
@@ -6419,7 +6422,7 @@ ____Using |fallback| theme.''')
                 else:
                     self._goto_history_back_handler()
 
-            elif char == ord(']'):
+            elif char == kbkey['hist_top']:
                 ''' ] pressed - go to first playlist in history '''
                 self._update_status_bar_right(status_suffix='')
                 if self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -6430,7 +6433,7 @@ ____Using |fallback| theme.''')
                     else:
                         self._show_no_more_playlist_history()
 
-            elif char == ord('c'):
+            elif char == kbkey['clear_reg']:
                 self._update_status_bar_right(status_suffix='')
                 if ((self._cnf.is_register and \
                      self.ws.operation_mode == self.ws.NORMAL_MODE) or \
@@ -6445,7 +6448,7 @@ ____Using |fallback| theme.''')
                                     mode_to_set=self.ws.NORMAL_MODE,
                                     callback_function=self.refreshBody)
 
-            elif char == ord('C'):
+            elif char == kbkey['clear_all_reg']:
                 self._update_status_bar_right(status_suffix='')
                 if (self.ws.operation_mode == self.ws.NORMAL_MODE or \
                         (self.ws.operation_mode == self.ws.PLAYLIST_MODE and \
@@ -6460,7 +6463,7 @@ ____Using |fallback| theme.''')
                                 mode_to_set=self.ws.NORMAL_MODE,
                                 callback_function=self.refreshBody)
 
-            elif char == ord('b'):
+            elif char == kbkey['buffer']:
                 self._update_status_bar_right(status_suffix='')
                 if self._cnf.buffering_data:
                     self._cnf.buffering_data = []
@@ -6488,7 +6491,7 @@ ____Using |fallback| theme.''')
                     logger.debug('buffering data = {}'.format(self._cnf.buffering_data))
                 return
 
-            elif char == ord('B'):
+            elif char == kbkey['open_buffer']:
                 self._update_status_bar_right(status_suffix='')
                 if self.ws.operation_mode == self.ws.NORMAL_MODE:
                     self._buffering_win = PyRadioBuffering(
@@ -6514,7 +6517,7 @@ ____Using |fallback| theme.''')
 
             '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-        elif not self._register_assign_pressed and char == ord('y') and \
+        elif not self._register_assign_pressed and char == kbkey['add_to_reg'] and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
             ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
@@ -6535,13 +6538,13 @@ ____Using |fallback| theme.''')
             #             mode_to_set=self.ws.NORMAL_MODE,
             #             callback_function=self.refreshBody)
             else:
-                self._update_status_bar_right(reg_y_pressed=True, status_suffix='y')
+                self._update_status_bar_right(reg_y_pressed=True, status_suffix=chr(kbkey['add_to_reg']))
                 self._do_display_notify()
             return
         elif (self._register_assign_pressed and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE):
             ''' get station to register - accept a-z, 0-9 and - '''
-            if char == ord('?'):
+            if char == kbkey['?']:
                 self._open_message_win_by_key('H_YANK')
                 return
             self._update_status_bar_right(status_suffix='')
@@ -6590,7 +6593,7 @@ ____Using |fallback| theme.''')
             self.ws.close_window()
             self.refreshBody()
             ret = -1
-            if char == ord('y'):
+            if char == kbkey['y']:
                 ret = self._need_to_update_stations_csv = self._cls_update_stations.update_stations_csv(print_messages=False)
                 if self._need_to_update_stations_csv == -6:
                     self._update_stations_error_count = 0
@@ -6613,7 +6616,7 @@ ____Using |fallback| theme.''')
                 if self._cnf.station_title == 'stations':
                     self.reloadCurrentPlaylist(self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE)
 
-            elif char == ord('n'):
+            elif char == kbkey['n']:
                 self._update_stations_error_count = 0
                 while True:
                     # logger.error('\n\ncalling self._cls_update_stations.write_synced_version\n\n')
@@ -6698,7 +6701,7 @@ ____Using |fallback| theme.''')
                 self._change_player = None
 
         elif self.ws.operation_mode == self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE:
-            if char == ord('s'):
+            if char == kbkey['s']:
                 self._stop_remote_control_server()
             self.ws.close_window()
             self.refreshBody()
@@ -6719,7 +6722,7 @@ ____Using |fallback| theme.''')
                 self.ws.close_window()
                 self.refreshBody()
 
-        elif char == ord('H') and self.ws.operation_mode in \
+        elif char == kbkey['screen_top'] and self.ws.operation_mode in \
                 (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
             self._reset_status_bar_right()
             if self.number_of_items > 0:
@@ -6728,7 +6731,7 @@ ____Using |fallback| theme.''')
             self._do_display_notify()
             return
 
-        elif char == ord('M') and self.ws.operation_mode in \
+        elif char == kbkey['screen_middle'] and self.ws.operation_mode in \
                 (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
             self._reset_status_bar_right()
             if self.number_of_items > 0:
@@ -6740,7 +6743,7 @@ ____Using |fallback| theme.''')
             self._do_display_notify()
             return
 
-        elif char == ord('L') and self.ws.operation_mode in \
+        elif char == kbkey['screen_bottom'] and self.ws.operation_mode in \
                 (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
             self._reset_status_bar_right()
             if self.number_of_items > 0:
@@ -6752,7 +6755,7 @@ ____Using |fallback| theme.''')
             self._do_display_notify()
             return
 
-        elif char in (ord('t'), ) and \
+        elif char in (kbkey['t'], ) and \
                 self.ws.operation_mode not in (self.ws.EDIT_STATION_MODE,
                     self.ws.ADD_STATION_MODE, self.ws.THEME_MODE,
                     self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE,) and \
@@ -6792,7 +6795,7 @@ ____Using |fallback| theme.''')
             self._show_theme_selector()
             return
 
-        elif char == ord('P') and self.ws.operation_mode in \
+        elif char == kbkey['goto_playing'] and self.ws.operation_mode in \
                 (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
             self._reset_status_bar_right()
             self._goto_playing_station()
@@ -6877,7 +6880,7 @@ ____Using |fallback| theme.''')
 
         elif self.ws.operation_mode == self.ws.CONFIG_MODE and \
                 char not in self._chars_to_bypass:
-            if char in (ord('r'), ord('d')):
+            if char in (kbkey['revert_saved'], kbkey['revert_def']):
                 self._player_select_win = None
                 self._encoding_select_win = None
                 self._playlist_select_win = None
@@ -7432,7 +7435,7 @@ ____Using |fallback| theme.''')
             return
 
         elif self.ws.operation_mode == self.ws.DELETE_PLAYLIST_MODE:
-            if char == ord('y'):
+            if char == kbkey['y']:
                 try:
                     remove(self.stations[self.selection][-1])
                 except:
@@ -7761,7 +7764,7 @@ ____Using |fallback| theme.''')
                 return
             if self.theme_forced_selection:
                 self._theme_selector.set_theme(self.theme_forced_selection)
-            if char in (ord('y'), ):
+            if char in (kbkey['y'], ):
                 pass
                 #ret = self._cnf.copy_playlist_to_config_dir()
                 #if ret == 0:
@@ -7784,7 +7787,7 @@ ____Using |fallback| theme.''')
                 char not in self._chars_to_bypass and \
                 char not in self._chars_to_bypass_for_search:
             ''' Return from station selection window for pasting '''
-            if char == ord('?'):
+            if char == kbkey['?']:
                 self._open_message_win_by_key('H_CONFIG_PLAYLIST')
             else:
                 ret, a_playlist = self._playlist_select_win.keypress(char)
@@ -7810,7 +7813,7 @@ ____Using |fallback| theme.''')
         elif self.ws.operation_mode == self.ws.THEME_MODE and (
                 char not in self._chars_to_bypass and \
                 char not in self._chars_to_bypass_for_search and \
-                char not in (ord('T'),)):
+                char not in (kbkey['transp'],)):
             theme_id, save_theme = self._theme_selector.keypress(char)
 
             #if self._cnf.theme_not_supported:
@@ -7894,9 +7897,9 @@ ____Using |fallback| theme.''')
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG_TO_EXIT:
             if char in self._global_functions.keys():
                 self._global_functions[char]()
-            elif char in (ord('y'), ord('n')):
+            elif char in (kbkey['y'], kbkey['n']):
                 self.ws.close_window()
-                if char == ord('y'):
+                if char == kbkey['y']:
                     ret = self._cnf._online_browser.save_config()
                     if ret == -2:
                         ''' save ok  '''
@@ -7912,7 +7915,7 @@ ____Using |fallback| theme.''')
                         ''' not modified '''
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('Online browser config not saved (not modifed)')
-                elif char == ord('n'):
+                elif char == kbkey['n']:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Saving Online browser config canceled!!!')
                 self._open_playlist_from_history()
@@ -7922,9 +7925,9 @@ ____Using |fallback| theme.''')
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_CONFIG:
             if char in self._global_functions.keys():
                 self._global_functions[char]()
-            elif char in (ord('y'), ord('n')):
+            elif char in (kbkey['y'], kbkey['n']):
                 self.ws.close_window()
-                if char == ord('y'):
+                if char == kbkey['y']:
                     ret = self._browser_config_win.save_config()
                     if ret == -2:
                         ''' save ok  '''
@@ -7940,7 +7943,7 @@ ____Using |fallback| theme.''')
                         ''' not modified '''
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('Online browser config not saved (not modifed)')
-                elif char == ord('n'):
+                elif char == kbkey['n']:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Saving Online browser config canceled!!!')
                     self._browser_config_win.reset_dirty_config()
@@ -7952,9 +7955,9 @@ ____Using |fallback| theme.''')
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_BROWSER:
             if char in self._global_functions.keys():
                 self._global_functions[char]()
-            elif char in (ord('y'), ord('n')):
+            elif char in (kbkey['y'], kbkey['n']):
                 self.ws.close_window()
-                if char == ord('y'):
+                if char == kbkey['y']:
                     ret = self._cnf._online_browser.save_config()
                     if ret == -2:
                         ''' save ok  '''
@@ -7971,7 +7974,7 @@ ____Using |fallback| theme.''')
                         ''' not modified '''
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('Online browser config not saved (not modifed)')
-                elif char == ord('n'):
+                elif char == kbkey['n']:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Saving Online browser config canceled!!!')
                     self._cnf._online_browser.reset_dirty_config()
@@ -7981,9 +7984,9 @@ ____Using |fallback| theme.''')
             return
 
         elif self.ws.operation_mode == self.ws.CLEAR_REGISTER_MODE:
-            if char in (ord('y'), ord('n')):
+            if char in (kbkey['y'], kbkey['n']):
                 self.ws.close_window()
-                if char == ord('y'):
+                if char == kbkey['y']:
                     self._clear_register_file()
                 self.refreshBody()
             return
@@ -7991,14 +7994,14 @@ ____Using |fallback| theme.''')
         elif self.ws.operation_mode == self.ws.CLEAR_ALL_REGISTERS_MODE:
             if char in self._global_functions.keys():
                 self._global_functions[char]()
-            elif char in (ord('y'), ord('n')):
+            elif char in (kbkey['y'], kbkey['n']):
                 self.ws.close_window()
-                if char == ord('y'):
+                if char == kbkey['y']:
                     self._clear_all_register_files()
                 self.refreshBody()
             return
 
-        elif char in (ord('/'), ) and self.ws.operation_mode in self._search_modes.keys():
+        elif char in (kbkey['search'], ) and self.ws.operation_mode in self._search_modes.keys():
             self._reset_status_bar_right()
             if self.maxY > 5:
                 self._give_me_a_search_class(self.ws.operation_mode)
@@ -8013,7 +8016,7 @@ ____Using |fallback| theme.''')
                 with self._update_notify_lock:
                     self._update_version = ''
                 self.ws.close_window()
-                if char == ord('y'):
+                if char == kbkey['y']:
                     self._print_update_ok_notification()
                 self.refreshBody()
             return
@@ -8035,9 +8038,9 @@ ____Using |fallback| theme.''')
             self.ctrl_c_handler(0, 0)
             return -1
 
-        # elif char in (ord('n'), ) and \
+        # elif char in (kbkey['n'], ) and \
         #         self.ws.operation_mode in self._search_modes.keys():
-        elif char in (ord('n'), ) and \
+        elif char in (kbkey['search_next'], ) and \
                 self.ws.operation_mode in self._search_modes.keys():
             self._give_me_a_search_class(self.ws.operation_mode)
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -8084,7 +8087,7 @@ ____Using |fallback| theme.''')
                 curses.ungetch('/')
             return
 
-        elif char in (ord('N'), ) and \
+        elif char in (kbkey['search_prev'], ) and \
                 self.ws.operation_mode in self._search_modes.keys():
             self._give_me_a_search_class(self.ws.operation_mode)
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -8207,7 +8210,7 @@ ____Using |fallback| theme.''')
                 self._open_message_win_by_key('H_GROUP')
             return
 
-        elif char in (ord('T'), ):
+        elif char in (kbkey['transp'], ):
             self._update_status_bar_right()
             self._toggle_transparency()
             return
@@ -8226,9 +8229,9 @@ ____Using |fallback| theme.''')
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE:
             if char in self._global_functions.keys():
                 self._global_functions[char]()
-            elif char in (ord('y'), ord('Y')):
+            elif char in (kbkey['y'], kbkey['Y']):
                 self.ws.close_window()
-                if not self._cnf.locked and char == ord('Y'):
+                if not self._cnf.locked and char == kbkey['Y']:
                     self._cnf.auto_save_playlist = True
                 ret = self.saveCurrentPlaylist()
                 #if ret == -1:
@@ -8241,7 +8244,7 @@ ____Using |fallback| theme.''')
                     self.stopPlayer()
                 self.ctrl_c_handler(0, 0)
                 return -1
-            elif char in (ord('n'), ):
+            elif char in (kbkey['n'], ):
                 ''' exit program '''
                 # ok
                 self.detect_if_player_exited = False
@@ -8250,7 +8253,7 @@ ____Using |fallback| theme.''')
                 self.ctrl_c_handler(0, 0, False)
                 self._wait_for_threads()
                 return -1
-            elif char in (curses.KEY_EXIT, ord('q'), 27):
+            elif char in (curses.KEY_EXIT, kbkey['q'], 27):
                 self.bodyWin.nodelay(True)
                 char = self.bodyWin.getch()
                 self.bodyWin.nodelay(False)
@@ -8269,8 +8272,8 @@ ____Using |fallback| theme.''')
                 self._global_functions[char]()
             else:
                 self.ws.close_window()
-                if char in (ord('y'), ord('Y')):
-                    if not self._cnf.locked and char == ord('Y'):
+                if char in (kbkey['y'], kbkey['Y']):
+                    if not self._cnf.locked and char == kbkey['Y']:
                         self._cnf.auto_save_playlist = True
                     ret = self.saveCurrentPlaylist()
                     if ret == 0:
@@ -8283,14 +8286,14 @@ ____Using |fallback| theme.''')
                     else:
                         if self._cnf.browsing_station_service:
                             self._cnf.removed_playlist_history_item()
-                elif char in (ord('n'), ):
+                elif char in (kbkey['n'], ):
                     if self.ws.operation_mode == self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE:
                         self._open_playlist()
                     else:
                         self._goto_history_back_handler()
                         if self._function_to_repeat:
                             self._function_to_repeat()
-                elif char in (curses.KEY_EXIT, ord('q'), 27):
+                elif char in (curses.KEY_EXIT, kbkey['q'], 27):
                     self.bodyWin.nodelay(True)
                     char = self.bodyWin.getch()
                     self.bodyWin.nodelay(False)
@@ -8306,12 +8309,12 @@ ____Using |fallback| theme.''')
         elif self.ws.operation_mode == self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:
             if char in self._global_functions.keys():
                 self._global_functions[char]()
-            elif char in (ord('y'), ord('Y')):
-                if not self._cnf.locked and char == ord('Y'):
+            elif char in (kbkey['y'], kbkey['Y']):
+                if not self._cnf.locked and char == kbkey['Y']:
                     self._cnf.confirm_playlist_reload = False
                 self.ws.close_window()
                 self.reloadCurrentPlaylist(self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE)
-            elif char in (ord('n'), ):
+            elif char in (kbkey['n'], ):
                 ''' close confirmation message '''
                 self.stations = self._cnf.stations
                 self.ws.close_window()
@@ -8334,7 +8337,7 @@ ____Using |fallback| theme.''')
             if char in self._global_functions.keys():
                 self._global_functions[char]()
                 return
-            if char in (ord('y'), ord('Y')):
+            if char in (kbkey['y'], kbkey['Y']):
                 self._remove_station(char)
             else:
                 if logger.isEnabledFor(logging.DEBUG):
@@ -8347,7 +8350,7 @@ ____Using |fallback| theme.''')
         elif self.ws.operation_mode == self.ws.FOREIGN_PLAYLIST_ASK_MODE:
             if char in self._global_functions.keys():
                 self._global_functions[char]()
-            elif char in (ord('y'), ):
+            elif char in (kbkey['y'], ):
                 ret = self._cnf.copy_playlist_to_config_dir()
                 if ret == 0:
                     ind = self._cnf.current_playlist_index()
@@ -8359,7 +8362,7 @@ ____Using |fallback| theme.''')
                 else:
                     ''' error '''
                     self._print_foreign_playlist_copy_error()
-            elif char in (ord('n'), ):
+            elif char in (kbkey['n'], ):
                 self.ws.close_window()
                 self.refreshBody()
                 if logger.isEnabledFor(logging.DEBUG):
@@ -8369,7 +8372,7 @@ ____Using |fallback| theme.''')
         elif self.ws.operation_mode == self.ws.STATION_INFO_MODE:
             self._update_status_bar_right()
             icy_data_name = self.player.icy_data('icy-name')
-            if char == ord('r') and self.stations[self.playing][0] != icy_data_name:
+            if char == kbkey['info_rename'] and self.stations[self.playing][0] != icy_data_name:
                 self._cnf.renamed_stations.append([
                     self.stations[self.playing][0],
                     icy_data_name
@@ -8450,7 +8453,7 @@ ____Using |fallback| theme.''')
             return
 
         elif self.ws.operation_mode == self.ws.RECORD_WINDOW_MODE:
-            if char == ord('x'):
+            if char == kbkey['no_show']:
                 self._cnf.show_recording_start_message = False
                 self._cnf.dirty_config = True
             self.ws.close_window()
@@ -8499,7 +8502,7 @@ ____Using |fallback| theme.''')
                 return
 
 
-            if char in (ord('?'), ):
+            if char in (kbkey['?'], ):
                 self._update_status_bar_right()
                 self._print_help()
                 return
@@ -8511,7 +8514,7 @@ ____Using |fallback| theme.''')
                     self.refreshBody()
                 return
 
-            if char in (ord('G'), ord('g')):
+            if char in (kbkey['g'], kbkey['G']):
                 self._jump_to_jumpnr(char)
                 self.refreshBody()
                 self._reset_status_bar_right()
@@ -8528,15 +8531,15 @@ ____Using |fallback| theme.''')
                 if char not in (curses.ascii.EOT, curses.ascii.NAK, 4, 21):
                     self._update_status_bar_right()
 
-            if char in (ord('g'), curses.KEY_HOME):
+            if char in (kbkey['g'], curses.KEY_HOME):
                 self._update_status_bar_right()
                 self.setStation(0)
                 self.refreshBody()
                 return
 
-            if char in (curses.KEY_EXIT, ord('q'), 27) or \
+            if char in (curses.KEY_EXIT, kbkey['q'], 27) or \
                     (self.ws.operation_mode == self.ws.PLAYLIST_MODE and \
-                    char in (ord('h'), curses.KEY_LEFT)):
+                    char in (kbkey['h'], curses.KEY_LEFT)):
                 ''' exit program or playlist mode '''
                 self.bodyWin.nodelay(True)
                 char = self.bodyWin.getch()
@@ -8603,11 +8606,11 @@ ____Using |fallback| theme.''')
                 else:
                     return
 
-            if char in (curses.KEY_DOWN, ord('j')):
+            if char in (curses.KEY_DOWN, kbkey['j']):
                 self._move_cursor_one_down()
                 return
 
-            if char in (curses.KEY_UP, ord('k')):
+            if char in (curses.KEY_UP, kbkey['k']):
                 self._move_cursor_one_up()
                 return
 
@@ -8620,7 +8623,10 @@ ____Using |fallback| theme.''')
                 return
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
-                if char == ord('*'):
+                if char in self._local_functions.keys():
+                    self._local_functions[char]()
+                    return
+                if char == kbkey['fav']:
                     if self._cnf.station_path == self._cnf.favorites_path:
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('Favorites: Cannot add to myself :)')
@@ -8637,16 +8643,16 @@ ____Using |fallback| theme.''')
                             if logger.isEnabledFor(logging.DEBUG):
                                 logger.debug('Favorites: Nothing to add')
 
-                elif char == ord('|'):
+                elif char == kbkey['rec']:
                     self._toggle_recording()
 
-                elif char == curses.ascii.BEL:
+                elif char == kbkey['gr']:
                     ''' ^G - show groups '''
                     self._reset_status_bar_right()
                     self._group_selection_window = None
                     self._show_group_selection()
 
-                elif char in (curses.ascii.EM, curses.ascii.ENQ):
+                elif char in (kbkey['gr_next'], kbkey['gr_prev']):
                     if self._cnf._online_browser is None:
                         # logger.error('^E ^Y')
                         d = [x for x, y in enumerate(self.stations) if y[1] == '-' ]
@@ -8663,7 +8669,7 @@ ____Using |fallback| theme.''')
                                     ind = -1
                                 else:
                                     ind = d.index(self.selection)
-                                    if char == curses.ascii.EM:
+                                    if char == kbkey['gr_prev']:
                                         ind -= 1
                                         if ind < 0:
                                             ind = len(d) - 1
@@ -8679,7 +8685,7 @@ ____Using |fallback| theme.''')
                                     ind = d[0]
                                     # logger.error('x1 ind = {}'.format(ind))
                                 else:
-                                    if char == curses.ascii.EM:
+                                    if char == kbkey['gr_prev']:
                                         try:
                                             ind = [n for n in d if n < self.selection][-1]
                                             # logger.error('x2 ind = {}'.format(ind))
@@ -8732,7 +8738,7 @@ ____Using |fallback| theme.''')
                     ''' delete old installation files on Windows '''
                     self._show_win_remove_old_installation()
 
-                elif char in (ord('a'), ord('A')):
+                elif char in (kbkey['add'], kbkey['append']):
                     self._reset_status_bar_right()
                     if not self._cnf.browsing_station_service:
                         self._station_editor = PyRadioEditor(
@@ -8741,20 +8747,20 @@ ____Using |fallback| theme.''')
                             self.outerBodyWin,
                             self._cnf.default_encoding,
                             global_functions=self._global_functions)
-                        if char == ord('A'):
+                        if char == kbkey['append']:
                             self._station_editor.append = True
                         self._station_editor.show()
                         self._station_editor.item = ['', '', '']
                         self.ws.operation_mode = self.ws.ADD_STATION_MODE
 
-                elif char == ord('p'):
+                elif char == kbkey['paste']:
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
                         self._print_not_applicable()
                     else:
                         self._paste()
 
-                elif char == ord('V'):
+                elif char == kbkey['rb_vote']:
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
                         self._open_simple_message_by_key('M_RB_VOTE')
@@ -8763,30 +8769,30 @@ ____Using |fallback| theme.''')
                         else:
                             self._cnf._online_browser.vote(self.selection)
 
-                elif char == ord('I'):
+                elif char == kbkey['rb_info']:
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
                         self._browser_station_info()
                     else:
                         self._normal_station_info()
 
-                elif char == ord('C'):
+                elif char == kbkey['rb_server']:
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
                         self.ws.operation_mode = self.ws.BROWSER_SERVER_SELECTION_MODE
                         self._browser_server_selection()
 
-                elif char == ord('S'):
+                elif char == kbkey['rb_sort']:
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
                         self.ws.operation_mode = self.ws.BROWSER_SORT_MODE
                         self._browser_sort()
 
-                elif char == ord('i'):
+                elif char == kbkey['info']:
                     self._reset_status_bar_right()
                     self._normal_station_info()
 
-                elif char == ord('e'):
+                elif char == kbkey['edit']:
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service: return
                     if python_version[0] == '2':
@@ -8803,7 +8809,7 @@ ____Using |fallback| theme.''')
                     self._station_editor.show(self.stations[self.selection])
                     self.ws.operation_mode = self.ws.EDIT_STATION_MODE
 
-                elif char == ord('c'):
+                elif char == kbkey['open_config']:
                     ''' open config '''
                     if self._cnf.browsing_station_service:
                         self.ws.operation_mode = self.ws.RADIO_BROWSER_CONFIG_MODE
@@ -8828,7 +8834,7 @@ ____Using |fallback| theme.''')
                         self._show_config_window()
                     return
 
-                elif char in (ord('E'), ):
+                elif char in (kbkey['open_enc'], ):
                     self._reset_status_bar_right()
                     self._old_station_encoding = self.stations[self.selection][2]
                     if self._old_station_encoding == '':
@@ -8847,7 +8853,7 @@ ____Using |fallback| theme.''')
                     self._encoding_select_win.refresh_win()
                     self._encoding_select_win.setEncoding(self._old_station_encoding)
 
-                elif char == ord('O'):
+                elif char == kbkey['open_online']:
                     ''' Open Online services
                         Currently only BrowserInfoBrowser is available
                         so go ahead and open this one.
@@ -8857,7 +8863,7 @@ ____Using |fallback| theme.''')
                     self._open_radio_browser()
                     return
 
-                elif char in (ord('o'), ):
+                elif char == kbkey['open_playlist']:
                     self._update_status_bar_right(status_suffix='')
                     self._reset_status_bar_right()
                     self._set_rename_stations()
@@ -8868,9 +8874,8 @@ ____Using |fallback| theme.''')
                     self._do_display_notify()
                     return
 
-                elif char in (curses.KEY_ENTER,
-                              ord('\n'), ord('\r'),
-                              curses.KEY_RIGHT, ord('l')):
+                elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
+                              curses.KEY_RIGHT, kbkey['l']):
                     if self.player.isPlaying() and \
                             self.player.playback_is_on:
                         self._stop_player()
@@ -8878,11 +8883,11 @@ ____Using |fallback| theme.''')
                     self._do_display_notify()
                     return
 
-                elif char in (curses.KEY_LEFT, ord('h')):
+                elif char in (curses.KEY_LEFT, kbkey['h']):
                     self._stop_player()
                     return
 
-                elif char in (ord(' '), ):
+                elif char in (kbkey['pause'], ):
                     if self.player.isPlaying() and \
                             self.player.playback_is_on and \
                             self.player.recording and \
@@ -8892,7 +8897,7 @@ ____Using |fallback| theme.''')
                         self._stop_player()
                     return
 
-                elif char in (ord('x'), curses.KEY_DC):
+                elif char in (kbkey['del'], curses.KEY_DC):
                     # TODO: make it impossible when session locked?
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
@@ -8913,7 +8918,7 @@ ____Using |fallback| theme.''')
                                 self._ask_to_remove_station()
                     return
 
-                elif char in(ord('s'), ):
+                elif char in (kbkey['s'], ):
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
                         # self._print_not_implemented_yet()
@@ -8933,13 +8938,13 @@ ____Using |fallback| theme.''')
                                     callback_function=self.refreshBody)
                     return
 
-                elif char in (ord('r'), ):
+                elif char in (kbkey['random'], ):
                     self._reset_status_bar_right(random_request=True)
                     ''' Pick a random radio station '''
                     self.play_random()
                     return
 
-                elif char in (ord('R'), ):
+                elif char in (kbkey['reload'], ):
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
                         return
@@ -8958,7 +8963,7 @@ ____Using |fallback| theme.''')
                             self._reload_playlist_after_confirmation(char)
                     return
 
-                elif char in (ord('z'), ):
+                elif char in (kbkey['https'], ):
                     ''' change force http '''
                     self._reset_status_bar_right()
                     self.ws.operation_mode = self.ws.CONNECTION_MODE
@@ -8970,7 +8975,7 @@ ____Using |fallback| theme.''')
                     self._connection_type_edit.show()
                     return
 
-                elif char in (ord('Z'), ):
+                elif char in (kbkey['extra_p_pamars'], ):
                     self._random_requested = False
                     self.jumpnr = ''
                     self._reset_status_bar_right()
@@ -8983,15 +8988,15 @@ ____Using |fallback| theme.''')
                     self._player_select_win.show()
                     return
 
-                elif char == ord('J'):
+                elif char == kbkey['jump']:
                     self._random_requested = False
                     self.jumpnr = ''
                     ''' tag for jump '''
                     self._cnf.jump_tag = self.selection
-                    self._update_status_bar_right(status_suffix=str(self._cnf.jump_tag + 1) + 'J')
+                    self._update_status_bar_right(status_suffix=str(self._cnf.jump_tag + 1) + str(kbkey['jump']))
                     return
 
-                elif char in (curses.ascii.NAK, 21):
+                elif char in (kbkey['st_up'], 21):
                     ''' ^U, move station Up '''
                     self._random_requested = False
                     if self.jumpnr:
@@ -9000,7 +9005,7 @@ ____Using |fallback| theme.''')
                     self._reset_status_bar_right()
                     return
 
-                elif char in (curses.ascii.EOT, 4):
+                elif char in (kbkey['st_dn'], 4):
                     ''' ^D, move station Down '''
                     self._random_requested = False
                     if self.jumpnr:
@@ -9013,10 +9018,10 @@ ____Using |fallback| theme.''')
                 self._random_requested = False
 
                 # logger.error('DE pl 1 active_stations = \n\n{}\n\n'.format(self.active_stations))
-                if char == ord(' '):
+                if char == kbkey['pause']:
                     self.stopPlayer()
 
-                elif char in (ord('x'), curses.KEY_DC):
+                elif char in (kbkey['del'], curses.KEY_DC):
                     if self._cnf.locked:
                         txt='___Cannot delete playlist!!!___\n______Session is locked'
                         self._show_notification_with_delay(
@@ -9039,7 +9044,7 @@ ____Using |fallback| theme.''')
                         self._ask_to_delete_playlist()
 
                 elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
-                            curses.KEY_RIGHT, ord('l')):
+                              curses.KEY_RIGHT, kbkey['l']):
                     self._update_status_bar_right(status_suffix='')
                     if self._cnf.open_register_list:
                         self.playlist_selections[self.ws.REGISTER_MODE] = [self.selection, self.startPos, self.playing]
@@ -9109,7 +9114,7 @@ ____Using |fallback| theme.''')
                     self._open_simple_message_by_key_and_mode('M_PLAYLIST_READ')
                     self._reload_playlists()
 
-                elif char in (ord('\''), ):
+                elif char in (kbkey['open_regs'], ):
                     ''' Toggle playlists / registers '''
                     if self._cnf.open_register_list:
                         ''' going back to playlists '''
@@ -9118,7 +9123,7 @@ ____Using |fallback| theme.''')
                         self.selections[self.ws.PLAYLIST_MODE][:-1] = self.playlist_selections[self.ws.PLAYLIST_MODE][:]
                         self.selections[self.ws.REGISTER_MODE][:-1] = self.playlist_selections[self.ws.REGISTER_MODE][:]
                         self._cnf.open_register_list = not self._cnf.open_register_list
-                        self._status_suffix = '\''
+                        self._status_suffix = chr(kbkey['open_regs'])
                         self._register_open_pressed = True
                         self._open_playlist()
                     else:
@@ -9128,7 +9133,7 @@ ____Using |fallback| theme.''')
                             ''' set selections 0,1,2 to saved values '''
                             self.selections[self.ws.PLAYLIST_MODE][:-1] = self.playlist_selections[self.ws.REGISTER_MODE][:]
                             self._cnf.open_register_list = not self._cnf.open_register_list
-                            self._status_suffix = '\''
+                            self._status_suffix = chr(kbkey['open_regs'])
                             self._register_open_pressed = True
                             self._open_playlist()
                         else:
@@ -9166,7 +9171,7 @@ ____Using |fallback| theme.''')
         self._random_requested = False
         if self.number_of_items > 0:
             if self.jumpnr == '':
-                if char == ord('G'):
+                if char == kbkey['G']:
                     self.setStation(-1)
                 else:
                     self.setStation(0)

@@ -17,6 +17,7 @@ from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalP
 from .client import PyRadioClient
 import logging
 import locale
+from .keyboard import kbkey
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
@@ -25,8 +26,8 @@ def set_global_functions(global_functions):
     ret = {}
     if global_functions is not None:
         ret = dict(global_functions)
-        if ord('t') in ret.keys():
-            del ret[ord('t')]
+        if kbkey['t'] in ret.keys():
+            del ret[kbkey['t']]
     return ret
 
 
@@ -126,24 +127,24 @@ class PyRadioConfigWindow(object):
         self._is_recording = recording_function
         self.parameters_editing_error = parameters_editing_error
         self._local_functions = {
-            ord('j'): self._go_down,
+            kbkey['j']: self._go_down,
             curses.KEY_DOWN: self._go_down,
-            ord('k'): self._go_up,
+            kbkey['k']: self._go_up,
             curses.KEY_UP: self._go_up,
             curses.KEY_PPAGE: self._go_pgup,
             curses.KEY_NPAGE: self._go_pgdown,
-            ord('g'): self._go_home,
+            kbkey['g']: self._go_home,
             curses.KEY_HOME: self._go_home,
-            ord('G'): self._go_end,
+            kbkey['G']: self._go_end,
             curses.KEY_END: self._go_end,
-            ord('d'): self._go_default,
-            ord('r'): self._go_saved,
+            kbkey['revert_def']: self._go_default,
+            kbkey['revert_saved']: self._go_saved,
             curses.KEY_EXIT: self._go_exit,
             27: self._go_exit,
-            ord('q'): self._go_exit,
-            ord('h'): self._go_exit,
+            kbkey['q']: self._go_exit,
+            kbkey['h']: self._go_exit,
             curses.KEY_LEFT: self._go_exit,
-            ord('s'): self._go_save,
+            kbkey['s']: self._go_save,
         }
 
         self._global_functions = set_global_functions(global_functions)
@@ -752,7 +753,7 @@ class PyRadioConfigWindow(object):
             ) and char in (
                 curses.KEY_LEFT,
                 curses.KEY_RIGHT,
-                ord('h'), ord('l'),
+                kbkey['h'], kbkey['l'],
             )):
                     ret = self._local_functions[char]()
                     if self._local_functions[char] == self._go_exit:
@@ -799,8 +800,8 @@ class PyRadioConfigWindow(object):
             return self.n_u.INSERT_RECORDINGS_DIR_MODE, []
 
         elif val[0] == 'radiobrowser':
-            if char in (curses.KEY_RIGHT, ord('l'),
-                        ord(' '), curses.KEY_ENTER, ord('\n')):
+            if char in (curses.KEY_RIGHT, kbkey['l'], kbkey['pause'],
+                        curses.KEY_ENTER, ord('\r'), ord('\n')):
                 return 3, []
 
         elif val[0] == 'remote_control_server_port':
@@ -809,7 +810,7 @@ class PyRadioConfigWindow(object):
                 return -1, []
 
         elif val[0] == 'enable_notifications':
-            if char in (curses.KEY_RIGHT, ord('l')):
+            if char in (curses.KEY_RIGHT, kbkey['l']):
                 t = int(val[1][1])
                 if t == -1:
                     t = 0
@@ -826,7 +827,7 @@ class PyRadioConfigWindow(object):
                 self._print_title()
                 self._win.refresh()
                 return -1, []
-            elif char in (curses.KEY_LEFT, ord('h')):
+            elif char in (curses.KEY_LEFT, kbkey['h']):
                 t = int(val[1][1])
                 if t == -1:
                     t = -1
@@ -843,7 +844,7 @@ class PyRadioConfigWindow(object):
                 return -1, []
 
         elif val[0] == 'calculated_color_factor':
-            if char in (curses.KEY_RIGHT, ord('l')):
+            if char in (curses.KEY_RIGHT, kbkey['l']):
                 if self._cnf.use_themes:
                     t = float(val[1][1])
                     if t < .2:
@@ -865,7 +866,7 @@ class PyRadioConfigWindow(object):
                     self._cnf._show_colors_cannot_change()
                 return -1, []
 
-            elif char in (curses.KEY_LEFT, ord('h')):
+            elif char in (curses.KEY_LEFT, kbkey['h']):
                 if self._cnf.use_themes:
                     t = float(val[1][1])
                     if t > 0:
@@ -888,7 +889,8 @@ class PyRadioConfigWindow(object):
                 return -1, []
 
         elif val[0] == 'remote_control_server_ip':
-            if char in (curses.KEY_RIGHT, ord('l'), ord(' '), ord('\n'), curses.KEY_ENTER):
+            if char in (ord('\n'), ord('\r'), curses.KEY_ENTER,
+                        curses.KEY_RIGHT, kbkey['l'], kbkey['pause']):
                 self._config_options[val[0]][1] = self.nip.next()
                 disp = self._config_options[val[0]][1].ljust(15)
                 # if self._config_options[val[0]][1] == 'localhost':
@@ -904,7 +906,7 @@ class PyRadioConfigWindow(object):
                 self._print_title()
                 self._win.refresh()
                 return -1, []
-            elif char in (curses.KEY_LEFT, ord('h')):
+            elif char in (curses.KEY_LEFT, kbkey['h']):
                 if self._config_options[val[0]][1] == 'localhost':
                     self._config_options[val[0]][1] = 'LAN'
                     disp = 'LAN      '
@@ -921,7 +923,7 @@ class PyRadioConfigWindow(object):
 
         elif val[0] == 'console_theme':
             if char in (
-                    curses.KEY_RIGHT, ord('l'), ord(' ')
+                    curses.KEY_RIGHT, kbkey['l'], kbkey['pause']
                         ):
                 if self._config_options['console_theme'][1] == 'dark':
                     self._config_options['console_theme'][1] = 'light'
@@ -931,7 +933,7 @@ class PyRadioConfigWindow(object):
             return -1, []
 
         elif val[0] == 'connection_timeout':
-            if char in (curses.KEY_RIGHT, ord('l')):
+            if char in (curses.KEY_RIGHT, kbkey['l']):
                 t = int(val[1][1])
                 if t == 0:
                     t = 4
@@ -945,7 +947,7 @@ class PyRadioConfigWindow(object):
                     self._win.refresh()
                 return -1, []
 
-            elif char in (curses.KEY_LEFT, ord('h')):
+            elif char in (curses.KEY_LEFT, kbkey['h']):
                 t = int(val[1][1])
                 if t > 5:
                     t -= 1
@@ -959,9 +961,8 @@ class PyRadioConfigWindow(object):
                 self._win.refresh()
                 return -1, []
 
-        if char in (
-                curses.KEY_ENTER, ord('\n'),
-                ord('\r'), ord(' '), ord('l'), curses.KEY_RIGHT):
+        if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
+                    kbkey['pause'], kbkey['l'], curses.KEY_RIGHT):
             ''' alter option value '''
             vals = list(self._config_options.items())
             sel = vals[self.selection][0]
@@ -1328,13 +1329,13 @@ class ExtraParametersEditor(object):
                 2: Display line editor help
         '''
         ret = 1
-        if char == ord('?') and self._focus > 0:
+        if char == kbkey['?'] and self._focus > 0:
             return 2
-        elif char in (curses.KEY_EXIT, 27, ord('q')) and \
+        elif char in (curses.KEY_EXIT, 27, kbkey['q']) and \
                 self._focus > 0:
             self.edit_string = ''
             ret = 0
-        elif char in (ord('\t'), 9, curses.KEY_DOWN):
+        elif char in (ord('\t'), 9, curses.KEY_DOWN, kbkey['tab']):
             self._focus_next()
         elif char == curses.KEY_UP:
             self._focus_previous()
@@ -1350,7 +1351,7 @@ class ExtraParametersEditor(object):
                 ''' cancel '''
                 self.edit_string = ''
                 ret = 0
-        elif char == ord('s') and self._focus > 0:
+        elif char == kbkey['s'] and self._focus > 0:
             ''' s, execute '''
             if self._widgets[1].enabled:
                 self.edit_string = self._line_editor.string.strip()
@@ -1977,10 +1978,8 @@ class ExtraParameters(object):
         if char in self._global_functions.keys():
             self._global_functions[char]()
             return -1
-        elif char in (
-            curses.KEY_ENTER, ord('\n'),
-            ord('\r'), ord(' '), ord('l'),
-                curses.KEY_RIGHT, ord('s')):
+        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
+                      kbkey['pause'], kbkey['l'], curses.KEY_RIGHT, kbkey['s']):
             ''' activate selection '''
             self._list.keypress(char)
             # logger.error('DE active ={}, selection={}'.format(self.active, self.selection))
@@ -1995,8 +1994,8 @@ class ExtraParameters(object):
 
         elif char in (
             curses.KEY_EXIT, 27,
-            ord('q'), curses.KEY_LEFT,
-            ord('h')
+            kbkey['q'], curses.KEY_LEFT,
+            kbkey['h']
         ):
             self._win.nodelay(True)
             char = self._win.getch()
@@ -2006,7 +2005,7 @@ class ExtraParameters(object):
                 self.reset()
                 return -2
 
-        elif char == ord('?'):
+        elif char == kbkey['?']:
             ''' display help '''
             return 1
         ret = self._list.keypress(char)
@@ -2236,14 +2235,14 @@ class PyRadioSelectPlayer(object):
             ''' focus on players '''
             if char in self._global_functions.keys():
                 self._global_functions[char]()
-            elif char in (9, ):
+            elif char in (9, kbkey['tab'] ):
                 if self.from_config  and self._players[self.selection][1]:
                     self._switch_column()
 
             elif char in (
                 curses.KEY_EXIT, 27,
-                ord('q'), curses.KEY_LEFT,
-                ord('h')
+                kbkey['q'], curses.KEY_LEFT,
+                kbkey['h']
             ):
                 self._win.nodelay(True)
                 char = self._win.getch()
@@ -2252,10 +2251,10 @@ class PyRadioSelectPlayer(object):
                     ''' ESCAPE '''
                     return 1
 
-            elif char == ord('r'):
+            elif char == kbkey['revert_saved']:
                 self.reset()
 
-            elif char == ord('s'):
+            elif char == kbkey['s']:
                 working_players = []
                 for a_player in self._players:
                     if a_player[1]:
@@ -2270,10 +2269,8 @@ class PyRadioSelectPlayer(object):
 
             if self.focus:
                 ''' focus on players '''
-                if char in (
-                    curses.KEY_ENTER, ord('\n'), ord('\r'),
-                    ord(' '), ord('l'), curses.KEY_RIGHT
-                ):
+                if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
+                            kbkey['pause'], kbkey['l'], curses.KEY_RIGHT):
                     self._players[self.selection][1] = not self._players[self.selection][1]
                     self.refresh_selection()
 
@@ -2300,14 +2297,14 @@ class PyRadioSelectPlayer(object):
                         self._players.insert(self.selection, x)
                     self.refresh_selection()
 
-                elif char in (curses.KEY_UP, ord('k')):
+                elif char in (curses.KEY_UP, kbkey['k']):
                     self.selection -= 1
                     if self.selection < 0:
                         self.selection = len(self._players) - 1
                     self.refresh_selection()
                     self._extra.set_player(self.selected_player_name(), True)
 
-                elif char in (curses.KEY_DOWN, ord('j')):
+                elif char in (curses.KEY_DOWN, kbkey['j']):
                     self.selection += 1
                     if self.selection == len(self._players):
                         self.selection = 0
@@ -2645,29 +2642,29 @@ class PyRadioSelectEncodings(object):
         if char in self._global_functions.keys():
             self._global_functions[char]()
 
-        elif char in (ord('c'), ):
+        elif char in (kbkey['revert_def'], ):
             self.encoding = self._config_encoding
             self.setEncoding(self.encoding, init=True)
 
-        elif char in (ord('r'), ):
+        elif char in (kbkey['revert_saved'], ):
             self.encoding = self._orig_encoding
             self.setEncoding(self.encoding, init=True)
 
-        elif char in (curses.KEY_UP, ord('k')):
+        elif char in (curses.KEY_UP, kbkey['k']):
             self.selection -= 1
             if self.selection < 0:
                 self.selection = len(self._encodings) - 1
             self._fix_startPos(-1)
             self.refresh_selection()
 
-        elif char in (curses.KEY_DOWN, ord('j')):
+        elif char in (curses.KEY_DOWN, kbkey['j']):
             self.selection += 1
             if self.selection == len(self._encodings):
                 self.selection = 0
             self._fix_startPos(1)
             self.refresh_selection()
 
-        elif char in (curses.KEY_RIGHT, ord('l')):
+        elif char in (curses.KEY_RIGHT, kbkey['l']):
             self._column, self._row = self._selection_to_col_row(self.selection)
             self._column += 1
             if self._column == self._num_of_columns:
@@ -2684,7 +2681,7 @@ class PyRadioSelectEncodings(object):
             self._fix_startPos(1)
             self.refresh_selection()
 
-        elif char in (curses.KEY_LEFT, ord('h')):
+        elif char in (curses.KEY_LEFT, kbkey['h']):
             self._column, self._row = self._selection_to_col_row(self.selection)
             self._column -= 1
             if self._column == -1:
@@ -2716,19 +2713,19 @@ class PyRadioSelectEncodings(object):
             self._fix_startPos(-5)
             self.refresh_selection()
 
-        elif char in (curses.KEY_HOME, ord('g')):
+        elif char in (curses.KEY_HOME, kbkey['g']):
             self.selection = 0
             self.startPos = 0
             self.refresh_selection()
 
-        elif char in (curses.KEY_END, ord('G')):
+        elif char in (curses.KEY_END, kbkey['G']):
             self.selection = len(self._encodings) - 1
             self.startPos = self._num_of_rows - self.list_maxY + 1
             self.refresh_selection()
 
         elif char in (curses.KEY_EXIT, 27,
-                      ord('q'), curses.KEY_LEFT,
-                      ord('h')):
+                      kbkey['q'], curses.KEY_LEFT,
+                      kbkey['h']):
             self._win.nodelay(True)
             char = self._win.getch()
             self._win.nodelay(False)
@@ -2736,8 +2733,8 @@ class PyRadioSelectEncodings(object):
                 ''' ESCAPE '''
                 return 1, ''
 
-        elif char in (curses.KEY_ENTER, ord('\n'),
-                      ord('\r'), ord(' '), ord('s')):
+        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
+                      kbkey['pause'], kbkey['s']):
             return 0, self._encodings[self.selection][0]
 
         return -1, ''
@@ -3053,16 +3050,16 @@ class PyRadioSelectPlaylist(object):
             self._select_playlist_error = -2
             self.refresh_selection()
 
-        elif char == ord('M'):
+        elif char == kbkey['screen_middle']:
             if self._num_of_items > 0:
                 self.setPlaylistById(int(self._num_of_items / 2) - 1)
                 #self._put_selection_in_the_middle(force=True)
                 self.refresh_selection()
 
-        elif char in (ord('r'), ):
+        elif char == kbkey['revert_saved']:
             self.setPlaylist(self._orig_playlist)
 
-        elif char in (curses.KEY_EXIT, 27, ord('q'), curses.KEY_LEFT, ord('h')):
+        elif char in (curses.KEY_EXIT, 27, kbkey['q'], curses.KEY_LEFT, kbkey['h']):
             self._win.nodelay(True)
             char = self._win.getch()
             self._win.nodelay(False)
@@ -3071,15 +3068,14 @@ class PyRadioSelectPlaylist(object):
                 self._select_playlist_error = -2
                 return 1, ''
 
-        elif char in (curses.KEY_ENTER, ord('\n'),
-                      ord('\r'), ord(' '), ord('l'),
-                      curses.KEY_RIGHT):
+        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
+                      kbkey['pause'], kbkey['l'], curses.KEY_RIGHT):
             if type(self) is PyRadioSelectStation:
                 if self._selected_playlist_id in self._groups_ids:
                     return -1, ''
             return self._get_result()
 
-        elif char in (curses.KEY_DOWN, ord('j')):
+        elif char in (curses.KEY_DOWN, kbkey['j']):
             self.jumpnr = ''
             if self._num_of_items > 0:
                 self.setPlaylistById(self._selected_playlist_id + 1,
@@ -3090,7 +3086,7 @@ class PyRadioSelectPlaylist(object):
                     self.startPos += 1
                 self.refresh_selection()
 
-        elif char in (curses.KEY_UP, ord('k')):
+        elif char in (curses.KEY_UP, kbkey['k']):
             self.jumpnr = ''
             if self._num_of_items > 0:
                 self.setPlaylistById(self._selected_playlist_id - 1,
@@ -3138,7 +3134,7 @@ class PyRadioSelectPlaylist(object):
                         self.startPos = self._num_of_items - self.maxY + 2
             self.refresh_selection()
 
-        elif char in (curses.KEY_HOME, ord('g')):
+        elif char in (curses.KEY_HOME, kbkey['g']):
             self.jumpnr = ''
             self._selected_playlist_id = 0
             self.startPos = 0
@@ -3150,7 +3146,7 @@ class PyRadioSelectPlaylist(object):
             self.startPos = self._num_of_items - self.maxY + 2
             self.refresh_selection()
 
-        elif char in (ord('G'), ):
+        elif char in (kbkey['G'], ):
             if self.jumpnr:
                 try:
                     if type(self) is PyRadioSelectStation:
@@ -3345,7 +3341,7 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
                                  )
 
     def keypress(self, char):
-        if char in (ord('r'), ):
+        if char == kbkey['revert_saved']:
             self.setStation(self._orig_playlist)
             return -1, ''
 

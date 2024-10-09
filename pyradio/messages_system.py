@@ -6,11 +6,17 @@ import logging
 from curses.ascii import ACK as KEY_ACK, STX as KEY_STX
 from sys import platform
 from .window_stack import Window_Stack_Constants
+from .keyboard import kbkey
 
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
 logger = logging.getLogger(__name__)
+
+def conv(msg):
+    for n in ('y', 'Y', 'n', 'N', 'q'):
+        msg = msg.replace('{' + n +  '}', chr(kbkey[n]))
+    return msg
 
 class PyRadioMessagesSystem(object):
 
@@ -143,7 +149,7 @@ J                                   |*| Create a |J|ump tag.
                                     |*| If a |jump tag| exists, move it there.
 !Group Management
 a A                                 |*|  Add a |Group| (sets |URL| to "|-|").
-^E |/ |^Y                           |*|  Go to next /previous |Group|.
+^E |/ |^Y                           |*|  Go to previous / next |Group|.
 ^G                                  |*|  Open the |Group Selection| window.
 
 !Player Customization
@@ -222,24 +228,24 @@ __(|^N| is the same as |n| when not in a line editor).
 '''),
 
 'D_STATION_DELETE_ASK': ('Station Deletion',
-r'''
+conv(r'''
 Are you sure you want to delete station:
 "|{}|"?
 
-Press "|y|" to confirm, "|Y|" to confirm and not
+Press "|{y}|" to confirm, "|{Y}|" to confirm and not
 be asked again, or any other key to cancel
 
-'''
+''')
 ),
 
 'D_STATION_DELETE_ASK_LOCKED': ('Station Deletion',
-r'''
+conv(r'''
 Are you sure you want to delete station:
 "|{}|"?
 
-Press "|y|" to confirm, or any other key to cancel
+Press "|{y}|" to confirm, or any other key to cancel
 
-'''
+''')
 ),
 
     'M_STATION_INFO_ERROR': ('Station Info Error',
@@ -288,79 +294,79 @@ ____Please wait...
 ),
 
     'D_PLAYLIST_RELOAD_CONFIRM': ('Playlist Reload',
-r'''
+conv(r'''
 This playlist has not been modified within
 PyRadio. Do you still want to reload it?
 
-Press "|y|" to confirm, "|Y|" to confirm and not
+Press "|{y}|" to confirm, "|{Y}|" to confirm and not
 be asked again, or any other key to cancel
 
-'''
+''')
 ),
 
     'D_PLAYLIST_RELOAD_CONFIRM_LOCKED': ('Playlist Reload',
-r'''
+conv(r'''
 This playlist has not been modified within
 PyRadio. Do you still want to reload it?
 
-Press "|y|" to confirm, or any other key to cancel
+Press "|{y}|" to confirm, or any other key to cancel
 
-'''
+''')
 ),
 
     'M_PLAYLIST_LOAD_ERROR': ('Error',
 ),
 
     'D_PLAYLIST_DIRTY_CONFIRM_LOCKED': ('Playlist Reload',
-r'''
+conv(r'''
 This playlist has been modified within PyRadio.
 If you reload it now, all modifications will be
 lost. Do you still want to reload it?
 
-Press "|y|" to confirm, or "|n|" to cancel
+Press "|{y}|" to confirm, or "|{n}|" to cancel
 
-'''
+''')
 ),
 
     'D_PLAYLIST_DIRTY_CONFIRM': ('Playlist Reload',
-r'''
+conv(r'''
 This playlist has been modified within PyRadio.
 If you reload it now, all modifications will be
 lost. Do you still want to reload it?
 
-Press "|y|" to confirm, "|Y|" to confirm and not be
-asked again, or "|n|" to cancel
+Press "|{y}|" to confirm, "|{Y}|" to confirm and not be
+asked again, or "|{n}|" to cancel
 
-'''
+''')
 ),
 
     'D_PLAYLIST_MODIFIED': ('Playlist Modified',
-r'''
+conv(r'''
 This playlist has been modified within
 PyRadio. Do you want to save it?
 
 If you choose not to save it now, all
 modifications will be lost.
 
-Press "|y|" to confirm, "|Y|" to confirm and not
-be asked again, "|n|" to reject, or "|q|" or
+Press "|{y}|" to confirm, "|{Y}|" to confirm and not
+be asked again, "|{n}|" to reject, or "|{q}|" or
 "|ESCAPE|" to cancel
 
-'''
+''')
 ),
 
     'D_PLAYLIST_MODIFIED_LOCKED': ('Playlist Modified',
-r'''
+conv(r'''
 This playlist has been modified within
 PyRadio. Do you want to save it?
 
 If you choose not to save it now, all
 modifications will be lost.
 
-Press "|y|" to confirm, "|n|" to reject,
-or "|q|" or "|ESCAPE|" to cancel
+Press "|{y}|" to confirm, "|{n}|" to reject,
+or "|{q}|" or "|ESCAPE|" to cancel
 
-'''
+''')
 ),
 
     'M_PLAYLIST_SAVE_ERR_1': ('Error'
@@ -432,15 +438,15 @@ Please save the playlist and try again.
 ),
 
         'D_PLAYLIST_DELETE_ASK': ('Playlist Deletion',
-r'''
+conv(r'''
 Are you sure you want to delete the playlist:
 "|{}|"?
 Please keep in mind that once it is deleted, there
 is no way to get it back.
 
-Press "|y|" to confirm, or any other key to cancel
+Press "|{y}|" to confirm, or any other key to cancel
 
-'''
+''')
 ),
 
         'M_PLAYLIST_DELETE_ERROR': ('Playlist Deletion Error',
@@ -473,7 +479,7 @@ Space                              |*| Apply theme and make it default.
 c                                  |*| Make theme default and watch it for
 |                                  |*| changes (|User Themes| only).
 T                                  |*| Toggle theme transparency.
-r                                  |*| Rescan disk for user themes.
+R                                  |*| Rescan disk for user themes.
 /| / |n| / |N                      |*| Search, go to next / previous result.
 Esc|, |q|, |Left|, |h              |*| Close window.
 %Global functions (with \ on Line editor)
@@ -484,14 +490,14 @@ W| / |w                            |*| Toggle title log / like a station.'''
 ),
 
     'D_THEME_CREATE_NEW_ASK': ('Read-only Theme',
-r'''
+conv(r'''
 You have requested to edit a |read-only| theme,
 which is not possible. Do you want to create a
 new theme instead?
 
-Press "|y|" to accept or any other key to cancel.
+Press "|{y}|" to accept or any other key to cancel.
 
-'''
+''')
 ),
 
         'H_GROUP': ('Group Selection Help',
@@ -509,13 +515,13 @@ W| / |w                             |*| Toggle title log / like a station.'''
 ),
 
     'D_GROUP_DELETE_ASK': ('Group Deletion',
-r'''
+conv(r'''
 Are you sure you want to delete this group header:
 "|{}|"?
 
-Press "|y|" to confirm, or any other key to cancel
+Press "|{y}|" to confirm, or any other key to cancel
 
-'''
+''')
 ),
 
     'H_YANK': ('Copy Mode Help',
@@ -537,27 +543,27 @@ Any other key exits current mode.
 ),
 
     'D_REGISTER_CLEAR': ('Clear register',
-r'''
+conv(r'''
 Are you sure you want to clear the contents
 of this register?
 
 This action is not recoverable!
 
-Press "|y|" to confirm, or "|n|" to cancel
+Press "|{y}|" to confirm, or "|{n}|" to cancel
 
-'''
+''')
 ),
 
     'D_REGISTERS_CLEAR_ALL': ('Clear All Registers',
-r'''
+conv(r'''
 Are you sure you want to clear the contents
 of all the registers?
 
 This action is not recoverable!
 
-Press "|y|" to confirm, or "|n|" to cancel
+Press "|{y}|" to confirm, or "|{n}|" to cancel
 
-'''
+''')
 ),
 
     'M_REGISTER_SAVE_ERROR': ('Error',
@@ -680,30 +686,30 @@ W| / |w                             |*| Toggle title log / like a station.'''
 ),
 
     'D_RB_ASK_TO_SAVE_CONFIG': ('Online Browser Config not Saved!',
-r'''
+conv(r'''
 |{}|'s configuration has been altered
 but not saved. Do you want to save it now?
 
-Press |y| to save it or |n| to disregard it.
-'''
+Press |{y}| to save it or |n| to disregard it.
+''')
 ),
 
     'D_RB_ASK_TO_SAVE_CONFIG_FROM_CONFIG': ('Online Browser Config not Saved!',
-r'''
+conv(r'''
 |{}|'s configuration has been altered
 but not saved. Do you want to save it now?
 
-Press |y| to save it or |n| to disregard it.
-'''
+Press |{y}| to save it or |n| to disregard it.
+''')
 ),
 
     'D_RB_ASK_TO_SAVE_CONFIG_TO_EXIT': ('Online Browser Config not Saved!',
-r'''
+conv(r'''
 |{}|'s configuration has been altered
 but not saved. Do you want to save it now?
 
-Press |y| to save it or |n| to disregard it.
-'''
+Press |{y}| to save it or |{n}| to disregard it.
+''')
 ),
 
     'M_RB_CONFIG_SAVE_ERROR': ('Config Saving Error',
@@ -798,18 +804,18 @@ ___Please provide a valid Station Icon URL.___
 ),
 
     'D_ASK_TO_UPDATE_STATIONS_CSV': ('Stations update',
-r'''
+conv(r'''
 |PyRadio| default stations (file "|stations.csv|") has been
 updated upstream.
 
 Do you want to update your "|stations.csv|" file with the
 upstream changes?
 
-Press |y| to update, |n| to decline and not be asked again
+Press |{y}| to update, |{n}| to decline and not be asked again
 for this version, or any other key to close this window
 and be asked next time you execute |PyRadio|.
 
-'''
+''')
 ),
 
     'M_UPDATE_STATIONS_RESULT': ('', ''),
@@ -884,7 +890,7 @@ r'''Arrows|, |h|, |j|, |k|,         |*|
 l|, |PgUp|, |,PgDn                  |*|
 g|, |Home|, |G|, |End               |*| Change encoding selection.
 Enter|, |Space|, |s                 |*| Save encoding.
-r c                                 |*| Revert to station / |c|onfig value.
+r d                                 |*| Revert to station / config value.
 Esc|, |q                            |*| Cancel.
 %Global functions
 -|/|+| or |,|/|.                    |*| Change volume.
@@ -1026,7 +1032,7 @@ r'''
 Text Address: |http://{0}
 _Web Address: |http://{0}/html____
 
-Press "|s|" to stop the server, or'''
+Press "|{s}|" to stop the server, or'''.replace('{s}', chr(kbkey['s']))
 ),
 
     'M_RC_START_ERROR': ('Server Error',
@@ -1062,14 +1068,14 @@ __|Remote Control Server| cannot be started!__
 ),
 
     'D_UPDATE_NOTIFICATION': ('',
-r'''
+conv(r'''
 A new |PyRadio| release (|{0}|) is available!
 
 You are strongly encouraged to update now, so that
 you enjoy new features and bug fixes.
 
-Press |y| to update or any other key to cancel.
-'''
+Press |{y}| to update or any other key to cancel.
+''')
 ),
 
     'M_UPDATE_NOTIFICATION_OK': ('Update Notification',
@@ -1106,7 +1112,7 @@ indicates that recording is |enabled|.
 A |[R]| indicates that a station is actually
 |being recorded| to a file.
 
-Press |x| to not show this message again, or'''
+Press |{x}| to not show this message again, or'''.replace('{x}', chr(kbkey['no_show']))
 ),
 
     'M_REC_DISABLED': ('Recording Disabled',
@@ -1230,13 +1236,13 @@ Players management |enabled|!
 ),
 
     'D_UNINSTALL_WIN': ('Uninstall PyRadio',
-r'''
+conv(r'''
 Are you sure you want to uninstall |PyRadio|?
 
-Please press |y| to confirm or any other key
+Please press |{y}| to confirm or any other key
 to decline.
 
-'''
+''')
 ),
 
     'M_REMOVE_OLD_INSTALLATION': ('PyRadio',
@@ -1308,7 +1314,7 @@ application and try to load it again
 ),
 
     'D_FOREIGN_ASK': ('Foreign playlist',
-r'''
+conv(r'''
 This is a "|foreign|" playlist (i.e. it does not
 reside in PyRadio's config directory). If you
 want to be able to easily load it again in the
@@ -1316,9 +1322,9 @@ future, it should be copied there.
 
 Do you want to copy it in the config directory?
 
-Press "|y|" to confirm or "|n|" to reject
+Press "|{y}|" to confirm or "|{n}|" to reject
 
-'''
+''')
 ),
 
     'M_NO_THEMES': ('Themes Disabled',
@@ -1331,8 +1337,8 @@ Therefore, using |themes is disabled| and the |default theme| is used.
 For more info, please refer to:
 |https://github.com/coderholic/pyradio/#virtual-terminal-restrictions
 
-Press "|x|" to never display this message in the future, or
-'''
+Press "|{x}|" to never display this message in the future, or
+'''.replace('{x}', chr(kbkey['no_show']))
 ),
 
     'M_REQUESTS_ERROR':('Module Error',
@@ -1899,17 +1905,17 @@ W| / |w                             |*|Toggle title log / like a station'''
 
     def keypress(self, char):
         if not self.too_small and self._can_scroll:
-            if char in (ord('g'), curses.KEY_HOME):
+            if char in (kbkey['g'], curses.KEY_HOME):
                 self._pad_pos = 0
                 self._pad_refresh()
-            elif char in (ord('G'), curses.KEY_END):
+            elif char in (kbkey['G'], curses.KEY_END):
                 self._pad_pos = self._lines_count - self._maxY + 3
                 self._pad_refresh()
-            elif char in (curses.KEY_DOWN, ord('j')):
+            elif char in (curses.KEY_DOWN, kbkey['j']):
                 if self._lines_count - self._maxY + 2 >= self._pad_pos:
                     self._pad_pos += 1
                     self._pad_refresh()
-            elif char in (curses.KEY_UP, ord('k')):
+            elif char in (curses.KEY_UP, kbkey['k']):
                 if self._pad_pos > 0:
                     self._pad_pos -= 1
                     self._pad_refresh()
@@ -1964,7 +1970,7 @@ def main(scr):
     running = True
     while running:
         ch = scr.getch()
-        if ch in (curses.KEY_RESIZE, ord('#')):
+        if ch in (curses.KEY_RESIZE, kbkey['resize']):
 
             height, width = scr.getmaxyx()
             window = curses.newwin(height-2, width, 1, 0)
