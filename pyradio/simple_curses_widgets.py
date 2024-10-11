@@ -269,8 +269,7 @@ class SimpleCursesWidget(object):
         pass
 
     def keypress(self, char):
-        '''Handle keyboard input
-
+        ''' SimpleCursesWidget keypress
             Returns
             =======
                 True
@@ -631,12 +630,11 @@ class SimpleCursesDate(SimpleCursesWidget):
         self._showed = True
 
     def keypress(self, char):
-        '''
-        SimpleCursesDate keypress
-        Returns:
-            -1: Cancel
-             0: Continue
-             1: Show help
+        ''' SimpleCursesDate keypress
+            Returns:
+                -1: Cancel
+                 0: Continue
+                 1: Show help
         '''
         # logger.error('char = {}'.format(char))
 
@@ -1015,12 +1013,11 @@ class SimpleCursesTime(SimpleCursesWidget):
         return ''
 
     def keypress(self, char):
-        '''
-        SimpleCursesTime keypress
-        Returns:
-            -1: Cancel
-             0: Continue
-             1: Show help
+        ''' SimpleCursesTime keypress
+            Returns:
+                -1: Cancel
+                 0: Continue
+                 1: Show help
         '''
         if char in self._global_functions.keys():
             self._global_functions[char]()
@@ -1311,7 +1308,6 @@ class SimpleCursesCounter(SimpleCursesWidget):
 
     def keypress(self, char):
         ''' SimpleCursesCounter keypress
-
             Returns
             -------
                -1 - Cancel
@@ -1671,7 +1667,6 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
 
     def keypress(self, char):
         ''' SimpleCursesWidgetColumns keypress
-
             Returns
             -------
                -1 - Cancel
@@ -1717,7 +1712,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
             self.show()
             return 2
 
-        elif char in (kbkey['g'], curses.KEY_END):
+        elif char in (kbkey['G'], curses.KEY_END):
             self.selection = len(self.items) - 1
             self.show()
             return 2
@@ -2744,7 +2739,6 @@ class SimpleCursesMenu(SimpleCursesWidget):
 
     def keypress(self, char):
         ''' SimpleCursesMenuEntries keypress
-
             Returns
             -------
                -1 - Cancel
@@ -2852,7 +2846,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._start_pos = 0
                 self._refresh()
 
-        elif char in (kbkey['g'], curses.KEY_END):
+        elif char in (kbkey['G'], curses.KEY_END):
             if len(self._items) == 0:
                 return 1
             self._selection = len(self._items) - 1
@@ -3173,6 +3167,7 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
         self._width = len(self._title) + 4
 
     def keypress(self, char):
+        ''' SimpleCursesCheckBox keypress '''
         if self._focused and \
                 self.enabled and \
                 char in (kbkey['pause'], curses.KEY_ENTER,
@@ -3313,6 +3308,7 @@ class SimpleCursesPushButton(SimpleCursesWidget):
             self._win.refresh()
 
     def keypress(self, char):
+        ''' SimpleCursesPushButton keypress '''
         if char in (kbkey['pause'], curses.KEY_ENTER,
                     ord('\n'), ord('\r')) and \
                 self._focused:
@@ -4280,12 +4276,12 @@ class SimpleCursesLineEdit(object):
                 and self._show_help_with_backslash_pressed))
 
     def keypress(self, win, char):
-        '''
-         returns:
-            2: display help
-            1: get next char
-            0: exit edit mode, string is valid
-           -1: cancel
+        ''' SimpleCursesLineEdit keypress
+            returns:
+               2: display help
+               1: get next char
+               0: exit edit mode, string is valid
+              -1: cancel
         '''
         #self._log_file='/home/spiros/edit.log'
         #self._log_file='C:\\Users\\spiros\\edit.log'
@@ -5020,7 +5016,6 @@ class SimpleCursesBoolean(SimpleCursesCounter):
 
     def keypress(self, char):
         ''' SimpleCursesBoolean keypress
-
             Returns
             -------
                -1 - Cancel

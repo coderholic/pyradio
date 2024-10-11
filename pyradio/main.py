@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import sys
 import curses
-import logging, logging.handlers
+import logging
+import logging.handlers
 import subprocess
 import argparse
 import shutil
@@ -1054,7 +1055,7 @@ def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True
             to CSV.\n
             Unfortunately, renaming this file has failed, so you have to
             manually address the issue.'''
-        print(txt.replace('TXT', '[red]TXT[/red]').replace('CSV', '[green]CSV[/green]').replace('PyRadio', '[magenta]PyRadio[/magenta]'))
+        print(msg.replace('TXT', '[red]TXT[/red]').replace('CSV', '[green]CSV[/green]').replace('PyRadio', '[magenta]PyRadio[/magenta]'))
         #open_conf_dir(cnf)
         sys.exit(1)
     elif ret == -8:

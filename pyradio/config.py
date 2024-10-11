@@ -683,6 +683,7 @@ class PyRadioStations(object):
             stationFile, ret = self._get_playlist_abspath_from_data(stationFile=stationFile)
             self._is_register = False
         read_file = True
+        prev_file = ''
         if ret < 0:
             ''' returns -2, -3, -4 or -8 '''
             self.last_playlist_to_open = []
@@ -2196,7 +2197,7 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['auto_update_theme'][1] = False
             elif sp[0] == 'console_theme':
                 tmp = sp[1].strip()
-                if not tmp in ('dark', 'light'):
+                if tmp not in ('dark', 'light'):
                     self.opts['console_theme'][1] = 'dark'
                 else:
                     self.opts['console_theme'][1] = tmp
@@ -2908,6 +2909,7 @@ class PyRadioConfig(PyRadioStations):
         '''
         procs = []
         out = []
+        ppid = None
         for proc in psutil.process_iter(['pid', 'ppid', 'name', 'username']):
             procs.append(proc)
             if proc.pid == pid:

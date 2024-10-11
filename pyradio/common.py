@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import io
 import csv
+import curses
 from sys import version as sys_version
 from os import rename, remove, access, X_OK
 from os.path import exists, dirname, join

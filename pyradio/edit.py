@@ -19,7 +19,7 @@ from .server import IPsWithNumbers
 from .cjkwrap import cjkslices
 from .xdg import CheckDir
 from .html_help import HtmlHelp
-from .keyboard import kbkey
+from .keyboard import kbkey, kb2str, kb2chr
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -125,8 +125,7 @@ class PyRadioOpenDir(SimpleCursesMenu):
     # self._group_selection_window.show(parent=self.bodyWin)
 
     def keypress(self, char):
-        ''' SimpleCursesMenuEntries keypress
-
+        ''' PyRadioOpenDir keypress
             Returns
             -------
                -1 - Cancel
@@ -486,18 +485,18 @@ class PyRadioEditor(object):
             except:
                 self._win.addstr(13, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(12))
             self._win.addstr(13, int((self.maxX - 6) / 2), ' Help ', curses.color_pair(4))
-            self._win.addstr(14, 5, 'TAB', curses.color_pair(4))
+            self._win.addstr(14, 5, 'Tab', curses.color_pair(4))
             self._win.addstr(', ', curses.color_pair(5))
             self._win.addstr('Down', curses.color_pair(4))
             self._win.addstr(' / ', curses.color_pair(5))
             self._win.addstr('Up', curses.color_pair(4))
             self._win.addstr('    Go to next / previous field.', curses.color_pair(5))
-            self._win.addstr(15, 5, 'ENTER', curses.color_pair(4))
+            self._win.addstr(15, 5, 'Enter', curses.color_pair(4))
             self._win.addstr('             When in Line Editor, go to next field.', curses.color_pair(5))
             self._win.addstr(16, 23, 'Otherwise, execute selected function.', curses.color_pair(5))
             step = 0
             if not self._adding:
-                self._win.addstr(17, 5, 'r', curses.color_pair(4))
+                self._win.addstr(17, 5, kb2chr('revert_saved'), curses.color_pair(4))
                 self._win.addstr(', ', curses.color_pair(5))
                 self._win.addstr('^R', curses.color_pair(4))
                 self._win.addstr(17, 23, 'Revert to saved values (', curses.color_pair(5))
@@ -507,12 +506,12 @@ class PyRadioEditor(object):
             self._win.addstr(17 + step, 5, 'Esc', curses.color_pair(4))
             self._win.addstr(17 + step, 23, 'Cancel operation.', curses.color_pair(5))
 
-            self._win.addstr(18 + step, 5, 's', curses.color_pair(4))
+            self._win.addstr(18 + step, 5, kb2chr('s'), curses.color_pair(4))
             self._win.addstr(' / ', curses.color_pair(5))
-            self._win.addstr('q', curses.color_pair(4))
+            self._win.addstr(kb2chr('q'), curses.color_pair(4))
             self._win.addstr(18 + step , 23, 'Save data / Cancel operation (not in Line Editor).', curses.color_pair(5))
 
-            self._win.addstr(19 + step, 5, '?', curses.color_pair(4))
+            self._win.addstr(19 + step, 5, kb2chr('?'), curses.color_pair(4))
             self._win.addstr(19 + step, 23, 'Line editor help (in Line Editor).', curses.color_pair(5))
 
         lim = 24 if self._adding else 26
@@ -523,28 +522,28 @@ class PyRadioEditor(object):
                 self._win.addstr(20 + step, 3, '─'.encode('utf-8') * (self.maxX - 10), curses.color_pair(12))
             self._win.addstr(20 + step, int((self.maxX - 42) / 2), r' Global Functions (with \ in Line Editor) ', curses.color_pair(4))
 
-            self._win.addstr(21 + step, 5, '-', curses.color_pair(4))
+            self._win.addstr(21 + step, 5, kb2chr('v_dn2'), curses.color_pair(4))
             self._win.addstr('/', curses.color_pair(5))
-            self._win.addstr('+', curses.color_pair(4))
+            self._win.addstr(kb2chr('v_up1'), curses.color_pair(4))
             self._win.addstr(' or ', curses.color_pair(5))
-            self._win.addstr(',', curses.color_pair(4))
+            self._win.addstr(kb2chr('v_dn1'), curses.color_pair(4))
             self._win.addstr('/', curses.color_pair(5))
-            self._win.addstr('.', curses.color_pair(4))
+            self._win.addstr(kb2chr('v_up2'), curses.color_pair(4))
             self._win.addstr(21 + step, 23, 'Change volume', curses.color_pair(5))
-            self._win.addstr(22 + step, 5, 'm', curses.color_pair(4))
+            self._win.addstr(22 + step, 5, kb2chr('mute'), curses.color_pair(4))
             self._win.addstr(' / ', curses.color_pair(5))
-            self._win.addstr('v', curses.color_pair(4))
+            self._win.addstr(kb2chr('s_vol'), curses.color_pair(4))
             self._win.addstr(22 + step, 23, 'M', curses.color_pair(4))
             self._win.addstr('ute player / Save ', curses.color_pair(5))
             self._win.addstr('v', curses.color_pair(4))
             self._win.addstr('olume (not in vlc).', curses.color_pair(5))
             if step + 21 < self.maxY:
-                self._win.addstr(23 + step, 5, 'W', curses.color_pair(4))
+                self._win.addstr(23 + step, 5, kb2chr('t_tag'), curses.color_pair(4))
                 self._win.addstr(' / ', curses.color_pair(5))
-                self._win.addstr('w', curses.color_pair(4))
+                self._win.addstr(kb2chr('tag'), curses.color_pair(4))
                 self._win.addstr(23 + step, 23, 'Toggle title log / like a station', curses.color_pair(5))
             if step + 22 < self.maxY:
-                self._win.addstr(24 + step, 5, 'T', curses.color_pair(4))
+                self._win.addstr(24 + step, 5, kb2chr('transp'), curses.color_pair(4))
                 self._win.addstr(24 + step, 23, 'Toggle transparency', curses.color_pair(5))
 
         if item:
@@ -723,7 +722,8 @@ class PyRadioEditor(object):
         return 1
 
     def keypress(self, char):
-        """ Returns:
+        """ PyRadioEditor keypress
+            Returns:
                 -5: icon format is invalid
                 -4: icon url is invalid
                 -3: url is invalid
@@ -1041,20 +1041,20 @@ class PyRadioRecordingDir(object):
             except:
                 self._win.addstr(10 + adjust_line_Y, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(12))
             self._win.addstr(10 + adjust_line_Y, int((self.maxX - 6) / 2), ' Help ', curses.color_pair(4))
-            self._win.addstr(11 + adjust_line_Y, 5, 'TAB', curses.color_pair(4))
+            self._win.addstr(11 + adjust_line_Y, 5, 'Tab', curses.color_pair(4))
             self._win.addstr(', ', curses.color_pair(5))
             self._win.addstr('Down', curses.color_pair(4))
             self._win.addstr(' / ', curses.color_pair(5))
             self._win.addstr('Up', curses.color_pair(4))
             self._win.addstr('    Go to next / previous field.', curses.color_pair(5))
-            self._win.addstr(12 + adjust_line_Y, 5, 'ENTER', curses.color_pair(4))
+            self._win.addstr(12 + adjust_line_Y, 5, 'Enter', curses.color_pair(4))
             self._win.addstr('             When in Line Editor, go to next field.', curses.color_pair(5))
             self._win.addstr(13 + adjust_line_Y, 23, 'Otherwise, execute selected function.', curses.color_pair(5))
 
 
-            self._win.addstr(14 + adjust_line_Y, 5, 'Space', curses.color_pair(4))
+            self._win.addstr(14 + adjust_line_Y, 5, kb2chr('pause'), curses.color_pair(4))
             self._win.addstr(', ', curses.color_pair(5))
-            self._win.addstr('l', curses.color_pair(4))
+            self._win.addstr(kb2chr('l'), curses.color_pair(4))
             self._win.addstr(', ', curses.color_pair(5))
             self._win.addstr('Left', curses.color_pair(4))
             self._win.addstr('    Toggle check box state.', curses.color_pair(5))
@@ -1066,13 +1066,13 @@ class PyRadioRecordingDir(object):
 
             self._win.addstr(16 + adjust_line_Y, 5, 's', curses.color_pair(4))
             self._win.addstr(' / ', curses.color_pair(5))
-            self._win.addstr('q', curses.color_pair(4))
+            self._win.addstr(kb2chr('q'), curses.color_pair(4))
             self._win.addstr(16 + adjust_line_Y, 23, 'Exeute / Cancel operation (not in Line Editor).', curses.color_pair(5))
 
-            self._win.addstr(17 + adjust_line_Y, 5, '?', curses.color_pair(4))
+            self._win.addstr(17 + adjust_line_Y, 5, kb2chr('?'), curses.color_pair(4))
             self._win.addstr(17 + adjust_line_Y, 23, 'Help or Line editor help.', curses.color_pair(5))
 
-            self._win.addstr(18 + adjust_line_Y, 5, 'h', curses.color_pair(4))
+            self._win.addstr(18 + adjust_line_Y, 5, kb2chr('html_help'), curses.color_pair(4))
             self._win.addstr(18 + adjust_line_Y, 23, 'Display HTML help (not in Line Editor).', curses.color_pair(5))
 
         if self.maxY > 22 + adjust_line_Y and self.maxX > 76:
@@ -1082,28 +1082,28 @@ class PyRadioRecordingDir(object):
                 self._win.addstr(19 + adjust_line_Y, 3, '─'.encode('utf-8') * (self.maxX - 10), curses.color_pair(12))
             self._win.addstr(19 + adjust_line_Y, int((self.maxX - 42) / 2), r' Global Functions (with \ in Line Editor) ', curses.color_pair(4))
 
-            self._win.addstr(20 + adjust_line_Y, 5, '-', curses.color_pair(4))
+            self._win.addstr(20 + adjust_line_Y, 5, kb2chr('v_dn2'), curses.color_pair(4))
             self._win.addstr('/', curses.color_pair(5))
-            self._win.addstr('+', curses.color_pair(4))
+            self._win.addstr(kb2chr('v_up1'), curses.color_pair(4))
             self._win.addstr(' or ', curses.color_pair(5))
-            self._win.addstr(',', curses.color_pair(4))
+            self._win.addstr(kb2chr('v_dn1'), curses.color_pair(4))
             self._win.addstr('/', curses.color_pair(5))
-            self._win.addstr('.', curses.color_pair(4))
+            self._win.addstr(kb2chr('v_up2'), curses.color_pair(4))
             self._win.addstr(20 + adjust_line_Y, 23, 'Change volume', curses.color_pair(5))
-            self._win.addstr(21 + adjust_line_Y, 5, 'm', curses.color_pair(4))
+            self._win.addstr(21 + adjust_line_Y, 5, kb2chr('mute'), curses.color_pair(4))
             self._win.addstr(' / ', curses.color_pair(5))
-            self._win.addstr('v', curses.color_pair(4))
+            self._win.addstr(kb2chr('s_vol'), curses.color_pair(4))
             self._win.addstr(21 + adjust_line_Y, 23, 'M', curses.color_pair(4))
             self._win.addstr('ute player / Save ', curses.color_pair(5))
             self._win.addstr('v', curses.color_pair(4))
             self._win.addstr('olume (not in vlc).', curses.color_pair(5))
             if adjust_line_Y + 23 < self.maxY:
-                self._win.addstr(22 + adjust_line_Y, 5, 'W', curses.color_pair(4))
+                self._win.addstr(22 + adjust_line_Y, 5, kb2chr('t_tag'), curses.color_pair(4))
                 self._win.addstr(' / ', curses.color_pair(5))
-                self._win.addstr('w', curses.color_pair(4))
+                self._win.addstr(kb2chr('tag'), curses.color_pair(4))
                 self._win.addstr(22 + adjust_line_Y, 23, 'Toggle title log / like a station.', curses.color_pair(5))
             if adjust_line_Y + 24 < self.maxY:
-                self._win.addstr(23 + adjust_line_Y, 5, 'T', curses.color_pair(4))
+                self._win.addstr(23 + adjust_line_Y, 5, kb2chr('transp'), curses.color_pair(4))
                 self._win.addstr(23 + adjust_line_Y, 23, 'Toggle transparency.', curses.color_pair(5))
 
         self._win.refresh()
@@ -1173,7 +1173,8 @@ class PyRadioRecordingDir(object):
         return 3, None, False
 
     def keypress(self, char):
-        """ Returns:
+        """ PyRadioRecordingDir keypress
+            Returns:
                 -1: Cancel                      (-1, None, False)
                  0: go on                       (0, None, False)
                  1: New location ok             (1, new_location, move_files)
@@ -1463,13 +1464,13 @@ class PyRadioResourceOpener(object):
             except:
                 self._win.addstr(10 + adjust_line_Y, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(12))
             self._win.addstr(10 + adjust_line_Y, int((self.maxX - 6) / 2), ' Help ', curses.color_pair(4))
-            self._win.addstr(11 + adjust_line_Y, 5, 'TAB', curses.color_pair(4))
+            self._win.addstr(11 + adjust_line_Y, 5, 'Tab', curses.color_pair(4))
             self._win.addstr(', ', curses.color_pair(5))
             self._win.addstr('Down', curses.color_pair(4))
             self._win.addstr(' / ', curses.color_pair(5))
             self._win.addstr('Up', curses.color_pair(4))
             self._win.addstr('    Go to next / previous field.', curses.color_pair(5))
-            self._win.addstr(12 + adjust_line_Y, 5, 'ENTER', curses.color_pair(4))
+            self._win.addstr(12 + adjust_line_Y, 5, 'Enter', curses.color_pair(4))
             self._win.addstr('             When in Line Editor, go to next field.', curses.color_pair(5))
             self._win.addstr(13 + adjust_line_Y, 23, 'Otherwise, execute selected function.', curses.color_pair(5))
 
@@ -1478,16 +1479,16 @@ class PyRadioResourceOpener(object):
             self._win.addstr(14 + adjust_line_Y, 23, 'Cancel operation.', curses.color_pair(5))
 
 
-            self._win.addstr(15 + adjust_line_Y, 5, 'd', curses.color_pair(4))
+            self._win.addstr(15 + adjust_line_Y, 5, kb2chr('revert_def'), curses.color_pair(4))
             self._win.addstr(15 + adjust_line_Y, 23, 'Revert to default (', curses.color_pair(5))
             self._win.addstr(r'\d', curses.color_pair(4))
             self._win.addstr(' in Line Editor).', curses.color_pair(5))
-            self._win.addstr(16 + adjust_line_Y, 5, 's', curses.color_pair(4))
+            self._win.addstr(16 + adjust_line_Y, 5, kb2chr('s'), curses.color_pair(4))
             self._win.addstr(' / ', curses.color_pair(5))
-            self._win.addstr('q', curses.color_pair(4))
+            self._win.addstr(kb2chr('q'), curses.color_pair(4))
             self._win.addstr(16 + adjust_line_Y, 23, 'Exeute / Cancel operation (not in Line Editor).', curses.color_pair(5))
 
-            self._win.addstr(17 + adjust_line_Y, 5, '?', curses.color_pair(4))
+            self._win.addstr(17 + adjust_line_Y, 5, kb2chr('?'), curses.color_pair(4))
             self._win.addstr(17 + adjust_line_Y, 23, 'Help or Line editor help.', curses.color_pair(5))
 
         adjust_line_Y -= 1
@@ -1498,17 +1499,17 @@ class PyRadioResourceOpener(object):
                 self._win.addstr(19 + adjust_line_Y, 3, '─'.encode('utf-8') * (self.maxX - 10), curses.color_pair(12))
             self._win.addstr(19 + adjust_line_Y, int((self.maxX - 42) / 2), r' Global Functions (with \ in Line Editor) ', curses.color_pair(4))
 
-            self._win.addstr(20 + adjust_line_Y, 5, '-', curses.color_pair(4))
+            self._win.addstr(20 + adjust_line_Y, 5, kb2chr('v_dn2'), curses.color_pair(4))
             self._win.addstr('/', curses.color_pair(5))
-            self._win.addstr('+', curses.color_pair(4))
+            self._win.addstr(kb2chr('v_up1'), curses.color_pair(4))
             self._win.addstr(' or ', curses.color_pair(5))
-            self._win.addstr(',', curses.color_pair(4))
+            self._win.addstr(kb2chr('v_dn1'), curses.color_pair(4))
             self._win.addstr('/', curses.color_pair(5))
-            self._win.addstr('.', curses.color_pair(4))
+            self._win.addstr(kb2chr('v_up2'), curses.color_pair(4))
             self._win.addstr(20 + adjust_line_Y, 23, 'Change volume', curses.color_pair(5))
-            self._win.addstr(21 + adjust_line_Y, 5, 'm', curses.color_pair(4))
+            self._win.addstr(21 + adjust_line_Y, 5, kb2chr('mute'), curses.color_pair(4))
             self._win.addstr(' / ', curses.color_pair(5))
-            self._win.addstr('v', curses.color_pair(4))
+            self._win.addstr(kb2chr('s_vol'), curses.color_pair(4))
             self._win.addstr(21 + adjust_line_Y, 23, 'M', curses.color_pair(4))
             self._win.addstr('ute player / Save ', curses.color_pair(5))
             self._win.addstr('v', curses.color_pair(4))
@@ -1600,7 +1601,8 @@ class PyRadioResourceOpener(object):
         return 0, None
 
     def keypress(self, char):
-        """ Returns:
+        """ PyRadioResourceOpener keypress
+            Returns:
                 -1: Cancel                            (-1, None)
                  0: go on                             (0, None)
                  1: New resource opener ok            (1, new_resource)
@@ -1953,20 +1955,20 @@ class PyRadioRenameFile(object):
             except:
                 self._win.addstr(10 + adjust_line_Y, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(12))
             self._win.addstr(10 + adjust_line_Y, int((self.maxX - 6) / 2), ' Help ', curses.color_pair(4))
-            self._win.addstr(11 + adjust_line_Y, 5, 'TAB', curses.color_pair(4))
+            self._win.addstr(11 + adjust_line_Y, 5, 'Tab', curses.color_pair(4))
             self._win.addstr(', ', curses.color_pair(5))
             self._win.addstr('Down', curses.color_pair(4))
             self._win.addstr(' / ', curses.color_pair(5))
             self._win.addstr('Up', curses.color_pair(4))
             self._win.addstr('    Go to next / previous field.', curses.color_pair(5))
-            self._win.addstr(12 + adjust_line_Y, 5, 'ENTER', curses.color_pair(4))
+            self._win.addstr(12 + adjust_line_Y, 5, 'Enter', curses.color_pair(4))
             self._win.addstr('             When in Line Editor, go to next field.', curses.color_pair(5))
             self._win.addstr(13 + adjust_line_Y, 23, 'Otherwise, execute selected function.', curses.color_pair(5))
 
 
-            self._win.addstr(14 + adjust_line_Y, 5, 'Space', curses.color_pair(4))
+            self._win.addstr(14 + adjust_line_Y, 5, kb2chr('pause'), curses.color_pair(4))
             self._win.addstr(', ', curses.color_pair(5))
-            self._win.addstr('l', curses.color_pair(4))
+            self._win.addstr(kb2chr('l'), curses.color_pair(4))
             self._win.addstr(', ', curses.color_pair(5))
             self._win.addstr('Left', curses.color_pair(4))
             self._win.addstr('    Toggle check box state.', curses.color_pair(5))
@@ -1976,12 +1978,12 @@ class PyRadioRenameFile(object):
             self._win.addstr(15 + adjust_line_Y, 23, 'Cancel operation.', curses.color_pair(5))
 
 
-            self._win.addstr(16 + adjust_line_Y, 5, 's', curses.color_pair(4))
+            self._win.addstr(16 + adjust_line_Y, 5, kb2chr('s'), curses.color_pair(4))
             self._win.addstr(' / ', curses.color_pair(5))
-            self._win.addstr('q', curses.color_pair(4))
+            self._win.addstr(kb2chr('q'), curses.color_pair(4))
             self._win.addstr(16 + adjust_line_Y, 23, 'Exeute / Cancel operation (not in Line Editor).', curses.color_pair(5))
 
-            self._win.addstr(17 + adjust_line_Y, 5, '?', curses.color_pair(4))
+            self._win.addstr(17 + adjust_line_Y, 5, kb2chr('?'), curses.color_pair(4))
             self._win.addstr(17 + adjust_line_Y, 23, 'Line editor help (in Line Editor).', curses.color_pair(5))
 
         if self.maxY > 21 + adjust_line_Y and self.maxX > 76:
@@ -1991,28 +1993,28 @@ class PyRadioRenameFile(object):
                 self._win.addstr(18 + adjust_line_Y, 3, '─'.encode('utf-8') * (self.maxX - 10), curses.color_pair(12))
             self._win.addstr(18 + adjust_line_Y, int((self.maxX - 42) / 2), r' Global Functions (with \ in Line Editor) ', curses.color_pair(4))
 
-            self._win.addstr(19 + adjust_line_Y, 5, '-', curses.color_pair(4))
+            self._win.addstr(19 + adjust_line_Y, 5, kb2chr('v_dn2'), curses.color_pair(4))
             self._win.addstr('/', curses.color_pair(5))
-            self._win.addstr('+', curses.color_pair(4))
+            self._win.addstr(kb2chr('v_up1'), curses.color_pair(4))
             self._win.addstr(' or ', curses.color_pair(5))
-            self._win.addstr(',', curses.color_pair(4))
+            self._win.addstr(kb2chr('v_dn1'), curses.color_pair(4))
             self._win.addstr('/', curses.color_pair(5))
-            self._win.addstr('.', curses.color_pair(4))
+            self._win.addstr(kb2chr('v_up2'), curses.color_pair(4))
             self._win.addstr(19 + adjust_line_Y, 23, 'Change volume', curses.color_pair(5))
-            self._win.addstr(20 + adjust_line_Y, 5, 'm', curses.color_pair(4))
+            self._win.addstr(20 + adjust_line_Y, 5, kb2chr('mute'), curses.color_pair(4))
             self._win.addstr(' / ', curses.color_pair(5))
-            self._win.addstr('v', curses.color_pair(4))
+            self._win.addstr(kb2chr('s_vol'), curses.color_pair(4))
             self._win.addstr(20 + adjust_line_Y, 23, 'M', curses.color_pair(4))
             self._win.addstr('ute player / Save ', curses.color_pair(5))
             self._win.addstr('v', curses.color_pair(4))
             self._win.addstr('olume (not in vlc).', curses.color_pair(5))
             if adjust_line_Y + 22 < self.maxY:
-                self._win.addstr(21 + adjust_line_Y, 5, 'W', curses.color_pair(4))
+                self._win.addstr(21 + adjust_line_Y, 5, kb2chr('t_tag'), curses.color_pair(4))
                 self._win.addstr(' / ', curses.color_pair(5))
-                self._win.addstr('w', curses.color_pair(4))
+                self._win.addstr(kb2chr('tag'), curses.color_pair(4))
                 self._win.addstr(21 + adjust_line_Y, 23, 'Toggle title log / like a station', curses.color_pair(5))
             if adjust_line_Y + 23 < self.maxY:
-                self._win.addstr(22 + adjust_line_Y, 5, 'T', curses.color_pair(4))
+                self._win.addstr(22 + adjust_line_Y, 5, kb2chr('transp'), curses.color_pair(4))
                 self._win.addstr(22 + adjust_line_Y, 23, 'Toggle transparency', curses.color_pair(5))
 
         self._win.refresh()
@@ -2134,7 +2136,8 @@ class PyRadioRenameFile(object):
         return result
 
     def keypress(self, char):
-        """ Returns:
+        """ PyRadioRenameFile keypress
+            Returns:
                 -1: Cancel
                  0: go on
                  1: Operation succeeded
@@ -2286,23 +2289,24 @@ class PyRadioBuffering(object):
             try:
                 self._win.addstr(4, 2, '─' * (self.MaxX - 4), curses.color_pair(3))
             except:
-                self._win.addstr(4, 2, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
+                self._win.addstr(4, 2, '─'.encode('utf-8') * (self.MaxX - 6), curses.color_pair(3))
             self._win.addstr(4, int((self.MaxX - len(self._help_text))/2), self._help_text, curses.color_pair(3))
-            self._win.addstr(5, 2, 'j k UP DOWN', curses.color_pair(11))
+            self._win.addstr(5, 2, kb2str('{j} {k} Up Down'), curses.color_pair(11))
             self._win.addstr(6, 2, 'PgUp PgDown', curses.color_pair(11))
             self._win.addstr('     Adjust value', curses.color_pair(10))
-            self._win.addstr(7, 2, 'r', curses.color_pair(11))
+            self._win.addstr(7, 2, kb2chr('revert_saved'), curses.color_pair(11))
             self._win.addstr('               Load saved value', curses.color_pair(10))
-            self._win.addstr(8, 2, 'z', curses.color_pair(11))
+            self._win.addstr(8, 2, kb2chr('no_buffer'), curses.color_pair(11))
             self._win.addstr('               No buffering', curses.color_pair(10))
-            self._win.addstr(9, 2, 'ENTER s', curses.color_pair(11))
+            self._win.addstr(9, 2, 'Enter ' + kb2chr('s'), curses.color_pair(11))
             self._win.addstr('         Accept value', curses.color_pair(10))
-            self._win.addstr(10, 2, 'Esc q h RIGHT', curses.color_pair(11))
+            self._win.addstr(10, 2, kb2str('Esc {q} {h} Right'), curses.color_pair(11))
             self._win.addstr('   Cancel operation', curses.color_pair(10))
         self._win.refresh()
 
     def keypress(self, char):
-        """ Returns:
+        """ PyRadioBuffering keypress
+            Returns:
                 -1: Cancel  - []
                  0: go on   - []
                  1: Ok      = [buffering parameters]
@@ -2320,9 +2324,9 @@ class PyRadioBuffering(object):
         elif char in (kbkey['j'], curses.KEY_UP,
                       kbkey['k'], curses.KEY_DOWN,
                       curses.KEY_NPAGE, curses.KEY_PPAGE,
-                      ord('z'), ord('r')
+                      kbkey['no_buffer'], kbkey['revert_saved']
                       ):
-            if char == ord('r'):
+            if char == kbkey['revert_saved']:
                 self._delay = self._cache_data.delay
             elif char in (kbkey['k'], curses.KEY_UP):
                 self._delay += self._step
@@ -2338,7 +2342,7 @@ class PyRadioBuffering(object):
                     self._delay = 0
             elif char == curses.KEY_PPAGE:
                 self._delay += self._big_step
-            elif char == ord('z'):
+            elif char == kbkey['no_buffer']:
                 self._delay = 0
 
             if self._delay < 0:
@@ -2398,24 +2402,24 @@ class PyRadioConnectionType(object):
             try:
                 self._win.addstr(4, 2, '─' * (self.MaxX - 4), curses.color_pair(3))
             except:
-                self._win.addstr(4, 2, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
+                self._win.addstr(4, 2, '─'.encode('utf-8') * (self.MaxX - 6), curses.color_pair(3))
             self._win.addstr(4, int((self.MaxX - len(self._help_text))/2), self._help_text, curses.color_pair(3))
 
 
 
-            self._win.addstr(5, 2, 'j k l SPACE', curses.color_pair(11))
-            self._win.addstr(6, 2, 'RIGHT UP DOWN', curses.color_pair(11))
+            self._win.addstr(5, 2, kb2str('{j} {k} {l} {pause}'), curses.color_pair(11))
+            self._win.addstr(6, 2, 'Right Up Down', curses.color_pair(11))
             self._win.addstr('    Toggle parameter', curses.color_pair(10))
-            self._win.addstr(7, 2, 'ENTER s', curses.color_pair(11))
+            self._win.addstr(7, 2, 'Enter ' + kb2chr('s'), curses.color_pair(11))
             self._win.addstr('          Accept parameter', curses.color_pair(10))
-            self._win.addstr(8, 2, 'Esc q h RIGHT', curses.color_pair(11))
+            self._win.addstr(8, 2, kb2str('Esc {q} {h} Left'), curses.color_pair(11))
             self._win.addstr('    Cancel operation', curses.color_pair(10))
 
             # show note
             try:
                 self._win.addstr(10, 2, '─' * (self.MaxX - 4), curses.color_pair(3))
             except:
-                self._win.addstr(10, 2, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
+                self._win.addstr(10, 2, '─'.encode('utf-8') * (self.MaxX - 6), curses.color_pair(3))
             self._win.addstr(10, int((self.MaxX - len(self._note_text))/2), self._note_text, curses.color_pair(3))
 
             self._win.addstr(11, 4, 'Changes made here will not be', curses.color_pair(10))
@@ -2424,7 +2428,8 @@ class PyRadioConnectionType(object):
         self._win.refresh()
 
     def keypress(self, char):
-        """ Returns:
+        """ PyRadioConnectionType keypress
+            Returns:
                 -1: Cancel
                  0: go on
                  1: Ok
@@ -2525,18 +2530,18 @@ class PyRadioServerWindow(object):
         except:
             self._win.addstr(7, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
         self._win.addstr(7, int((self.maxX - 6) / 2), ' Help ', curses.color_pair(11))
-        self._win.addstr(8, 8, 'j', curses.color_pair(11))
+        self._win.addstr(8, 8, kb2chr('j'), curses.color_pair(11))
         self._win.addstr(', ', curses.color_pair(10))
-        self._win.addstr('k', curses.color_pair(11))
+        self._win.addstr(kb2chr('k'), curses.color_pair(11))
         self._win.addstr(', ', curses.color_pair(10))
         self._win.addstr('Up', curses.color_pair(11))
         self._win.addstr(', ', curses.color_pair(10))
         self._win.addstr('Down', curses.color_pair(11))
         self._win.addstr(8, 30, 'Change selection.', curses.color_pair(10))
 
-        self._win.addstr(9, 8, 'h', curses.color_pair(11))
+        self._win.addstr(9, 8, kb2chr('h'), curses.color_pair(11))
         self._win.addstr(', ', curses.color_pair(10))
-        self._win.addstr('l', curses.color_pair(11))
+        self._win.addstr(kb2chr('l'), curses.color_pair(11))
         self._win.addstr(', ', curses.color_pair(10))
         self._win.addstr('Left', curses.color_pair(11))
         self._win.addstr(', ', curses.color_pair(10))
@@ -2544,10 +2549,10 @@ class PyRadioServerWindow(object):
 
         self._win.addstr(10, 8, 'Enter', curses.color_pair(11))
         self._win.addstr(', ', curses.color_pair(10))
-        self._win.addstr('Space', curses.color_pair(11))
+        self._win.addstr(kb2chr('pause'), curses.color_pair(11))
         self._win.addstr(10, 30, 'Toggle IP.', curses.color_pair(10))
 
-        self._win.addstr(11, 8, 's', curses.color_pair(11))
+        self._win.addstr(11, 8, kb2chr('s'), curses.color_pair(11))
         self._win.addstr(11, 30, 'Start the Server.', curses.color_pair(10))
 
         self._win.addstr(12, 2, 'Any other key will hide the window (not in editor).', curses.color_pair(10))
@@ -2600,11 +2605,11 @@ class PyRadioServerWindow(object):
         return False
 
     def keypress(self, char):
-        '''
-        Return
-            -1: cancel
-             0: saved
-             1: go on
+        ''' PyRadioServerWindow keypress
+            Return
+                -1: cancel
+                 0: saved
+                 1: go on
         '''
         if self._selection == 0 and \
                 char in (ord('\n'), ord('\r'), curses.KEY_ENTER,

@@ -487,17 +487,9 @@ class Log(object):
                                         stderr=subprocess.DEVNULL
                                     )
                             except:
-                                # for python 2
-                                try:
-                                    with self._desktop_notification_lock:
-                                        subprocess.Popen(
-                                            notification_command
-                                        )
-                                    pass
-                                except:
-                                    if logger.isEnabledFor(logging.DEBUG):
-                                        logger.debug('Failure sending Desktop Notification!')
-                                    return
+                                if logger.isEnabledFor(logging.DEBUG):
+                                    logger.debug('Failure sending Desktop Notification!')
+                                return
                             if d_title == 'Station':
                                 self._station_sent = True
                             self._cnf._current_notification_message = d_msg
@@ -582,7 +574,7 @@ class Log(object):
                 if d_msg.startswith('Title: '):
                         if logger.isEnabledFor(logging.CRITICAL):
                             try:
-                                if force or not d_msg in self._cnf._old_log_title:
+                                if force or d_msg not in self._cnf._old_log_title:
                                     try:
                                         logger.critical(d_msg.replace('Title: ', '    '))
                                     except:
@@ -591,7 +583,7 @@ class Log(object):
                             except UnicodeDecodeError:
                                 ''' try to handle it for python2 '''
                                 try:
-                                    if force or not d_msg.decode('utf-8', 'replace') in self._cnf._old_log_title.decode('utf-8', 'replace'):
+                                    if force or d_msg.decode('utf-8', 'replace') not in self._cnf._old_log_title.decode('utf-8', 'replace'):
                                         try:
                                             logger.critical(d_msg.replace('Title: ', '    '))
                                         except:
@@ -608,7 +600,7 @@ class Log(object):
                         tok = 'Buffering: '
                     if logger.isEnabledFor(logging.CRITICAL) and tok == 'Playing: ':
                         try:
-                            if force or not d_msg in self._cnf._old_log_station:
+                            if force or d_msg not in self._cnf._old_log_station:
                                 try:
                                     logger.critical(d_msg.replace(tok, '>>> Station: '))
                                 except:
@@ -617,7 +609,7 @@ class Log(object):
                         except UnicodeDecodeError:
                             ''' try to handle it for python2 '''
                             try:
-                                if force or not d_msg.decode('utf-8', 'replace') in self._cnf._old_log_title.decode('utf-8', 'replace'):
+                                if force or d_msg.decode('utf-8', 'replace') not in self._cnf._old_log_title.decode('utf-8', 'replace'):
                                     try:
                                         logger.critical(d_msg.replace(tok, '>>> Station: '))
                                     except:
@@ -817,16 +809,8 @@ class RepeatDesktopNotification(object):
                         )
                         end_time = self._start_time + datetime.timedelta(seconds=my_time_out)
                 except:
-                    # for python 2
-                    try:
-                        with self._desktop_notification_lock:
-                            subprocess.Popen(
-                                notification_command
-                            )
-                        pass
-                    except:
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('Failure sending repetative Desktop Notification!')
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Failure sending repetative Desktop Notification!')
 
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Desktop Notification Thread stopped!!!')

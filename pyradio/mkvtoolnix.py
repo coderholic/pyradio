@@ -105,16 +105,13 @@ class MKVToolNix:
         r = subprocess.Popen(
             self._command,
             stdout=subprocess.PIPE).stdout.read()
-        if sys.version_info.major < 3:
-            s = r
-        else:
-            s = r.decode('utf-8')
         if print_messages:
-            print(s)
+            print(r)
         # remove temporary files
         if self._remove_file:
             for n in self._remove_file:
                 os.remove(n)
+        return True
 
     def list_mkv_files(self):
         files = self._get_mkv_file_from_id(0, return_list=True)

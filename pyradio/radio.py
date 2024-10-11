@@ -53,10 +53,7 @@ CAN_CHECK_FOR_UPDATES = True
 try:
     from urllib.request import urlopen
 except:
-    try:
-        from urllib2 import urlopen
-    except:
-        CAN_CHECK_FOR_UPDATES = False
+    CAN_CHECK_FOR_UPDATES = False
 
 import locale
 locale.setlocale(locale.LC_ALL, "")
@@ -234,7 +231,7 @@ class SelectPlayer(object):
             self._win.refresh()
 
     def keypress(self, char):
-        # select player keypress
+        ''' SelectPlayer keypress '''
         if char in (
             kbkey['j'], curses.KEY_DOWN,
             kbkey['k'], curses.KEY_UP
@@ -724,8 +721,7 @@ class PyRadio(object):
             kbkey['s_vol']: self._volume_save,
             kbkey['t_calc_col']: self._toggle_claculated_colors,
             kbkey['resize']: self._resize_with_number_sign,
-            # ord('d'): self._html_song_title,
-            ord('b'): self._show_schedule_editor,
+            # ord('b'): self._show_schedule_editor,
         }
 
         self._local_functions = {
@@ -1949,6 +1945,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             #signal.signal(signal.SIGINT, self.ctrl_c_handler)
             self.log.write(msg='Selected player: ' + self.player.PLAYER_NAME, help_msg=True)
             if self.play != 'False':
+                num = 0
                 if self.play is None:
                     num = random.randint(0, len(self.stations))
                     self._random_requested = True
@@ -2297,7 +2294,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 stream_url = self.stations[self.selection][1]
             try:
                 enc = self.stations[self.selection][2].strip()
-                if invalid_encoding(end):
+                if invalid_encoding(enc):
                     enc = ''
             except:
                 enc = ''
@@ -2910,7 +2907,7 @@ ____Using |fallback| theme.''')
             {}
 
             Use |Shift| and |Left Mouse Button| to select the path, and
-            then press |ENTER| to copy it to the clipboard.
+            then press |Enter| to copy it to the clipboard.
 
             Press |q| or |Esc| to terminate |PyRadio| now; for your
             convinience, it will also be printed in the terminal.
@@ -6034,7 +6031,7 @@ ____Using |fallback| theme.''')
         return ''
 
     def keypress(self, char):
-        ''' main keypress function '''
+        ''' PyRadio keypress '''
         # # logger.error('\n\nparams\n{}\n\n'.format(self._cnf.params))
         # # logger.error('\n\nsaved params\n{}\n\n'.format(self._cnf.saved_params))
         # # logger.error('\n\nbackup params\n{}\n\n'.format(self._cnf.backup_player_params))
@@ -7416,7 +7413,7 @@ ____Using |fallback| theme.''')
                     if ret == 0:
                         if self._cnf._online_browser.server_window_from_config:
                             self._cnf._online_browser._config_win.get_server_value()
-                            self._online_browser._config_win.calculate_dirty()
+                            self._cnf._online_browser._config_win.calculate_dirty()
                         else:
                             self.refreshBody()
                             self._set_active_stations()
@@ -7777,7 +7774,7 @@ ____Using |fallback| theme.''')
                 #else:
                 #    ''' error '''
                 #    self._print_foreign_playlist_copy_error()
-            elif not char in (ord('#'), curses.KEY_RESIZE):
+            elif char not in (kbkey['resize'], curses.KEY_RESIZE):
                 self.ws.close_window()
                 self.refreshBody()
                 ''' Do this here to properly resize '''
@@ -8715,26 +8712,26 @@ ____Using |fallback| theme.''')
                                                                     self.playing,
                                                                     self.stations]
 
-                elif char == curses.KEY_F8 and platform.startswith('win'):
+                elif char == kbkey['F8'] and platform.startswith('win'):
                     ''' manage players on Windows
                         will present them after curses end
                     '''
                     self._cnf.WIN_MANAGE_PLAYERS = True
                     self._show_win_manage_players()
 
-                elif char == curses.KEY_F9 and platform.startswith('win'):
+                elif char == kbkey['F9'] and platform.startswith('win'):
                     ''' show exe location on Windows
                         will present them after curses end
                     '''
                     self._cnf.WIN_PRINT_PATHS = True
                     self._show_win_print_exe_paths()
 
-                elif char == curses.KEY_F10 and platform.startswith('win'):
+                elif char == kbkey['F10'] and platform.startswith('win'):
                     ''' uninstall on Windows '''
                     self._cnf.WIN_UNINSTALL = True
                     self._show_win_uninstall()
 
-                elif char == curses.KEY_F7 and platform.startswith('win'):
+                elif char == kbkey['F7'] and platform.startswith('win'):
                     ''' delete old installation files on Windows '''
                     self._show_win_remove_old_installation()
 
@@ -8794,11 +8791,8 @@ ____Using |fallback| theme.''')
 
                 elif char == kbkey['edit']:
                     self._reset_status_bar_right()
-                    if self._cnf.browsing_station_service: return
-                    if python_version[0] == '2':
-                        if not is_ascii(self.stations[self.selection][0]):
-                            self._open_simple_message_by_key('M_PYTHON2_ASCII_ERROR')
-                            return
+                    if self._cnf.browsing_station_service:
+                        return
                     self._station_editor = PyRadioEditor(
                         self.stations,
                         self.selection,
@@ -8944,7 +8938,7 @@ ____Using |fallback| theme.''')
                     self.play_random()
                     return
 
-                elif char in (kbkey['reload'], ):
+                elif char in (kbkey['Reload'], ):
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
                         return
@@ -9108,10 +9102,13 @@ ____Using |fallback| theme.''')
                             # if self._cnf.open_last_playlist:
                             #     self._cnf.save_last_playlist()
 
-                elif char in (ord('r'), ):
+                elif char == kbkey['reload']:
                     self._update_status_bar_right()
                     ''' read playlists from disk '''
-                    self._open_simple_message_by_key_and_mode('M_PLAYLIST_READ')
+                    self._open_simple_message_by_key_and_mode(
+                            self.ws.operation_mode,
+                            'M_PLAYLIST_READ'
+                    )
                     self._reload_playlists()
 
                 elif char in (kbkey['open_regs'], ):
@@ -10296,7 +10293,7 @@ ____Using |fallback| theme.''')
             if self._cnf.online_browser:
                 if self._cnf.online_browser.browser_config.is_config_dirty:
                     self._cnf.online_browser.save_config()
-                    sel._cnf.online_browser = None
+                    self._cnf.online_browser = None
         self.player.close()
         self._cnf.save_config()
         self._cnf.remove_session_lock_file()

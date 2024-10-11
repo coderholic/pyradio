@@ -1478,7 +1478,6 @@ class RadioBrowser(PyRadioStationsBrowser):
 
     def keypress(self, char):
         ''' RadioBrowser keypress
-
             Returns:
                 -1: Cancel
                  0: Done, result is in ....
@@ -1925,7 +1924,7 @@ class RadioBrowserConfigWindow(object):
             else:
                 self._focus = 0
         if self._showed:
-            self.show()
+            self.show(self._parent)
 
     def _fix_server(self, server):
         if server == '':
@@ -2309,7 +2308,7 @@ class RadioBrowserConfigWindow(object):
 
     def get_server_value(self, a_server=None):
         if a_server is not None:
-            act_server = a_server if not 'Random' in a_server else ''
+            act_server = a_server if 'Random' not in a_server else ''
             self._params[0]['server'] = act_server
             self._widgets[4].string = act_server if act_server != '' else 'Random'
         else:
@@ -2338,7 +2337,6 @@ class RadioBrowserConfigWindow(object):
 
     def keypress(self, char):
         ''' RadioBrowserConfigWindow keypress
-
             Returns:
               -4: config not modified
               -3: error saving config
@@ -2375,8 +2373,7 @@ class RadioBrowserConfigWindow(object):
         ):
             return -1
 
-        elif char in (kbkey['pause'], curses.KEY_ENTER,
-                      ord('\n'), ord('\r')
+        elif char in (kbkey['pause'], curses.KEY_ENTER, ord('\n'), ord('\r')
                       ) and self._focus == len(self._widgets) - 2:
             ''' enter on ok button  '''
             ret = self._handle_new_or_existing_search_term()
@@ -3280,7 +3277,6 @@ class RadioBrowserSearchWindow(object):
 
     def keypress(self, char):
         ''' RadioBrowserSearchWindow keypress
-
             Returns
             -------
                -1 - Cancel
@@ -3617,9 +3613,10 @@ class RadioBrowserData(object):
     _timeout = 3
     data_thread = None
 
-    def __init__(self, url, timeout=3):
+    def __init__(self, url, pyradio_info, timeout=3):
         self._url = url
         self._timeout = timeout
+        self._pyradio_info = pyradio_info
 
     def start(self, force_update=False):
         ''' Start data acquisition thread '''
@@ -3741,7 +3738,7 @@ class RadioBrowserData(object):
             connection_error, json_countrycodes = get_data_dict('countrycodes')
             if connection_error:
                 return True, {}
-            from countries import countries
+            from .countries import countries
             st = 'stationcount'
             for n in json_countrycodes:
                 if n['name'] in countries.keys():
@@ -4012,7 +4009,6 @@ class RadioBrowserSort(object):
 
     def keypress(self, char):
         ''' RadioBrowserSort keypress
-
             Returns:
                 -1: Cancel
                  0: Done, result is in ....
@@ -4191,7 +4187,6 @@ class RadioBrowserServersSelect(object):
 
     def keypress(self, char):
         ''' RadioBrowserServersSelect keypress
-
             Returns:
                 -1: Cancel
                  0: Done, result is in ....
@@ -4327,7 +4322,6 @@ class RadioBrowserServers(object):
 
     def keypress(self, char):
         ''' RadioBrowserServers keypress
-
             Returns:
                 -1: Cancel
                  0: Done, result is in ....
@@ -4839,7 +4833,8 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
         self.show()
 
     def keypress(self, char):
-        """ returns theme_id, save_theme
+        """ RadioBrowserTermNavigator keypress
+            returns theme_id, save_theme
             return_id
                -1    : cancel
                 1    : go on

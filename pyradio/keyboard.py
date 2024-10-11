@@ -1,3 +1,4 @@
+import curses
 import curses.ascii
 import logging
 import locale
@@ -64,7 +65,8 @@ kbkey = {
     'open_config':              ord('c'),               # open config window
     'open_enc':                 ord('E'),               # open encodings window
     'random':                   ord('r'),               # play random station
-    'reload':                   ord('R'),               # reload current playlist, themes, etc. from disk
+    'Reload':                   ord('R'),               # reload current playlist, main window only
+    'reload':                   ord('r'),               # reload from disk
     'https':                    ord('z'),               # toggle force use https
     'extra_p_pamars':           ord('Z'),               # open "Player Extra Parameters" window
     'add':                      ord('a'),               # add item (station, group, whatever)
@@ -84,6 +86,7 @@ kbkey = {
     # extra
     'hist_top':                 ord(']'),               # Open first opened playlist
     'buffer':                   ord('b'),               # set buffering
+    'no_buffer':                ord('z'),               # set buffering to 0 (disable)
     'open_buffer':              ord('B'),               # open buffering window
     'last_playlist':            ord('l'),               # Toggle Open last playlist
     'change_player':            ord('m'),               # Cahnge media player
@@ -100,7 +103,7 @@ kbkey = {
     'rb_info':                  ord('I'),
     'rb_server':                ord('C'),               # Select server to connect to
     'rb_sort':                  ord('S'),               # Sort search results
-    'rb_p_first':               ord(']'),               # show first result page
+    'rb_p_first':               ord('{'),               # show first result page
     'rb_p_next':                ord(']'),               # show next result page
     'rb_p_prev':                ord('['),               # show previous result page
     'rb_h_next':                curses.ascii.SO,        # go to next item - default: ^N
@@ -110,24 +113,24 @@ kbkey = {
     'rb_h_def':                 curses.ascii.STX,       # make item default - default: ^B
     'rb_h_0':                   curses.ascii.ACK,       # go to template (item 0) - default: ^F
     'rb_h_save':                curses.ascii.ENQ,       # save history - default: ^E
+    'F7':                       curses.KEY_F7,
+    'F8':                       curses.KEY_F8,          # Windows Players management
+    'F9':                       curses.KEY_F9,          # Windows Show EXE location
+    'F10':                      curses.KEY_F10,         # Windows Uninstall PyRadio
 }
 
 
-def to_srt(akey):
-    adict = {
-    'pause':        'Space',
-    'gr':           '^G',
-    'gr_next':      '^E',
-    'gr_prev':      '^Y',
-    'st_up':        '^U',
-    'st_dn':        '^D',
-    'p_next':       '^N',
-    'p_prev':       '^P',
-    }
-    if akey in adict.keys():
-        return adict[akey]
-    return chr(kbkey[akey])
-
+curses_function_keys_dict = {
+    curses.KEY_F1: 'F1',
+    curses.KEY_F2: 'F2',
+    curses.KEY_F3: 'F3',
+    curses.KEY_F4: 'F4',
+    curses.KEY_F5: 'F5',
+    curses.KEY_F6: 'F6',
+    curses.KEY_F7: 'F7',
+    curses.KEY_F8: 'F8',
+    curses.KEY_F9: 'F9',
+}
 
 curses_ascii_dict = {
     curses.ascii.NUL: '^@',
@@ -158,7 +161,69 @@ curses_ascii_dict = {
     curses.ascii.EM:  '^Y',
     curses.ascii.SUB: '^Z',
     curses.ascii.ESC: '^[',
+    curses.KEY_F1: 'F1',
+    curses.KEY_F2: 'F2',
+    curses.KEY_F3: 'F3',
+    curses.KEY_F4: 'F4',
+    curses.KEY_F5: 'F5',
+    curses.KEY_F6: 'F6',
+    curses.KEY_F7: 'F7',
+    curses.KEY_F8: 'F8',
+    curses.KEY_F9: 'F9',
+    curses.KEY_F10: 'F10',
 }
+
+def to_str(akey):
+    ''' convert kbkey keys to a string '''
+    adict = {
+    'rec':          'Verital Line',
+    'pause':        'Space',
+    'gr':           '^G',
+    'gr_next':      '^E',
+    'gr_prev':      '^Y',
+    'st_up':        '^U',
+    'st_dn':        '^D',
+    'p_next':       '^N',
+    'p_prev':       '^P',
+    'F7':           'F7',
+    'F8':           'F8',
+    'F9':           'F9',
+    'F10':          'F10',
+    }
+    if akey in adict.keys():
+        return adict[akey]
+    return chr(kbkey[akey])
+
+
+def kb2str(msg):
+    ''' convert a string to an appropriate
+        form to be displayed to the user
+
+        All keys in kbkey will be replaced with to_str result
+        provided they are enclosed to {}
+    '''
+    for n in kbkey.keys():
+        chk = '{' + n + '}'
+        if chk in msg:
+            msg = msg.replace(chk, to_str(n))
+
+    return msg
+
+def kb2strL(msg):
+    ''' convert a string to an appropriate
+        form to be displayed to the user
+
+        msg can contain {X}, X is y, Y, n, N, q
+    '''
+    for n in ('y', 'Y', 'n', 'N', 'q'):
+        msg = msg.replace('{' + n +  '}', chr(kbkey[n]))
+    return msg
+
+def kb2chr(akey):
+    ''' convert a kbkey key to a string (result of to_str) '''
+    if akey in kbkey.keys():
+        return to_str(akey)
+    return ''
 
 def ctrl_code_to_string(a_code):
     if a_code in curses_ascii_dict.keys():

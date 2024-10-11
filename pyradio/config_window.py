@@ -724,7 +724,7 @@ class PyRadioConfigWindow(object):
         return True
 
     def keypress(self, char):
-        ''' Config Window key press
+        ''' PyRadioConfigWindow keypress
             Returns:
                 -1  continue
                  0  save config
@@ -1133,6 +1133,7 @@ class PyRadioExtraParams(object):
             self._extra.refresh_win()
 
     def keypress(self, char):
+        ''' PyRadioExtraParams keypress '''
         return self._extra.keypress(char)
 
 
@@ -1322,7 +1323,7 @@ class ExtraParametersEditor(object):
             self._focus = focus
 
     def keypress(self, char):
-        ''' Extra parameter editor keypress
+        ''' ExtraParametersEditor keypress
             Returns:
                 0: Response ready (in edit_string)
                 1: Continue
@@ -1337,7 +1338,7 @@ class ExtraParametersEditor(object):
             ret = 0
         elif char in (ord('\t'), 9, curses.KEY_DOWN, kbkey['tab']):
             self._focus_next()
-        elif char == curses.KEY_UP:
+        elif char in (curses.KEY_BTAB, curses.KEY_UP, kbkey['stab']):
             self._focus_previous()
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
             if self._focus == 0:
@@ -1762,7 +1763,7 @@ class ExtraParameters(object):
             logger.error('setting to players default: {}'.format(self._player))
             self.active = self._items.index(self._defaults[self._player])
         else:
-            lgger.error('setting to profile:pyradio')
+            logger.error('setting to profile:pyradio')
             self.active = self._items.index('profile:pyradio')
         logger.error('\n*****************************\n\n')
         if not saved:
@@ -1963,7 +1964,7 @@ class ExtraParameters(object):
             logger.debug('new parameters (not saved) = {}'.format(self._orig_params))
 
     def keypress(self, char):
-        ''' Extra parameters keypress
+        ''' ExtraParameters keypress
             Returns:
                 -2 - cancel
                 -1 - continue
@@ -2220,7 +2221,7 @@ class PyRadioSelectPlayer(object):
         self._cnf.params_changed = False
 
     def keypress(self, char):
-        ''' Player selection keypress
+        ''' PyRadioSelectPlayer keypress
             Returns:
               -2 - error, number of max lines reached
               -3 - error, cannot edit or delete first item
@@ -2637,8 +2638,7 @@ class PyRadioSelectEncodings(object):
         return (self._num_of_rows + 1) * a_column + a_row
 
     def keypress(self, char):
-        ''' Encoding key press
-        '''
+        ''' PyRadioSelectEncodings keypress '''
         if char in self._global_functions.keys():
             self._global_functions[char]()
 
@@ -3033,7 +3033,7 @@ class PyRadioSelectPlaylist(object):
             self.startPos = self._selected_playlist_id - int((self.maxY - 2) / 2)
 
     def keypress(self, char):
-        ''' Return restlt from playlist selection window
+        ''' PyRadioSelectPlaylist keypress
 
         Results are:
         -1, ''              - Continue in window
@@ -3341,6 +3341,7 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
                                  )
 
     def keypress(self, char):
+        ''' PyRadioSelectStation keypress '''
         if char == kbkey['revert_saved']:
             self.setStation(self._orig_playlist)
             return -1, ''

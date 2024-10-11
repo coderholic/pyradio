@@ -11,6 +11,7 @@ import platform
 from .simple_curses_widgets import DisabledWidget, SimpleCursesCheckBox, SimpleCursesPushButton, SimpleCursesTime, SimpleCursesString, SimpleCursesDate, SimpleCursesLineEdit
 from .cjkwrap import cjklen, cjkslices
 from .schedule import PyRadioScheduleItem, PyRadioScheduleItemType, PyRadioScheduleTimeType, PyRadioTime, PyRadioScheduleList, format_date_to_iso8851, random_string, datetime_to_my_time, is_date_before
+from .keyboard import kbkey
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -1155,7 +1156,6 @@ class PyRadioSimpleScheduleWindow(object):
     def keypress(self, char):
         '''
         PyRadioSimpleScheduleWindow keypress
-
         Return
         ======
             -1: Cancel
@@ -1298,30 +1298,30 @@ class PyRadioSimpleScheduleWindow(object):
                 else:
                     self._widgets[7].set_time_pyradio_time(self._widgets[13].active_time)
 
-        elif char == ord('?'):
+        elif char == kbkey['?']:
             return 2
 
-        elif char in (curses.KEY_EXIT, ord('q'), 27):
+        elif char in (curses.KEY_EXIT, kbkey['q'], 27):
             self._stop = True
             self._exit = True
             return -1
 
         elif self._focus == 0 and char in (
                 curses.KEY_ENTER, ord('\n'), ord('\r'),
-                curses.KEY_RIGHT, ord('l'), ord(' ')
+                curses.KEY_RIGHT, kbkey['l'], kbkey['pause']
                 ) and self._widgets[2].checked:
             return 4
 
         elif self._focus == 1 and char in (
                 curses.KEY_ENTER, ord('\n'), ord('\r'),
-                curses.KEY_RIGHT, ord(' '), ord('l'),
+                curses.KEY_RIGHT, kbkey['l'], kbkey['pause']
                 ) and self._widgets[2].checked:
             return 5
 
         elif self._focus == 19 and char in (
-                ord('l'), ord('h'), curses.KEY_LEFT, curses.KEY_RIGHT
+                kbkey['l'], kbkey['h'], curses.KEY_LEFT, curses.KEY_RIGHT
                 ):
-            if char in (ord('h'), curses.KEY_LEFT):
+            if char in (kbkey['h'], curses.KEY_LEFT):
                 self._repeat_index -= 1
                 if self._repeat_index < 0 :
                     self._repeat_index = len(self._repeat) - 1
@@ -1331,10 +1331,10 @@ class PyRadioSimpleScheduleWindow(object):
                     self._repeat_index = 0
             self._widgets[19].string = self._repeat[self._repeat_index].ljust(self._max_repeat_len)
 
-        elif char in (ord('k'), curses.KEY_UP):
+        elif char in (kbkey['k'], curses.KEY_UP):
             self._go_up()
 
-        elif char in (ord('j'), curses.KEY_DOWN):
+        elif char in (kbkey['j'], curses.KEY_DOWN):
             self._go_down()
 
         elif char in (ord('\t'), 9, kbkey['tab']):
@@ -1349,7 +1349,7 @@ class PyRadioSimpleScheduleWindow(object):
             else:
                 self._previous_widget()
 
-        elif char == ord('i'):
+        elif char == kbkey['info']:
             self._show_info()
             return 10
 
@@ -1382,13 +1382,13 @@ class PyRadioSimpleScheduleWindow(object):
                 pass
 
             elif self._widgets[self._focus].w_id == 14:
-                if char in (ord('l'), curses.KEY_RIGHT):
+                if char in (kbkey['l'], curses.KEY_RIGHT):
                     self._current_player_id += 1
                     if self._current_player_id == len(self._supported_players):
                         self._current_player_id = 0
                     self._widgets[14].string = self._supported_players[self._current_player_id]
                     # self._fix_recording_from_player_selection()
-                elif char in (ord('h'), curses.KEY_LEFT):
+                elif char in (kbkey['h'], curses.KEY_LEFT):
                     self._current_player_id -= 1
                     if self._current_player_id < 0:
                         self._current_player_id = len(self._supported_players) - 1

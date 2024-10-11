@@ -233,6 +233,7 @@ class PyRadioClient(object):
 class MyArgParser(ArgumentParser):
 
     def __init(self):
+        description = None
         super(MyArgParser, self).__init__(
             description = description
         )

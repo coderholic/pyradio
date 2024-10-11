@@ -337,7 +337,7 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
         if not exists(patool_exec):
             patool_exec = glob.glob(join(environ['APPDATA'], '**', 'patool.exe'), recursive=True)
             if patool_exec:
-                patool_exec = patool_exe[0]
+                patool_exec = patool_exec[0]
             else:
                 patool_exec = None
         try:

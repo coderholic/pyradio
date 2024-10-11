@@ -436,7 +436,7 @@ class XdgDirs(object):
                     makedirs(a_dir, exist_ok=True)
                 except:
                     print('Error: Cannot create directory: "{}"'.format(a_dir))
-                    sys.exit(1)
+                    exit(1)
 
         # getenv('XDG_RUNTIME_DIR', '/run/user/1000')
 
@@ -638,13 +638,13 @@ class XdgDirs(object):
         # Create the destination directory if it doesn't exist
         if not path.exists(self.recording_dir):
             makedirs(self.recording_dir, exist_ok=True)
-        if not path.exists(self.recording_dir):
-            # if I cannot create the new dir (and file),use the old file
-            self.titles_log_file = old_title_file
 
         # Construct the path to the pyradio-titles.log file
         old_title_path = path.join(path.expanduser('~'), '.config', 'pyradio')
         old_title_file = path.join(old_title_path, 'pyradio-titles.log')
+        if not path.exists(self.recording_dir):
+            # if I cannot create the new dir (and file),use the old file
+            self.titles_log_file = old_title_file
         # Check if titles.log exists
         if path.exists(old_title_file):
             # Find all "pyradio-titles.*" files

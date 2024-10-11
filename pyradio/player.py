@@ -6,7 +6,7 @@ import random
 import logging
 from os.path import expanduser
 from platform import uname as platform_uname
-from sys import platform, version_info, platform
+from sys import platform, version_info
 from sys import exit
 from time import sleep
 from datetime import datetime
@@ -241,6 +241,8 @@ def info_dict_to_list(info, fix_highlight, max_width, win_width):
     a_list[0] = a_list[0].replace('|', '')
 
     if fix_highlight:
+        rep_name = 0
+        web_name = 0
         for x in fix_highlight:
             for n, an_item in enumerate(a_list):
                 if x[0] in an_item:
@@ -484,7 +486,7 @@ class Player(object):
                     self.NEW_PROFILE_STRING,
                     self.config_files[0])
                              )
-            return 0, profile
+            return 0, a_profile_name
 
     def get_recording_filename(self, name, extension):
         if self._chapters is None:
@@ -1301,6 +1303,7 @@ class Player(object):
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug('MPV updateStatus thread started.')
 
+        sock = None
         while True:
             try:
                 sock = self._connect_to_socket(self.mpvsocket)
@@ -1805,7 +1808,7 @@ class Player(object):
         # logger.info('DE a_data {}'.format(a_data))
         if b'icy-br' in a_data:
             # logger.info('DE check {}'.format(self._icy_data))
-            if not 'icy-br' in self._icy_data.keys():
+            if 'icy-br' not in self._icy_data.keys():
                 for icy in ('icy-name', 'icy-url', 'icy-genre', 'icy-br'):
                     if stop():
                         return False
@@ -2461,9 +2464,9 @@ class MpvPlayer(Player):
         else:
             mpvsocket = '/tmp/mpvsocket.{}'.format(os.getpid())
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('mpv socket is "{}"'.format(self.mpvsocket))
+            logger.debug('mpv socket is "{}"'.format(mpvsocket))
         if os.path.exists(mpvsocket):
-            os.system('rm ' + mpvsocket + ' 2>/dev/null');
+            os.system('rm ' + mpvsocket + ' 2>/dev/null')
 
         max_vol = 130
 
@@ -2565,7 +2568,7 @@ class MpvPlayer(Player):
             self.recording_filename = self.get_recording_filename(self.name, '.mkv')
             opts.append('--stream-record=' + self.recording_filename)
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('---=== Starting Recording: "{}" ===---',format(self.recording_filename))
+                logger.debug('---=== Starting Recording: "{}" ===---'.format(self.recording_filename))
 
         referer = self._get_referer(streamName)
         if referer is not None:
@@ -3073,7 +3076,7 @@ class MpPlayer(Player):
             opts.append('-dumpfile')
             opts.append(self.recording_filename)
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('---=== Starting Recording: "{}" ===---',format(self.recording_filename))
+                logger.debug('---=== Starting Recording: "{}" ===---'.format(self.recording_filename))
 
         ''' add URL '''
         if playList:
@@ -3435,7 +3438,7 @@ class VlcPlayer(Player):
             opts.append(r'file/ps:' + self.recording_filename)
             monitor_opts.append(self.recording_filename)
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('---=== Starting Recording: "{}" ===---',format(self.recording_filename))
+                logger.debug('---=== Starting Recording: "{}" ===---'.format(self.recording_filename))
 
         ''' check if buffering '''
         self.buffering = self._player_is_buffering(opts, self.buffering_tokens)

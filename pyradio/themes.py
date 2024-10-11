@@ -1320,7 +1320,8 @@ class PyRadioThemeSelector(object):
             return True
 
     def keypress(self, char):
-        """ returns theme_id, save_theme
+        """ PyRadioThemeSelector keypress
+            returns theme_id, save_theme
             return_id
               0-..  : id in self._theme
               -1    : end or canel
@@ -1474,5 +1475,6 @@ class PyRadioThemeEditor(object):
         self.maxY = maxY
 
     def keypress(self, char):
+        ''' PyRadioThemeEditor keypress '''
         pass
 
