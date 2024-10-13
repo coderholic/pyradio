@@ -26,6 +26,7 @@ else:
 from pyradio import version, stations_updated
 
 from .common import validate_resource_opener_path
+from .keyboard import kbkey, read_keyboard_shortcuts
 from .browser import PyRadioStationsBrowser, probeBrowsers
 from .install import get_github_long_description
 from .common import is_rasberrypi
@@ -2423,9 +2424,11 @@ class PyRadioConfig(PyRadioStations):
             self._first_read = False
             # logger.error('\n\nfile = {0}\nplayer extra params = {1}\n\n'.format(self.player_params_file, self.params))
 
-        # do this here to get proper schedule config filepath if XDG is on
+        # do this here to get proper schedule and keyboard config filepath if XDG is on
         self.schedule_file = path.join(self.data_dir, 'schedule.json')
-
+        self.keyboard_file = path.join(self.data_dir, 'keyboard.json')
+        if not self.headless:
+            read_keyboard_shortcuts(self.keyboard_file)
 
     def _make_sure_dirs_exist(self):
         home_rec_dir = path.join(path.expanduser('~'), 'pyradio-recordings')

@@ -672,10 +672,10 @@ kb2str(r'''Tab| / |Sh-Tab           |*| Go to next / previous field.
 {h}|, |Left| / |{l}|, |Right        |*|
                                     |*| Go to next / previous field (when
                                     |*| applicable). Also, change counter value.
-{pause}                           |*| Toggle check buttons.
+{pause}                             |*| Toggle check buttons.
                                     |*| Toggle multiple selection.
 Enter                               |*| Perform search / cancel (on push buttons).
-{search}                            |*| Perform search (not on Line editor).
+{s}                                 |*| Perform search (not on Line editor).
 Esc                                 |*| Cancel operation.
 _
 Search history navigation works with normal keys as well
@@ -687,7 +687,7 @@ __(|^N| is the same as |n| when not in a line editor).
 )),
 
     'H_RB_CONFIG': ('RadioBrowser Config Help',
-kb2str(r'''Tab| / |Sh-Tab|,                 |*|
+kb2str(r'''Tab| / |Sh-Tab|,                |*|
 {j}|, |Up| / |{k}|, |Down                  |*| Go to next / previous field.
 {h}|, |Left| / |{l}|, |Right               |*| Change |auto save| and |counters| value.
                                            |*| Navigate through |Search Terms|.

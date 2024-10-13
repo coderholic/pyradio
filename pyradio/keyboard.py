@@ -1,13 +1,14 @@
 import curses
 import curses.ascii
 import platform
+import json
 import logging
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
 
-kbkey = {
+kbkey_orig = {
     # Common keys
     's':                        ord('s'),               # save, accept, toggle option
     'j':                        ord('j'),               # go down
@@ -102,8 +103,8 @@ kbkey = {
     'unnamed':                  ord('u'),               # Show unnamed register
 
     # RadioBrowser
-    'rb_vote':                  ord('V'),
-    'rb_info':                  ord('I'),
+    'rb_vote':                  ord('V'),               # Vote for station
+    'rb_info':                  ord('I'),               # Station DB info
     'rb_server':                ord('C'),               # Select server to connect to
     'rb_sort':                  ord('S'),               # Sort search results
     'rb_p_first':               ord('{'),               # show first result page
@@ -121,7 +122,7 @@ kbkey = {
     'F9':                       curses.KEY_F9,          # Windows Show EXE location
     'F10':                      curses.KEY_F10,         # Windows Uninstall PyRadio
 }
-
+kbkey = dict(kbkey_orig)
 
 curses_function_keys_dict = {
     curses.KEY_F1: 'F1',
@@ -176,10 +177,27 @@ curses_ascii_dict = {
     curses.KEY_F10: 'F10',
 }
 
+def read_keyboard_shortcuts(file_path, reset=False):
+    global kbkey
+    if reset:
+        kbkey = dict(kbkey_orig)
+    else:
+        data = None
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as json_file:
+                    data = json.load(json_file)
+        except  (FileNotFoundError, json.JSONDecodeError, TypeError, IOError):
+            pass
+        if data is not None:
+            print('========')
+            for n in data.keys():
+                print(f'{n} : {data[n]}')
+                kbkey[n] = data[n]
+
 def to_str(akey):
     ''' convert kbkey keys to a string '''
     adict = {
-    'rec':          'Verital Line (|)',
+    'rec':          'Verital Line',
     'pause':        'Space',
     'gr':           '^G',
     'gr_next':      '^E',
@@ -276,3 +294,8 @@ def letter_to_ctrl_code(letter):
     # Return None if not a valid letter or not found
     return None
 
+
+if __name__ == '__main__':
+    file_path="/home/spiros/keyboard.json"
+    with open(file_path, 'w', encoding='utf-8', errors='ignore') as json_file:
+            json.dump(kbkey, json_file, ensure_ascii=False)
