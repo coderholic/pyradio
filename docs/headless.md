@@ -3,7 +3,6 @@
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->
 
-* [IMPORTANT](#important)
 * [Goal](#goal)
     * [Usage](#usage)
     * [How it works](#how-it-works)
@@ -19,18 +18,6 @@
 <!-- vim-markdown-toc -->
 
 [ [Return to main doc](index.md#installation) ]
-
-## IMPORTANT
-
-If you use the "headless" functionality and upgrading to v. 0.9.3, please keep in mind that a headless session will not perform any of the tasks described in **NOTICE 2** in the [main documentation page](index.md), leading to unpredictable result.
-
-To ensure the correct operation, please take these actions:
-
-1. Terminate headless instance of **PyRadio**.
-
-2. Execute **PyRadio** in a terminal at least once, permitting the directory changes to take effect.
-
-3. Start a new headless instance of **PyRadio**.
 
 ## Goal
 

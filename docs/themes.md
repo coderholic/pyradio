@@ -58,6 +58,8 @@ A clasic theme by [The OpenBSD Guy](https://github.com/OpenBSDGuy), originally c
 Two themes by [edunfelt](https://github.com/edunfelt) inspired by the [base16](https://github.com/base16-project) project.
 - **dracula_by_Plyply99** \
 A theme based of the Dracula theme by [Plyply99](https://github.com/Plyply99).
+- everforest-hard.pyradio-theme
+A theme by [CabalCrow](https://github.com/CabalCrow) based on [Everforest](https://github.com/sainnhe/everforest), "a green based color scheme; it's designed to be warm and soft in order to protect developers' eyes."
 - *gruvbox_dark_by_farparticul*, **gruvbox_dark_by_sng** and **gruvbox_light_by_sng** \
 Three themes based on the [gruvbox](https://github.com/morhetz/gruvbox) theme.
 - **hyprland_amber_gold** and **hyprland_dracula** \

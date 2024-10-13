@@ -43,7 +43,6 @@ a:visited{color: SaddleBrown;}
 <h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <!-- vim-markdown-toc Marked -->
 <ul>
-<li><a href="#important">IMPORTANT</a></li>
 <li><a href="#goal">Goal</a>
 <ul>
 <li><a href="#usage">Usage</a></li>
@@ -66,14 +65,6 @@ a:visited{color: SaddleBrown;}
 </ul>
 <!-- vim-markdown-toc -->
 <p class="indented">[ <a href="index.html#installation">Return to main doc</a> ]</p>
-<h2 id="important">IMPORTANT <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>If you use the “headless” functionality and upgrading to v. 0.9.3, please keep in mind that a headless session will not perform any of the tasks described in <strong>NOTICE 2</strong> in the <a href="index.html">main documentation page</a>, leading to unpredictable result.</p>
-<p>To ensure the correct operation, please take these actions:</p>
-<ol type="1">
-<li><p>Terminate headless instance of <strong>PyRadio</strong>.</p></li>
-<li><p>Execute <strong>PyRadio</strong> in a terminal at least once, permitting the directory changes to take effect.</p></li>
-<li><p>Start a new headless instance of <strong>PyRadio</strong>.</p></li>
-</ol>
 <h2 id="goal">Goal <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>This is a document that provides info on running <strong>PyRadio</strong> in “<em>headless</em>” mode (well, kind of), on a Linux, BSD, or Pi system.</p>
 <p>Now, <strong>PyRadio</strong> is a <strong>terminal application</strong>; it actually <strong>needs</strong> a terminal to run. But there is a way to make it run on a “terminal” and at the same time run in the background, being “invisible” so to speak, or run as a weird kind of a daemon; the way to do that is run it in a <strong>tmux detached session</strong> or a <strong>screen detached session</strong>.</p>

@@ -43,34 +43,6 @@ a:visited{color: SaddleBrown;}
 <p>Command line internet radio player.</p>
 <p><a href="https://members.hellug.gr/sng/pyradio/pyradio.png" target="_blank"><img style="width: 600px" src="https://members.hellug.gr/sng/pyradio/pyradio.png" alt="Pyradio" /></a></p>
 
-<h2 id="important-notice-1">IMPORTANT NOTICE 1 <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p><strong>PyRadio</strong> may fail to install/update on some linux distros (mainly Ubuntu 23.04, Debian and derivatives, etc.) due to a change to the underlined python installation.</p>
-<p>If you face this situation, please refer to <a href="pip-error.html">this page</a> to resolve the problem.</p>
-<h2 id="important-notice-2-v.-0.9.3">IMPORTANT NOTICE 2 (v. 0.9.3) <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>This is a big update, with heavy refactoring and introducing a lot of new concepts, so I expect to have a lot of BUG reports.</p>
-<p>Please be kind ;)</p>
-<p>Once you execute <strong>PyRadio v. 0.9.3</strong> these things will happen:</p>
-<ol type="1">
-<li><p>Your <em>recordings</em> dir will be moved to your home folder and renamed to <em>pyradio-recordings</em>.</p></li>
-<li><p>Your <strong>titles log</strong> files will be moved to the new <strong>Recordings Dir</strong>.</p></li>
-<li><p><strong>PyRadio’s</strong> cache will be moved to <em>~/.cache/pyradio</em> (<strong>not on Windows</strong>).</p></li>
-</ol>
-<p>If you are using a <strong>Linux Distro Package</strong>, there’s a chance the packager has decided to enable support for the <a target="_blank" href="https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html">XDG Base Directory specification</a>.</p>
-<p>In this case:</p>
-<ol type="1">
-<li><p>most of the files that reside in <em>~/config/pyradio</em> and <em>~/.config/pyradio/data</em> will be moved to <strong>~/.local/share/pyradio</strong> or <strong>~/.local/state/pyradio</strong>.</p></li>
-<li><p>Any file that you may have saved under <em>~/.config/pyradio</em> and has not been created by <strong>PyRadio</strong>, will be moved into a folder called <strong>pyradio-not-migrated</strong> in your home folder.</p></li>
-<li><p>Your <em>~/.config/pyradio/data</em> folder will be removed.</p></li>
-<li><p>All your playlists and the main configuraton files will remain in <em>~/.config/pyradio</em>.</p></li>
-</ol>
-<h2 id="important-notice-3-headles-v.-0.9.3">IMPORTANT NOTICE 3 (headles v. 0.9.3) <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>If you use the “headless” functionality and upgrading to v. 0.9.3, please keep in mind that a headless session will not perform any of the tasks described in <strong>NOTICE 2</strong>, leading to unpredictable result.</p>
-<p>To ensure the correct operation, please take these actions:</p>
-<ol type="1">
-<li><p>Terminate headless instance of <strong>PyRadio</strong>.</p></li>
-<li><p>Execute <strong>PyRadio</strong> in a terminal at least once, permitting the directory changes to take effect.</p></li>
-<li><p>Start a new headless instance of <strong>PyRadio</strong>.</p></li>
-</ol>
 <h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <!-- vim-markdown-toc Marked -->
 <ul>
