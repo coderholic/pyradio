@@ -3170,9 +3170,7 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
         ''' SimpleCursesCheckBox keypress '''
         if self._focused and \
                 self.enabled and \
-                char in (kbkey['pause'], curses.KEY_ENTER,
-                         ord('\n'), ord('\r')
-                         ):
+                char in (kbkey['pause'], curses.KEY_ENTER, ord('\n'), ord('\r')):
             self.checked = not self._checked
             if self._checked and \
                     self._callback_function is not None:
@@ -3309,9 +3307,9 @@ class SimpleCursesPushButton(SimpleCursesWidget):
 
     def keypress(self, char):
         ''' SimpleCursesPushButton keypress '''
-        if char in (kbkey['pause'], curses.KEY_ENTER,
-                    ord('\n'), ord('\r')) and \
-                self._focused:
+        if char in (
+                kbkey['pause'], curses.KEY_ENTER, ord('\n'), ord('\r')
+                ) and self._focused:
             if self._callback_function:
                 self._callback_function(self._parent, w_id=None)
                 return True

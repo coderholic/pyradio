@@ -1,5 +1,6 @@
 import curses
 import curses.ascii
+import platform
 import logging
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -40,6 +41,8 @@ kbkey = {
     'revert_def':               ord('d'),               # revert to default values
     'tab':                      ord('L'),               # alternative TAB
     'stab':                     ord('H'),               # alternative Shift-TAB
+    'next':                     ord('n'),               # go to next item
+    'prev':                     ord('p'),               # go to previous item
 
     # main window
     'open_playlist':            ord('o'),               # open playlists list
@@ -176,7 +179,7 @@ curses_ascii_dict = {
 def to_str(akey):
     ''' convert kbkey keys to a string '''
     adict = {
-    'rec':          'Verital Line',
+    'rec':          'Verital Line (|)',
     'pause':        'Space',
     'gr':           '^G',
     'gr_next':      '^E',
@@ -240,5 +243,36 @@ def ctrl_code_to_simple_code(a_code):
     logger.error(f'code = {code.lower()}')
     if code:
         return ord(code.lower())
+    return None
+
+def letter_to_ctrl_code(letter):
+    ''' gets a letter (for example "a")
+        returns the key of "^{letter}" (for example "^A")
+        in curses_ascii_dict, or None for "^S", "^Z", and "^C" on Linux/macOS
+        but accepts them on Windows.
+    '''
+
+    # Normalize to uppercase
+    letter = letter.upper()
+
+    # Calculate the ASCII value of the letter
+    ascii_value = ord(letter)
+
+    # Check if it's a valid letter (A-Z)
+    if 'A' <= letter <= 'Z':
+        # Calculate the control character
+        control_char = curses.ascii.NUL + (ascii_value - ord('A') + 1)
+
+        # Check for "^S", "^Z", and "^C" based on OS
+        if platform.system() in ['Linux', 'Darwin']:  # Darwin is macOS
+            if value := f'^{letter}' in ['^S', '^Z', '^C']:
+                return None
+
+        # Find and return the key corresponding to the control character
+        for key, value in curses_ascii_dict.items():
+            if value == f'^{letter}':
+                return key
+
+    # Return None if not a valid letter or not found
     return None
 

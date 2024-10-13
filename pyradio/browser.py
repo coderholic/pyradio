@@ -22,7 +22,7 @@ from .cjkwrap import cjklen
 from .countries import countries
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesWidgetColumns, SimpleCursesCheckBox, SimpleCursesCounter, SimpleCursesBoolean, DisabledWidget, SimpleCursesString, SimpleCursesWidget
 from .ping import ping
-from .keyboard import kbkey, ctrl_code_to_simple_code
+from .keyboard import kbkey, ctrl_code_to_simple_code, kb2chr
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
@@ -3299,11 +3299,11 @@ class RadioBrowserSearchWindow(object):
         if self._too_small:
             return 1
 
-        if char == ord('0') and \
+        if char in (kbkey['g'], ord('0')) and \
                 class_name != 'SimpleCursesLineEdit':
             self._goto_first_history_item()
 
-        elif char == ord('$') and \
+        elif char in (kbkey['G'], ord('$')) and \
                 class_name != 'SimpleCursesLineEdit':
             self._goto_last_history_item()
 
@@ -4269,11 +4269,6 @@ class RadioBrowserServers(object):
         self.maxY = len(self.items)
         self.maxX = len(self.items[0])
         self._global_functions = {}
-        # if global_functions is not None:
-        #     logger.error('\n\n{}\n\n'.format(global_functions))
-        #     self._global_functions = deepcopy(global_functions)
-        #     if ord('t') in self._global_functions.keys():
-        #             del self._global_functions[ord('t')]
 
         if show_random:
             self.items.reverse()
@@ -4763,7 +4758,7 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
             self._win.addstr(' ' * (len(' (descending)   ') + 15), self._color)
 
         self._win.hline(6, 0, ' ', self._width, fcol)
-        self._win.addstr(6, 0, '  Extra keys: x - delete item , Space - make item default', fcol)
+        self._win.addstr(6, 0, '  Extra keys: ' + kb2chr('del') + ' - delete item , ' + kb2chr('pause') + ' - make item default', fcol)
         # do this for windows
         self._win.touchwin()
         #####################
@@ -4855,9 +4850,9 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
             if self._items:
                 self._default = self._selection
                 self.show()
-        elif char in (curses.KEY_LEFT, kbkey['h'], ord('p')):
+        elif char in (curses.KEY_LEFT, kbkey['h'], kbkey['prev']):
             self._go_up()
-        elif char in (curses.KEY_RIGHT, kbkey['l'], ord('n')):
+        elif char in (curses.KEY_RIGHT, kbkey['l'], kbkey['next']):
             self._go_down()
         elif char in (curses.KEY_HOME, kbkey['g'], ord('0'), ord('^')):
             self._go_home()

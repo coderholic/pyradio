@@ -102,12 +102,22 @@ class PyRadioMessagesSystem(object):
 kb2str(r'''__Welcome to |PyRadio Main Help
 __You can use the following keys to navigate: |{j}| (|Up|), |{k}| (|Down|),
 |PgUp| (|^B|), |PgDn| (|^F|) to scroll up/down.
-__You can also use |{g}| (|HOME|) / |{G}| (|END|) to scroll to the top / bottom.
+__You can also use |Home| (|{g}|) / |End| (|{G}|) to scroll to the top / bottom.
 
 __ You will have noticed an |upward arrow| at the top right corner of
 this window; it indicates that the text is |scrollable| and the keys
 mentioned above are |valid|; if the arrow is not there, the text is
 not scrollable and pressing any key will |close the window|.
+
+!Gerneral Notes
+|Note 1:| |Home| (and |{g}|) and |End| (and |{G}|) may be used to move to the first
+___and last item or field, respectively. In several of these windows
+____(excluding the main window), |0| and |^| can be used to go to the
+____first item or field, and |$| can be used to go to the last one.
+
+|Note 2:| In several windows, |Tab| may be used to move to next item or
+____field (and |Sh-Tab| to the previous one). In these cases, |{tab}| and |{stab}|
+____can also be used, respectively.
 
 !Gerneral Help
 Up|, |{j}|, |PgUp|,                                     |*|
