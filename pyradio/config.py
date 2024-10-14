@@ -96,7 +96,7 @@ def to_ip_port(string):
                 host = 'localhost'
     return host, port
 
-class PyRadioStations(object):
+class PyRadioStations():
     ''' PyRadio stations file management '''
     #station_path = ''
     #station_file_name = ''
@@ -196,9 +196,9 @@ class PyRadioStations(object):
             ''' If a station.csv file exitst, which is wrong,
                 we rename it to stations.csv '''
             if path.exists(path.join(self.stations_dir, 'station.csv')):
-                    copyfile(path.join(self.stations_dir, 'station.csv'),
-                            path.join(self.stations_dir, 'stations.csv'))
-                    remove(path.join(self.stations_dir, 'station.csv'))
+                copyfile(path.join(self.stations_dir, 'station.csv'),
+                         path.join(self.stations_dir, 'stations.csv'))
+                remove(path.join(self.stations_dir, 'station.csv'))
 
             self._move_old_csv(self.stations_dir)
             self._check_stations_csv(self.stations_dir, self.root_path)
@@ -261,7 +261,7 @@ class PyRadioStations(object):
                 except:
                     pass
         # create file so that icons will not be forced copied
-        with open(upd, 'w') as f:
+        with open(upd, 'w', encoding='utf-8') as f:
             f.write('\n')
 
         ''' make sure that the icons are under ~/.config/pyradio/data
@@ -500,7 +500,7 @@ class PyRadioStations(object):
             return
         else:
             copyfile(root, path.join(usr, 'stations.csv'))
-            with open(path.join(self.state_dir, 'last-sync'), 'w') as f:
+            with open(path.join(self.state_dir, 'last-sync'), 'w', encoding='utf-8') as f:
                 self.get_pyradio_version()
                 v = self.current_pyradio_version.replace('.', ', ')
                 f.write(v)
@@ -2299,7 +2299,7 @@ class PyRadioConfig(PyRadioStations):
                 #     self.opts['remote_control_server_ip'][1] = 'localhost'
             elif sp[0] == 'remote_control_server_port':
                 try:
-                     x = int(sp[1])
+                    x = int(sp[1])
                 except (ValueError, TypeError):
                     x = 9998
                 if 1025 <= x <= 65535:
@@ -2672,11 +2672,11 @@ class PyRadioConfig(PyRadioStations):
         return out
 
     def _dir_to_shorthand(self, a_dir):
-            ret = a_dir.replace(
-                    path.expanduser('~'),
-                    '%HOMEPATH%' if platform.startswith('win') else '~'
-                    )
-            return ret
+        ret = a_dir.replace(
+                path.expanduser('~'),
+                '%HOMEPATH%' if platform.startswith('win') else '~'
+                )
+        return ret
 
     def _save_config_from_fixed_rec_dir(self, a_path):
         self._fixed_recording_dir = a_path
@@ -2719,7 +2719,7 @@ class PyRadioConfig(PyRadioStations):
             #    logger.info('* self.backup_player_params {}'.format(self.backup_player_params))
         if not from_command_line and \
                 logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('saved params = {}'.format(self.saved_params))
+            logger.debug('saved params = {}'.format(self.saved_params))
 
         # logger.info('\nsaved_params\n{}\n\n'.format(self.saved_params))
         if not self.opts['dirty_config'][1]:
@@ -2828,7 +2828,7 @@ class PyRadioConfig(PyRadioStations):
                 logger.error('Error saving config')
             return -1
         if not out:
-           remove(self.config_file)
+            remove(self.config_file)
 
         # if self.open_last_playlist:
         #     self.save_last_playlist()
@@ -2931,7 +2931,7 @@ class PyRadioConfig(PyRadioStations):
         return out
 
 
-class PyRadioPlaylistStack(object):
+class PyRadioPlaylistStack():
 
     _p = []
 
@@ -3189,7 +3189,7 @@ class PyRadioPlaylistStack(object):
         return ret
 
 
-class PyRadioStationsStack(object):
+class PyRadioStationsStack():
     pass_first_item_func=None
     pass_last_item_func=None
     no_items_func=None
@@ -3276,17 +3276,17 @@ class PyRadioStationsStack(object):
         self._show_station_history_debug()
 
     def rename_station(self, playlist, orig_station, new_station):
-         # logger.error('playlist = "{}"'.format(playlist))
-         # logger.error('orig_station = "{}"'.format(orig_station))
-         # logger.error('new_station = "{}"'.format(new_station))
-         self._show_station_history_debug()
-         for i in range(len(self.items) - 1, -1, -1):
-             if self.items[i][0] == playlist and \
-                     self.items[i][1] == orig_station:
-                 logger.error('item = {}'.format(self.items[i]))
-                 self.items[i][1] = new_station
-                 logger.error('item = {}'.format(self.items[i]))
-         self._show_station_history_debug()
+        # logger.error('playlist = "{}"'.format(playlist))
+        # logger.error('orig_station = "{}"'.format(orig_station))
+        # logger.error('new_station = "{}"'.format(new_station))
+        self._show_station_history_debug()
+        for i in range(len(self.items) - 1, -1, -1):
+            if self.items[i][0] == playlist and \
+                    self.items[i][1] == orig_station:
+                logger.error('item = {}'.format(self.items[i]))
+                self.items[i][1] = new_station
+                logger.error('item = {}'.format(self.items[i]))
+        self._show_station_history_debug()
 
     def rename_playlist(self, orig, new):
         self._show_station_history_debug()
@@ -3341,7 +3341,7 @@ class PyRadioStationsStack(object):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('   item restored  = {}'.format(self.item))
 
-class PyRadioLog(object):
+class PyRadioLog():
 
     PATTERN = '%(asctime)s - %(name)s:%(funcName)s():%(lineno)d - %(levelname)s: %(message)s'
     PATTERN_TITLE = '%(asctime)s | %(message)s'
@@ -3438,7 +3438,7 @@ class PyRadioLog(object):
                 return 0
         return 2
 
-class PyRadioBase16Themes(object):
+class PyRadioBase16Themes():
 
     NAME = 'Base16 Project'
     ''' theme name to be found in themes window '''
@@ -3605,7 +3605,7 @@ class PyRadioBase16Themes(object):
             ret = self.status == 200 and written
             if not ret:
                 try:
-                   remove(w_path)
+                    remove(w_path)
                 except:
                     pass
         return ret, w_path
@@ -4140,7 +4140,7 @@ class FavoritesManager:
         items = []
         if path.exists(self.file_path):
             try:
-                with open(self.file_path, mode='r', newline='') as file:
+                with open(self.file_path, mode='r', newline='', encoding='utf-8') as file:
                     reader = csv.reader(file)
                     for row in reader:
                         if not row[0].startswith('#'):
@@ -4158,7 +4158,7 @@ class FavoritesManager:
                  0 : Item added
         '''
         try:
-            with open(self.file_path, mode='w', newline='') as file:
+            with open(self.file_path, mode='w', newline='', encoding='utf-8') as file:
                 writer = csv.writer(file)
                 writer.writerows(items)
         except:

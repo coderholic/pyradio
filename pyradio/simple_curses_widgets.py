@@ -50,11 +50,11 @@ locale.setlocale(locale.LC_ALL, '')    # set your locale
 logger = logging.getLogger(__name__)
 
 def log_it(msg):
-    with open('/home/spiros/log_it.log', 'a') as f:
+    with open('/home/spiros/log_it.log', 'a', encoding='utf-8') as f:
         f.write(msg + '\n')
 
 
-class DisabledWidget(object):
+class DisabledWidget():
     '''A dummy class that only returns enabled = False
 
     To be used in complex dialogs
@@ -81,7 +81,7 @@ class DisabledWidget(object):
     def move(self, newY=-1, newX=-1, parent=None):
         pass
 
-class SimpleCursesWidget(object):
+class SimpleCursesWidget():
     '''An abstract widget class '''
     _win = _parent = _callback_function = None
     _focused = _showed = False
@@ -673,7 +673,7 @@ class SimpleCursesDate(SimpleCursesWidget):
             self.decrease()
 
         elif char in (kbkey['l'], curses.KEY_RIGHT):
-                self.increase()
+            self.increase()
 
         elif char in (9, kbkey['l'], kbkey['tab']):
             ''' TAB '''
@@ -3316,7 +3316,7 @@ class SimpleCursesPushButton(SimpleCursesWidget):
         return False
 
 
-class SimpleCursesHorizontalPushButtons(object):
+class SimpleCursesHorizontalPushButtons():
     '''A helper class to create horizontally
     spaced curses push buttons.
 
@@ -3457,7 +3457,7 @@ class SimpleCursesHorizontalPushButtons(object):
                 n.parent = value
 
 
-class SimpleCursesLineEdit(object):
+class SimpleCursesLineEdit():
     ''' Class to insert one line of text
     Python 3 supports all chars
     Python 2 supports ascii only
@@ -3775,7 +3775,7 @@ class SimpleCursesLineEdit(object):
         if self.string == '' and self._has_history:
             self._input_history.reset_index()
         if logger.isEnabledFor(logging.DEBUG) and self._cjk != old_cjk:
-                logger.debug('=== CJK editing is {} ==='.format('ON' if self._cjk else 'OFF'))
+            logger.debug('=== CJK editing is {} ==='.format('ON' if self._cjk else 'OFF'))
 
     def keep_restore_data(self):
         ''' Keep a copy of current editor state
@@ -4203,7 +4203,7 @@ class SimpleCursesLineEdit(object):
         if len(self.string) < self._max_chars_to_display:
             self._curs_pos += 1
             if self._curs_pos > len(self.string):
-                    self._curs_pos = len(self.string)
+                self._curs_pos = len(self.string)
             else:
                 if len(self._string) < self._first + self._curs_pos:
                     self._curs_pos = len(self._string) - self._max_chars_to_display
@@ -4817,7 +4817,7 @@ class SimpleCursesLineEdit(object):
                 return ret
 
 
-class SimpleCursesLineEditHistory(object):
+class SimpleCursesLineEditHistory():
 
     def __init__(self, history_file=None, history_file_is_locked=None):
         self._history = ['']

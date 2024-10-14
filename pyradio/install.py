@@ -470,7 +470,7 @@ def open_cache_dir():
     print(f'[magenta]PyRadio[/magenta] Cache dir: "{c.cache_dir}"')
 
 
-class PyRadioCache(object):
+class PyRadioCache():
 
     _files = []
     _gits = (
@@ -677,7 +677,7 @@ class MyArgParser(ArgumentParser):
         return '[bold]' + x.replace('||', r']').replace('|', r'\[') + '[/bold]'
 
 
-class PythonExecutable(object):
+class PythonExecutable():
     ''' A class to verify that python is installed
         and in the PATH
     '''
@@ -780,7 +780,7 @@ If you get en error, you have to add it to your PATH.
         '''
         return True if self._python[self.requested_python_version - 2] else False
 
-class PyRadioUpdate(object):
+class PyRadioUpdate():
 
     ''' package values:
             0   -   official release
@@ -1032,8 +1032,8 @@ class PyRadioUpdate(object):
         ''' change to pyradio directory '''
         self._install_dir = os.path.join(self._dir, self._install_dir)
         if os.path.isdir(self._install_dir):
-           os.chdir(self._install_dir)
-           os.chmod('devel/build_install_pyradio', 0o766)
+            os.chdir(self._install_dir)
+            os.chmod('devel/build_install_pyradio', 0o766)
         else:
             print('Error: Failed to download PyRadio source code...\n')
             sys.exit(1)
@@ -1126,32 +1126,32 @@ class PyRadioUpdate(object):
         if os.path.isdir(name):
             self._clean_up()
         if sys.version_info[0] == 2:
-          try:
-              os.makedirs(name)
-          except OSError as e:
-              if e.errno == 13:
-                  if _permission_error_function:
-                      _permission_error_function(name)
-                  else:
-                      print('Insufficient permissions...')
-              elif e.errno == 17:
-                  if dir_exist_function:
-                      dir_exist_function(name)
-                  else:
-                      print('Dir already exists...')
+            try:
+                os.makedirs(name)
+            except OSError as e:
+                if e.errno == 13:
+                    if _permission_error_function:
+                        _permission_error_function(name)
+                    else:
+                        print('Insufficient permissions...')
+                elif e.errno == 17:
+                    if dir_exist_function:
+                        dir_exist_function(name)
+                    else:
+                        print('Dir already exists...')
         else:
-          try:
-              os.makedirs(name)
-          except PermissionError:
-              if _permission_error_function:
-                  _permission_error_function(name)
-              else:
-                  print('Insufficient permissions...')
-          except FileExistsError:
-              if dir_exist_function:
-                  dir_exist_function(name)
-              else:
-                  print('Dir already exists...')
+            try:
+                os.makedirs(name)
+            except PermissionError:
+                if _permission_error_function:
+                    _permission_error_function(name)
+            else:
+                print('Insufficient permissions...')
+            except FileExistsError:
+                if dir_exist_function:
+                    dir_exist_function(name)
+            else:
+                print('Dir already exists...')
 
     def _empty_dir(self, name=None):
         ddir = self._dir if name is None else name

@@ -289,7 +289,7 @@ class PyRadioSearch(SimpleCursesLineEdit):
             return item[0].lower()
 
 
-class PyRadioEditor(object):
+class PyRadioEditor():
     """ PyRadio stations editor """
 
     _stations = []
@@ -838,7 +838,7 @@ class PyRadioEditor(object):
                 n.backslash_pressed = False
 
 
-class PyRadioRecordingDir(object):
+class PyRadioRecordingDir():
     """ PyRadio insert recording dir dialog """
 
     def __init__(self, dir_path, parent, global_functions=None):
@@ -1264,7 +1264,7 @@ class PyRadioRecordingDir(object):
         return 0, None, False
 
 
-class PyRadioResourceOpener(object):
+class PyRadioResourceOpener():
     """ PyRadio insert resource opener dialog """
 
     def __init__(self, opener, parent, global_functions=None):
@@ -1585,7 +1585,7 @@ class PyRadioResourceOpener(object):
     def _get_result(self):
         tmp = self._widgets[0].string.strip().split(' ')
         if tmp[0] == 'auto':
-             return 1, 'auto'
+            return 1, 'auto'
         w_file = find_executable_basename(tmp[0])
         if w_file is None:
             return 3, None
@@ -1678,7 +1678,7 @@ class PyRadioResourceOpener(object):
         return 0, None
 
 
-class PyRadioRenameFile(object):
+class PyRadioRenameFile():
     """ PyRadio copy file dialog """
 
     def __init__(self, filename, parent, create=False,
@@ -2213,7 +2213,7 @@ class PyRadioRenameFile(object):
         return self._get_result(ret)
 
 
-class PyRadioBuffering(object):
+class PyRadioBuffering():
 
     _text = 'Buffer size in seconds: '
     _help_text = ' Help '
@@ -2354,7 +2354,7 @@ class PyRadioBuffering(object):
         return 0, []
 
 
-class PyRadioConnectionType(object):
+class PyRadioConnectionType():
 
     _title = ' Connection Type '
     _text = 'Force http connections: '
@@ -2452,7 +2452,7 @@ class PyRadioConnectionType(object):
         return 0
 
 
-class PyRadioServerWindow(object):
+class PyRadioServerWindow():
 
     _win = _editor = None
 

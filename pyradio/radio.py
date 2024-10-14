@@ -145,7 +145,7 @@ def calc_can_change_colors(config):
             logger.info('Terminal can change colors: {}'.format(ret))
     return ret
 
-class SelectPlayer(object):
+class SelectPlayer():
 
     X = Y = maxX = maxY = 0
     _win = _parent = None
@@ -253,7 +253,7 @@ class SelectPlayer(object):
             return None
         return ''
 
-class PyRadio(object):
+class PyRadio():
     player = None
     ws = Window_Stack()
 
@@ -928,10 +928,10 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             sleep(.1)
             return 'Volume set to: {}'.format(vol)
         else:
-             if self.player.muted:
-                 return 'Player is Muted!'
-             else:
-                 return 'Player is Idle!'
+            if self.player.muted:
+                return 'Player is Muted!'
+            else:
+                return 'Player is Idle!'
 
     def _get_text_volume(self):
         if self.player.isPlaying() and \
@@ -942,10 +942,10 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             else:
                 return 'Volume: {}'.format(self.player.volume)
         else:
-             if self.player.muted:
-                 return 'Player is Muted!'
-             else:
-                 return 'Player is Idle!'
+            if self.player.muted:
+                return 'Player is Muted!'
+            else:
+                return 'Player is Idle!'
 
     def _html_song_title(self):
         if self._remote_control_server:
@@ -1874,6 +1874,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             logger.debug('File watch thread stopped on: {}'.format(a_file))
 
     def run(self):
+        logger.error('kbkey\n{}'.format(kbkey))
         # self._watch_theme()
         self._register_signals_handlers()
         if self.ws.operation_mode == self.ws.DEPENDENCY_ERROR:
@@ -2195,7 +2196,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         # logger.error('de setStation: selection = {}'.format(self.selection))
 
     def playSelectionBrowser(self, a_url=None):
-            self.log.display_help_message = False
+        self.log.display_help_message = False
 
             # self.log.write(msg=player_start_stop_token[0] + self._last_played_station[0])
 
@@ -6336,7 +6337,7 @@ ____Using |fallback| theme.''')
                         if self._cnf.is_register:
                             self._rename_playlist_dialog.title = ' Rename Register '
                     elif self._cnf._open_register_list and self.ws.operation_mode == self.ws.PLAYLIST_MODE:
-                            self._rename_playlist_dialog.title = ' Rename Register '
+                        self._rename_playlist_dialog.title = ' Rename Register '
                     self._rename_playlist_dialog.show()
                     self.ws.operation_mode = self.ws.RENAME_PLAYLIST_MODE
 
@@ -6433,10 +6434,10 @@ ____Using |fallback| theme.''')
             elif char == kbkey['clear_reg']:
                 self._update_status_bar_right(status_suffix='')
                 if ((self._cnf.is_register and \
-                     self.ws.operation_mode == self.ws.NORMAL_MODE) or \
+                        self.ws.operation_mode == self.ws.NORMAL_MODE) or \
                         (self.ws.operation_mode == self.ws.PLAYLIST_MODE and \
-                         self._cnf.open_register_list)):
-                        ''' c pressed - clear register '''
+                        self._cnf.open_register_list)):
+                            ''' c pressed - clear register '''
                         if self.number_of_items > 0:
                             self._print_clear_register()
                         else:
@@ -7352,13 +7353,13 @@ ____Using |fallback| theme.''')
                 logger.error('DE last_history = {}'.format(last_history))
                 # logger.error('DE last_history = {}'.format(last_history))
                 if self.ws.window_mode == self.ws.NORMAL_MODE:
-                        ''' rename the playlist on editor '''
+                    ''' rename the playlist on editor '''
                         self._rename_playlist_from_normal_mode(
-                            copy,
-                            open_file,
-                            pl_create,
-                            last_history
-                        )
+                                copy,
+                                open_file,
+                                pl_create,
+                                last_history
+                                )
                 else:
                     # self.ll('playlist before')
                     #self._playlist_in_editor = self._cnf.playlists[self.selections[self.ws.PLAYLIST_MODE][2]][-1]
@@ -9191,10 +9192,10 @@ ____Using |fallback| theme.''')
                 except:
                     pass
             if not os.path.exists(self._cnf.recording_dir):
-                    if mode == 'text':
-                        return 'Error: Recording not available; Recording dir does not exist!'
-                    elif mode == 'html':
-                        return '<div class="alert alert-danger"><b>Error!</b><br />Recording <b>not available!</b><br />Recording dir does <b>not exist!</b></div>'
+                if mode == 'text':
+                    return 'Error: Recording not available; Recording dir does not exist!'
+                elif mode == 'html':
+                    return '<div class="alert alert-danger"><b>Error!</b><br />Recording <b>not available!</b><br />Recording dir does <b>not exist!</b></div>'
         return None
 
     def _text_start_player(self):

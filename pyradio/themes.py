@@ -120,7 +120,7 @@ def calculate_fifteenth_color(colors, an_amount, inhibit_if_color15_exists=True)
         logger.debug('color15: {}'.format(y))
     return tuple(y)
 
-class PyRadioTheme(object):
+class PyRadioTheme():
     _colors = {}
     _active_colors = {}
     _read_colors = {}
@@ -342,7 +342,7 @@ class PyRadioTheme(object):
         else:
             self.applied_theme_name = 'dark'
             if a_theme.startswith('light'):
-                    self.applied_theme_name = 'light'
+                self.applied_theme_name = 'light'
             self._cnf.fallback_theme = self.applied_theme_name
         if logger.isEnabledFor(logging.INFO):
             logger.info('Applying fallback theme: "{0}" instead of: "{1}"'.format(self.applied_theme_name, a_theme))
@@ -398,7 +398,7 @@ class PyRadioTheme(object):
         '''
         out_file = path.join(self._cnf.themes_dir, out_theme_name + '.pyradio-theme')
         if exists(out_file):
-                return False, 'Theme "{}" already exists...'.format(out_theme_name)
+            return False, 'Theme "{}" already exists...'.format(out_theme_name)
         th_name = theme_name if theme_name else 'dark'
         if theme_name not in self._cnf.internal_themes and \
                 theme_name not in self._cnf.system_themes:
@@ -571,13 +571,13 @@ class PyRadioTheme(object):
             files = glob.glob(path.join(theme_dir, '*.pyradio-theme'))
             if files:
                 for a_file in files:
-                     a_theme_name = a_file.split(dir_sep)[-1].replace('.pyradio-theme', '')
-                     if a_theme_name == a_theme:
-                         return a_file
+                    a_theme_name = a_file.split(dir_sep)[-1].replace('.pyradio-theme', '')
+                    if a_theme_name == a_theme:
+                        return a_file
         return ''
 
 
-class PyRadioThemeReadWrite(object):
+class PyRadioThemeReadWrite():
 
     _tmeme_name = ''
     _theme_path = ''
@@ -868,7 +868,7 @@ transparency        0
 
 
 
-class PyRadioThemeSelector(object):
+class PyRadioThemeSelector():
     """ Theme Selector Window """
     TITLE = ' Available Themes '
     parent = None
@@ -999,12 +999,12 @@ class PyRadioThemeSelector(object):
             if files:
                 tmp_themes = []
                 for a_file in files:
-                     theme_name = a_file.split(dir_sep)[-1].replace('.pyradio-theme', '')
+                    theme_name = a_file.split(dir_sep)[-1].replace('.pyradio-theme', '')
 
-                     ret, _ = self._cnf.is_project_theme(theme_name)
-                     if ret is None:
-                         if not self._cnf.is_default_file(theme_name):
-                             tmp_themes.append([theme_name, a_file])
+                    ret, _ = self._cnf.is_project_theme(theme_name)
+                    if ret is None:
+                        if not self._cnf.is_default_file(theme_name):
+                            tmp_themes.append([theme_name, a_file])
                 if tmp_themes:
                     tmp_themes.sort()
                     tmp_themes.reverse()
@@ -1459,7 +1459,7 @@ class PyRadioThemeSelector(object):
             log_file.write(msg)
 
 
-class PyRadioThemeEditor(object):
+class PyRadioThemeEditor():
 
     theme_name = theme_path = ''
     editing = False

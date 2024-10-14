@@ -18,7 +18,7 @@ locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
 
-class PyRadioSimpleScheduleWindow(object):
+class PyRadioSimpleScheduleWindow():
 
     _X = _Y = _maxY = maxX = 0
     _widgets = _win = None

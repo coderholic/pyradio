@@ -774,7 +774,7 @@ If nothing else works, try the following command:
             for n in 0, 1:
                 if path.exists(paths[n]):
                     try:
-                        with open(paths[n], 'r') as f:
+                        with open(paths[n], 'r', encoding='utf-8') as f:
                             addr = f.read()
                             disp.append(out.format(tok[n], addr))
                     except:
@@ -1078,19 +1078,19 @@ def validate_user_config_dir(a_dir):
     test_file = path.join(this_dir, 'test.txt')
     # write a file to check if directory is writable
     try:
-        with open(test_file, 'w') as f:
+        with open(test_file, 'w', encoding='utf-8') as f:
             pass
     except:
         return None
     # try to read the file created above
     try:
-        with open(test_file, 'r') as f:
+        with open(test_file, 'r', encoding='utf-8') as f:
             pass
     except:
         return None
     # remove the file created above
     try:
-       remove(test_file)
+        remove(test_file)
     except:
         return None
     return this_dir

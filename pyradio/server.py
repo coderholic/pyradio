@@ -20,7 +20,7 @@ try:
 except:
     HAS_NETIFACES = False
 
-class IPs(object):
+class IPs():
     def __init__(self, fetch_public_ip=False):
         self._fetch_public_ip = fetch_public_ip
         self._IPs = []
@@ -95,7 +95,7 @@ class IPs(object):
         return out
 
 
-class IPsWithNumbers(object):
+class IPsWithNumbers():
 
     def __init__(self, default_ip=None, fat=False):
         self._ips = ['localhost', 'lan']
@@ -144,7 +144,7 @@ class IPsWithNumbers(object):
         '''
         return ip.lower() if self.ip_exists(ip) else 'localhost'
 
-class PyRadioServer(object):
+class PyRadioServer():
     _filter_string = '''
                     <script>
                     $(document).ready(function(){
@@ -1440,42 +1440,42 @@ Restricted Commands (Main mode only)
                 # self._send_text('Local playlist opened!')
 
         elif self._path.startswith('/search_rb') or \
-                    self._path.startswith('/srb'):
-                if not self.can_send_command():
-                    if self._is_html:
-                        self._send_raw(self._text['/perm_html'])
-                    else:
-                        self._send_text(self._text['/perm'])
-                    return
-                if self._path.endswith('srb') or \
-                        self._path.endswith('srb/') or \
-                        self._path.endswith('search_radio_browser') or \
-                        self._path.endswith('search_radio_browser/'):
-                    x = None
-                else:
-                    p = self._path.replace(
-                            '/search_radio_browser/', ''
-                        ).replace(
-                            '/srb/', ''
-                        )
-                    # logger.error('p = "{}"'.format(p))
-                    try:
-                        x = int(p)
-                        # logger.error('x = {}'.format(x))
-                    except ValueError:
-                        if self._is_html:
-                            # logger.error('HTML ERROR')
-                            self._send_raw('<div class="alert txt-center alert-danger">Error in parameter</div>')
-                        else:
-                            # logger.error('TEXT ERROR')
-                            self._send_text('Error in command\n')
-                        return
+                self._path.startswith('/srb'):
+            if not self.can_send_command():
                 if self._is_html:
-                    ret = self._commands['/html_search_radio_browser'](x)
+                    self._send_raw(self._text['/perm_html'])
                 else:
-                    ret = self._commands['/search_radio_browser'](x)
-                    if ret != '':
-                        self._send_text(ret)
+                    self._send_text(self._text['/perm'])
+                return
+            if self._path.endswith('srb') or \
+                    self._path.endswith('srb/') or \
+                    self._path.endswith('search_radio_browser') or \
+                    self._path.endswith('search_radio_browser/'):
+                x = None
+            else:
+                p = self._path.replace(
+                        '/search_radio_browser/', ''
+                    ).replace(
+                        '/srb/', ''
+                    )
+                # logger.error('p = "{}"'.format(p))
+                try:
+                    x = int(p)
+                    # logger.error('x = {}'.format(x))
+                except ValueError:
+                    if self._is_html:
+                        # logger.error('HTML ERROR')
+                        self._send_raw('<div class="alert txt-center alert-danger">Error in parameter</div>')
+                    else:
+                        # logger.error('TEXT ERROR')
+                        self._send_text('Error in command\n')
+                    return
+            if self._is_html:
+                ret = self._commands['/html_search_radio_browser'](x)
+            else:
+                ret = self._commands['/search_radio_browser'](x)
+                if ret != '':
+                    self._send_text(ret)
 
         elif self._path == '/rb_page' or self._path == '/grb':
             if self._is_html:
@@ -1975,7 +1975,7 @@ Content-Length: {}
                     else:
                         out.append(n[0])
                 else:
-                        out.append(n[0])
+                    out.append(n[0])
             p_name = basename(self.playlist_in_editor()[:-4])
         else:
             out = stations

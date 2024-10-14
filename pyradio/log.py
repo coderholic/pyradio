@@ -42,7 +42,7 @@ def fix_chars(s):
     return out[-1].strip()
 
 
-class Log(object):
+class Log():
     ''' Log class that outputs text to a curses screen '''
 
     old_window_title = None
@@ -295,7 +295,7 @@ class Log(object):
                         self.display_help_message = False
                 if self._show_status_updates:
                     if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('Counter: {}'.format(self.counter))
+                        logger.debug('Counter: {}'.format(self.counter))
 
                 if self.asked_to_stop:
                     self.asked_to_stop = False
@@ -572,26 +572,26 @@ class Log(object):
         else:
             if d_msg:
                 if d_msg.startswith('Title: '):
-                        if logger.isEnabledFor(logging.CRITICAL):
+                    if logger.isEnabledFor(logging.CRITICAL):
+                        try:
+                            if force or d_msg not in self._cnf._old_log_title:
+                                try:
+                                    logger.critical(d_msg.replace('Title: ', '    '))
+                                except:
+                                    logger.critical('Error writing title...')
+                                self._cnf._old_log_title = d_msg
+                        except UnicodeDecodeError:
+                            ''' try to handle it for python2 '''
                             try:
-                                if force or d_msg not in self._cnf._old_log_title:
+                                if force or d_msg.decode('utf-8', 'replace') not in self._cnf._old_log_title.decode('utf-8', 'replace'):
                                     try:
                                         logger.critical(d_msg.replace('Title: ', '    '))
                                     except:
                                         logger.critical('Error writing title...')
                                     self._cnf._old_log_title = d_msg
-                            except UnicodeDecodeError:
-                                ''' try to handle it for python2 '''
-                                try:
-                                    if force or d_msg.decode('utf-8', 'replace') not in self._cnf._old_log_title.decode('utf-8', 'replace'):
-                                        try:
-                                            logger.critical(d_msg.replace('Title: ', '    '))
-                                        except:
-                                            logger.critical('Error writing title...')
-                                        self._cnf._old_log_title = d_msg
-                                except:
-                                    logger.critical('Error writing title...')
-                        self._cnf._current_log_title = d_msg
+                            except:
+                                logger.critical('Error writing title...')
+                    self._cnf._current_log_title = d_msg
                 elif d_msg.startswith('Playing: ') or \
                           d_msg.startswith('Buffering: '):
                     if d_msg[0] == 'P':
@@ -720,7 +720,7 @@ class Log(object):
             stdout.flush()
 
 
-class RepeatDesktopNotification(object):
+class RepeatDesktopNotification():
 
     def __init__(self, config, timeout):
         self._cnf = config

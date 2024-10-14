@@ -26,7 +26,7 @@ def format_list(a_string):
     )
     )
 
-class PyRadioClient(object):
+class PyRadioClient():
 
     def __init__(
             self,
@@ -158,7 +158,7 @@ class PyRadioClient(object):
         for n in 0, 1:
             if path.exists(self._files[n]):
                 try:
-                    with open(self._files[n], 'r') as f:
+                    with open(self._files[n], 'r', encoding='utf-8') as f:
                         addr = f.read()
                         disp.append(out.format(tok[n], addr))
                 except:
@@ -217,7 +217,7 @@ class PyRadioClient(object):
 
     def _get_host_and_port_from_file(self):
         try:
-            with open(self._file, 'r') as f:
+            with open(self._file, 'r', encoding='utf-8') as f:
                 line = f.read()
         except:
             pass

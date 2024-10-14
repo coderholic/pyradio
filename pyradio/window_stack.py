@@ -9,7 +9,7 @@ import locale
 locale.setlocale(locale.LC_ALL, "")
 
 
-class Window_Stack_Constants(object):
+class Window_Stack_Constants():
     ''' Modes of Operation '''
     DEPENDENCY_ERROR = -2
     NO_PLAYER_ERROR_MODE = -1

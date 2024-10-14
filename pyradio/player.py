@@ -255,7 +255,7 @@ def info_dict_to_list(info, fix_highlight, max_width, win_width):
     # logger.error('DE a_list\n\n{}\n\n'.format(a_list))
     return a_list
 
-class Player(object):
+class Player():
     ''' Media player class. Playing is handled by player sub classes '''
     process = None
     update_thread = None
@@ -537,7 +537,7 @@ class Player(object):
         if not os.path.exists(self.all_config_files['vlc'][0]):
             ''' create a default vlc config file '''
             try:
-                with open(self.all_config_files['vlc'][0], 'w') as f:
+                with open(self.all_config_files['vlc'][0], 'w', encoding='utf-8') as f:
                     f.write('50')
             except:
                 pass
@@ -749,7 +749,7 @@ class Player(object):
                         else:
                             lines_no_profile.append('volume={}\n'.format(self.volume))
                         try:
-                            with open(config_file, "w") as c_file:
+                            with open(config_file, "w", encoding='utf-8') as c_file:
                                 c_file.write(
                                     '\n'.join(lines_no_profile) + \
                                     '\n'.join(lines_with_profile)
@@ -842,7 +842,7 @@ class Player(object):
             return ret_string
 
     def _split_config_file(self, config_file):
-        with open(config_file, 'r') as c_file:
+        with open(config_file, 'r', encoding='utf-8') as c_file:
             config_string = c_file.read()
             config_string = config_string.replace('#Volume set from pyradio\n', '')
             lines = config_string.split('\n')
@@ -1008,7 +1008,7 @@ class Player(object):
                             enable_crash_detection_function()
                         with recording_lock:
                             if (not self.playback_is_on) and (logger.isEnabledFor(logging.INFO)):
-                                    logger.info('*** updateStatus(): Start of playback detected ***')
+                                logger.info('*** updateStatus(): Start of playback detected ***')
                             #if self.outputStream.last_written_string.startswith('Connecting to'):
                             if self.oldUserInput['Title'] == '':
                                 if self.buffering:
@@ -1913,12 +1913,12 @@ class Player(object):
         if self.oldUserInput['Title'] != '':
             self._stop_delay_thread()
             try:
-               self.delay_thread = threading.Timer(delay,
-                                                   self.updateTitle,
-                                                   [ self.outputStream,
-                                                    None ]
-                                                   )
-               self.delay_thread.start()
+                self.delay_thread = threading.Timer(
+                        delay,
+                        self.updateTitle,
+                        [ self.outputStream, None ]
+                        )
+                self.delay_thread.start()
             except:
                 if (logger.isEnabledFor(logging.DEBUG)):
                     logger.debug('delay thread start failed')
@@ -2146,25 +2146,25 @@ class Player(object):
         self.currently_recording = True if self.recording > 0 else False
         if self.recording == self.RECORD_AND_LISTEN \
                 and self.PLAYER_NAME != 'mpv':
-                    self.buffering = False
-                    # logger.error('=======================\n\n')
-                    limit = 120000
-                    if self.PLAYER_NAME == 'mplayer':
-                        if not platform.startswith('win'):
-                            limit = 12000
-                        threading.Thread(
-                                target=self.create_monitor_player,
-                                args=(lambda: self.stop_mpv_status_update_thread or \
-                                        self.stop_win_vlc_status_update_thread,
-                                      limit,
-                                      self._start_monitor_update_thread)
-                                ).start()
-                    else:
-                        threading.Thread(
-                                target=self.create_monitor_player,
-                                args=(lambda: self.stop_mpv_status_update_thread,  limit, self._start_monitor_update_thread)
-                                ).start()
-                    # logger.error('=======================\n\n')
+            self.buffering = False
+            # logger.error('=======================\n\n')
+            limit = 120000
+            if self.PLAYER_NAME == 'mplayer':
+                if not platform.startswith('win'):
+                    limit = 12000
+                threading.Thread(
+                        target=self.create_monitor_player,
+                        args=(lambda: self.stop_mpv_status_update_thread or \
+                                self.stop_win_vlc_status_update_thread,
+                              limit,
+                              self._start_monitor_update_thread)
+                        ).start()
+            else:
+                threading.Thread(
+                        target=self.create_monitor_player,
+                        args=(lambda: self.stop_mpv_status_update_thread,  limit, self._start_monitor_update_thread)
+                        ).start()
+            # logger.error('=======================\n\n')
 
     def _sendCommand(self, command):
         ''' send keystroke command to player '''
@@ -2176,11 +2176,11 @@ class Player(object):
             return
         # logger.error('self.monitor_process.pid = {}'.format(self.monitor_process))
         if self.monitor_process is not None and \
-                [x for x in
-                 ('/', '*', 'p', 'm', 'vol', 'pause' ) if command.startswith(x)
-                 ]:
-                    # logger.error('\n\nsending command: "{}"\n\n'.format(command))
-                    self._command_to_player(self.monitor_process, command)
+            [x for x in
+             ('/', '*', 'p', 'm', 'vol', 'pause') if command.startswith(x)
+             ]:
+            # logger.error('\n\nsending command: "{}"\n\n'.format(command))
+            self._command_to_player(self.monitor_process, command)
         else:
             self._command_to_player(self.process, command)
 
@@ -2576,18 +2576,18 @@ class MpvPlayer(Player):
 
         if playList:
             if newerMpv:
-                        opts.append('--input-ipc-server=' + self.mpvsocket)
-                        opts.append('--playlist=' + self._url_to_use(streamUrl))
+                opts.append('--input-ipc-server=' + self.mpvsocket)
+                opts.append('--playlist=' + self._url_to_use(streamUrl))
             else:
-                        opts.append('--input-unix-socket=' + self.mpvsocket)
-                        opts.append('--playlist=' + self._url_to_use(streamUrl))
+                opts.append('--input-unix-socket=' + self.mpvsocket)
+                opts.append('--playlist=' + self._url_to_use(streamUrl))
         else:
             if newerMpv:
-                        opts.append('--input-ipc-server=' + self.mpvsocket)
-                        opts.append(self._url_to_use(streamUrl))
+                opts.append('--input-ipc-server=' + self.mpvsocket)
+                opts.append(self._url_to_use(streamUrl))
             else:
-                        opts.append('--input-unix-socket=' + self.mpvsocket)
-                        opts.append(self._url_to_use(streamUrl))
+                opts.append('--input-unix-socket=' + self.mpvsocket)
+                opts.append(self._url_to_use(streamUrl))
 
         ''' check if buffering '''
         self.buffering = self._player_is_buffering(opts, self.buffering_tokens)
@@ -3278,7 +3278,7 @@ class VlcPlayer(Player):
     def _read_config(self):
         if self._config_volume == -1:
             try:
-                with open(self.all_config_files['vlc'][0], 'r') as f:
+                with open(self.all_config_files['vlc'][0], 'r', encoding='utf-8') as f:
                     val = f.read().strip()
             except:
                 # logger.error('\n\nself._config_volume = {}\n\n'.format(self._config_volume))
@@ -3295,7 +3295,7 @@ class VlcPlayer(Player):
         # ovol = round(int(self.volume)*100/self.max_volume)
         # logger.error('ovol = {}\n\n'.format(ovol))
         try:
-            with open(self.all_config_files['vlc'][0], 'w') as f:
+            with open(self.all_config_files['vlc'][0], 'w', encoding='utf-8') as f:
                 # f.write(str(ovol))
                 f.write(str(self.volume))
         except:
@@ -3761,7 +3761,7 @@ class VlcPlayer(Player):
         #self.print_response(rep)
 
 
-class PyRadioChapters(object):
+class PyRadioChapters():
 
     HAS_MKVTOOLNIX = False
 
@@ -4053,7 +4053,7 @@ class PyRadioChapters(object):
                 )
 
 
-class PlayerCache(object):
+class PlayerCache():
 
     _dirty = False
 

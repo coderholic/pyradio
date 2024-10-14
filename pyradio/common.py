@@ -98,7 +98,7 @@ def rgb_to_curses_rgb(rgb):
     return tuple(int(y *1000 / 255) for y in rgb)
 
 
-class StationsChanges(object):
+class StationsChanges():
     '''
     #########################################################################
     #                                                                       #

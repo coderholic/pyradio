@@ -646,14 +646,14 @@ def get_path(exe):
     # print('------------------------')
     x = site.getusersitepackages()
     if isinstance(x, str):
-            # print('adding: "{}"'.format(join(x, exe)))
-            # print('adding: "{}"'.format(join(x, 'Scripts', exe)))
-            chk.append(join(x, exe))
-            chk.append(join(x, 'Scripts', exe))
-            # print('adding: "{}"'.format(join(x, exe)).replace('\site-packages', ''))
-            # print('adding: "{}"'.format(join(x, 'Scripts', exe)).replace('\site-packages', ''))
-            chk.append(join(x, exe).replace(r'\site-packages', ''))
-            chk.append(join(x, 'Scripts', exe).replace(r'\site-packages', ''))
+        # print('adding: "{}"'.format(join(x, exe)))
+        # print('adding: "{}"'.format(join(x, 'Scripts', exe)))
+        chk.append(join(x, exe))
+        chk.append(join(x, 'Scripts', exe))
+        # print('adding: "{}"'.format(join(x, exe)).replace('\site-packages', ''))
+        # print('adding: "{}"'.format(join(x, 'Scripts', exe)).replace('\site-packages', ''))
+        chk.append(join(x, exe).replace(r'\site-packages', ''))
+        chk.append(join(x, 'Scripts', exe).replace(r'\site-packages', ''))
     else:
         for n in site.getusersitepackages():
             # print('adding: "{}"'.format(join(n, exe)))
@@ -724,16 +724,14 @@ def install_pyradio_link():
     to_start_menu = join(appdata, 'Microsoft', 'Windows', 'Start Menu', 'Programs')
 
     if exists(to_desktop):
-            copy(
-                join(appdata, 'pyradio', 'help', 'PyRadio.lnk'),
-                join(to_desktop, 'PyRadio.lnk')
-            )
+        copy(join(appdata, 'pyradio', 'help', 'PyRadio.lnk'),
+             join(to_desktop, 'PyRadio.lnk')
+             )
 
     if exists(to_start_menu):
-            copy(
-                join(appdata, 'pyradio', 'help', 'PyRadio.lnk'),
-                join(to_start_menu, 'PyRadio.lnk')
-            )
+        copy(join(appdata, 'pyradio', 'help', 'PyRadio.lnk'),
+             join(to_start_menu, 'PyRadio.lnk')
+             )
 
 def find_and_remove_recording_data(data_dir):
     threading.Thread(

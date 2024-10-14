@@ -240,7 +240,7 @@ class MKVToolNix:
             else:
                 return None
         if print_messages:
-                print('  (w) SRT file: "{}"'.format(os.path.basename(self._srt_file)))
+            print('  (w) SRT file: "{}"'.format(os.path.basename(self._srt_file)))
         else:
             return self._srt_file
 

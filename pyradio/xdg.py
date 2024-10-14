@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
-class XdgMigrate(object):
+class XdgMigrate():
 
     _verbose = False
 
@@ -231,8 +231,8 @@ class XdgMigrate(object):
         if path.exists(self._desktop_file) and \
                 self._need_to_fix_desktop_file:
             try:
-                  with open(self._desktop_file, 'r', encoding='utf-8') as d:
-                      lines = d.readlines()
+                with open(self._desktop_file, 'r', encoding='utf-8') as d:
+                    lines = d.readlines()
             except:
                 return
             for i, l in enumerate(lines):
@@ -286,7 +286,7 @@ class XdgMigrate(object):
                 pass
 
 
-class XdgDirs(object):
+class XdgDirs():
     ''' A class to provide PyRadio directories compliant
         to the XDG XDG Base Directory Specification (or not)
 
@@ -669,7 +669,7 @@ class XdgDirs(object):
         self.titles_log_file = path.join(self.recording_dir, 'pyradio-titles.log')
 
 
-class CheckDir(object):
+class CheckDir():
     _is_writable = False
     _can_be_writable = False
     _can_be_created = False
@@ -748,7 +748,7 @@ class CheckDir(object):
             # Can i write in it?
             test_file = path.join(self.dir_path, r'TEST_IF_WRITABLE')
             try:
-                with open(test_file, 'w') as f:
+                with open(test_file, 'w', encoding='utf-8') as f:
                     pass
                 remove(test_file)
                 self._is_writable = True

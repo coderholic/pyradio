@@ -113,7 +113,7 @@ def capitalize_comma_separated_string(a_string):
         sp[i] = n.strip().capitalize()
     return ', '.join(sp)
 
-class PyRadioStationsBrowser(object):
+class PyRadioStationsBrowser():
     ''' A base class to get results from online radio directory services.
 
         Actual implementations should be subclasses of this one.
@@ -1253,7 +1253,7 @@ class RadioBrowser(PyRadioStationsBrowser):
             columns_separotors = self._populate_columns_separators(('tags', 'language', 'state', 'country', 'codec', 'bitrate', 'clickcount', 'votes'), width)
 
         if adjust_for_header and self._output_format == 1:
-                columns_separotors[0] -= self._outer_internal_body_diff
+            columns_separotors[0] -= self._outer_internal_body_diff
 
         if adjust_for_body:
             if self._output_format == 1:
@@ -1569,7 +1569,7 @@ class RadioBrowser(PyRadioStationsBrowser):
         self.keyboard_handler = self._config_win
         self._config_win.show(parent=parent)
 
-class RadioBrowserConfig(object):
+class RadioBrowserConfig():
     ''' RadioBrowser config calss
 
         Parameters:
@@ -1790,7 +1790,7 @@ PING_TIMEOUT = '''
             logger.info('Saved Online Browser config files')
         return True
 
-class RadioBrowserConfigWindow(object):
+class RadioBrowserConfigWindow():
 
     BROWSER_NAME = 'RadioBrowser'
     TITLE = ' RadioBrowser Config '
@@ -2033,7 +2033,7 @@ class RadioBrowserConfigWindow(object):
             self._fix_ping_enable()
             self._widgets[-1].set_data(self._params[0]['default'], self._params[0]['limit'], self._params[0]['terms'])
             for n in self._widgets:
-               n.show(self._win)
+                n.show(self._win)
             self._win.refresh()
             # self._widgets[-1].refresh()
         # self._print_params()
@@ -2449,7 +2449,7 @@ class RadioBrowserConfigWindow(object):
                 return ret
         return 1
 
-class RadioBrowserSearchWindow(object):
+class RadioBrowserSearchWindow():
 
     NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION = 3
 
@@ -3080,14 +3080,14 @@ class RadioBrowserSearchWindow(object):
 
         self._win.addstr(self.maxY - 3, 2, 25 * ' ')
         if self._selected_history_id == 0:
-                self._win.addstr(self.maxY - 3, 2, 'Empty item!!!', curses.color_pair(4))
+            self._win.addstr(self.maxY - 3, 2, 'Empty item!!!', curses.color_pair(4))
         elif self._selected_history_id == self._history_id:
             if self._default_history_id == self._history_id:
                 self._win.addstr(self.maxY - 3, 2, 'Last search, Default', curses.color_pair(4))
             else:
                 self._win.addstr(self.maxY - 3, 2, 'Last search', curses.color_pair(4))
         elif self._selected_history_id == self._default_history_id:
-                self._win.addstr(self.maxY - 3, 2, 'Default item', curses.color_pair(4))
+            self._win.addstr(self.maxY - 3, 2, 'Default item', curses.color_pair(4))
 
         msg = 'History navigation: ^N/^P, HOME,0/END,g,$, PgUp/PgDown'
         thisX = self.maxX - 2 - len(msg)
@@ -3599,7 +3599,7 @@ class RadioBrowserSearchWindow(object):
         elif this_id in self._right_column:
             return self._right_column.index(this_id), self._right_column
 
-class RadioBrowserData(object):
+class RadioBrowserData():
     ''' Read search parameters for radio.browser.info service
 
         parameters are:
@@ -3791,7 +3791,7 @@ class RadioBrowserData(object):
         lock.release()
 
 
-class RadioBrowserDns(object):
+class RadioBrowserDns():
     ''' Preforms query the DNS SRV record of
         _api._tcp.radio-browser.info which
         gives the list of server names directly
@@ -3900,7 +3900,7 @@ class RadioBrowserDns(object):
         for a_url in self._urls:
             yield a_url
 
-class RadioBrowserSort(object):
+class RadioBrowserSort():
 
     TITLE = ' Sort by '
 
@@ -4076,7 +4076,7 @@ class RadioBrowserSort(object):
         return 1
 
 
-class RadioBrowserServersSelect(object):
+class RadioBrowserServersSelect():
     ''' Server selection Window
         Uses RadioBrowserServers
     '''
@@ -4240,7 +4240,7 @@ class RadioBrowserServersSelect(object):
         return self.return_value
 
 
-class RadioBrowserServers(object):
+class RadioBrowserServers():
     ''' Display RadioBrowser server
         This is supposed to be pluged into
         another widget
@@ -4393,7 +4393,7 @@ class RadioBrowserServers(object):
 
         return 1
 
-class RadioBrowserStationsStack(object):
+class RadioBrowserStationsStack():
     pass_first_item_func=None
     pass_last_item_func=None
     no_items_func=None
@@ -4477,16 +4477,16 @@ class RadioBrowserStationsStack(object):
         self._show_station_history_debug()
 
     def rename_station(self, playlist, orig_station, new_station):
-         # logger.error('playlist = "{}"'.format(playlist))
-         # logger.error('orig_station = "{}"'.format(orig_station))
-         # logger.error('new_station = "{}"'.format(new_station))
-         self._show_station_history_debug()
-         for i in range(len(self.items) - 1, -1, -1):
-             if self.items[i][1] == orig_station:
-                 logger.error('item = {}'.format(self.items[i]))
-                 self.items[i][1] = new_station
-                 logger.error('item = {}'.format(self.items[i]))
-         self._show_station_history_debug()
+        # logger.error('playlist = "{}"'.format(playlist))
+        # logger.error('orig_station = "{}"'.format(orig_station))
+        # logger.error('new_station = "{}"'.format(new_station))
+        self._show_station_history_debug()
+        for i in range(len(self.items) - 1, -1, -1):
+            if self.items[i][1] == orig_station:
+                logger.error('item = {}'.format(self.items[i]))
+                self.items[i][1] = new_station
+                logger.error('item = {}'.format(self.items[i]))
+        self._show_station_history_debug()
 
     def _get(self):
         if self.item == -1:
@@ -4867,7 +4867,7 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
         return 1
 
     def _log(self, msg):
-        with open(self._log_file, 'a') as log_file:
+        with open(self._log_file, 'a', encoding='utf-8') as log_file:
             log_file.write(msg)
 
 def probeBrowsers(a_browser_url):

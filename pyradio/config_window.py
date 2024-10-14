@@ -31,7 +31,7 @@ def set_global_functions(global_functions):
     return ret
 
 
-class PyRadioConfigWindow(object):
+class PyRadioConfigWindow():
     n_u = Window_Stack_Constants
 
     parent = None
@@ -755,12 +755,12 @@ class PyRadioConfigWindow(object):
                 curses.KEY_RIGHT,
                 kbkey['h'], kbkey['l'],
             )):
-                    ret = self._local_functions[char]()
-                    if self._local_functions[char] == self._go_exit:
-                        return 1, []
-                    elif self._local_functions[char] == self._go_save and ret:
-                        return 0, []
-                    return -1, []
+                ret = self._local_functions[char]()
+                if self._local_functions[char] == self._go_exit:
+                    return 1, []
+                elif self._local_functions[char] == self._go_save and ret:
+                    return 0, []
+                return -1, []
 
         if char in self._global_functions.keys():
             self._global_functions[char]()
@@ -1027,7 +1027,7 @@ class PyRadioConfigWindow(object):
         return -1, []
 
 
-class PyRadioExtraParams(object):
+class PyRadioExtraParams():
     ''' Class to display extra player parameters on
         main window. No editing allowed!
     '''
@@ -1137,7 +1137,7 @@ class PyRadioExtraParams(object):
         return self._extra.keypress(char)
 
 
-class ExtraParametersEditor(object):
+class ExtraParametersEditor():
     ''' Class to edit or add parameters
     '''
 
@@ -1413,7 +1413,7 @@ class ExtraParametersEditor(object):
                 else:
                     x._focused = False
 
-class ExtraParameters(object):
+class ExtraParameters():
     ''' display player's extra parameters
         in a foreign curses window ('Z')
     '''
@@ -1631,7 +1631,7 @@ class ExtraParameters(object):
         ''' extract profiles from a file '''
         try:
             out = []
-            with open(a_file, 'r') as f:
+            with open(a_file, 'r', encoding='utf-8') as f:
                 r = f.readlines()
                 for n in r:
                     k = n.strip()
@@ -2015,7 +2015,7 @@ class ExtraParameters(object):
         return ret
 
 
-class PyRadioSelectPlayer(object):
+class PyRadioSelectPlayer():
 
     maxY = 14
     maxX = 72
@@ -2386,7 +2386,7 @@ class PyRadioSelectPlayer(object):
         self._populate_players()
 
 
-class PyRadioSelectEncodings(object):
+class PyRadioSelectEncodings():
     max_enc_len = 15
 
     _win = None
@@ -2740,7 +2740,7 @@ class PyRadioSelectEncodings(object):
         return -1, ''
 
 
-class PyRadioSelectPlaylist(object):
+class PyRadioSelectPlaylist():
     _win = None
 
     _title = ' Playlist Selection '
@@ -3352,7 +3352,7 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
 
         return PyRadioSelectPlaylist.keypress(self, char)
 
-class PyRadioServerConfig(object):
+class PyRadioServerConfig():
 
     def __init__(self):
         pass

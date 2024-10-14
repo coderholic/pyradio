@@ -64,7 +64,7 @@ def format_date_to_iso8851(a_date=None):
         cur_month + ' ' + str(a_date.year) + \
         a_date.strftime(' %H:%M:%S')
 
-class PyRadioScheduleItemType(object):
+class PyRadioScheduleItemType():
 
     TYPE_START_END = 0
     TYPE_START = 1
@@ -84,7 +84,7 @@ class PyRadioScheduleItemType(object):
             return 'UNKNOUN'
 
 
-class PyRadioScheduleTimeType(object):
+class PyRadioScheduleTimeType():
 
     TIME_ABSOLUTE = 0
     TIME_RELATIVE = 1
@@ -101,7 +101,7 @@ class PyRadioScheduleTimeType(object):
             return 'UNKNOUN'
 
 
-class PyRadioScheduleList(object):
+class PyRadioScheduleList():
 
     _list = []              # initial list of dicts
     _schedule_list = []     # lisr of PyRadioScheduleItem
@@ -135,9 +135,9 @@ class PyRadioScheduleList(object):
     def _list_to_schedule_items(self):
         self._schedule_list = []
         for i in range(0, len(self._list)):
-             self._schedule_list.append(
-                 PyRadioScheduleItem(self._list[i])
-             )
+            self._schedule_list.append(
+                    PyRadioScheduleItem(self._list[i])
+                    )
         for i in range(len(self._schedule_list)-1, -1, -1):
             ac = self._schedule_list[i].get_active_item()
             now = datetime.now()
@@ -151,9 +151,9 @@ class PyRadioScheduleList(object):
         if self._schedule_list == []:
             # logger.error('len(self._list) = {}'.format(len(self._list)))
             for i in range(0, len(self._list)):
-                 self._schedule_list.append(
-                     PyRadioScheduleItem(self._list[i])
-                 )
+                self._schedule_list.append(
+                        PyRadioScheduleItem(self._list[i])
+                        )
         return [x.get_active_item() for x in self._schedule_list]
 
     def get_info_of_items(self):
@@ -390,7 +390,7 @@ class PyRadioScheduleList(object):
     def count(self):
         return len(self._schedule_list)
 
-class PyRadioScheduleItem(object):
+class PyRadioScheduleItem():
     '''
     Provide a Schedule Item
 
@@ -445,7 +445,7 @@ class PyRadioScheduleItem(object):
                 self._item = item
 
         if self._item is None:
-           self._item = self.default_item
+            self._item = self.default_item
 
     def __str__(self):
         out = ['Current _item:']
@@ -770,7 +770,7 @@ class PyRadioScheduleItem(object):
             [today.hour, today.minute, 0, 0]
 
 
-class PyRadioTime(object):
+class PyRadioTime():
     ''' A class to provide PyRadio time and date
 
         PyRadio time is a tuple

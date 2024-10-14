@@ -3,17 +3,17 @@
 import curses
 import re
 import logging
+import locale
 from curses.ascii import ACK as KEY_ACK, STX as KEY_STX
 from sys import platform
 from .window_stack import Window_Stack_Constants
 from .keyboard import kbkey, kb2str, kb2strL
 
-import locale
 locale.setlocale(locale.LC_ALL, "")
 
 logger = logging.getLogger(__name__)
 
-class PyRadioMessagesSystem(object):
+class PyRadioMessagesSystem():
 
     _win = None
     too_small = False
@@ -1567,7 +1567,7 @@ Esc                                 |*|Cancel operation.
         self._active_token = None
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('tokens = {}'.format(self._tokens))
-        if token in self._tokens.keys():
+        if token in self._tokens:
             self._active_token = self._tokens[token]
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('setting self._pad_pos to {}'.format(self._pad_pos))
@@ -1609,7 +1609,7 @@ Esc                                 |*|Cancel operation.
                 cap=' Registers List Help '
         elif self.active_message_key == 'H_DIR':
             out = self._txt[self.active_message_key][1].format(args[1])
-        elif (self.active_message_key == 'H_SEARCH' or self.active_message_key == 'H_LINE_EDITOR') and \
+        elif self.active_message_key in ('H_SEARCH', 'H_LINE_EDITOR') and \
                 platform.startswith('win'):
             out = self._txt[self.active_message_key][1].replace('M-', 'A-')
         elif self.active_message_key == 'H_CONFIG_ENCODING':
@@ -1644,7 +1644,7 @@ Esc                                 |*|Cancel operation.
             if self.simple_dialog:
                 column = 0
             else:
-                if self.active_message_key in self._columns.keys():
+                if self.active_message_key in self._columns:
                     column =  self._columns[self.active_message_key]
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('column from self._columns = {}'.format(column))
@@ -1661,7 +1661,7 @@ Esc                                 |*|Cancel operation.
                     self._columns[self.active_message_key] = column
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('column from calculation = {}'.format(column))
-            if self.active_message_key in self._max_lens.keys():
+            if self.active_message_key in self._max_lens:
                 mmax =  self._max_lens[self.active_message_key]
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('max len from self._max_lens = {}'.format(mmax))
@@ -1689,8 +1689,11 @@ Esc                                 |*|Cancel operation.
             self._columns.pop(self.active_message_key, None)
             self._max_lens.pop(self.active_message_key, None)
         # logger.error('self._max_lens\n{}'.format(self._max_lens))
+        mmax = max(mmax, len(cap) + 6)
+        ''' replaced by pylint prompt
         if mmax < len(cap) + 6:
             mmax = len(cap) + 6
+        '''
         # logger.error('\n\n===> mmax = {}\n\n'.format(mmax))
         return cap, l, mmax
 

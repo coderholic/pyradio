@@ -6,7 +6,7 @@ import csv
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
-class CompareFiles(object):
+class CompareFiles():
     ''' Class to compare two files  by content '''
 
     def __init__(self, fname1, fname2):

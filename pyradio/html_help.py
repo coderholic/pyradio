@@ -73,7 +73,7 @@ def is_graphical_environment_running():
     HAS_GRAPHICAL_ENV = 2
     return False
 
-class HtmlHelp(object):
+class HtmlHelp():
 
     _files = ('index.html', 'radio-browser.html')
 
