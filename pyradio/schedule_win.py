@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import locale
-from sys import exit
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from calendar import monthrange
 from time import sleep
 import curses

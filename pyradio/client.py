@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import argparse
 from argparse import ArgumentParser, SUPPRESS as SUPPRESS
 from os import path, getenv
 import sys
@@ -87,7 +86,7 @@ class PyRadioClient():
 
     @property
     def server_found(self):
-        return False if self._file is None else True
+        return self._file is not None
 
     @property
     def last_command(self):
@@ -241,7 +240,6 @@ class MyArgParser(ArgumentParser):
     def print_usage(self, file=None):
         if file is None:
             file = sys.stdout
-        usage = self.format_usage()
         print(self._add_colors(self.format_usage()))
 
     def print_help(self, file=None):

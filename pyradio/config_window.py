@@ -6,7 +6,7 @@ from copy import deepcopy
 from textwrap import wrap
 import glob
 import csv
-from os import path, sep, remove
+from os import path, sep
 from sys import platform, version_info
 
 from .common import *
@@ -469,8 +469,8 @@ class PyRadioConfigWindow():
             return
         visible_items = self.maxY - 3
         last_item = self._start + visible_items
-        old_selection = self.__selection
-        old_start = self._start
+        # old_selection = self.__selection
+        # old_start = self._start
         self.__selection += jump
         if jump >= 0:
             if self.__selection in self._headers:
@@ -648,8 +648,8 @@ class PyRadioConfigWindow():
 
     def _go_saved(self):
         self.load_default_or_saved_parameters = True
-        old_theme = self._config_options['theme'][1]
-        old_transparency = self._config_options['use_transparency'][1]
+        # old_theme = self._config_options['theme'][1]
+        # old_transparency = self._config_options['use_transparency'][1]
         self._config_options = deepcopy(self._saved_config_options)
         self._config_options['recording_dir'][1] = self._orig_redording_dir
         if self._cnf.use_themes:
@@ -1799,7 +1799,7 @@ class ExtraParameters():
             self._working_params[a_params_set] = the_list[:]
 
     def _get_width(self):
-        Y, X = self._win.getmaxyx()
+        _, X = self._win.getmaxyx()
         self._width = X - self.startX - 2
 
     def refresh_win(self, do_show=True):
@@ -2569,7 +2569,7 @@ class PyRadioSelectEncodings():
             self.startPos = 0
 
     def _resize(self, init=False):
-        col, row = self._selection_to_col_row(self.selection)
+        _, row = self._selection_to_col_row(self.selection)
         if not (self.startPos <= row <= self.startPos + self.list_maxY - 1):
             while row > self.startPos:
                 self.startPos += 1
@@ -2610,7 +2610,7 @@ class PyRadioSelectEncodings():
         return -1
 
     def _fix_startPos(self, direction=1):
-        col, row = self._selection_to_col_row(self.selection)
+        _, row = self._selection_to_col_row(self.selection)
         startRow = self.startPos
         endRow = self.startPos + self.list_maxY - 1
         if not (startRow <= row <= endRow):

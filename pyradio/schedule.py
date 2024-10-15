@@ -7,7 +7,6 @@ from string import printable
 from platform import system
 import logging
 import json
-import sys
 from datetime import *
 from datetime import date as ddate, datetime, timedelta
 from dateutil.relativedelta import *

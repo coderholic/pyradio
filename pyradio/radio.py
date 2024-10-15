@@ -20,7 +20,7 @@ from sys import version as python_version, version_info, platform
 from os.path import join, basename, getmtime, getsize
 from os import remove, rename
 from platform import uname
-from time import ctime, sleep
+from time import sleep
 from datetime import datetime
 from tempfile import gettempdir
 import glob
@@ -45,11 +45,11 @@ from .cjkwrap import cjklen, cjkcenter, cjkslices
 from . import player
 from .install import version_string_to_list, get_github_tag, fix_pyradio_win_exe, get_a_linux_resource_opener
 from .html_help import HtmlHelp, is_graphical_environment_running
-from .browser import RadioBrowserConfig, RadioBrowserConfigWindow
+from .browser import RadioBrowserConfigWindow
 from .schedule_win import PyRadioSimpleScheduleWindow
 from .simple_curses_widgets import SimpleCursesMenu
 from .messages_system import PyRadioMessagesSystem
-from .server import IPs, PyRadioServer, HAS_NETIFACES
+from .server import PyRadioServer, HAS_NETIFACES
 from .keyboard import kbkey
 
 CAN_CHECK_FOR_UPDATES = True
@@ -187,9 +187,6 @@ class SelectPlayer():
         self._win.erase()
 
     def _print_header(self):
-        txt_col = curses.color_pair(10)
-        box_col = curses.color_pair(3)
-        caption_col = curses.color_pair(11)
         header = ' Switch Media Player '
         X = int( ( self.maxX - len(header) ) / 2 )
         self._win.addstr(0, X, header, curses.color_pair(11))
@@ -417,7 +414,6 @@ class PyRadio():
                  theme='',
                  force_update='',
                  record=False):
-        temp_dir = gettempdir()
         self._station_images = (
             join(pyradio_config.logos_dir, 'station.jpg'),
             join(pyradio_config.logos_dir, 'station.png'),
@@ -921,7 +917,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
     def _set_text_volume(self, vol):
         if self.player.isPlaying() and \
                 not self.player.muted:
-            ivol = int(vol)
+            vol = int(vol)
             # self._remote_control_server._send_text('Volume set!')
             self.player.set_volume(vol)
             sleep(.1)
@@ -979,7 +975,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
     def setup(self, stdscr):
         if logger.isEnabledFor(logging.INFO):
-            ver = self._cnf.get_pyradio_version()
             logger.info('<<<===---  Program start  ---===>>>')
             if self._cnf.distro == 'None':
                 logger.info('PyRadio {0}: TUI initialization on python v. {1} on "{2}"'.format(self._cnf.current_pyradio_version, python_version.replace('\n', ' ').replace('\r', ' '), ', '.join(uname())))
@@ -1776,13 +1771,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self._print_theme_download_error()
 
     def _wait_for_theme_to_change(self, theme, file, a_lock, stop, func, config):
-        is_project_theme = False
         a_file = file
         ret, ret_ind = config.is_project_theme(theme)
         if ret is not None:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Watching project theme: ' + theme)
-            is_project_theme = True
             a_file = ret.check_file
             ret.theme_id = ret_ind
         else:
@@ -1797,7 +1790,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             if logger.isEnabledFor(logging.DEBUG) and not showed:
                 logger.debug('Waiting for watched file to appear: {}'.format(a_file))
                 showed = True
-            for n in range(0, 5):
+            for _ in range(0, 5):
                 sleep(.15)
                 if stop():
                     if logger.isEnabledFor(logging.DEBUG):
@@ -2237,7 +2230,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         if int(self._cnf.enable_notifications) >= 0 and \
                 self._cnf.use_station_icon and \
                 self._cnf.remove_station_icons and \
-                not sys.platform.startswith('win'):
+                not platform.startswith('win'):
             if self._cnf.logos_dir:
                 if path.exists(self._cnf.logos_dir):
                     from shutil import rmtree
@@ -2345,7 +2338,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         lim = int((7 * timeout) / 10)
         for n in range(timeout, -1, -1):
             ''' 8 * .12 =~ 1 sec '''
-            for k in range(0, 8):
+            for _ in range(0, 8):
                 sleep(.12)
                 if stop():
                     return
@@ -3742,7 +3735,6 @@ ____Using |fallback| theme.''')
                     # logger.error('DE online browser = {}'.format(self._cnf._online_browser))
                     if self._cnf.online_browser:
                         self._cnf.online_browser.set_global_functions(self._global_functions)
-                        tmp_stations = []
                         self._cnf.stations_history = self._cnf.online_browser.set_station_history(
                             execute_funct=self._load_playlist_and_station_from_station_history,
                             no_items_funct=self._show_no_station_history_notification,
@@ -3808,7 +3800,7 @@ ____Using |fallback| theme.''')
             if not path.exists(self._cnf.station_path):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Creating empty register file: ' + self._cnf.register_to_open)
-                with open(self._cnf.station_path, "w", encoding='utf-8') as rr:
+                with open(self._cnf.station_path, "w", encoding='utf-8'):
                     pass
             self._find_renamed_selection(self.ws.REGISTER_MODE,
                                          self._cnf.registers_dir,
@@ -4463,7 +4455,7 @@ ____Using |fallback| theme.''')
         ''' a thread to check if stations.csv is updated '''
 
         def delay(secs, stop):
-            for i in range(0, 5 * secs):
+            for _ in range(0, 5 * secs):
                 sleep(.2)
                 if stop():
                     if logger.isEnabledFor(logging.DEBUG):
@@ -4503,7 +4495,7 @@ ____Using |fallback| theme.''')
         ''' a thread to check if an update is available '''
 
         def delay(secs, stop):
-            for i in range(0, 5 * secs):
+            for _ in range(0, 5 * secs):
                 sleep(.2)
                 if stop():
                     return
@@ -4520,7 +4512,7 @@ ____Using |fallback| theme.''')
             d1 = datetime.now()
             now_str = d1.strftime('%Y-%m-%d')
             try:
-                with open(path.join(a_path, '.' + now_str + '.date'), 'w', encoding='utf-8') as f:
+                with open(path.join(a_path, '.' + now_str + '.date'), 'w', encoding='utf-8'):
                     pass
             except:
                 pass
@@ -5451,10 +5443,8 @@ ____Using |fallback| theme.''')
                 logger.debug('stations update counter = {}'.format(self._update_stations_error_count))
             except:
                 pass
-        prompt=' Press any key... '
         if self._need_to_update_stations_csv == 1:
             caption = ' PyRadio '
-            prompt = ''
             txt = '''
                   ___Stations already up to date!___
                   '''
@@ -9680,7 +9670,7 @@ ____Using |fallback| theme.''')
         # self.ll('after')
 
     def _reload_playlists(self, refresh=True):
-        old_playlist = self._cnf.playlists[self.selection][0]
+        # old_playlist = self._cnf.playlists[self.selection][0]
         self.number_of_items, self.playing = self.readPlaylists()
         if self._cnf.open_register_list:
             oper_mode = self.ws.REGISTER_MODE
@@ -9838,7 +9828,6 @@ ____Using |fallback| theme.''')
         ''' Find new selection, startPos, playing after a rename action
 
         '''
-        base_old_file = os.path.basename(old_file)
         if old_file_is_reg:
             ''' work on registers '''
             self.selections[self.ws.REGISTER_MODE][:-1] = self.playlist_selections[self.ws.REGISTER_MODE][:]
@@ -10158,7 +10147,7 @@ ____Using |fallback| theme.''')
         k = [r[ind] for r in a_list]
         try:
             return k.index(a_search)
-        except ValueError as e:
+        except ValueError:
             return -1
 
     def _show_http_connection(self):
@@ -10353,9 +10342,6 @@ ____Using |fallback| theme.''')
         # TODO: Do I need it?
         # TODO: Do I set it?
         self._register_to_open = ''
-        playlist = self._cnf.station_title
-        station = self.stations[self.selection]
-        sel = self.selection
         self._cnf.stations_history.add(self._cnf.station_file_name[:-4], self.stations[self.playing][0], self.playing)
 
     def _load_playlist_and_station_from_station_history(self, h_item, func):

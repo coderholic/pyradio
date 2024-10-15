@@ -7,7 +7,6 @@ from os.path import basename, exists
 from sys import platform, version_info
 from time import sleep
 import requests
-from .simple_curses_widgets import SimpleCursesLineEdit
 
 locale.setlocale(locale.LC_ALL, "")
 
@@ -133,7 +132,7 @@ class IPsWithNumbers():
 
     def ip_exists(self, ip):
         try:
-            x = self._ips.index(ip.lower())
+            self._ips.index(ip.lower())
             return True
         except ValueError:
             return False
@@ -1907,7 +1906,7 @@ Content-Length: {}
                 else:
                     ''' do i have a number? '''
                     try:
-                        x = int(sp[1])
+                        int(sp[1])
                     except ValueError:
                         return None
                     return sp[1]
@@ -1953,7 +1952,8 @@ Content-Length: {}
 
         # Receive data
         try:
-            reply = s.recv(4096)
+            s.recv(4096)
+            # reply = s.recv(4096)
         except socket.error as e:
             s.close()
             return False, e

@@ -4,12 +4,10 @@ import sys
 import curses
 import logging
 import logging.handlers
-import subprocess
-import argparse
 import shutil
 from argparse import ArgumentParser, SUPPRESS as SUPPRESS
 from os import path, getenv, environ, remove, chmod, makedirs, rmdir
-from sys import platform, version_info, executable
+from sys import platform
 from contextlib import contextmanager
 from platform import system
 import re
@@ -18,8 +16,7 @@ import glob
 from .radio import PyRadio
 from .config import PyRadioConfig
 from .install import PyRadioUpdate, PyRadioUpdateOnWindows, PyRadioCache, \
-    is_pyradio_user_installed, version_string_to_list, get_github_tag, \
-    open_cache_dir
+    is_pyradio_user_installed, version_string_to_list, get_github_tag
 from .cjkwrap import cjklen, cjkslices, fill
 from .log import Log
 from .common import StationsChanges
@@ -60,7 +57,6 @@ class MyArgParser(ArgumentParser):
     def print_usage(self, file=None):
         if file is None:
             file = sys.stdout
-        usage = self.format_usage()
         print(self._add_colors(self.format_usage()))
 
     def print_help(self, file=None):
@@ -486,8 +482,8 @@ If nothing else works, try the following command:
                 lines.append('#')
                 lines.append('# Default value: True')
                 lines.append('show_recording_message = [bold green]False[/bold green]')
-            for i, l in enumerate(lines):
-                line = l.strip()
+            for i, a_line in enumerate(lines):
+                line = a_line.strip()
                 if line.startswith('#'):
                     if i == 0:
                         d_line = '[deep_sky_blue1]' + line + '[/deep_sky_blue1]' + \
@@ -863,7 +859,7 @@ If nothing else works, try the following command:
                 args.play = pyradio_config.default_station
         elif args.play is not None:
             try:
-                check_int = int(args.play)
+                int(args.play)
             except:
                 print('[red]Error:[/red] Invalid parameter ([green]-p[/green] [red]' + args.play + '[/red])')
                 return
@@ -1078,13 +1074,13 @@ def validate_user_config_dir(a_dir):
     test_file = path.join(this_dir, 'test.txt')
     # write a file to check if directory is writable
     try:
-        with open(test_file, 'w', encoding='utf-8') as f:
+        with open(test_file, 'w', encoding='utf-8'):
             pass
     except:
         return None
     # try to read the file created above
     try:
-        with open(test_file, 'r', encoding='utf-8') as f:
+        with open(test_file, 'r', encoding='utf-8'):
             pass
     except:
         return None

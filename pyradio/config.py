@@ -8,7 +8,7 @@ import curses
 import collections
 import json
 # import socket
-from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, environ, getpid, listdir, rmdir
+from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, getpid, listdir
 from sys import platform
 from time import ctime, sleep
 from datetime import datetime
@@ -23,7 +23,7 @@ from rich import print
 from pyradio import version, stations_updated
 from .common import validate_resource_opener_path
 from .keyboard import kbkey, read_keyboard_shortcuts
-from .browser import PyRadioStationsBrowser, probeBrowsers
+from .browser import probeBrowsers
 from .install import get_github_long_description
 from .common import is_rasberrypi
 from .player import pywhich
@@ -602,7 +602,7 @@ class PyRadioStations():
                     ''' negative playlist number '''
                     return '', -3
                 else:
-                    n, f = self.read_playlists()
+                    n, _ = self.read_playlists()
                     if sel <= n-1:
                         stationFile = self.playlists[sel][-1]
                         return stationFile, 0
@@ -1108,10 +1108,6 @@ class PyRadioStations():
                 self.number_of_stations == 0:
             # logger.error('DE \n\nreturning False\n\n')
             return False
-        if source < target:
-            step = 1
-        else:
-            step = 0
         d = collections.deque(self.stations)
         d.rotate(-source)
         source_item = d.popleft()
@@ -1178,7 +1174,7 @@ class PyRadioStations():
         return len(self.playlists), self.selected_playlist
 
     def list_playlists(self):
-        num_of_playlists, selected_playlist = self.read_playlists()
+        self.read_playlists()
         console = Console()
 
         table = Table(show_header=True, header_style="bold magenta")
@@ -1466,9 +1462,6 @@ class PyRadioConfig(PyRadioStations):
 
         self._read_notification_command()
 
-        ''' function to return a player instance '''
-        player_instance = None
-
     @property
     def linux_resource_opener(self):
         return self._linux_resource_opener
@@ -1605,7 +1598,7 @@ class PyRadioConfig(PyRadioStations):
     @calculated_color_factor.setter
     def calculated_color_factor(self, value):
         try:
-            test = float(str(value))
+            float(str(value))
             self.opts['calculated_color_factor'][1] = str(value)
         except (ValueError, TypeError, NameError):
             self.opts['calculated_color_factor'][1] = '0'
@@ -1979,7 +1972,7 @@ class PyRadioConfig(PyRadioStations):
         else:
             if not self.headless:
                 try:
-                    with open(self._session_lock_file, 'w', encoding='utf-8') as f:
+                    with open(self._session_lock_file, 'w', encoding='utf-8'):
                         pass
                 except:
                     pass
@@ -2095,7 +2088,6 @@ class PyRadioConfig(PyRadioStations):
             ''' is server valid '''
             if sp[0].startswith('*'):
                 sp[0] = sp[0][1:]
-                auto = True
             x = [r for r in hosts if r == sp[0]]
             if not x:
                 return default_remote_control_server
@@ -2164,7 +2156,7 @@ class PyRadioConfig(PyRadioStations):
                 return -2
             if sp[1] == '':
                 return -2
-            for i, n in enumerate(sp):
+            for i in range(len(sp)):
                 sp[i] = sp[i].strip()
             if sp[0] == 'show_no_themes_message':
                 self.show_no_themes_message = True
@@ -2800,7 +2792,7 @@ class PyRadioConfig(PyRadioStations):
             # fix self.saved_params (remove profiles)
             profiles_params_changed = False
             for a_key in self.saved_params.keys():
-                the_id = self.saved_params[a_key][0]
+                # the_id = self.saved_params[a_key][0]
                 the_profile = self.saved_params[a_key][self.saved_params[a_key][0]]
                 # logger.error('\n\na_key = {0}\nthe_id = {1}\nthe_profile = {2}\n\n'.format(a_key, the_id, the_profile))
                 for i in range(len(self.saved_params[a_key])-1, 0, -1):
@@ -2872,7 +2864,6 @@ class PyRadioConfig(PyRadioStations):
                 read ~/.config/pyradio/no-themes-terminals
                 '''
                 term_file = path.join(self.stations_dir, 'no-themes-terminals')
-                user_terminal = []
                 if path.exists(term_file):
                     try:
                         with open(term_file, 'r', encoding='utf-8') as term:
@@ -3568,7 +3559,6 @@ class PyRadioBase16Themes():
             # logger.error('w_path = {}'.format(w_path))
             requests_response = None
             written = False
-            line_num = 1
             for n in range(0,5):
                 requests_response = None
                 try:
@@ -3583,7 +3573,7 @@ class PyRadioBase16Themes():
                         if print_errors is not None:
                             print_errors.addstr(n + 1, 0, '  download failed, retrying...', curses.color_pair(0))
                             print_errors.refresh()
-                except requests.exceptions.RequestException as e:
+                except requests.exceptions.RequestException:
                     if print_errors is not None:
                         print_errors.addstr(n + 1, 0, '  download failed, retrying...', curses.color_pair(0))
                         print_errors.refresh()

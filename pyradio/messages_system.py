@@ -1508,8 +1508,8 @@ Esc                                 |*|Cancel operation.
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Redisplaying last Messaging System Active key...')
         else:
-            self._caption, l, max_len = self._get_txt(*args)
-            if l is None:
+            self._caption, text, max_len = self._get_txt(*args)
+            if text is None:
                 return
             if max_len < self._main_win_width or \
                     self.active_message_key in ('M_STATION_INFO', 'M_DB_INFO'):
@@ -1518,9 +1518,9 @@ Esc                                 |*|Cancel operation.
                 self._maxX = self._main_win_width
             # # logger.error('self._caption = "{}"'.format(self._caption))
             # # logger.error('max_len = {0}, self._maxY = {1}'.format(max_len, self._maxX))
-            # for n in l:
+            # for n in text:
             #     logger.info(n)
-            self._lines_count = len(l)
+            self._lines_count = len(text)
 
         self._get_win()
 
@@ -1535,7 +1535,7 @@ Esc                                 |*|Cancel operation.
             )
             self._pad.bkgd(' ', self.col_txt)
             try:
-                self._populate_pad(l)
+                self._populate_pad(text)
             except curses.error:
                 pass
         self.simple_dialog = False
@@ -1628,7 +1628,7 @@ Esc                                 |*|Cancel operation.
             self._txt[self.active_message_key] = args[1]()
             out = self._txt[self.active_message_key][1]
 
-        self._tokens, l = self._parse_strings_for_tokens(out.splitlines())
+        self._tokens, cleaned_text = self._parse_strings_for_tokens(out.splitlines())
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('tokens = {}'.format(self._tokens))
         # get max len
@@ -1649,7 +1649,7 @@ Esc                                 |*|Cancel operation.
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('column from self._columns = {}'.format(column))
                 else:
-                    for n in l:
+                    for n in cleaned_text:
                         x = n.split('|*|')
                         if len(x) == 2:
                             first_column.append(x[0].strip().replace('%', '').replace('|', ''))
@@ -1666,8 +1666,8 @@ Esc                                 |*|Cancel operation.
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('max len from self._max_lens = {}'.format(mmax))
             else:
-                # logger.error(f'{l = }')
-                for n in l:
+                # logger.error(f'{cleaned_text = }')
+                for n in cleaned_text:
                     x = n.split('|*|')
                     if len(x) == 2:
                         first_column.append(x[0].strip().replace('|', ''))
@@ -1695,7 +1695,7 @@ Esc                                 |*|Cancel operation.
             mmax = len(cap) + 6
         '''
         # logger.error('\n\n===> mmax = {}\n\n'.format(mmax))
-        return cap, l, mmax
+        return cap, cleaned_text, mmax
 
     def _get_active_message_key(self, *args):
         if args:
@@ -1841,22 +1841,22 @@ Esc                                 |*|Cancel operation.
                         )
 
     def _echo_line(self, Y, X, formated, reverse=False):
-        for k, l in enumerate(formated):
+        for k, a_string in enumerate(formated):
             if reverse:
                 col = self.col_highlight if k % 2 else self.col_txt
             else:
                 col = self.col_txt if k % 2 else self.col_highlight
             if k == 0:
-                self._pad.addstr(Y, X, l.replace('_', ' '), col)
-                # logger.error('printing: {0} - "{1}"'.format(X, l))
+                self._pad.addstr(Y, X, a_string.replace('_', ' '), col)
+                # logger.error('printing: {0} - "{1}"'.format(X, a_string))
             else:
-                if l:
-                    self._pad.addstr(l.replace('_', ' '), col)
-                # logger.error('adding: "{}"'.format(l))
+                if a_string:
+                    self._pad.addstr(a_string.replace('_', ' '), col)
+                # logger.error('adding: "{}"'.format(a_string))
 
-    def _populate_pad(self, l):
+    def _populate_pad(self, a_list):
         self._pad.erase()
-        for i, n in enumerate(l):
+        for i, n in enumerate(a_list):
             out = n.strip()
             if out.strip().startswith('%'):
                 self._pad.addstr(i, 1, '─' * (self._maxX-4), self.col_box)

@@ -4,7 +4,7 @@ import warnings
 import curses
 from os import getenv
 from os.path import join, exists, dirname
-from sys import version_info, platform, stdout
+from sys import platform, stdout
 from platform import system as platform_system
 from copy import deepcopy
 from time import sleep
@@ -12,7 +12,6 @@ import datetime
 import logging
 import threading
 import subprocess
-from tempfile import gettempdir
 from .common import player_start_stop_token
 from .cjkwrap import cjklen
 
@@ -145,7 +144,7 @@ class Log():
             with self.lock:
                 if msg:
                     if player_start_stop_token[1] in msg or \
-                            player_start_stop_token[2] in msg:\
+                            player_start_stop_token[2] in msg:
                         self._player_stopped += 1
                     elif msg.startswith(player_start_stop_token[0]):
                         self._player_stopped = 0

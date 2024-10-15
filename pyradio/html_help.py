@@ -128,7 +128,7 @@ class HtmlHelp():
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('HtmlHelp: executing: "{}"'.format(cmd))
             try:
-                p = subprocess.Popen(
+                 subprocess.Popen(
                         cmd,
                         shell=False,
                         stdout=subprocess.PIPE,

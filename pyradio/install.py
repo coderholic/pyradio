@@ -22,7 +22,6 @@ PyRadioInstallPyReleaseVersion = '0.9.3.11'
 locale.setlocale(locale.LC_ALL, "")
 
 try:
-    from os.path import curdir, exists
     import ctypes
     import win32api
     import win32ui
@@ -181,7 +180,7 @@ def isRunning():
         sleep(1)
         if count > 2:
             print('[bold magebta]PyRadio[/bold magebta] is still running. Please terminate it to continue ... ')
-        cout += 1
+        count += 1
     print('')
 
 def version_string_to_list(this_version):
@@ -659,7 +658,6 @@ class MyArgParser(ArgumentParser):
     def print_usage(self, file=None):
         if file is None:
             file = sys.stdout
-        usage = self.format_usage()
         print(self._add_colors(self.format_usage()))
 
     def print_help(self, file=None):
@@ -1082,6 +1080,7 @@ class PyRadioUpdate():
 
     def _download_pyradio(self):
         os.chdir(self._dir)
+        VERSION ==  ''
         if self._package == 0:
             try:
                 VERSION ==  ''
@@ -1118,7 +1117,7 @@ class PyRadioUpdate():
         if self._get_cache:
             sys.exit()
 
-        with open(os.path.join(self._dir, self.ZIP_DIR[self._package], 'DEV'), 'w', encoding='utf-8') as b:
+        with open(os.path.join(self._dir, self.ZIP_DIR[self._package], 'DEV'), 'w', encoding='utf-8'):
             pass
         # input('Please update files as needed. Then press ENTER to continue...')
 

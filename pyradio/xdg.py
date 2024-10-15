@@ -1,8 +1,8 @@
 import locale
 import logging
-from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, environ, getpid, listdir, rmdir, walk
+from os import path, getenv, makedirs, remove, listdir, rmdir, walk
 from sys import platform, exit
-from shutil import copy, copyfile, move, Error as shutil_Error, rmtree as remove_tree
+from shutil import copy, copyfile, move, rmtree as remove_tree
 from platform import system
 from rich import print
 
@@ -97,7 +97,7 @@ class XdgMigrate():
         files_list = []
 
         # Iterate through all files in the specified directory
-        for root, dirs, files in walk(a_path):
+        for root, _, files in walk(a_path):
             # Concatenate root path with each filename to get the full path
             for file in files:
                 file_path = path.join(root, file)
@@ -125,7 +125,6 @@ class XdgMigrate():
                 self.files_to_other.pop(n)
 
     def _get_max_length(self):
-        to_print = []
         max_length = 0
         for n in self.files_to_data, self.files_to_state, self.files_to_other:
             if n:
@@ -656,12 +655,12 @@ class XdgDirs():
                 # Delete the original titles files
                 for title_file in titles_files:
                     remove(path.join(old_title_path, title_file))
-            except Exception as e:
+            except Exception:
                 # If an error occurs during copying, delete all pyradio-titles.* files from recording_dir
                 for title_file in titles_files:
                     try:
                         remove(path.join(self.recording_dir, title_file))
-                    except Exception as ex:
+                    except Exception:
                         pass
                 self.titles_log_file = old_title_file
                 return
@@ -748,7 +747,7 @@ class CheckDir():
             # Can i write in it?
             test_file = path.join(self.dir_path, r'TEST_IF_WRITABLE')
             try:
-                with open(test_file, 'w', encoding='utf-8') as f:
+                with open(test_file, 'w', encoding='utf-8'):
                     pass
                 remove(test_file)
                 self._is_writable = True

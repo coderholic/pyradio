@@ -7,7 +7,6 @@ import logging
 from os.path import expanduser
 from platform import uname as platform_uname
 from sys import platform, version_info
-from sys import exit
 from time import sleep
 from datetime import datetime
 import collections
@@ -452,7 +451,7 @@ class Player():
         else:
             a_profile_token = '[' + a_profile_name + ']'
         self.PROFILE_FROM_USER = False
-        for i, config_file in enumerate(self.config_files):
+        for config_file in self.config_files:
             if os.path.exists(config_file):
                 with open(config_file, 'r', encoding='utf-8') as f:
                     config_string = f.read()
@@ -953,14 +952,6 @@ class Player():
                 with recording_lock:
                     tmp = self.oldUserInput['Input']
                 if tmp != subsystemOut:
-                    if (logger.isEnabledFor(logging.DEBUG)):
-                        if version_info < (3, 0):
-                            disp = subsystemOut.encode('utf-8', 'replace').strip()
-                            # logger.debug('User input: {}'.format(disp))
-                        else:
-                            # logger.debug('User input: {}'.format(subsystemOut))
-                            pass
-
                     with recording_lock:
                         self.oldUserInput['Input'] = subsystemOut
                         self_volume_string = self.volume_string
@@ -1158,7 +1149,7 @@ class Player():
                                         for an_item in self._icy_data:
                                             try:
                                                 self._icy_data[an_item] = self._icy_data[an_item].encode(self._station_encoding, 'replace')
-                                            except UnicodeDecodeError as e:
+                                            except UnicodeDecodeError:
                                                 self._icy_data[an_item] = ''
                                     if 'codec-name' in self._icy_data:
                                         self._icy_data['codec-name'] = self._icy_data['codec-name'].replace('"', '')
@@ -1333,7 +1324,7 @@ class Player():
                     if platform.startswith('win'):
                         try:
                             data = win32file.ReadFile(sock, 64*1024)
-                        except pywintypes.error as e:
+                        except pywintypes.error:
                             data = b''
                     else:
                         try:
@@ -1498,13 +1489,6 @@ class Player():
                 if self.oldUserInput['Input'] != subsystemOut:
                     if stop():
                         break
-                    if (logger.isEnabledFor(logging.DEBUG)):
-                        if version_info < (3, 0):
-                            disp = subsystemOut.encode('utf-8', 'replace').strip()
-                            # logger.debug("User input: {}".format(disp))
-                        else:
-                            # logger.debug("User input: {}".format(subsystemOut))
-                            pass
                     self.oldUserInput['Input'] = subsystemOut
                     # logger.error('DE subsystemOut = "' + subsystemOut + '"')
                     if self.volume_string in subsystemOut:
@@ -1658,7 +1642,7 @@ class Player():
                                         for an_item in self._icy_data:
                                             try:
                                                 self._icy_data[an_item] = self._icy_data[an_item].encode(self._station_encoding, 'replace')
-                                            except UnicodeDecodeError as e:
+                                            except UnicodeDecodeError:
                                                 self._icy_data[an_item] = ''
                                     if 'codec-name' in self._icy_data:
                                         self._icy_data['codec-name'] = self._icy_data['codec-name'].replace('"', '')
@@ -1825,12 +1809,12 @@ class Player():
                             if version_info < (3, 0):
                                 try:
                                     self._icy_data[icy] = a_data.split(bytes_icy + b'":"')[1].split(b'",')[0].split(b'"}')[0].encode(enc, 'replace')
-                                except UnicodeDecodeError as e:
+                                except UnicodeDecodeError:
                                     pass
                             else:
                                 try:
                                     self._icy_data[icy] = a_data.split(bytes_icy + b'":"')[1].split(b'",')[0].split(b'"}')[0].decode(enc)
-                                except UnicodeDecodeError as e:
+                                except UnicodeDecodeError:
                                     pass
                     # logger.error('DE 0 {}'.format(self._icy_data))
             return True
@@ -2632,7 +2616,7 @@ class MpvPlayer(Player):
                 if platform.startswith('win'):
                     try:
                         data = win32file.ReadFile(sock, 64*1024)
-                    except pywintypes.error as e:
+                    except pywintypes.error:
                         data = b''
                 else:
                     if version_info < (3, 0):
@@ -2681,7 +2665,7 @@ class MpvPlayer(Player):
                 if platform.startswith('win'):
                     try:
                         data = win32file.ReadFile(sock, 64*1024)
-                    except pywintypes.error as e:
+                    except pywintypes.error:
                         data = b''
                 else:
                     if version_info < (3, 0):
@@ -2742,7 +2726,6 @@ class MpvPlayer(Player):
 
     def _connect_to_socket(self, server_address):
         if platform.startswith('win'):
-            count = 0
             # logger.error('\n\n_connect_to_socket: {}\n\n'.format(server_address))
             try:
                 handle = win32file.CreateFile(
@@ -2754,9 +2737,9 @@ class MpvPlayer(Player):
                     0,
                     None
                 )
-                res = win32pipe.SetNamedPipeHandleState(handle, win32pipe.PIPE_READMODE_MESSAGE, None, None)
+                win32pipe.SetNamedPipeHandleState(handle, win32pipe.PIPE_READMODE_MESSAGE, None, None)
                 return handle
-            except pywintypes.error as e:
+            except pywintypes.error:
                 return None
         else:
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -2822,7 +2805,7 @@ class MpvPlayer(Player):
         if platform.startswith('win'):
             try:
                 data = win32file.ReadFile(sock, 64*1024)
-            except pywintypes.error as e:
+            except pywintypes.error:
                 data = b''
         else:
             try:
@@ -2869,7 +2852,7 @@ class MpvPlayer(Player):
                 if platform.startswith('win'):
                     try:
                         data = win32file.ReadFile(sock, 64*1024)
-                    except pywintypes.error as e:
+                    except pywintypes.error:
                         data = b''
                 else:
                     if version_info < (3, 0):
@@ -3365,7 +3348,7 @@ class VlcPlayer(Player):
                     logger.error('DE file exists: "{}"'.format(self._vlc_stdout_log_file))
                     continue
                 try:
-                    with open(self._vlc_stdout_log_file, 'w', encoding='utf-8') as f:
+                    with open(self._vlc_stdout_log_file, 'w', encoding='utf-8'):
                         ok_to_go_on = True
                 except:
                     logger.error('DE file not opened: "{}"'.format(self._vlc_stdout_log_file))
@@ -3753,13 +3736,9 @@ class VlcPlayer(Player):
 
     def _win_get_playing_state(self, msg):
         parts = msg.split('\r\n')
-        rep = False
         for n in parts:
             if n == '1' or 'play state:' in n:
-                rep = True
                 break
-        #self.print_response(rep)
-
 
 class PyRadioChapters():
 
@@ -3924,7 +3903,7 @@ class PyRadioChapters():
                 stdin=subprocess.PIPE,
                 stderr=subprocess.PIPE
                 )
-        outs, err = p.communicate()
+        _, err = p.communicate()
         # logger.error('outs = "{0}", err = "{1}"'.format(outs, err))
         if p.returncode == 0:
             if logger.isEnabledFor(logging.INFO):

@@ -4,11 +4,9 @@ import locale
 import io
 import csv
 import curses
-from sys import version as sys_version
 from os import rename, remove, access, X_OK
 from os.path import exists, dirname, join
 from shutil import which
-from copy import deepcopy
 from rich import print
 
 logger = logging.getLogger(__name__)
@@ -16,8 +14,10 @@ logger = logging.getLogger(__name__)
 locale.setlocale(locale.LC_ALL, "")
 
 """ Theming constants """
-def FOREGROUND(): return 0
-def BACKGROUND(): return 1
+def FOREGROUND():
+    return 0
+def BACKGROUND():
+    return 1
 
 # for pop up window
 CAPTION = 2
@@ -59,7 +59,7 @@ player_start_stop_token = ('Initialization: ',
                            ': Playback stopped',
                            ': Player terminated abnormally!')
 
-def erase_curses_win(self, Y, X, beginY, beginX, char=' ', color=5):
+def erase_curses_win(Y, X, beginY, beginX, char=' ', color=5):
     ''' empty a part of the screen
     '''
     empty_win = curses.newwin(
@@ -199,8 +199,8 @@ class StationsChanges():
         # print('in_file = "{}"'.format(in_file))
         if exists(in_file):
             try:
-                with open(in_file, 'r', encoding='utf-8') as l:
-                    line = l.readline().strip()
+                with open(in_file, 'r', encoding='utf-8') as sync_file:
+                    line = sync_file.readline().strip()
                     return eval(line)
             except:
                 pass
@@ -209,8 +209,8 @@ class StationsChanges():
     def write_synced_version(self, asked=False):
         out_file = self._asked_sync_file if asked else self._last_sync_file
         try:
-            with open(out_file, 'w', encoding='utf-8') as l:
-                l.write(self.version_to_write)
+            with open(out_file, 'w', encoding='utf-8') as sync_file:
+                sync_file.write(self.version_to_write)
         except:
             return -5 if asked else -6
         return -3 if asked else 0
@@ -346,8 +346,8 @@ class StationsChanges():
                 return False
         if exists(self._last_sync_file):
             try:
-                with open(self._last_sync_file, 'r', encoding='utf-8') as l:
-                    line = l.readline().strip()
+                with open(self._last_sync_file, 'r', encoding='utf-8') as sync_file:
+                    line = sync_file.readline().strip()
                     self.last_sync = eval(line)
             except:
                 ret = False

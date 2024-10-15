@@ -3,7 +3,6 @@ import sys
 import os
 import subprocess
 import re
-from shutil import which
 from datetime import datetime, timedelta
 from glob import glob
 import locale
@@ -183,7 +182,7 @@ class MKVToolNix:
         # Validate files
         if 'container: Matroska' not in s:
             if print_messages:
-                print('  File not supported: "{}"'.format(out[0]))
+                print('  File not supported: "{}"'.format(self._mkv_file))
                 sys.exit(1)
             else:
                 return None
@@ -304,7 +303,7 @@ class MKVToolNix:
                 return None
             out = []
             search_str=('Chapter time start: ', 'Chapter string: ')
-            for i, n in enumerate(search_str):
+            for n in search_str:
                 ex = re.compile(n + r'[^\n]*')
                 out.append(ex.findall(s))
             out[0] = [x[:-6] for x in out[0]]
@@ -323,7 +322,7 @@ class MKVToolNix:
         txt_file = self._mkv_file[:-4] + '.txt'
         if os.path.exists(srt_file):
             with open(srt_file, 'r', encoding='utf-8') as f:
-                l = f.readlines()
+                lines = f.readlines()
         else:
             if print_messages:
                 print('[red]Error:[/red] [bold magenta]SRT[/bold magents] file not found: "{}"'.format(srt_file))
@@ -332,9 +331,9 @@ class MKVToolNix:
                 return None
         times = []
         titles = []
-        for n in range(1,len(l),4):
-            times.append(l[n].strip())
-            titles.append(l[n+1].strip())
+        for n in range(1,len(lines),4):
+            times.append(lines[n].strip())
+            titles.append(lines[n+1].strip())
 
         ziped = list(zip([x.split()[0].replace(',', '.') for x in times],titles))
 

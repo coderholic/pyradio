@@ -722,7 +722,7 @@ class RadioBrowser(PyRadioStationsBrowser):
 
     def next_page(self, msg_function=None):
         self._page += 1
-        post_data = self._get_post_data()
+        # post_data = self._get_post_data()
         if self.current_search_limit > len(self._raw_stations):
             self._page -= 1
             return '___No more results available!___'
@@ -944,7 +944,7 @@ class RadioBrowser(PyRadioStationsBrowser):
 
         out = ['', '']
         i_out = []
-        for i, n in enumerate(info[self._output_format]):
+        for n in info[self._output_format]:
             i_out.append(u'│' + ' ' * self._columns_width[n])
         out[1] = ''.join(i_out)
 
@@ -1838,7 +1838,7 @@ class RadioBrowserConfigWindow():
         '''
         self._cannot_delete_function = cannot_delete_function
         if len(self._params) == 0:
-            for i in range(0, 3):
+            for _ in range(0, 3):
                 self._params.append(
                     {'auto_save': False,
                      'server': '',
@@ -3488,7 +3488,7 @@ class RadioBrowserSearchWindow():
         '''
         test_search_term = self._widgets_to_search_term()
         if test_search_term:
-            found, index = self._get_search_term_index(test_search_term)
+            _, index = self._get_search_term_index(test_search_term)
             # TODO: check if item is altered
             self._selected_history_id = index
             self._print_history_legend()
@@ -3959,7 +3959,7 @@ class RadioBrowserSort():
     def show(self, parent=None):
         self._too_small = False
         pY, pX = self._parent.getmaxyx()
-        Y, X = self._parent.getbegyx()
+        Y, _ = self._parent.getbegyx()
         if self.maxY > pY or self.maxX > pX -2:
             self._too_small = True
             msg = 'Window too small to display content!'
@@ -4135,7 +4135,7 @@ class RadioBrowserServersSelect():
             self.servers._parent = parent
         self._too_small = False
         pY, pX = self._parent.getmaxyx()
-        Y, X = self._parent.getbegyx()
+        Y, _ = self._parent.getbegyx()
         if pX < 80 or pY < 22:
             self._too_small = True
             msg = 'Window too small to display content!'
@@ -4596,7 +4596,6 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
 
     @selection.setter
     def selection(self, val):
-        old_selection = self._selection
         if 0 <= val < len(self._items):
             self._selection = val
             self.show()

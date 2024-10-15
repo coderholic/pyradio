@@ -227,7 +227,7 @@ def get_latest_x86_64_mplayer_url():
     if r.status_code == 200:
         # print(r.text)
         sp = r.text.split('<tr title="')
-        for i, n in enumerate(sp):
+        for n in sp:
             if n.startswith('r'):
                 rev = n.split('"')[0][1:]
                 try:
@@ -255,7 +255,7 @@ def get_latest_x86_64_mpv_url():
     if r.status_code == 200:
         # print(r.text)
         sp = r.text.split('"url":"')
-        for i, n in enumerate(sp):
+        for n in sp:
             if n.startswith('/project') and '-v3' not in n:
                 # print('item: {}'.format(i))
                 # print(n)
@@ -306,7 +306,7 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
                 r = session.get(zurl[package])
                 r.raise_for_status()
                 break
-            except requests.exceptions.RequestException as e:
+            except requests.exceptions.RequestException:
                 if count < 5:
                     print('  Download failed. Retrying [magenta]{}[/magenta]/[red]5[/red]'.format(count+1))
                 else:

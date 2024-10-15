@@ -36,7 +36,7 @@ python -m pip install --user dateutil
 ''')
     exit(1)
 import logging
-from sys import version_info, platform, version
+from sys import version_info, platform
 try:
     from .cjkwrap import is_wide, cjklen, cjkljust, cjkslices
     from .schedule import PyRadioTime
@@ -2639,7 +2639,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
         # logger.info('items before delete\n{}'.format(self._items))
         d = deque(self._items)
         d.rotate(-index)
-        ret = d.popleft()
+        d.popleft()
         d.rotate(index)
         self._items = list(d)
         # logger.info('items after delete\n{}'.format(self._items))
@@ -3724,7 +3724,7 @@ class SimpleCursesLineEdit():
     @property
     def width(self):
         if self._auto_width < 1:
-            h, self._width = self._parent_win.getmaxyx()
+            _, self._width = self._parent_win.getmaxyx()
             self._width += self._auto_width
             self._width -= self.x
         return self._width
@@ -3732,7 +3732,7 @@ class SimpleCursesLineEdit():
     @width.setter
     def width(self, val):
         if val < 1:
-            h, self._width = self._parent_win.getmaxyx()
+            _, self._width = self._parent_win.getmaxyx()
             self._width -= val
             self._auto_width = val
         else:
@@ -3849,7 +3849,7 @@ class SimpleCursesLineEdit():
             self._height, self.width,
             self.y, self.x
         )
-        maxY, maxX = self._caption_win.getmaxyx()
+        _, maxX = self._caption_win.getmaxyx()
         if self._boxed:
             self._edit_win = curses.newwin(
                 1, maxX - len(self._disp_caption) - 2,

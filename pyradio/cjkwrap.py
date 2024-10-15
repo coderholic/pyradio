@@ -28,7 +28,6 @@ __version__ = '2.2'
 
 import textwrap
 import unicodedata
-import sys
 
 import locale
 locale.setlocale(locale.LC_ALL, "")

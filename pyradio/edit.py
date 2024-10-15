@@ -914,9 +914,9 @@ class PyRadioRecordingDir():
                 if stripped_string.startswith(self._orig_path + sep):
                     self._error_string = 'Invalid dir_path!!!'
                 else:
-                    l = [x for x in self._invalid_chars if x in stripped_string]
+                    err_list = [x for x in self._invalid_chars if x in stripped_string]
                     # logger.error('l = {}'.format(l))
-                    if l:
+                    if err_list:
                         self._error_string = 'Invalid dir_path!!!'
             self._widgets[-2].enabled = False
             if stripped_string and self._error_string == '':
@@ -1347,9 +1347,9 @@ class PyRadioResourceOpener():
                     if w_file is None:
                         self._error_string = 'Invalid opener!!!'
                     else:
-                        l = [x for x in self._invalid_chars if x in stripped_string]
+                        err_list = [x for x in self._invalid_chars if x in stripped_string]
                         # logger.error('l = {}'.format(l))
-                        if l:
+                        if err_list:
                             self._error_string = 'Invalid opener!!!'
                 self._widgets[-2].enabled = False
                 if w_file and self._error_string == '':

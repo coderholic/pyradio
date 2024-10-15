@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 import locale
 import curses
-import sys
 import logging
 import glob
-from sys import version_info
-from os import path, getenv, makedirs, remove, sep as dir_sep, access, R_OK
-from shutil import copyfile, move
+from os import path, sep as dir_sep, access, R_OK
+from shutil import copyfile
 from copy import deepcopy
 from math import sqrt
 import colorsys
