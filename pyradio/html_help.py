@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import locale
 import subprocess
 import logging
 from sys import platform
@@ -13,7 +14,6 @@ except:
 
 logger = logging.getLogger(__name__)
 
-import locale
 locale.setlocale(locale.LC_ALL, "")
 
 '''

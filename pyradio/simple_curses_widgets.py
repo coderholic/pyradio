@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import locale
+import logging
 import curses
 import curses.ascii
 from os.path import basename
@@ -44,7 +46,6 @@ except:
 # from .cjkwrap import is_wide, cjklen, cjkljust, cjkslices
 # from .schedule import PyRadioTime
 from .keyboard import kbkey
-import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
@@ -3798,7 +3799,7 @@ class SimpleCursesLineEdit():
         self._global_functions = {}
         if global_functions is not None:
             self._global_functions = dict(global_functions)
-            if kbkey['t'] in self._global_functions.keys():
+            if kbkey['t'] in self._global_functions:
                 del self._global_functions[kbkey['t']]
             # if 'T' in self._global_functions.keys():
             #     del self._global_functions['T']
@@ -4297,7 +4298,7 @@ class SimpleCursesLineEdit():
                     self._mode_changed()
             self._local_functions[char]()
 
-        if char in self._global_functions.keys() and \
+        if char in self._global_functions and \
                 self._backslash_pressed:
             ''' toggle paste mode '''
             self._backslash_pressed = False
@@ -5049,7 +5050,6 @@ class SimpleCursesBoolean(SimpleCursesCounter):
 #   Testing part
 #
 
-import logging
 logger = logging.getLogger('pyradio')
 logger.setLevel(logging.DEBUG)
 

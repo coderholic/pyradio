@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import locale
 import curses
 import sys
 import logging
@@ -15,7 +16,6 @@ from .keyboard import kbkey
 
 logger = logging.getLogger(__name__)
 
-import locale
 locale.setlocale(locale.LC_ALL, "")
 
 def isLightOrDark(rgbColor=[0,128,255]):
@@ -284,7 +284,7 @@ class PyRadioTheme():
                         13: (border_color + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
                         14: (9 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at)
                     }
-            for k in colors.keys():
+            for k in colors:
                 curses.init_pair(k, colors[k][0], colors[k][1])
             # curses.start_color()
 
@@ -667,7 +667,7 @@ class PyRadioThemeReadWrite():
             # logger.error('sp = {}'.format(sp))
             # logger.error('names = {}'.format(names))
             names[sp[0].strip()] = sp[1:]
-            for k in names.keys():
+            for k in names:
                 for n in (0, 1):
                     try:
                         names[k][n] = names[k][n].strip()
@@ -675,13 +675,13 @@ class PyRadioThemeReadWrite():
                         pass
 
         if curses.COLORS > 16 and \
-                'Border' not in names.keys():
+                'Border' not in names:
             names['Border'] = [names['Stations'][0]]
 
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('theme names = {}'.format(names))
         self._temp_colors = { 'data': {}, 'css': {}, 'transparency': 2, 'color_factor': 0}
-        for name in names.keys():
+        for name in names:
             if name == 'transparency':
                 self._temp_colors['transparency'] = 2
                 try:
@@ -945,9 +945,9 @@ class PyRadioThemeSelector():
         self._global_functions = {}
         if global_functions is not None:
             self._global_functions = dict(global_functions)
-            if kbkey['t'] in self._global_functions.keys():
+            if kbkey['t'] in self._global_functions:
                 del self._global_functions[kbkey['t']]
-            if kbkey['transp'] in self._global_functions.keys():
+            if kbkey['transp'] in self._global_functions:
                 del self._global_functions[kbkey['transp']]
 
     def show(self, touch_selection=True):
@@ -1334,7 +1334,7 @@ class PyRadioThemeSelector():
         """
         if  self._too_small or self._cnf.locked:
             return -1, False
-        if char in self._global_functions.keys():
+        if char in self._global_functions:
             self._global_functions[char]()
             return -3, False
         if char in (kbkey['edit'], ):

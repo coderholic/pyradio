@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
+import locale
 from sys import version_info as python_version
-from datetime import date as ddate, datetime, timedelta
-from dateutil.relativedelta import *
-from dateutil.rrule import *
-from dateutil.parser import *
-from datetime import *
 from calendar import monthrange
 from random import choice
 from string import printable
@@ -12,8 +8,12 @@ from platform import system
 import logging
 import json
 import sys
+from datetime import *
+from datetime import date as ddate, datetime, timedelta
+from dateutil.relativedelta import *
+from dateutil.rrule import *
+from dateutil.parser import *
 
-import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
@@ -223,7 +223,7 @@ class PyRadioScheduleList():
                 for n in range(len(ll)-1, -1,-1):
                     if ll[n] <= now_with_correct_time:
                         ll.pop(n)
-            elif in_date[-4] in days.keys():
+            elif in_date[-4] in days:
                 ll = list(rrule(WEEKLY, count=3, wkst=SU, byweekday=(days[in_date[-4]],), dtstart=start_date))
             for n in range(len(ll)-1, -1,-1):
                 if ll[n] > now_plus_seven_days:
@@ -235,7 +235,7 @@ class PyRadioScheduleList():
                 ll = list(rrule(WEEKLY, dtstart=in_date[1], count=count))
             elif in_date[-4] == 'month':
                 ll = list(rrule(MONTHLY, dtstart=in_date[1], count=count))
-            elif in_date[-4] in days.keys():
+            elif in_date[-4] in days:
                 ll = list(rrule(WEEKLY, count=count, wkst=SU, byweekday=(days[in_date[-4]],), dtstart=start_date))
 
         # print('\n\nll\n{}'.format(ll))
@@ -511,7 +511,7 @@ class PyRadioScheduleItem():
         elif isinstance(item, dict):
             self._item = item
 
-        for n in self.default_item.keys():
+        for n in self.default_item:
             if n not in self._item:
                 self.item = self.default_item
                 raise ValueError('Item is missing keys')

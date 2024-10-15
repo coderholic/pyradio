@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import locale
 import curses
 try:
     from dns import resolver
@@ -23,7 +24,6 @@ from .countries import countries
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesWidgetColumns, SimpleCursesCheckBox, SimpleCursesCounter, SimpleCursesBoolean, DisabledWidget, SimpleCursesString, SimpleCursesWidget
 from .ping import ping
 from .keyboard import kbkey, ctrl_code_to_simple_code, kb2chr
-import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
@@ -100,7 +100,7 @@ def country_from_server(a_server):
     if a_server:
         country = a_server.split('.')[0]
         up = country[:-1].upper()
-        if up in countries.keys():
+        if up in countries:
             return countries[up]
         else:
             return country
@@ -433,7 +433,7 @@ class RadioBrowser(PyRadioStationsBrowser):
         self._global_functions = {}
         if global_functions is not None:
             self._global_functions = dict(global_functions)
-            if kbkey['t'] in self._global_functions.keys():
+            if kbkey['t'] in self._global_functions:
                 del self._global_functions[kbkey['t']]
             # if 'T' in self._global_functions.keys():
             #     del self._global_functions['T']
@@ -887,7 +887,7 @@ class RadioBrowser(PyRadioStationsBrowser):
         '''
         a_search_copy = deepcopy(a_search)
         # logger.error('_format_url(): a_search_copy = {}'.format(a_search_copy))
-        if a_search_copy['type'] in RADIO_BROWSER_DISPLAY_TERMS.keys():
+        if a_search_copy['type'] in RADIO_BROWSER_DISPLAY_TERMS:
             url = 'http://{0}{1}'.format(
                 self._server,
                 '/json/stations/{}'.format(a_search_copy['type'])
@@ -896,7 +896,7 @@ class RadioBrowser(PyRadioStationsBrowser):
                 url += '/{}'.format(a_search_copy['term'])
             self._search_type = 0
 
-        elif a_search_copy['type'] in RADIO_BROWSER_SEARCH_BY_TERMS.keys():
+        elif a_search_copy['type'] in RADIO_BROWSER_SEARCH_BY_TERMS:
             if a_search_copy['type'].startswith('bycountry') and \
                     len(a_search_copy['term']) == 2:
                 a_search_copy['type'] = 'bycountrycodeexact'
@@ -2604,7 +2604,7 @@ class RadioBrowserSearchWindow():
             self._widgets[4].checked = True
             self._focus = 4
 
-        elif a_search['type'] in RADIO_BROWSER_DISPLAY_TERMS.keys():
+        elif a_search['type'] in RADIO_BROWSER_DISPLAY_TERMS:
             ''' populate the "Display by" part '''
             self._widgets[0].checked = True
             self._widgets[4].checked = False
@@ -2631,7 +2631,7 @@ class RadioBrowserSearchWindow():
             for i in range(5, len(self._widgets) - self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION):
                 self._widgets[i].enabled = True
 
-            if a_search['type'] in RADIO_BROWSER_SEARCH_BY_TERMS.keys():
+            if a_search['type'] in RADIO_BROWSER_SEARCH_BY_TERMS:
                 line_edit = RADIO_BROWSER_SEARCH_BY_TERMS[a_search['type']]
 
                 if a_search['type'].endswith('exact'):
@@ -2646,7 +2646,7 @@ class RadioBrowserSearchWindow():
                 s_id_list = []
                 for n in a_search['post_data'].items():
                     # logger.error('DE s_id = {}'.format(s_id))
-                    if n[0] in RADIO_BROWSER_SEARCH_TERMS.keys():
+                    if n[0] in RADIO_BROWSER_SEARCH_TERMS:
                         if n[1] != -1:
                             s_id = RADIO_BROWSER_SEARCH_TERMS[n[0]]
                             # logger.error('DE s_id = {}'.format(s_id))
@@ -2663,7 +2663,7 @@ class RadioBrowserSearchWindow():
             for n in a_search['post_data'].keys():
                 if n == 'order':
                     order = a_search['post_data']['order']
-                    if order in RADIO_BROWSER_SEARCH_SORT_TERMS.keys():
+                    if order in RADIO_BROWSER_SEARCH_SORT_TERMS:
                         order_id = RADIO_BROWSER_SEARCH_SORT_TERMS[order]
                         self._widgets[2].selection = self._widgets[2].active = order_id
                 elif n == 'limit':
@@ -2734,7 +2734,7 @@ class RadioBrowserSearchWindow():
                                     continue
                             ret['post_data'][n[0]] = self._widgets[a_what_type].string
                             if self._widgets[a_what_type-1].checked:
-                                if n[0] in RADIO_BROWSER_EXACT_SEARCH_TERM.keys():
+                                if n[0] in RADIO_BROWSER_EXACT_SEARCH_TERM:
                                     ret['post_data'][RADIO_BROWSER_EXACT_SEARCH_TERM[n[0]]] = 'true'
 
             ''' get limit (term)'''
@@ -3741,7 +3741,7 @@ class RadioBrowserData():
             from .countries import countries
             st = 'stationcount'
             for n in json_countrycodes:
-                if n['name'] in countries.keys():
+                if n['name'] in countries:
                     ret[countries[n['name']]] = {}
                     ret[countries[n['name']]]['code'] = n['name']
                     ret[countries[n['name']]]['stationcount'] = n[st]
@@ -3750,7 +3750,7 @@ class RadioBrowserData():
             if connection_error:
                 return True, {}
             for n in json_states:
-                if n['country'] in ret.keys():
+                if n['country'] in ret:
                     ret[n['country']]['states'][n['name']] = n['stationcount']
             return False, ret
 
@@ -4327,7 +4327,7 @@ class RadioBrowserServers():
         if self._too_small:
             return 1
 
-        if char in self._global_functions.keys():
+        if char in self._global_functions:
             self._global_functions[char]()
             return 1
         elif char in (

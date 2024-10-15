@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import locale
 import csv
 import sys
 import logging
@@ -14,17 +15,12 @@ from datetime import datetime
 from shutil import which, copyfile, move, Error as shutil_Error, rmtree as remove_tree
 import threading
 from copy import deepcopy
-try:
-    from subprocess import Popen, DEVNULL
-except ImportError:
-    from subprocess import Popen
 from platform import system
-if system().lower() == 'windows':
-    from os import startfile
-else:
-    from os import getuid
+from rich.console import Console
+from rich.table import Table
+from rich.align import Align
+from rich import print
 from pyradio import version, stations_updated
-
 from .common import validate_resource_opener_path
 from .keyboard import kbkey, read_keyboard_shortcuts
 from .browser import PyRadioStationsBrowser, probeBrowsers
@@ -35,6 +31,16 @@ from .server import IPsWithNumbers
 from .xdg import XdgDirs, XdgMigrate, CheckDir
 from .install import get_a_linux_resource_opener
 from .html_help import is_graphical_environment_running
+from .log import Log
+
+try:
+    from subprocess import Popen, DEVNULL
+except ImportError:
+    from subprocess import Popen
+if system().lower() == 'windows':
+    from os import startfile
+else:
+    from os import getuid
 HAS_REQUESTS = True
 
 try:
@@ -42,7 +48,6 @@ try:
 except:
     HAS_REQUESTS = False
 
-from .log import Log
 HAS_DNSPYTHON = True
 try:
     from dns import resolver
@@ -54,14 +59,8 @@ try:
 except:
     HAS_PSUTIL = False
 
-from rich.console import Console
-from rich.table import Table
-from rich.align import Align
-from rich import print
-
 logger = logging.getLogger(__name__)
 
-import locale
 locale.setlocale(locale.LC_ALL, "")
 
 def to_ip_port(string):
@@ -3119,7 +3118,7 @@ class PyRadioPlaylistStack():
         # logger.error('DE playlist history\n{}\n'.format(self._p))
 
     def get_item_member(self, member, item_id=-1):
-        if member in self._id.keys():
+        if member in self._id:
             return self._p[item_id][self._id[member]]
         else:
             raise ValueError('member "{}" does not exist'.format(member))

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import argparse
 from argparse import ArgumentParser, SUPPRESS as SUPPRESS
-import requests
 from os import path, getenv
 import sys
 import re
 from sys import platform
 from rich import print
+import requests
 
 def format_list(a_string):
     print(a_string.replace(

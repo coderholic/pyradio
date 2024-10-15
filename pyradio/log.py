@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import locale
+import warnings
 import curses
 from os import getenv
 from os.path import join, exists, dirname
@@ -14,7 +16,6 @@ from tempfile import gettempdir
 from .common import player_start_stop_token
 from .cjkwrap import cjklen
 
-import locale
 locale.setlocale(locale.LC_ALL, "")
 
 HAS_WIN10TOAST = True
@@ -25,7 +26,6 @@ try:
 except:
     HAS_WIN10TOAST = False
 
-import warnings
 warnings.simplefilter("ignore")
 
 logger = logging.getLogger(__name__)

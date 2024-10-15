@@ -8,13 +8,13 @@ from datetime import datetime, timedelta
 from glob import glob
 import locale
 import logging
-
-locale.setlocale(locale.LC_ALL, "")
-logger = logging.getLogger(__name__)
 from rich.console import Console
 from rich.table import Table
 from rich.align import Align
 from rich import print
+
+locale.setlocale(locale.LC_ALL, "")
+logger = logging.getLogger(__name__)
 
 class MKVToolNix:
 

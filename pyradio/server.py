@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
+import locale
 import socket
 import logging
 from os import remove
 from os.path import basename, exists
 from sys import platform, version_info
-import requests
 from time import sleep
+import requests
 from .simple_curses_widgets import SimpleCursesLineEdit
 
-import locale
 locale.setlocale(locale.LC_ALL, "")
 
 logger = logging.getLogger(__name__)

@@ -1,10 +1,11 @@
+import locale
+import logging
 from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, environ, getpid, listdir, rmdir, walk
 from sys import platform, exit
-from rich import print
 from shutil import copy, copyfile, move, Error as shutil_Error, rmtree as remove_tree
-import logging
-
 from platform import system
+from rich import print
+
 if not system().lower() == 'windows':
     from os import getuid
 
@@ -36,7 +37,6 @@ state_files = [
 
 logger = logging.getLogger(__name__)
 
-import locale
 locale.setlocale(locale.LC_ALL, "")
 
 class XdgMigrate():

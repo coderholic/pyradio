@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import locale
 import curses
 import curses.ascii
 from time import sleep
@@ -21,7 +22,6 @@ from .xdg import CheckDir
 from .html_help import HtmlHelp
 from .keyboard import kbkey, kb2str, kb2chr
 
-import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
@@ -1671,7 +1671,7 @@ class PyRadioResourceOpener():
                     # cancel
                     self._widgets[0].string = ''
                     ret = -1
-            elif char in self._global_functions.keys():
+            elif char in self._global_functions:
                 self._global_functions[char]()
         #self._show_title()
         #self.show()

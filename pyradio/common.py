@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import logging
+import locale
 import io
 import csv
 import curses
@@ -8,11 +10,9 @@ from os.path import exists, dirname, join
 from shutil import which
 from copy import deepcopy
 from rich import print
-import logging
 
 logger = logging.getLogger(__name__)
 
-import locale
 locale.setlocale(locale.LC_ALL, "")
 
 """ Theming constants """
@@ -172,6 +172,8 @@ class StationsChanges():
         ],
     }
 
+    keys = None
+
     def __init__(self, config):
         self._cnf = config
         self._last_sync_file = join(self._cnf.state_dir, 'last-sync')
@@ -328,7 +330,7 @@ class StationsChanges():
 
             Used by update_stations_csv()
         '''
-        self.keys = [x for x in self.versions.keys()]
+        self.keys = [x for x in self.versions]
         self.keys.sort()
         # print('keys = {}'.format(self.keys))
         if stop is not None:

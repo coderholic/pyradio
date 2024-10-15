@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import locale
 import sys
 import curses
 import logging
@@ -26,7 +27,6 @@ from .schedule import PyRadioScheduleList
 from .install import get_a_linux_resource_opener
 from .html_help import is_graphical_environment_running
 from .client import client
-import locale
 locale.setlocale(locale.LC_ALL, "")
 
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

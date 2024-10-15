@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
+import locale
 from collections import deque
 import logging
 import locale
 locale.setlocale(locale.LC_ALL, "")
 logger = logging.getLogger(__name__)
 
-import locale
 locale.setlocale(locale.LC_ALL, "")
 
 
@@ -317,7 +317,7 @@ class Window_Stack(Window_Stack_Constants):
         return -2, 'UNKNOWN'
 
     def mode_name(self, intToFind):
-        if intToFind in self.MODE_NAMES.keys():
+        if intToFind in self.MODE_NAMES:
             return self.MODE_NAMES[intToFind]
         return 'UNKNOWN'
 

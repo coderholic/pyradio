@@ -193,7 +193,7 @@ def info_dict_to_list1(info, fix_highlight, max_width):
                     out.append((f"{formatted_label:>{label_width-2}}: {wrapped_lines[0]}"))
                 for i in range(1, len(wrapped_lines)):
                     out.append('_' * label_width + '|' + wrapped_lines[i])
-    if 'text' in result_dict.keys():
+    if 'text' in result_dict:
         out.append('')
         for n in result_dict['text']:
             out.append(n)
@@ -653,7 +653,7 @@ class Player():
         info = collections.OrderedDict()
         info['Playlist Name'] = a_station[0]
         for x in guide:
-            if x[1] in self._icy_data.keys():
+            if x[1] in self._icy_data:
                 info[x[0]] = self._icy_data[x[1]].strip()
             else:
                 info[x[0]] = ''
@@ -691,7 +691,7 @@ class Player():
 
         ret = '|' + '\n'.join(a_list).replace('Encoding: |', 'Encoding: ').replace('URL: |', 'URL: ').replace('\n', '\n|')
         tail = ''
-        if 'icy-name' in self._icy_data.keys():
+        if 'icy-name' in self._icy_data:
             if a_station[0] != self._icy_data['icy-name'] and \
                     self._icy_data['icy-name'] and \
                     self._icy_data['icy-name'] != '(null)':
@@ -1125,7 +1125,7 @@ class Player():
                     #        self.outputStream.write(msg=self.oldUserInput['Title'], counter='')
 
                     else:
-                        for a_token in self.icy_audio_tokens.keys():
+                        for a_token in self.icy_audio_tokens:
                             if a_token in subsystemOut:
                                 if not self.playback_is_on:
                                     if logger.isEnabledFor(logging.INFO):
@@ -1155,12 +1155,12 @@ class Player():
                                             self._icy_data['codec-name'] = self._icy_data['codec'].split('] ')[0].replace('[', '')
                                             self._icy_data['codec'] = self._icy_data['codec'].split('] ')[1]
                                     if version_info < (3, 0):
-                                        for an_item in self._icy_data.keys():
+                                        for an_item in self._icy_data:
                                             try:
                                                 self._icy_data[an_item] = self._icy_data[an_item].encode(self._station_encoding, 'replace')
                                             except UnicodeDecodeError as e:
                                                 self._icy_data[an_item] = ''
-                                    if 'codec-name' in self._icy_data.keys():
+                                    if 'codec-name' in self._icy_data:
                                         self._icy_data['codec-name'] = self._icy_data['codec-name'].replace('"', '')
                                 # logger.error('DE audio data\n\n{}\n\n'.format(self._icy_data))
                         self.info_display_handler()
@@ -1624,7 +1624,7 @@ class Player():
                     else:
                         if stop():
                             break
-                        for a_token in self.icy_audio_tokens.keys():
+                        for a_token in self.icy_audio_tokens:
                             if a_token in subsystemOut:
                                 self.stop_timeout_counter_thread = True
                                 try:
@@ -1655,12 +1655,12 @@ class Player():
                                             self._icy_data['codec-name'] = self._icy_data['codec'].split('] ')[0].replace('[', '')
                                             self._icy_data['codec'] = self._icy_data['codec'].split('] ')[1]
                                     if version_info < (3, 0):
-                                        for an_item in self._icy_data.keys():
+                                        for an_item in self._icy_data:
                                             try:
                                                 self._icy_data[an_item] = self._icy_data[an_item].encode(self._station_encoding, 'replace')
                                             except UnicodeDecodeError as e:
                                                 self._icy_data[an_item] = ''
-                                    if 'codec-name' in self._icy_data.keys():
+                                    if 'codec-name' in self._icy_data:
                                         self._icy_data['codec-name'] = self._icy_data['codec-name'].replace('"', '')
                                 # logger.error('DE audio data\n\n{}\n\n'.format(self._icy_data))
                         self.info_display_handler()
@@ -1808,7 +1808,7 @@ class Player():
         # logger.info('DE a_data {}'.format(a_data))
         if b'icy-br' in a_data:
             # logger.info('DE check {}'.format(self._icy_data))
-            if 'icy-br' not in self._icy_data.keys():
+            if 'icy-br' not in self._icy_data:
                 for icy in ('icy-name', 'icy-url', 'icy-genre', 'icy-br'):
                     if stop():
                         return False
@@ -2803,12 +2803,12 @@ class MpvPlayer(Player):
         # Send data
         try:
             if platform.startswith('win'):
-                if a_command in self.commands.keys():
+                if a_command in self.commands:
                     win32file.WriteFile(sock, self.commands[a_command])
                 else:
                     win32file.WriteFile(sock, a_command)
             else:
-                if a_command in self.commands.keys():
+                if a_command in self.commands:
                     sock.sendall(self.commands[a_command])
                 else:
                     sock.sendall(a_command)

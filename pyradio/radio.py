@@ -7,6 +7,7 @@
 # Peter Stevenson (2E0PGS) - 2018
 # Spiros Georgaras - 2018, 2024
 
+import locale
 import curses
 import curses.ascii
 import threading
@@ -48,6 +49,8 @@ from .browser import RadioBrowserConfig, RadioBrowserConfigWindow
 from .schedule_win import PyRadioSimpleScheduleWindow
 from .simple_curses_widgets import SimpleCursesMenu
 from .messages_system import PyRadioMessagesSystem
+from .server import IPs, PyRadioServer, HAS_NETIFACES
+from .keyboard import kbkey
 
 CAN_CHECK_FOR_UPDATES = True
 try:
@@ -55,13 +58,9 @@ try:
 except:
     CAN_CHECK_FOR_UPDATES = False
 
-import locale
 locale.setlocale(locale.LC_ALL, "")
 
 logger = logging.getLogger(__name__)
-
-from .server import IPs, PyRadioServer, HAS_NETIFACES
-from .keyboard import kbkey
 
 def rel(path):
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
@@ -2198,21 +2197,21 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
     def playSelectionBrowser(self, a_url=None):
         self.log.display_help_message = False
 
-            # self.log.write(msg=player_start_stop_token[0] + self._last_played_station[0])
+        # self.log.write(msg=player_start_stop_token[0] + self._last_played_station[0])
 
-            #### self._cnf.browsing_station_service = True
-            ''' Add a history item to preserve browsing_station_service
-                Need to add TITLE, if service found
-            '''
-            self._cnf.add_to_playlist_history(
-                    station_path=a_url if a_url else self.stations[self.selection][0],
-                    browsing_station_service=True
-                    )
-            if a_url:
-                ''' dirty hack here...  '''
-                self._cnf._ps._p[-2][-1] = False
-                # logger.error(self._cnf._ps._p)
-            self._check_to_open_playlist(a_url)
+        #### self._cnf.browsing_station_service = True
+        ''' Add a history item to preserve browsing_station_service
+            Need to add TITLE, if service found
+        '''
+        self._cnf.add_to_playlist_history(
+                station_path=a_url if a_url else self.stations[self.selection][0],
+                browsing_station_service=True
+                )
+        if a_url:
+            ''' dirty hack here...  '''
+            self._cnf._ps._p[-2][-1] = False
+            # logger.error(self._cnf._ps._p)
+        self._check_to_open_playlist(a_url)
 
     def restartPlayer(self, msg=''):
         if self.player.isPlaying():
@@ -2761,7 +2760,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 self._cnf.browsing_station_service:
             if self._cnf._online_browser.BROWSER_NAME == 'RadioBrowser':
                 self._show_message_win(help_key='H_MAIN', token='rb')
-        elif self.ws.operation_mode in self._help_keys.keys():
+        elif self.ws.operation_mode in self._help_keys:
             # logger.error('using _open_message_win_by_key')
             # logger.error('self.ws.operation_mode == {}'.format(self.ws.operation_mode))
             if self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE:
@@ -4672,7 +4671,7 @@ ____Using |fallback| theme.''')
             self._put_selection_in_the_middle(force=True)
         if reapply:
             if self.ws.operation_mode in \
-                    [self._mode_to_search[x] for x in self._mode_to_search.keys()]:
+                    [self._mode_to_search[x] for x in self._mode_to_search]:
                 _apply_main_windows(ret)
             elif self.ws.operation_mode == self.ws.THEME_MODE:
                 self._theme_selector.set_theme(self._theme_selector._themes[ret])
@@ -5064,7 +5063,7 @@ ____Using |fallback| theme.''')
         '''
         if shift_only(a_button):
             ''' looking for wheel '''
-            if a_button ^ curses.BUTTON_SHIFT not in self.buttons.keys():
+            if a_button ^ curses.BUTTON_SHIFT not in self.buttons:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Mouse event: assuming volume down')
                 self._volume_down()
@@ -5099,7 +5098,7 @@ ____Using |fallback| theme.''')
 
     def _handle_main_window_mouse_event(self, my, mx, a_button):
         if no_modifiers(a_button):
-            if a_button not in self.buttons.keys():
+            if a_button not in self.buttons:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Mouse event on main window: page down')
                 self._page_down()
@@ -6087,7 +6086,7 @@ ____Using |fallback| theme.''')
                     self._stop_player()
                 self.refreshBody()
 
-            elif char in self._global_functions.keys():
+            elif char in self._global_functions:
                 self._global_functions[char]()
 
         if self.ws.operation_mode == self.ws.NO_THEMES_MODE:
@@ -6100,7 +6099,7 @@ ____Using |fallback| theme.''')
             return
 
         if self.ws.operation_mode == self.ws.WIN_UNINSTALL_MODE:
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
             else:
                 self.ws.close_window()
@@ -6158,7 +6157,7 @@ ____Using |fallback| theme.''')
             return
 
         if self.ws.operation_mode == self.ws.WIN_PRINT_EXE_LOCATION_MODE:
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
             elif char in (kbkey['q'], curses.KEY_EXIT, 27):
                 self.ws.close_window()
@@ -6167,7 +6166,7 @@ ____Using |fallback| theme.''')
             return
 
         if self.ws.operation_mode == self.ws.WIN_MANAGE_PLAYERS_MSG_MODE:
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
             else:
                 self.ws.close_window()
@@ -6176,7 +6175,7 @@ ____Using |fallback| theme.''')
             return
 
         if self.ws.operation_mode == self.ws.WIN_REMOVE_OLD_INSTALLATION_MODE:
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
             else:
                 self.ws.close_window()
@@ -6437,7 +6436,7 @@ ____Using |fallback| theme.''')
                         self.ws.operation_mode == self.ws.NORMAL_MODE) or \
                         (self.ws.operation_mode == self.ws.PLAYLIST_MODE and \
                         self._cnf.open_register_list)):
-                            ''' c pressed - clear register '''
+                        ''' c pressed - clear register '''
                         if self.number_of_items > 0:
                             self._print_clear_register()
                         else:
@@ -7354,12 +7353,12 @@ ____Using |fallback| theme.''')
                 # logger.error('DE last_history = {}'.format(last_history))
                 if self.ws.window_mode == self.ws.NORMAL_MODE:
                     ''' rename the playlist on editor '''
-                        self._rename_playlist_from_normal_mode(
-                                copy,
-                                open_file,
-                                pl_create,
-                                last_history
-                                )
+                    self._rename_playlist_from_normal_mode(
+                            copy,
+                            open_file,
+                            pl_create,
+                            last_history
+                            )
                 else:
                     # self.ll('playlist before')
                     #self._playlist_in_editor = self._cnf.playlists[self.selections[self.ws.PLAYLIST_MODE][2]][-1]
@@ -7399,7 +7398,7 @@ ____Using |fallback| theme.''')
 
         elif self.ws.operation_mode == self.ws.BROWSER_SERVER_SELECTION_MODE and \
                 char not in self._chars_to_bypass:
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
                 return
             if self._server_selection_window:
@@ -7595,7 +7594,7 @@ ____Using |fallback| theme.''')
 
         elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE:
 
-            if char in self._global_functions.keys() and \
+            if char in self._global_functions and \
                     not self._cnf._online_browser.line_editor_has_focus():
                 self._global_functions[char]()
                 return
@@ -7646,7 +7645,7 @@ ____Using |fallback| theme.''')
             return
 
         elif self.ws.operation_mode == self.ws.BROWSER_SORT_MODE:
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
                 return
             ret = self._cnf._online_browser.keypress(char)
@@ -7757,7 +7756,7 @@ ____Using |fallback| theme.''')
             return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_CREATE_NEW_THEME_MODE:
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
                 return
             if self.theme_forced_selection:
@@ -7893,7 +7892,7 @@ ____Using |fallback| theme.''')
             return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG_TO_EXIT:
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
             elif char in (kbkey['y'], kbkey['n']):
                 self.ws.close_window()
@@ -7921,7 +7920,7 @@ ____Using |fallback| theme.''')
             return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_CONFIG:
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
             elif char in (kbkey['y'], kbkey['n']):
                 self.ws.close_window()
@@ -7951,7 +7950,7 @@ ____Using |fallback| theme.''')
             return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_BROWSER:
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
             elif char in (kbkey['y'], kbkey['n']):
                 self.ws.close_window()
@@ -7990,7 +7989,7 @@ ____Using |fallback| theme.''')
             return
 
         elif self.ws.operation_mode == self.ws.CLEAR_ALL_REGISTERS_MODE:
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
             elif char in (kbkey['y'], kbkey['n']):
                 self.ws.close_window()
@@ -7999,7 +7998,7 @@ ____Using |fallback| theme.''')
                 self.refreshBody()
             return
 
-        elif char in (kbkey['search'], ) and self.ws.operation_mode in self._search_modes.keys():
+        elif char in (kbkey['search'], ) and self.ws.operation_mode in self._search_modes:
             self._reset_status_bar_right()
             if self.maxY > 5:
                 self._give_me_a_search_class(self.ws.operation_mode)
@@ -8008,7 +8007,7 @@ ____Using |fallback| theme.''')
             return
 
         elif self.ws.operation_mode == self.ws.UPDATE_NOTIFICATION_MODE:
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
             else:
                 with self._update_notify_lock:
@@ -8020,7 +8019,7 @@ ____Using |fallback| theme.''')
             return
 
         elif self.ws.operation_mode == self.ws.UPDATE_NOTIFICATION_OK_MODE:
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
                 return
             # ok
@@ -8039,7 +8038,7 @@ ____Using |fallback| theme.''')
         # elif char in (kbkey['n'], ) and \
         #         self.ws.operation_mode in self._search_modes.keys():
         elif char in (kbkey['search_next'], ) and \
-                self.ws.operation_mode in self._search_modes.keys():
+                self.ws.operation_mode in self._search_modes:
             self._give_me_a_search_class(self.ws.operation_mode)
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 self._update_status_bar_right()
@@ -8086,7 +8085,7 @@ ____Using |fallback| theme.''')
             return
 
         elif char in (kbkey['search_prev'], ) and \
-                self.ws.operation_mode in self._search_modes.keys():
+                self.ws.operation_mode in self._search_modes:
             self._give_me_a_search_class(self.ws.operation_mode)
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 self._update_status_bar_right()
@@ -8133,7 +8132,7 @@ ____Using |fallback| theme.''')
             return
 
         elif self.ws.operation_mode in \
-            [self._search_modes[x] for x in self._search_modes.keys()]:
+            [self._search_modes[x] for x in self._search_modes]:
             ''' serve search results '''
             ret = self.search.keypress(self.search._edit_win, char)
             if ret == 0:
@@ -8213,7 +8212,7 @@ ____Using |fallback| theme.''')
             self._toggle_transparency()
             return
 
-        elif char in self._global_functions.keys():
+        elif char in self._global_functions:
             self._global_functions[char]()
             return
 
@@ -8225,7 +8224,7 @@ ____Using |fallback| theme.''')
             return -1
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE:
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
             elif char in (kbkey['y'], kbkey['Y']):
                 self.ws.close_window()
@@ -8266,7 +8265,7 @@ ____Using |fallback| theme.''')
 
         elif self.ws.operation_mode in (self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE,
                                         self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_BACK_IN_HISTORY_MODE):
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
             else:
                 self.ws.close_window()
@@ -8305,7 +8304,7 @@ ____Using |fallback| theme.''')
             return
 
         elif self.ws.operation_mode == self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
             elif char in (kbkey['y'], kbkey['Y']):
                 if not self._cnf.locked and char == kbkey['Y']:
@@ -8322,7 +8321,7 @@ ____Using |fallback| theme.''')
             return
 
         elif self.ws.operation_mode == self.ws.PLAYLIST_RELOAD_CONFIRM_MODE:
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
                 return
             self._reload_playlist_after_confirmation(char)
@@ -8332,7 +8331,7 @@ ____Using |fallback| theme.''')
                 self.ws.REMOVE_STATION_MODE,
                 self.ws.REMOVE_GROUP_MODE
         ):
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
                 return
             if char in (kbkey['y'], kbkey['Y']):
@@ -8346,7 +8345,7 @@ ____Using |fallback| theme.''')
             return
 
         elif self.ws.operation_mode == self.ws.FOREIGN_PLAYLIST_ASK_MODE:
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
             elif char in (kbkey['y'], ):
                 ret = self._cnf.copy_playlist_to_config_dir()
@@ -8459,7 +8458,7 @@ ____Using |fallback| theme.''')
             return
 
         elif self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
                 return
             self._handle_passive_windows()
@@ -8621,7 +8620,7 @@ ____Using |fallback| theme.''')
                 return
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
-                if char in self._local_functions.keys():
+                if char in self._local_functions:
                     self._local_functions[char]()
                     return
                 if char == kbkey['fav']:
@@ -10246,7 +10245,7 @@ ____Using |fallback| theme.''')
             }
             self.def_signal_handlers = {}
             try:
-                for a_sig in self.handled_signals.keys():
+                for a_sig in self.handled_signals:
                     self.def_signal_handlers[a_sig] = signal.signal(
                         self.handled_signals[a_sig],
                         self._linux_signal_handler
@@ -10298,7 +10297,7 @@ ____Using |fallback| theme.''')
         self.player.close()
         self._cnf.save_config()
         self._cnf.remove_session_lock_file()
-        for a_sig in self.handled_signals.keys():
+        for a_sig in self.handled_signals:
             try:
                 signal.signal(
                     self.handled_signals[a_sig],

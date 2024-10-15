@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import locale
+import logging
 import curses
 from copy import deepcopy
 from textwrap import wrap
@@ -15,8 +17,6 @@ from .themes import *
 from .server import IPsWithNumbers
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesMenu
 from .client import PyRadioClient
-import logging
-import locale
 from .keyboard import kbkey
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
@@ -270,10 +270,10 @@ class PyRadioConfigWindow():
             curses.KEY_RIGHT,
         )
         local_f = {}
-        for n in self._local_functions.keys():
+        for n in self._local_functions:
             local_f[n] = self._local_functions[n]
         for n in chk:
-            if n in local_f.keys():
+            if n in local_f:
                 local_f.pop(n)
         return local_f
 
@@ -744,7 +744,7 @@ class PyRadioConfigWindow():
         val = list(self._config_options.items())[self.selection]
         Y = self.selection - self._start + 1
 
-        if char in self._local_functions.keys():
+        if char in self._local_functions:
             if not (val[0] in (
                 'remote_control_server_port',
                 'enable_notifications',
@@ -762,7 +762,7 @@ class PyRadioConfigWindow():
                     return 0, []
                 return -1, []
 
-        if char in self._global_functions.keys():
+        if char in self._global_functions:
             self._global_functions[char]()
 
         elif val[0] == 'resource_opener':
@@ -1383,7 +1383,7 @@ class ExtraParametersEditor():
                 ''' cancel '''
                 self.edit_string = ''
                 ret = 0
-        elif char in self._global_functions.keys():
+        elif char in self._global_functions:
             self._global_functions[char]()
             return 1
 
@@ -1478,7 +1478,7 @@ class ExtraParameters():
 
         self.reset(saved=False)
         ''' set cursor to active item '''
-        for a_key in self._selections.keys():
+        for a_key in self._selections:
             self._selections[a_key][0] = self._selections[a_key][2]
         # logger.error('self._selections\n{}'.format(self._selections))
         self._get_width()
@@ -1787,13 +1787,13 @@ class ExtraParameters():
         '''
         # logger.error('DE\n')
         # logger.error('DE working params = {}'.format(self._working_params))
-        for a_param_set in self._profiles_from_files.keys():
+        for a_param_set in self._profiles_from_files:
             for a_param in self._profiles_from_files[a_param_set]:
                 self._items_dict[a_param_set].append(a_param)
 
     def _list_to_dict(self):
         ''' convert self._items_dict to self._working_params '''
-        for a_params_set in self._items_dict.keys():
+        for a_params_set in self._items_dict:
             the_list = [self._selections[a_params_set][2] + 1]
             the_list.extend(self._items_dict[a_params_set])
             self._working_params[a_params_set] = the_list[:]
@@ -1976,7 +1976,7 @@ class ExtraParameters():
                  5 - add parameter
                  6 - line editor help
         '''
-        if char in self._global_functions.keys():
+        if char in self._global_functions:
             self._global_functions[char]()
             return -1
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
@@ -2234,7 +2234,7 @@ class PyRadioSelectPlayer():
         '''
         if self.editing == 0:
             ''' focus on players '''
-            if char in self._global_functions.keys():
+            if char in self._global_functions:
                 self._global_functions[char]()
             elif char in (9, kbkey['tab'] ):
                 if self.from_config  and self._players[self.selection][1]:
@@ -3041,7 +3041,7 @@ class PyRadioSelectPlaylist():
          0, station path    - selected station path (for paste window)
          1, ''              - Cancel
         '''
-        if char in self._global_functions.keys():
+        if char in self._global_functions:
             self._global_functions[char]()
 
         elif self._select_playlist_error == -1 or \
@@ -3346,7 +3346,7 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
             self.setStation(self._orig_playlist)
             return -1, ''
 
-        elif char in self._global_functions.keys():
+        elif char in self._global_functions:
             self._global_functions[char]()
             return -1, ''
 

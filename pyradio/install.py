@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import locale
 import sys
 import os
 import subprocess
@@ -18,7 +19,6 @@ from shutil import which
 '''
 PyRadioInstallPyReleaseVersion = '0.9.3.11'
 
-import locale
 locale.setlocale(locale.LC_ALL, "")
 
 try:
@@ -1145,8 +1145,8 @@ class PyRadioUpdate():
             except PermissionError:
                 if _permission_error_function:
                     _permission_error_function(name)
-            else:
-                print('Insufficient permissions...')
+                else:
+                    print('Insufficient permissions...')
             except FileExistsError:
                 if dir_exist_function:
                     dir_exist_function(name)

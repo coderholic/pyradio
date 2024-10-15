@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
+import locale
 import sys
-import requests
 import subprocess
 from os.path import join, exists, isdir, basename, dirname
 from os import environ, makedirs, listdir, replace, remove, sep, getenv, chdir
@@ -12,8 +12,8 @@ from os import sep, startfile, path
 from urllib.request import urlretrieve
 import glob
 import threading
+import requests
 
-import locale
 locale.setlocale(locale.LC_ALL, "")
 
 HAVE_PYUNPACK = True

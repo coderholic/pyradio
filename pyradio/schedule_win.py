@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import locale
 from sys import exit
 from datetime import date, datetime, timedelta
 from calendar import monthrange
@@ -13,7 +14,6 @@ from .cjkwrap import cjklen, cjkslices
 from .schedule import PyRadioScheduleItem, PyRadioScheduleItemType, PyRadioScheduleTimeType, PyRadioTime, PyRadioScheduleList, format_date_to_iso8851, random_string, datetime_to_my_time, is_date_before
 from .keyboard import kbkey
 
-import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
