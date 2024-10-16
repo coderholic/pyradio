@@ -121,13 +121,15 @@ In any other case, and since **PyRadio** is currently not available via pip, you
 ## Command line options
 
 ```
+# pyradio -h
 Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-u PLAYER] [-l]
-               [-lt] [-sd] [-od] [-pc] [-d] [-ul] [-us] [-U] [-R] [-V] [-ls]
-               [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes] [--no-themes]
-               [--write-theme IN_THEME OUT_THEME,] [--terminal TERMINAL]
-               [--terminal-param TERMINAL_PARAM] [-oc] [-sc] [-cc] [-gc] [-r]
-               [-or] [-lr] [-mkv MKV_FILE] [-scv PNG_FILE] [-srt] [-ach]
-               [--headless IP_AND_PORT] [--address] [-fd]
+               [-lt] [-sds] [-sd] [-od] [-pc] [-d] [-ul] [-us] [-U] [-R] [-V]
+               [-ls] [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes]
+               [--no-themes] [--write-theme IN_THEME OUT_THEME,]
+               [--terminal TERMINAL] [--terminal-param TERMINAL_PARAM] [-oc]
+               [-sc] [-cc] [-gc] [-r] [-or] [-lr] [-mkv MKV_FILE]
+               [-scv PNG_FILE] [-srt] [-ach] [--headless IP_AND_PORT]
+               [--address] [-fd]
 
 Curses based Internet Radio Player
 
@@ -146,6 +148,7 @@ General options:
                         mpv, mplayer, vlc.
   -l, --list            List of available stations in a playlist.
   -lt, --log-titles     Log titles to file.
+  -sds, --show-dirs     Print all the directories used by PyRadio and exit.
   -sd, --show-config-dir
                         Print config directory [CONFIG DIR] location and exit.
   -od, --open-config-dir

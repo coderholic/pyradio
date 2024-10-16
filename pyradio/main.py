@@ -254,6 +254,8 @@ If nothing else works, try the following command:
 
     parser.add_argument('-lt', '--log-titles', action='store_true',
                         help='Log titles to file.')
+    parser.add_argument('-sds', '--show-dirs', action='store_true',
+                        help='Print all the directories used by PyRadio and exit.')
     parser.add_argument('-sd', '--show-config-dir', action='store_true',
                         help='Print config directory [CONFIG DIR] location and exit.')
     parser.add_argument('-od', '--open-config-dir', action='store_true',
@@ -647,6 +649,15 @@ If nothing else works, try the following command:
         if args.unlock:
             pyradio_config.locked = False
             pyradio_config.force_to_remove_lock_file = True
+            return
+
+        if args.show_dirs:
+            print('[magenta]Directories used by PyRadio[/magenta]')
+            print('    Config dir: "[red]{}[/red]"'.format(pyradio_config.stations_dir))
+            print('      Data dir: "[red]{}[/red]"'.format(pyradio_config.data_dir))
+            print('     State dir: "[red]{}[/red]"'.format(pyradio_config.state_dir))
+            print('     Cache dir: "[red]{}[/red]"'.format(pyradio_config.cache_dir))
+            print('Recordings dir: "[red]{}[/red]"'.format(pyradio_config.recording_dir))
             return
 
         if args.show_config_dir:
