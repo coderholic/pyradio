@@ -2,11 +2,12 @@
 import locale
 import logging
 import curses
+from datetime import datetime
 from copy import deepcopy
 from textwrap import wrap
 import glob
 import csv
-from os import path, sep
+from os import path, sep, rename
 from sys import platform, version_info
 
 from .common import *
@@ -3365,5 +3366,70 @@ class PyRadioServerConfig():
 
     def keypress(self, char):
         pass
+
+
+class PyRadioKeyboardConfig():
+
+    _focus = 0
+
+    def __init__(self):
+        pass
+
+    def _rename_keyboard_json_file(file_path):
+        # Check if the file path ends with "keyboard.json"
+        if not file_path.endswith("keyboard.json"):
+            raise ValueError("The file path must end with 'keyboard.json'")
+
+        # Get the current date and time
+        now = datetime.now()
+        formatted_time = now.strftime("%Y-%m-%d_%H-%M-%S")
+
+        # Create the new file name
+        new_file_name = f"{formatted_time}-keyboard.json"
+
+        # Get the directory of the original file
+        directory = path.dirname(file_path)
+
+        # Create the full new file path
+        new_file_path = path.join(directory, new_file_name)
+
+        # Rename the file
+        rename(file_path, new_file_path)
+
+        return new_file_name
+
+    def _focus_nect(self):
+        pass
+
+    def _focus_previous(self):
+        pass
+
+    def show(self):
+        pass
+
+    def keypress(self, char):
+        ''' PyRadioKeyboardConfig keypress
+            Returns:
+                -1: Cancel
+                 0: Done
+                 1: Continue
+                 2: Display help
+                 3: Display line editor help
+        '''
+        if char == kbkey['?'] and self._focus > 0:
+            return 3
+        elif char == kbkey['?']:
+            return 2
+        elif char in (curses.KEY_EXIT, 27, kbkey['q']) and \
+                self._focus > 0:
+            self.edit_string = ''
+            return -1
+        elif char in (ord('\t'), 9, curses.KEY_DOWN, kbkey['tab']):
+            self._focus_next()
+        elif char in (curses.KEY_BTAB, curses.KEY_UP, kbkey['stab']):
+            self._focus_previous()
+        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
+            pass
+        return 1
 
 # pymode:lint_ignore=W901

@@ -150,10 +150,11 @@ kbkey_orig['F10']                      = ( curses.KEY_F10         , 'Uninstall P
 '''
 def populate_dict():
     for key, value in kbkey_orig.items():
-        kbkey[key] = value[0]
+        if value[0]:
+            kbkey[key] = value[0]
     return kbkey
 
-kbkey = OrderedDict()
+kbkey = {}
 kbkey = populate_dict()
 
 curses_function_keys_dict = {
