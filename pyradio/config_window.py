@@ -105,6 +105,9 @@ class PyRadioConfigWindow():
     _help_text.append(['If set to True, the Server will be automatically started when PyRadio starts.', '|', r'If set to False, one can start the Server using the "\s" command from the Main program window.', '|', 'Default value: False'])
     _help_text.append(None)
     _help_text.append(['This options will open the configuration window for the RadioBrowser Online Stations Directory.',])
+    _help_text.append(None)
+    _help_text.append(['This options will open the configuration window for the Shortcuts Definitions.', '|', 'Currently not available.'])
+    _help_text.append(['This options will open the configuration window for the Alternative Shortcuts Definitions.', '|', 'Currently not available.'])
 
     _config_options = None
 

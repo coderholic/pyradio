@@ -173,6 +173,9 @@ class StationsChanges():
     }
 
     keys = None
+    _stations = None
+    _stations_file = None
+    _playlist_version = 0
 
     def __init__(self, config):
         self._cnf = config
@@ -218,7 +221,7 @@ class StationsChanges():
     def _open_stations_file(self):
         self._stations = []
         self._stations_file = join(self._cnf.stations_dir, 'stations.csv')
-        self._read_playlist_version = self._playlist_version = self.PLAYLIST_HAS_NAME_URL
+        self._playlist_version = self.PLAYLIST_HAS_NAME_URL
         if exists(self._stations_file):
             with open(self._stations_file, 'r', encoding='utf-8') as cfgfile:
                 try:
@@ -232,11 +235,11 @@ class StationsChanges():
                             try:
                                 name, url, enc = [s.strip() for s in row]
                                 self._stations.append([name, url, enc, ''])
-                                self._read_playlist_version = self._playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING
+                                self._playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING
                             except:
                                 name, url, enc, onl = [s.strip() for s in row]
                                 self._stations.append([name, url, enc, onl])
-                                self._read_playlist_version = self._playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON
+                                self._playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON
                 except:
                     self._stations = []
                     self._playlist_version = self.PLAYLIST_HAS_NAME_URL

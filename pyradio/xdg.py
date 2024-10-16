@@ -313,6 +313,7 @@ class XdgDirs():
     dir_fixed_function = None
 
     titles_log_file = None
+    last_rec_dirs = None
 
     def __init__(self, config_dir=None, xdg_compliant=False, a_dir_fix_function=None):
         ''' Parameters

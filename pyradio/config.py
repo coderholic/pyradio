@@ -1337,6 +1337,9 @@ class PyRadioConfig(PyRadioStations):
     opts['remote_control_server_auto_start'] = ['Auto-start Server: ', False]
     opts['online_header'] = ['Online services', '']
     opts['radiobrowser'] = ['RadioBrowser', '-']
+    opts['shortcuts'] = ['Keyboard Shortcuts', '']
+    opts['shortcuts_keys'] = ['Shortcuts', '-']
+    opts['shortcuts_alt'] = ['Alternative Shortcuts', '-']
     opts['requested_player'] = ['', '']
     opts['dirty_config'] = ['', False]
 

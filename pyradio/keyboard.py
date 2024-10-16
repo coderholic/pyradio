@@ -166,6 +166,7 @@ curses_function_keys_dict = {
     curses.KEY_F7: 'F7',
     curses.KEY_F8: 'F8',
     curses.KEY_F9: 'F9',
+    curses.KEY_F10: 'F10',
 }
 
 curses_ascii_dict = {
@@ -221,9 +222,7 @@ def read_keyboard_shortcuts(file_path, reset=False):
         except (FileNotFoundError, json.JSONDecodeError, TypeError, IOError):
             pass
         if data is not None:
-            print('========')
             for n in data.keys():
-                print(f'{n} : {data[n]}')
                 kbkey[n] = data[n]  # Modify the existing kbkey
 
 def to_str(akey):

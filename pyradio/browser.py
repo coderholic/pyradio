@@ -23,7 +23,7 @@ from .cjkwrap import cjklen
 from .countries import countries
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesWidgetColumns, SimpleCursesCheckBox, SimpleCursesCounter, SimpleCursesBoolean, DisabledWidget, SimpleCursesString, SimpleCursesWidget
 from .ping import ping
-from .keyboard import kbkey, ctrl_code_to_simple_code, kb2chr
+from .keyboard import kbkey, ctrl_code_to_simple_code, kb2chr, ctrl_code_to_string
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
@@ -3089,7 +3089,8 @@ class RadioBrowserSearchWindow():
         elif self._selected_history_id == self._default_history_id:
             self._win.addstr(self.maxY - 3, 2, 'Default item', curses.color_pair(4))
 
-        msg = 'History navigation: ^N/^P, HOME,0/END,g,$, PgUp/PgDown'
+        msg = 'History navigation: ' + ctrl_code_to_string(kbkey['rb_h_next']) + '/' + \
+                ctrl_code_to_string(kbkey['rb_h_prev']) +', Home,0/End,g,$, PgUp/PgDown'
         thisX = self.maxX - 2 - len(msg)
         self._win.addstr(self.maxY - 3, thisX, msg.split(':')[0] + ':', curses.color_pair(5))
         msg = msg.split(':')[1]
@@ -3097,7 +3098,10 @@ class RadioBrowserSearchWindow():
         self._win.addstr(msg, curses.color_pair(4))
         self._other_chgat(self.maxY - 3, thisX, msg)
         #self._carret_chgat(self.maxY-3, thisX, msg)
-        msg = 'Add/Del: ^Y/^X, Make default: ^B, Save history: ^E'
+        msg = 'Add/Del: ' + ctrl_code_to_string(kbkey['rb_h_add']) + \
+                '/' +  ctrl_code_to_string(kbkey['rb_h_del']) + \
+                ', Make default: ' + ctrl_code_to_string(kbkey['rb_h_def']) +  \
+                ', Save history: ' + ctrl_code_to_string(kbkey['rb_h_save'])
         thisX = self.maxX - 2 - len(msg)
         self._win.addstr(self.maxY - 2, thisX, msg)
         self._carret_chgat(self.maxY-2, thisX, msg)

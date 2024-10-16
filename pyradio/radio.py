@@ -395,6 +395,51 @@ class PyRadio():
 
     _function_to_repeat = None
 
+    setup_return_status = True
+
+    _group_color_normal = 2
+    _group_color_active = 9
+
+    log = None
+
+    headWin = None
+    bodyWin = None
+    outerBodyWin = None
+    footerWin = None
+    headWin = None
+    txtWin = None
+
+    maxY = 0
+    maxX = 0
+    outerBodyMaxY = 0
+    outerBodyMaxX = 0
+    bodyMaxY = 0
+    bodyMaxX = 0
+    bodyWinStartY = 0
+    bodyWinEndY = 0
+
+    _missing_dependency = None
+
+    _last_played_station_id = 0
+
+    playback_timeout = 0
+
+
+    buffering = False
+    _curses_key_resize = 0
+    _update_stations_error_count = 0
+    new_filename = None
+    old_filename = None
+    _connection_type_edit = None
+    def_signal_handlers = None
+    _failed_register_file = None
+    _groups = None
+    _old_station_encoding = None
+    _reading_stations = None
+    _register_to_open = None
+    _server_dead_msg = None
+    _server_error_msg = None
+
     def ll(self, msg):
         logger.error('DE ==========')
         logger.error('DE ===> {}'.format(msg))
@@ -986,9 +1031,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             return
         curses.start_color()
         curses.use_default_colors()
-
-        self._group_color_normal = 2
-        self._group_color_active = 9
 
         if self._cnf.use_themes:
             self._cnf.use_themes = calc_can_change_colors(self._cnf)
@@ -2398,7 +2440,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             for the status update thread.
         '''
         logger.error('stopPlayerFromKeyboard()!!!!!')
-        self.stop_mpv_status_update_thread = True
+        self.player.stop_mpv_status_update_thread = True
         self.player.stop_update_notification_thread = True
         self.player.stop_win_vlc_status_update_thread = True
         if from_update_thread:
@@ -3873,7 +3915,7 @@ ____Using |fallback| theme.''')
         if self._cnf.browsing_station_service:
             self._cnf._online_browser.parent = self.bodyWin
 
-        self._number_of_radio_browser_search_results = ret[1]
+        # self._number_of_radio_browser_search_results = ret[1]
         if ret[1] == 0 and not self._cnf._online_browser.first_search:
             logger.error('DE --== no items found ==--\noperating mode = {}'.format(self.ws.operation_mode))
             ''' display no results message '''
@@ -6008,11 +6050,6 @@ ____Using |fallback| theme.''')
                     index,
                     go_back_in_history=False
                 )
-            # if self._number_of_radio_browser_search_results == 0:
-            #     logger.info('return 0 stations info')
-            #     return '<div class="alert alert-danger">0 stations returned!</div>'
-            # logger.info('return number of stations')
-            # return '<div class="alert alert-success">Number of stations: {}</div>'.format(self._number_of_radio_browser_search_results)
         else:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.error('RadioBrowser headles search: browser is not active')
@@ -9658,11 +9695,12 @@ ____Using |fallback| theme.''')
         self.refreshBody()
         self._cnf.remove_playlist_history_duplicates()
         # self.ll('before')
-        self._find_playlists_after_rename(self.old_filename,
-                                          self.new_filename,
-                                          copy,
-                                          open_file,
-                                          old_file_is_reg)
+        self._find_playlists_after_rename(
+                self.old_filename,
+                self.new_filename,
+                copy,
+                open_file,
+                old_file_is_reg)
         if not copy:
             self._cnf.replace_playlist_history_items(
                     self.old_filename,
@@ -10227,16 +10265,16 @@ ____Using |fallback| theme.''')
             #         logger.debug('SetConsoleCtrlHandler: Signal SIGINT failed to register (with Exception)!!!')
 
         else:
-            self.handled_signals = {
+            handled_signals = {
                 'SIGHUP': signal.SIGHUP,
                 'SIGTERM': signal.SIGTERM,
                 'SIGKIL': signal.SIGKILL,
             }
             self.def_signal_handlers = {}
             try:
-                for a_sig in self.handled_signals:
+                for a_sig in handled_signals:
                     self.def_signal_handlers[a_sig] = signal.signal(
-                        self.handled_signals[a_sig],
+                        handled_signals[a_sig],
                         self._linux_signal_handler
                     )
                     if logger.isEnabledFor(logging.DEBUG):
@@ -10270,7 +10308,7 @@ ____Using |fallback| theme.''')
             return
         self._system_asked_to_terminate = True
         if logger.isEnabledFor(logging.INFO):
-            # logger.info('System asked me to terminate (signal: {})!!!'.format(list(self.handled_signals.keys())[list(self.handled_signals.values()).index(a_signal)]))
+            # logger.info('System asked me to terminate (signal: {})!!!'.format(list(handled_signals.keys())[list(handled_signals.values()).index(a_signal)]))
             logger.info('My terminal got closed... Terminating...')
         self._force_exit = True
         self.stop_update_notification_thread = True
@@ -10286,10 +10324,10 @@ ____Using |fallback| theme.''')
         self.player.close()
         self._cnf.save_config()
         self._cnf.remove_session_lock_file()
-        for a_sig in self.handled_signals:
+        for a_sig in handled_signals:
             try:
                 signal.signal(
-                    self.handled_signals[a_sig],
+                    handled_signals[a_sig],
                     self.def_signal_handlers[a_sig]
                 )
             except:
@@ -10397,10 +10435,8 @@ ____Using |fallback| theme.''')
             if self._register_to_open:
                 # logger.error('register_to_open = {}'.format(self._register_to_open))
                 stationFile, ret = self._cnf._get_register_filename_from_register()
-                self._is_register = True
             else:
                 stationFile, ret = self._cnf._get_playlist_abspath_from_data(stationFile=h_item[0])
-                self._is_register = False
             if ret > 0:
                 ''' Continue going through history items '''
                 func()
