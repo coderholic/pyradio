@@ -329,17 +329,24 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
             download_seven_zip(output_folder)
 
         if not HAVE_PYUNPACK:
-            for a_module in ('pyunpack', 'patool'):
-                install_module(a_module, print_msg=False)
+            install_module('pyunpack', print_msg=False)
         from pyunpack import Archive
 
-        patool_exec = join(site.USER_SITE.replace('site-packages', 'Scripts'), 'patool')
-        if not exists(patool_exec):
-            patool_exec = glob.glob(join(environ['APPDATA'], '**', 'patool.exe'), recursive=True)
-            if patool_exec:
-                patool_exec = patool_exec[0]
+        count = 0
+        while True:
+            patool_exec = join(site.USER_SITE.replace('site-packages', 'Scripts'), 'patool')
+            if exists(patool_exec):
+                break
             else:
-                patool_exec = None
+                patool_exec = glob.glob(join(environ['APPDATA'], '**', 'patool.exe'), recursive=True)
+                if patool_exec:
+                    patool_exec = patool_exec[0]
+                    break
+                else:
+                    install_module('patool', print_msg=False)
+            count += 1
+            if count > 2:
+                break
         try:
             Archive(out_file).extractall(join(output_folder, 'mpv' if package==0 else ''),
                 auto_create_dir=True,

@@ -5746,8 +5746,10 @@ ____Using |fallback| theme.''')
             if self._cnf.can_like_a_station():
                 if not path.exists(self._cnf.recording_dir):
                     try:
-                        makedirs(self._cnf.recording_dir)
-                    except:
+                        os.makedirs(self._cnf.recording_dir)
+                    except (
+                            FileExistsError, FileNotFoundError,
+                            PermissionError, OSError):
                         pass
                 if not path.exists(self._cnf.recording_dir):
                     if logger.isEnabledFor(logging.ERROR):
@@ -6155,7 +6157,7 @@ ____Using |fallback| theme.''')
                 if self._open_dir_win.dir == path.join(path.expanduser('~'), 'pyradio-recordings'):
                     if not path.exists(self._open_dir_win.dir):
                         try:
-                            makedirs(self._open_dir_win.dir)
+                            os.makedirs(self._open_dir_win.dir)
                         except:
                             self._show_delayed_notification(
                                 '___|Error|: Recording dir does |not exist|!___',
@@ -9252,7 +9254,7 @@ ____Using |fallback| theme.''')
         if self.player.recording > 0:
             if not os.path.exists(self._cnf.recording_dir):
                 try:
-                    makedirs(self._cnf.recording_dir)
+                    os.makedirs(self._cnf.recording_dir)
                 except:
                     pass
             if not os.path.exists(self._cnf.recording_dir):

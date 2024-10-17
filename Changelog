@@ -1,4 +1,4 @@
-2024-10-16 s-n-g
+2024-10-17 s-n-g
     * version 0.9.3.11.1 (BUG FIX) - 0.9.3.12-beta1
     * adding -sdd (--show_dirs) command line parameter
     * fixing a couple of bugs (some reported by pylint /ruff)
