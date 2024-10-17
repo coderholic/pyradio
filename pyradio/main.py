@@ -945,6 +945,10 @@ If nothing else works, try the following command:
                 https://github.com/zephyrproject-rtos/windows-curses/issues/50#issuecomment-1840485627
             '''
             pyradio.setup(_win_python_3_12())
+            try:
+                curses.endwin()
+            except:
+                pass
         else:
             curses.wrapper(pyradio.setup)
 

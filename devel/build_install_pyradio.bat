@@ -246,10 +246,7 @@ ECHO User files are under "%APPDATA%\pyradio"
 SET /p ANS="Do you want to remove them (y/n)?: "
 :: ECHO %ANS%
 IF "%ANS%" == "y" GOTO :addtobat
-IF "%ANS%" == "n" (
-    IF EXIST "DOPAUSE" ( GOTO endofscript )
-    GOTO endnopause
-)
+IF "%ANS%" == "n" GOTO :addtobat
 GOTO :readit
 :addtobat
 

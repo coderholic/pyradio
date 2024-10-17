@@ -1080,7 +1080,6 @@ class PyRadioUpdate():
 
     def _download_pyradio(self):
         os.chdir(self._dir)
-        VERSION ==  ''
         if self._package == 0:
             try:
                 VERSION ==  ''
@@ -1120,6 +1119,7 @@ class PyRadioUpdate():
         with open(os.path.join(self._dir, self.ZIP_DIR[self._package], 'DEV'), 'w', encoding='utf-8'):
             pass
         # input('Please update files as needed. Then press ENTER to continue...')
+        sys.exit()
 
     def _mkdir(self, name, dir_exist_function=None, _permission_error_function=None):
         if os.path.isdir(name):
@@ -1387,9 +1387,11 @@ if __name__ == '__main__':
         sys.exit(1)
 
     ''' download official release '''
+    print('-- start')
     package = 0
     tag_name = github_long_description = None
     if args.sng_master:
+        print('== sng-master')
         ''' sng master '''
         args.force = True
         package = 1
@@ -1400,6 +1402,7 @@ if __name__ == '__main__':
         #     github_long_description = github_long_description.replace('-', '-r', 1)
         # github_long_description += '-sng'
     elif args.sng_devel:
+        print('== sng-devel')
         '''' sng devel '''
         args.force = True
         package = 2
@@ -1410,6 +1413,7 @@ if __name__ == '__main__':
         #     github_long_description = github_long_description.replace('-', '-r', 1)
         # github_long_description += '-sng-dev'
     elif args.devel:
+        print('== devel')
         ''' official devel '''
         package = 3
         ''' go back to master '''
@@ -1417,17 +1421,23 @@ if __name__ == '__main__':
         package = 0
         VERSION = get_github_tag()
     elif args.master or args.git:
+        print('== master / devel')
         ''' official master '''
         args.force = True
         package = 4
         VERSION, github_long_description = get_github_long_description()
     else:
+        print('== normal')
         VERSION = get_github_tag()
 
     if VERSION is None:
         VERSION = PyRadioInstallPyReleaseVersion
 
+    print(f'== {package = }')
+
     if args.uninstall:
+        print('** uninstall')
+        print(f'** {package = }')
         if platform.system().lower().startswith('win'):
             ''' ok, create BAT file on Windows'''
             uni = PyRadioUpdateOnWindows(package=package)
@@ -1438,6 +1448,8 @@ if __name__ == '__main__':
             uni.remove_pyradio()
         sys.exit()
     elif args.update:
+        print('** update')
+        print(f'** {package = }')
         if platform.system().lower().startswith('win'):
             ''' ok, create BAT file on Windows'''
             upd = PyRadioUpdateOnWindows(
@@ -1459,6 +1471,8 @@ if __name__ == '__main__':
             upd.update_pyradio()
         sys.exit()
     elif args.do_uninstall:
+        print('** do uninstall')
+        print(f'** {package = }')
         ''' coming from uninstall BAT file on Windows'''
         uni = PyRadioUpdateOnWindows(
             package=package,
@@ -1467,6 +1481,8 @@ if __name__ == '__main__':
         uni.remove_pyradio()
         sys.exit()
     elif args.do_update:
+        print('** do update')
+        print(f'** {package = }')
         ''' coming from update BAT file on Windows'''
         upd = PyRadioUpdateOnWindows(
             package=package,
@@ -1476,6 +1492,8 @@ if __name__ == '__main__':
         upd.update_pyradio()
         sys.exit()
 
+    print('** installation')
+    print(f'** {package = }')
     ''' Installation!!! '''
     if platform.system().lower().startswith('win'):
         exe = find_pyradio_win_exe()

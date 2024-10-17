@@ -231,7 +231,7 @@ def get_latest_x86_64_mplayer_url():
             if n.startswith('r'):
                 rev = n.split('"')[0][1:]
                 try:
-                    r = int(rev)
+                    int(rev)
                 except ValueError:
                     return None
                 existing = zurl[1].split('-svn-')[1].split('-')[0]
@@ -355,7 +355,7 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
     along with the archive named "{0}".'''.format(basename(out_file)))
             if player_name == 'mpv':
                 if exists(join(output_folder, 'mpv')):
-                    print('''    Please extract the archive in the "[rev]mpv[/red]" folder
+                    print('''    Please extract the archive in the "[red]mpv[/red]" folder
     (overwriting any existing files).''')
                 else:
                     print('''    Please create a folder named "[red]mpv[/red]" and extract
