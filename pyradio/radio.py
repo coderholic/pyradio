@@ -440,6 +440,8 @@ class PyRadio():
     _server_dead_msg = None
     _server_error_msg = None
 
+    _keyboard_config_win = None
+
     def ll(self, msg):
         logger.error('DE ==========')
         logger.error('DE ===> {}'.format(msg))
@@ -636,7 +638,7 @@ class PyRadio():
             self.ws.MOVE_RECORDINGS_DIR_ERROR_MODE: self._show_moving_recordings_dir_error,
             self.ws.OPEN_DIR_MODE: self._show_open_dir_window,
             self.ws.DELETE_PLAYLIST_MODE: self._ask_to_delete_playlist,
-
+            self.ws.KEYBOARD_CONFIG_MODE: self._redisplay_keyboard_config,
         }
 
         self._help_keys = {
@@ -5204,6 +5206,19 @@ ____Using |fallback| theme.''')
         else:
             self._print_station_info_error()
 
+    def _keyboard_init_config(self, parent=None):
+        if parent is None:
+            parent = self.outerBodyWin
+        if self._keyboard_config_win is None:
+            self._keyboard_config_win = PyRadioKeyboardConfig(
+                    parent=self.outerBodyWin,
+                    global_functions=self._global_functions
+                    )
+        self._keyboard_config_win.show(parent=self.outerBodyWin)
+
+    def _redisplay_keyboard_config(self):
+        self._keyboard_config_win.show(parent=self.outerBodyWin)
+
     def _browser_server_selection(self):
         if self._cnf._online_browser:
             self._cnf._online_browser.select_servers()
@@ -5227,8 +5242,7 @@ ____Using |fallback| theme.''')
             self._browser_config_win.show(parent=self.outerBodyWin)
 
     def _browser_init_config(self, parent=None, init=False, browser_name=None, distro='None'):
-        ''' Show browser config window from online browseer
-        '''
+        ''' Show browser config window from online browseer '''
         if parent is None:
             parent = self.outerBodyWin
         if self._cnf._online_browser:
@@ -6139,7 +6153,18 @@ ____Using |fallback| theme.''')
                     self.refreshBody()
             return
 
-        if self.ws.operation_mode == self.ws.OPEN_DIR_MODE:
+        if self.ws.operation_mode == self.ws.KEYBOARD_CONFIG_MODE:
+            ret = self._keyboard_config_win.keypress(char)
+            if ret in (-1, 0):
+                if ret == 0:
+                    # new shortcuts saved
+                    pass
+                self._keyboard_config_win = None
+                self.ws.close_window()
+                self.refreshBody()
+            return
+
+        elif self.ws.operation_mode == self.ws.OPEN_DIR_MODE:
             ret = self._open_dir_win.keypress(char)
             ''' Returns:
                     -1 - Cancel
@@ -6996,7 +7021,7 @@ ____Using |fallback| theme.''')
                 msg = ( 'Error saving config. Press any key to exit...',
                         'Config saved successfully!!!',
                         'Config saved - Restarting playback (parameters changed)')
-                if ret not in (2, 3, 5, 6):
+                if ret not in (2, 3, 5, 6, 8):
                     self.ws.close_window()
                     self.bodyWin.box()
                     self._print_body_header()
@@ -7148,6 +7173,12 @@ ____Using |fallback| theme.''')
                             'M_REC_IS_ON_NO_DIR_HEADLESS',
                             ret_list[0]
                             )
+                    return
+
+                elif ret == 8:
+                    ''' keyboard window '''
+                    self.ws.operation_mode = self.ws.KEYBOARD_CONFIG_MODE
+                    self._keyboard_init_config()
                     return
 
                 else:

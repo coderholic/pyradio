@@ -121,7 +121,7 @@ kbkey_orig['html_help']                = ( ord('h')               , 'Open html h
 
 
 # ! RadioBrowser Keys:
-kbkey_orig['h5']                       = ( None                   , 'RadioBrowser Keys')
+kbkey_orig['h6']                       = ( None                   , 'RadioBrowser Keys')
 kbkey_orig['rb_vote']                  = ( ord('V')               , 'Vote for station: ')
 kbkey_orig['rb_info']                  = ( ord('I')               , 'Station DB info: ')
 kbkey_orig['rb_server']                = ( ord('C')               , 'Select server to connect to: ')
@@ -137,8 +137,13 @@ kbkey_orig['rb_h_def']                 = ( curses.ascii.STX       , 'Make item d
 kbkey_orig['rb_h_0']                   = ( curses.ascii.ACK       , 'Go to template (item 0): ')                    # default: ^F
 kbkey_orig['rb_h_save']                = ( curses.ascii.ENQ       , 'Save search items: ')                          # default: ^E
 
+# ! Shortcuts Window
+kbkey_orig['h7']                       = ( None                   , 'This Window')
+kbkey_orig['this_next']                     = ( ord(']')               , 'Go to next Group: ')
+kbkey_orig['this_prev']                     = ( ord('[')               , 'Go to previous Group: ')
+
 # ! Window Keys:
-kbkey_orig['h6']                       = ( None                   , 'Windows keys')
+kbkey_orig['h8']                       = ( None                   , 'Windows keys')
 kbkey_orig['F7']                       = ( curses.KEY_F7          , ': ')
 kbkey_orig['F8']                       = ( curses.KEY_F8          , 'Media Players management: ')
 kbkey_orig['F9']                       = ( curses.KEY_F9          , 'Show EXE location: ')
@@ -279,8 +284,11 @@ def kb2chr(akey):
     return ''
 
 def ctrl_code_to_string(a_code):
-    if a_code in curses_ascii_dict:
-        return curses_ascii_dict[a_code]
+    if a_code:
+        if a_code in curses_ascii_dict:
+            return curses_ascii_dict[a_code]
+        char = chr(a_code)
+        return char
     return ''
 
 def ctrl_code_to_letter(a_code):
@@ -327,6 +335,13 @@ def letter_to_ctrl_code(letter):
 
 
 if __name__ == '__main__':
-    F_PATH="/home/spiros/keyboard.json"
-    with open(F_PATH, 'w', encoding='utf-8', errors='ignore') as j_file:
-        json.dump(kbkey, j_file, ensure_ascii=False)
+    # F_PATH="/home/spiros/keyboard.json"
+    # with open(F_PATH, 'w', encoding='utf-8', errors='ignore') as j_file:
+    #     json.dump(kbkey, j_file, ensure_ascii=False)
+
+
+    items_list_of_lists = [[key] + list(value) for key, value in kbkey_orig.items()]
+
+    # Printing the result
+    for item in items_list_of_lists:
+        print(item)

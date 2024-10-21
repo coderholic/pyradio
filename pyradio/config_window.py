@@ -9,6 +9,7 @@ import glob
 import csv
 from os import path, sep, rename
 from sys import platform, version_info
+from collections import OrderedDict
 
 from .common import *
 from .window_stack import Window_Stack_Constants
@@ -18,7 +19,7 @@ from .themes import *
 from .server import IPsWithNumbers
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesMenu
 from .client import PyRadioClient
-from .keyboard import kbkey
+from .keyboard import kbkey, kbkey_orig, ctrl_code_to_string
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
@@ -739,6 +740,8 @@ class PyRadioConfigWindow():
                  5  show recording is on error message
                  6  show headless recording is on error message
                  7  show headless communication error
+                 8  show keyboard config window
+                 9  show alternative keyboard window
         '''
         if self.too_small:
             return 1, []
@@ -807,6 +810,11 @@ class PyRadioConfigWindow():
             if char in (curses.KEY_RIGHT, kbkey['l'], kbkey['pause'],
                         curses.KEY_ENTER, ord('\r'), ord('\n')):
                 return 3, []
+
+        elif val[0] == 'shortcuts_keys':
+            if char in (curses.KEY_RIGHT, kbkey['l'], kbkey['pause'],
+                        curses.KEY_ENTER, ord('\r'), ord('\n')):
+                return 8, []
 
         elif val[0] == 'remote_control_server_port':
             ret = self._port_line_editor.keypress(self._win, char)
@@ -3371,9 +3379,54 @@ class PyRadioServerConfig():
 class PyRadioKeyboardConfig():
 
     _focus = 0
+    _widget = None
+    _b_ok = None
+    _b_cancel = None
+    _dirty_config = False
+    _too_small = False
+    _editing = False
+    maxY = 0
+    maxX = 0
+    _start_line = 0
+    _end_line = 0
+    _number_of_lines = 0
+    _start = 0
+    _selection = 1
 
-    def __init__(self):
-        pass
+    def __init__(
+            self,
+            parent,
+            global_functions):
+        self._parent = parent
+        self._global_functions = global_functions
+
+        self._list = []
+        self._dict = OrderedDict()
+        for key in kbkey_orig:
+            ''' dct contains
+                [0:def_code, 1:old_code, 2:new_code, 3:def_string, 4:old_string, 5:new_string, 6:description]
+            '''
+            self._dict[key] =  [kbkey_orig[key][0], 0, 0, '', '', '',  kbkey_orig[key][1]]  # list(kbkey_orig[key])
+        logger.error(f'{self._dict = }')
+        for key in kbkey:
+            self._dict[key][1] = kbkey[key]
+            self._dict[key][2] = self._dict[key][1]
+            self._dict[key][3] = ctrl_code_to_string(self._dict[key][0])
+            self._dict[key][4] = ctrl_code_to_string(self._dict[key][1])
+            self._dict[key][5] = ctrl_code_to_string(self._dict[key][2])
+        for n in self._dict:
+            logger.error(f'{n}: {self._dict[n]}')
+        ''' dct contains
+            [0: key, 1:def_code, 2:old_code, 3:new_code, 4:def_string, 5:old_string, 6:new_string, 7:description]
+        '''
+        self._list = [[key] + list(value) for key, value in self._dict.items()]
+        # self._list = [[key] + ([value[0], value[0]] if isinstance(value[0], int) else [None]) + [value[1]] for key, value in kbkey_orig.items()]
+        for n in self._list:
+            logger.error(f'{n}')
+        self._max_length = max(len(sublist[-1]) for sublist in self._list) + 6
+        logger.error(f'{self._max_length = }')
+        self._headers = [i for i, x in enumerate(self._list) if x[1] is None]
+        logger.error(f'{self._headers = }')
 
     def _rename_keyboard_json_file(file_path):
         # Check if the file path ends with "keyboard.json"
@@ -3398,14 +3451,262 @@ class PyRadioKeyboardConfig():
 
         return new_file_name
 
-    def _focus_nect(self):
-        pass
+    def _start_editing(self):
+        self._editing = True
+
+    def _stop_editing(self):
+        self._editing = False
+
+    def _update_focus(self):
+        if self._focus == 0:
+            self._b_ok.focused = False
+            self._b_cancel.focused = False
+        elif self._focus == 1:
+            self._b_ok.focused = True
+            self._b_cancel.focused = False
+        else:
+            self._b_ok.focused = False
+            self._b_cancel.focused = True
+        self._widget.show()
+
+    def _focus_next(self):
+        self._focus += 1
+        if self._focus > 2:
+            self._focus = 0
+        self._update_focus()
 
     def _focus_previous(self):
-        pass
+        self._focus -= 1
+        if self._focus < 0:
+            self._focus = 2
+        self._update_focus()
 
-    def show(self):
-        pass
+    def _go_top(self):
+        self._start = 0
+        self._selection = 1
+        self.show()
+
+    def _go_bottom(self):
+        self._selection = len(self._list) -1
+        self._start = self._selection - self._number_of_lines + 1
+        self.show()
+
+    def _go_down(self, step=1):
+        logger.error(f'go_down: {step = }')
+        logger.error(f'{len(self._list) = }, {self._selection = }')
+        next_selection = self._selection + step
+        if next_selection >= len(self._list) and step > 1:
+            if self._selection == len(self._list) -1:
+                self._go_top()
+            else:
+                self._go_bottom()
+            return
+        if next_selection in self._headers:
+            next_selection += 1
+        logger.error(f'{next_selection = }')
+        if next_selection >= len(self._list):
+            self._selection = 1
+            self._start = 0
+            self.show()
+            return
+        line = next_selection - self._start + 2
+        logger.error(f'{line = }, {self._number_of_lines = }')
+        if line > self._number_of_lines + 1 :
+            logger.error('GREATER!')
+            while line > self._number_of_lines + 1:
+                self._start += (next_selection - self._selection)
+                self._selection = next_selection
+                self.show()
+                return
+        if 2 <  line <= self._number_of_lines + 1:
+            logger.error('=== between')
+            self._unselect_line(self._selection - self._start + 2)
+            logger.error(f'unselecting {self._selection - self._start + 2}')
+            self._select_line(next_selection - self._start + 2)
+            logger.error(f'selecting {next_selection - self._start + 2}')
+            self._selection = next_selection
+            self._win.refresh()
+
+    def _go_up(self, step=1):
+        logger.error(f'go_up: {step = }')
+        logger.error(f'{self._selection = }')
+        next_selection = self._selection - step
+        if next_selection < 0 and step > 1:
+            if self._selection == 1:
+                self._go_bottom()
+            else:
+                self._go_top()
+            return
+        if next_selection in self._headers:
+            next_selection -= 1
+        logger.error(f'{next_selection = }')
+        if next_selection < 0:
+            self._selection = len(self._list) - 1
+            self._start = len(self._list) - self._number_of_lines
+            self.show()
+            return
+        line = next_selection - self._start - 2
+        line = next_selection - self._start + 1
+        logger.error(f'{line = }, {self._number_of_lines = }')
+        if line <= 0:
+            self._selection = next_selection
+            if self._selection in self._headers:
+                self._selection =- 1
+            self._start = self._selection
+            self.show()
+            return
+        if 1 <=  line <= self._number_of_lines:
+            logger.error('=== between')
+            logger.error(f'unselecting {self._selection - self._start + 2}')
+            self._unselect_line(self._selection - self._start + 2)
+            logger.error(f'selecting {self._selection - self._start + 2}')
+            self._select_line(next_selection - self._start + 2)
+            self._selection = next_selection
+            self._win.refresh()
+
+    def _print_title(self):
+        title = 'Keyboard Shortcuts'
+        col = 12
+        dirty_title = ' *' if self._dirty_config else '─ '
+        X = int((self.maxX - len(title) - 1) / 2)
+        try:
+            self._win.addstr(0, X, dirty_title, curses.color_pair(col))
+        except:
+            self._win.addstr(0, X, dirty_title.encode('utf-8'), curses.color_pair(col))
+        self._win.addstr(title + ' ', curses.color_pair(4))
+
+    def _init_win(self):
+        self.maxY, self.maxX = self._parent.getmaxyx()
+        self._too_small = False
+        if self.maxY < 12 or self.maxX < 45:
+            self._too_small = True
+        # logger.error('\n\nmaxY = {}\n\n'.format(self.maxY))
+        # self._second_column = int(self.maxX / 2)
+        self._win = curses.newwin(self.maxY, self.maxX, 1, 0)
+        self._win.bkgdset(' ', curses.color_pair(12))
+        self._win.erase()
+        self._win.box()
+        self._print_title()
+        self._start_line = 1
+        self._end_line = self.maxY - 4
+        self._number_of_lines = self.maxY - 6
+        logger.error(f'{self.maxY = }')
+        logger.error(f'{self._start_line = }')
+        logger.error(f'{self._end_line = }')
+        logger.error(f'{self._number_of_lines = }')
+        if self._widget is not None and not self._too_small:
+            # move buttons to end of window
+            self._widget.move(self.maxY - 3)
+        self._make_selection_visible()
+
+    def _make_selection_visible(self):
+        chk =  self._start - self._selection
+        logger.error(f'{self._start= }')
+        logger.error(f'{self._selection = }')
+        logger.error(f'{chk = }')
+        if self._selection > len(self._list) - self._number_of_lines:
+            self._start = len(self._list) - self._number_of_lines
+        else:
+            if chk < 0:
+                # start is after selection
+                self._start = self._selection
+                if (self._start - 1) in self._headers:
+                    self._start -= 1
+            else:
+                # start is before selection
+                # is it too far?
+                if chk > self._number_of_lines:
+                    self._start = int((self._selection - self._number_of_lines) / 2)
+
+    def _select_line(self, a_line):
+        self._win.chgat(a_line, 2, self.maxX-4, curses.color_pair(6))
+
+    def _unselect_line(self, a_line):
+        self._win.chgat(a_line, 2, self._max_length-1, curses.color_pair(5))
+        self._win.chgat(a_line, self._max_length, self.maxX-self._max_length-2, curses.color_pair(4))
+
+    def show(self, parent=None):
+        if parent is not None:
+            self._parent = parent
+            self._init_win()
+        if self._too_small:
+            msg = 'Window too small to display content!'
+            if self.maxX < len(msg) + 2:
+                msg = 'Window too small!'
+            try:
+                self._win.addstr(
+                    int(self.maxY / 2),
+                    int((self.maxX - len(msg)) / 2),
+                    msg, curses.color_pair(5))
+            except:
+                pass
+            self._win.refresh()
+            return
+        if self._widget is None:
+            self._widget = SimpleCursesHorizontalPushButtons(
+                    Y=self.maxY-3, captions=('OK', 'Cancel'),
+                    color_focused=curses.color_pair(9),
+                    color=curses.color_pair(4),
+                    bracket_color=curses.color_pair(5),
+                    parent=self._win)
+            self._widget.calculate_buttons_position()
+            self._b_ok, self._b_cancel = self._widget.buttons
+            self._b_ok.focused = self._b_cancel.focused = False
+
+        self._win.addstr(1, 2, 'Shortcuts', curses.color_pair(12))
+        self._win.addstr(1, self._max_length-3, 'Default    User    New', curses.color_pair(12))
+
+        for i in range(0, self._number_of_lines):
+            cur = self._start + i
+            if cur < len(self._list):
+                try:
+                    if self._list[cur][1] is None:
+                        logger.error(f'=== header at {i+2}')
+                        self._win.addstr(i+2, 2, (self.maxX -4) * ' ', curses.color_pair(4))
+                        self._win.addstr(i+2, 2, self._list[cur][-1], curses.color_pair(4))
+                    else:
+                        self._win.addstr(i+2, 2, (self.maxX -4) * ' ', curses.color_pair(5))
+                        self._win.addstr(i+2, 2, '  ' + self._list[cur][-1], curses.color_pair(5))
+                        self._win.addstr(i+2, self._max_length, self._list[cur][4], curses.color_pair(4))
+                        # display user value / char, if it exists
+                        if self._list[cur][1] != self._list[cur][2]:
+                            self._win.addstr(i+2, self._max_length+9, self._list[cur][5], curses.color_pair(4))
+                        # display new value / char, if it exists
+                        if self._list[cur][2] != self._list[cur][3]:
+                            self._win.addstr(i+2, self._max_length+17, self._list[cur][6], curses.color_pair(4))
+
+                        if cur == self._selection:
+                            self._select_line(i+2)
+                        # else:
+                        #     self._unselect_line(i+2)
+                except IndexError:
+                    pass
+        self._win.refresh()
+        self._widget.show()
+
+    def _get_after_header(self, next=True):
+        if next:
+            # Return the first header value which is larger than an_id
+            for value in self._headers:
+                if value > self._selection:
+                    self._start = value
+                    self._selection = value + 1
+                    return
+            # If no larger value is found, return the last value
+            self._start = 0
+            self._selection = 1
+        else:
+            # Find the first header value which is smaller than self._selection
+            smaller_values = [value for value in self._headers if value < self._selection]
+
+            if len(smaller_values) >= 2:
+                # If there are at least two smaller values, select the second one
+                self._start = smaller_values[-2]  # Second last element in smaller_values
+                self._selection = self._start + 1
+            else:
+                # If no smaller values are found, return the last value in _headers
+                self._start = self._headers[-1]
+                self._selection = self._start + 1
 
     def keypress(self, char):
         ''' PyRadioKeyboardConfig keypress
@@ -3414,22 +3715,65 @@ class PyRadioKeyboardConfig():
                  0: Done
                  1: Continue
                  2: Display help
-                 3: Display line editor help
         '''
-        if char == kbkey['?'] and self._focus > 0:
-            return 3
-        elif char == kbkey['?']:
-            return 2
-        elif char in (curses.KEY_EXIT, 27, kbkey['q']) and \
-                self._focus > 0:
-            self.edit_string = ''
-            return -1
-        elif char in (ord('\t'), 9, curses.KEY_DOWN, kbkey['tab']):
-            self._focus_next()
-        elif char in (curses.KEY_BTAB, curses.KEY_UP, kbkey['stab']):
-            self._focus_previous()
-        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
-            pass
+        if self._editing:
+            self._stop_editing()
+        else:
+            if char == kbkey['?']:
+                return 2
+            elif char == kbkey['this_next']:
+                self._get_after_header()
+                self._make_selection_visible()
+                self.show()
+            elif char == kbkey['this_prev']:
+                self._get_after_header(next=False)
+                self._make_selection_visible()
+                self.show()
+            elif char in (curses.KEY_HOME, kbkey['g']):
+                if self._focus == 0:
+                    self._go_top()
+            elif char in (curses.KEY_END, kbkey['G']):
+                if self._focus == 0:
+                    self._go_bottom()
+            elif char == curses.KEY_NPAGE:
+                self._go_down(step=5)
+            elif char == curses.KEY_PPAGE:
+                self._go_up(step=5)
+            elif char in (curses.KEY_EXIT, 27, kbkey['q']):
+                return -1
+            elif char in (curses.KEY_RIGHT, kbkey['l']):
+                if self._focus > 0:
+                    self._focus_next()
+                else:
+                    self._start_editing()
+            elif char in (curses.KEY_LEFT, kbkey['h']):
+                if self._focus > 0:
+                    self._focus_previous()
+                else:
+                    self._start_editing()
+            elif char in (curses.KEY_DOWN, kbkey['j']):
+                if self._focus == 0:
+                    self._go_down()
+                else:
+                    self._focus_next()
+            elif char in (curses.KEY_UP, kbkey['k']):
+                if self._focus == 0:
+                    self._go_up()
+                else:
+                    self._focus_previous()
+            elif char in (ord('\t'), 9, kbkey['tab']):
+                self._focus_next()
+            elif char in (curses.KEY_BTAB, kbkey['stab']):
+                self._focus_previous()
+            elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'), kbkey['pause']):
+                if self._focus == 0:
+                    self._start_editing()
+                elif self._focus == 1:
+                    # ok
+                    return 0
+                else:
+                    # cancel
+                    return -1
         return 1
 
 # pymode:lint_ignore=W901
