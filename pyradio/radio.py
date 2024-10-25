@@ -762,7 +762,7 @@ class PyRadio():
             kbkey['mute']: self._volume_mute,
             kbkey['s_vol']: self._volume_save,
             kbkey['t_calc_col']: self._toggle_claculated_colors,
-            kbkey['resize']: self._resize_with_number_sign,
+            kbkey['repaint']: self._resize_with_number_sign,
             # ord('b'): self._show_schedule_editor,
         }
 
@@ -5211,6 +5211,7 @@ ____Using |fallback| theme.''')
             parent = self.outerBodyWin
         if self._keyboard_config_win is None:
             self._keyboard_config_win = PyRadioKeyboardConfig(
+                    config=self._cnf,
                     parent=self.outerBodyWin,
                     global_functions=self._global_functions
                     )
@@ -6080,6 +6081,7 @@ ____Using |fallback| theme.''')
         # # logger.error('\n\nbackup params\n{}\n\n'.format(self._cnf.backup_player_params))
         # if char == curses.KEY_RESIZE:
         #     logger.error('\n\nRESIZE\n\n')
+        logger.error('\n\nchar = {}\n\n'.format(char))
         if char in (curses.KEY_RESIZE, ):
             self._i_am_resizing = True
             self._normal_mode_resize()
@@ -6162,7 +6164,25 @@ ____Using |fallback| theme.''')
                 self._keyboard_config_win = None
                 self.ws.close_window()
                 self.refreshBody()
+            elif ret == 2:
+                # print message specified in
+                # self._keyboard_config_win.message
+                self._open_simple_message_by_key(self._keyboard_config_win.message)
+            elif ret == -2:
+                # Error saving file
+                self._open_simple_message_by_key_and_mode(
+                    self.ws.KEYBOARD_CONFIG_ERROR_MODE,
+                    'M_KEYBOARD_FILE_SAVE_ERROR',
+                    self._cnf.keyboard_file
+                )
+
             return
+
+        elif self.ws.operation_mode == self.ws.KEYBOARD_CONFIG_ERROR_MODE:
+            self.ws.close_window()
+            self.refreshBody()
+            self._redisplay_keyboard_config()
+            self._cnf.open_a_dir(self._cnf.data_dir)
 
         elif self.ws.operation_mode == self.ws.OPEN_DIR_MODE:
             ret = self._open_dir_win.keypress(char)
@@ -7834,7 +7854,7 @@ ____Using |fallback| theme.''')
                 #else:
                 #    ''' error '''
                 #    self._print_foreign_playlist_copy_error()
-            elif char not in (kbkey['resize'], curses.KEY_RESIZE):
+            elif char not in (kbkey['repaint'], curses.KEY_RESIZE):
                 self.ws.close_window()
                 self.refreshBody()
                 ''' Do this here to properly resize '''

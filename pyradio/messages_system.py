@@ -75,6 +75,7 @@ class PyRadioMessagesSystem():
             'M_SCHEDULE_ERROR',
             'M_REC_IS_ON_NO_DIR_HEADLESS',
             'M_SCHEDULE_INFO',
+            'M_KEYBOARD_FILE_SAVE_ERROR',
             )
 
     _two_arg_list = (
@@ -1465,6 +1466,70 @@ Esc                                 |*|Cancel operation.
 {t_tag}| / |{tag}                               |*|Toggle title log / like a station.'''
 )),
 
+    'M_KEYBOARD_HELP':('Keyboard Shortcuts Help',
+kb2str(r'''
+This is the |Keyboard Shortcuts| configuration window help.
+
+The window will display a list of the existing shortcuts:
+The first column will display the action the shortcut
+corresponds to, the second column (|Default|) will print
+the default (hardcoded) shortcut (press |{revert_def}| to activate
+them), the third column (|User|) will print the shortcut
+the user has already set for the action (press |{revert_saved}| to
+activate them), and the last column (|New|) will print the
+latest changes, which have not been saved yet.
+
+Use |Arrow Keys|, |{j}|, |{k}|, |PgUp| and |PgDown| to move, |{g}| and |{G}| to
+go to the beginning or the end of the list, or |{this_prev}| and |{this_next}| to
+navigate the shortcut groups.
+
+To change a |Keyboard Shortcut|, select a shortcut, press
+|Right|, |{l}|, |Enter|, or |{pause}|. Then a "|[edit]|" will appear
+at the right of the line. Press any key to change the
+shortcut, or |Esc| to cancel the operation.
+
+After you have finished customizing the shortcuts, press
+|OK| (press |Tab| or |{tab}| to navigate). Then |PyRadio| will try to
+detect any conflicts, and either help you to resolve
+them or save and activate your new shortcuts.
+'''
+)),
+
+    'M_INVALID_KEY_ERROR':('Invalid Key',
+r'''
+The key pressed is |invalid|!
+
+Please do not use any keys like |Home|, |End|,
+|PgUp|, |PgDown| here.
+
+'''
+),
+
+    'M_NOT_CTRL_KEY_ERROR':('Invalid Key',
+r'''
+The key pressed is |invalid|!
+
+Please use only |Control Characters| here, (|Ctrl+A|
+to |Ctrl+Z|, excluding |Ctrl-C|, |Ctrl-S| and |Ctrl-Z| on
+Linux and macOS).
+
+Plese keep in mind that the shortcut's equivalent
+key will also work on non-line editor widgets (|n|
+will work for |Ctrl-N|, for example).
+
+'''
+),
+
+    'M_KEYBOARD_FILE_SAVE_ERROR':('Error Saving File',
+r'''
+The configuration file could not be saved!
+|{0}|
+
+|PyRadio| will open the directory in your file manager
+so you can resolve the issue and try again.
+
+'''
+),
         }
         # INSERT NEW ITEMS ABOVE
         if self._db_info_message is not None:

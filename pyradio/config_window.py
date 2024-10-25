@@ -19,7 +19,7 @@ from .themes import *
 from .server import IPsWithNumbers
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesMenu
 from .client import PyRadioClient
-from .keyboard import kbkey, kbkey_orig, ctrl_code_to_string
+from .keyboard import kbkey, kbkey_orig, ctrl_code_to_string, is_invalid_key, only_ctrl , is_ctrl_key, set_kbkey
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
@@ -3393,10 +3393,14 @@ class PyRadioKeyboardConfig():
     _start = 0
     _selection = 1
 
+    message = None
+
     def __init__(
             self,
+            config,
             parent,
             global_functions):
+        self._cnf = config
         self._parent = parent
         self._global_functions = global_functions
 
@@ -3423,7 +3427,7 @@ class PyRadioKeyboardConfig():
         # self._list = [[key] + ([value[0], value[0]] if isinstance(value[0], int) else [None]) + [value[1]] for key, value in kbkey_orig.items()]
         for n in self._list:
             logger.error(f'{n}')
-        self._max_length = max(len(sublist[-1]) for sublist in self._list) + 6
+        self._max_length = max(len(sublist[-1]) for sublist in self._list) + 8
         logger.error(f'{self._max_length = }')
         self._headers = [i for i, x in enumerate(self._list) if x[1] is None]
         logger.error(f'{self._headers = }')
@@ -3452,10 +3456,30 @@ class PyRadioKeyboardConfig():
         return new_file_name
 
     def _start_editing(self):
+        self._win.addstr(self._selection - self._start + 2, self.maxX-8, '[edit]', curses.color_pair(6))
+        self._win.refresh()
         self._editing = True
+        logger.error('editing "{}"'.format(self._list[self._selection]))
+        for i in range(self._selection, -1, -1):
+            if self._list[i][1] is None:
+                self._in_group = i
+                break
+        logger.error(f'{self._in_group = }')
+        logger.error(f'group is "{self._list[self._in_group]}"')
+        aa = []
+        for i in range(self._in_group+1, len(self._list)):
+            if self._list[i][1] is None:
+                break
+            aa.append(self._list[i][0])
+        logger.error(f'{aa =}')
+
+
 
     def _stop_editing(self):
+        self._win.addstr(self._selection - self._start + 2, self.maxX-8, '      ', curses.color_pair(6))
+        self._win.refresh()
         self._editing = False
+        logger.error('edited "{}"'.format(self._list[self._selection]))
 
     def _update_focus(self):
         if self._focus == 0:
@@ -3677,6 +3701,8 @@ class PyRadioKeyboardConfig():
 
                         if cur == self._selection:
                             self._select_line(i+2)
+                            if self._editing:
+                                self._start_editing()
                         # else:
                         #     self._unselect_line(i+2)
                 except IndexError:
@@ -3711,15 +3737,44 @@ class PyRadioKeyboardConfig():
     def keypress(self, char):
         ''' PyRadioKeyboardConfig keypress
             Returns:
+                -2: Error saving file
                 -1: Cancel
                  0: Done
                  1: Continue
                  2: Display help
         '''
         if self._editing:
+            if is_invalid_key(char):
+                self.message = 'M_INVALID_KEY_ERROR'
+                logger.error('Key is INVALID')
+                return 2
+            if char in (curses.KEY_EXIT, 27, kbkey['q']):
+                self._stop_editing()
+                return
+            the_key = self._list[self._selection][0]
+            if the_key in only_ctrl and not is_ctrl_key(char):
+                self.message ='M_NOT_CTRL_KEY_ERROR'
+                return 2
+            logger.error(f'{the_key = }')
+
+            ''' put char into the list and update screen '''
+            self._list[self._selection][3] = char
+            self._list[self._selection][6] = ctrl_code_to_string(char)
+            logger.error(f'{self._list[self._selection] = }')
+            logger.error('line is {}'.format(self._selection - self._start + 2))
+            self._win.addstr(
+                    self._selection - self._start + 2,
+                    self._max_length + 17,
+                    self._list[self._selection][6],
+                    curses.color_pair(6)
+                    )
+            self._win.refresh()
+
+            ''' disable editing '''
             self._stop_editing()
         else:
             if char == kbkey['?']:
+                self.message = 'M_KEYBOARD_HELP'
                 return 2
             elif char == kbkey['this_next']:
                 self._get_after_header()
@@ -3770,10 +3825,34 @@ class PyRadioKeyboardConfig():
                     self._start_editing()
                 elif self._focus == 1:
                     # ok
+
+                    out_dict = {}
+                    for n in self._list:
+                        if n[2] != n[3]:
+                            out_dict[n[0]] = n[3]
+                    logger.error(f'{out_dict = }')
+                    import json
+                    try:
+                        with open(self._cnf.keyboard_file, 'w') as json_file:
+                            json.dump(out_dict, json_file)
+                    except (FileNotFoundError, TypeError, ValueError, IOError) as e:
+                        # file save failure
+                        return -2
+                    for n in out_dict:
+                        set_kbkey(n, out_dict[n])
+                    return -2
                     return 0
                 else:
                     # cancel
                     return -1
+            elif char in self._global_functions:
+                self._global_functions[char]()
+
+
+        logger.error('=============')
+        logger.error(f'{self._start = }')
+        logger.error(f'{self._selection = }')
+        logger.error('line = {}'.format(self._selection - self._start + 2))
         return 1
 
 # pymode:lint_ignore=W901

@@ -3,7 +3,7 @@ import locale
 import curses
 try:
     from dns import resolver
-except:
+except ImportError:
     pass
 from copy import deepcopy
 from shutil import copyfile
@@ -14,7 +14,7 @@ import collections
 from operator import itemgetter
 try:
     import requests
-except:
+except ImportError:
     pass
 import threading
 import logging
@@ -564,13 +564,16 @@ class RadioBrowser(PyRadioStationsBrowser):
             guide.pop(2)
         info = collections.OrderedDict()
         for n in guide:
+            info[n[0]] = str(self._raw_stations[a_station][n[1]])
+            '''
             try:
                 info[n[0]] = str(self._raw_stations[a_station][n[1]])
             except:
-                ''' do this here for python 2
-                    TODO: make the previous statement work on py2
-                '''
+                # do this here for python 2
+                # TODO: make the previous statement work on py2
+                #
                 info[n[0]] = self._raw_stations[a_station][n[1]].encode('utf-8', 'replace')
+            '''
             if n[1] == 'bitrate':
                 info[n[0]] += ' kb/s'
             # elif n[1] == 'favicon':
@@ -753,7 +756,7 @@ class RadioBrowser(PyRadioStationsBrowser):
                 logger.info('  url = "{}"'.format(url))
                 logger.info('  headers = "{}"'.format(self._headers))
                 logger.info('  post_data = "{}"'.format(post_data))
-            except:
+            except (AttributeError, IndexError, TypeError):
                 pass
 
     def _log_response(self, r):
@@ -763,7 +766,7 @@ class RadioBrowser(PyRadioStationsBrowser):
                 logger.info('  url = "{}"'.format(r.request.url))
                 logger.info('  body = "{}"'.format(r.request.body))
                 logger.info('  headers = "{}"'.format(r.request.headers))
-            except:
+            except (AttributeError, TypeError, ValueError):
                 pass
 
     def _get_search_elements(self, a_search):
@@ -1364,7 +1367,7 @@ class RadioBrowser(PyRadioStationsBrowser):
         else:
             try:
                 highlight = columns[self._output_format].index(guide[self.search_by])
-            except:
+            except (KeyError, ValueError):
                 highlight = -1
         return highlight, ((title, columns_separotors, columns[self._output_format]), )
 
@@ -1616,7 +1619,7 @@ class RadioBrowserConfig():
             with open(self.config_file, 'r', encoding='utf-8') as cfgfile:
                 lines = [line.strip() for line in cfgfile if line.strip() and not line.startswith('#') ]
 
-        except:
+        except (FileNotFoundError, IOError, UnicodeDecodeError):
             self.terms.append({
                     'type': 'topvote',
                     'term': '100',
@@ -1641,19 +1644,19 @@ class RadioBrowserConfig():
                     elif sp[0] == 'DEFAULT_LIMIT':
                         try:
                             self.limit = int(sp[1])
-                        except:
+                        except (IndexError, ValueError):
                             self.limit = '100'
                     elif sp[0] == 'SEARCH_TERM':
                         term_str.append(sp[1])
                     elif sp[0] == 'PING_COUNT':
                         try:
                             self.ping_count = int(sp[1])
-                        except:
+                        except (IndexError, ValueError):
                             self.ping_count = 1
                     elif sp[0] == 'PING_TIMEOUT':
                         try:
                             self.ping_timeout = int(sp[1])
-                        except:
+                        except (IndexError, ValueError):
                             self.ping_timeout = 1
 
         if path.exists(self.search_terms_file):
@@ -1663,7 +1666,7 @@ class RadioBrowserConfig():
                 term_str = []
                 for n in lines:
                     term_str.append(n)
-            except:
+            except (IOError, UnicodeDecodeError):
                 pass
 
         if term_str:
@@ -1676,13 +1679,9 @@ class RadioBrowserConfig():
                 # logger.error('term {0} = "{1}"'.format(n, term_str[n]))
                 try:
                     self.terms.append(json.loads(term_str[n]))
-                except:
-                    try:
-                        if logger.isEnabledFor(logging.ERROR):
-                            logger.error('RadioBrowser: error inserting search term {}'.format(n))
-                    except:
-                        if logger.isEnabledFor(logging.ERROR):
-                            logger.error('RadioBrowser: error inserting serch item id {}'.format(n))
+                except (json.JSONDecodeError, IndexError):
+                    if logger.isEnabledFor(logging.ERROR):
+                        logger.error('RadioBrowser: error inserting search term {}'.format(n))
                 if 'limit' in self.terms[-1]['post_data'].keys():
                     if self.terms[-1]['post_data']['limit'] == str(self.limit):
                         self.terms[-1]['post_data'].pop('limit')
@@ -1765,7 +1764,7 @@ PING_TIMEOUT = '''
         try:
             with open(self.config_file, 'w', encoding='utf-8') as cfgfile:
                 cfgfile.write(txt)
-        except:
+        except (IOError, OSError):
             if logger.isEnabledFor(logging.ERROR):
                 logger.error('Saving Online Browser config file failed')
             return False
@@ -2244,7 +2243,7 @@ class RadioBrowserConfigWindow():
                 X = int((self.maxX - 20 - len(self._distro) - 1) / 2)
                 self._win.addstr(self.maxY - 1, X, ' Package provided by ', curses.color_pair(5))
                 self._win.addstr(self._distro + ' ', curses.color_pair(4))
-            except:
+            except (ValueError, curses.error):
                 pass
 
         self._fix_ping_enable()
@@ -3976,9 +3975,8 @@ class RadioBrowserSort():
             self._win.bkgdset(' ', curses.color_pair(3))
             self._win.box()
             try:
-                self._win.addstr( 1, 1, msg,
-                                 curses.color_pair(10))
-            except:
+                self._win.addstr( 1, 1, msg, curses.color_pair(10))
+            except curses.error:
                 pass
             self._win.refresh()
             return
@@ -4152,9 +4150,8 @@ class RadioBrowserServersSelect():
             self._win.bkgdset(' ', curses.color_pair(3))
             self._win.box()
             try:
-                self._win.addstr( 1, 1, msg,
-                                 curses.color_pair(10))
-            except:
+                self._win.addstr( 1, 1, msg, curses.color_pair(10))
+            except curses.error:
                 pass
             self._win.refresh()
             return
@@ -4315,7 +4312,7 @@ class RadioBrowserServers():
                     col = 11
                 try:
                     self._win.addstr(i, 0 , n, curses.color_pair(col))
-                except:
+                except curses.error:
                     pass
             self._win.refresh()
 
