@@ -6175,7 +6175,38 @@ ____Using |fallback| theme.''')
                     'M_KEYBOARD_FILE_SAVE_ERROR',
                     self._cnf.keyboard_file
                 )
+            elif ret == -3:
+                # Display Conflict
+                conflict_first, conflict_second = self._keyboard_config_win.existing_conflict
+                conflict_first_item = self._keyboard_config_win.item(conflict_first)
+                conflict_first_title = conflict_first_item[-1]
+                conflict_first_header_title = self._keyboard_config_win.item(conflict_first_item[-2])[-1]
+                conflict_second_item = self._keyboard_config_win.item(conflict_second)
+                conflict_second_title = conflict_second_item[-1]
+                conflict_second_header_title = self._keyboard_config_win.item(conflict_second_item[-2])[-1]
+                sec = '__' + conflict_second_title
+                if conflict_first_header_title !=  conflict_second_header_title:
+                    sec = '|' + conflict_second_header_title + '|\n  ' + sec
 
+                msg = '''
+The following entries have a shortcut conflict.
+
+|{0}|
+__{1}
+{2}
+
+You can press "|0|" to switch between them.
+
+'''.format(conflict_first_header_title, conflict_first_title, sec)
+
+                self._messaging_win.set_a_message(
+                        'UNIVERSAL', (
+                            'Shortcut Conflict',
+                            msg)
+                        )
+                self._open_simple_message_by_key('UNIVERSAL')
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(msg)
             return
 
         elif self.ws.operation_mode == self.ws.KEYBOARD_CONFIG_ERROR_MODE:

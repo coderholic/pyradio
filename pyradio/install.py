@@ -1119,7 +1119,7 @@ class PyRadioUpdate():
         with open(os.path.join(self._dir, self.ZIP_DIR[self._package], 'DEV'), 'w', encoding='utf-8'):
             pass
         # input('Please update files as needed. Then press ENTER to continue...')
-        sys.exit()
+        # sys.exit()
 
     def _mkdir(self, name, dir_exist_function=None, _permission_error_function=None):
         if os.path.isdir(name):

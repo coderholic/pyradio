@@ -25,13 +25,13 @@ kbkey_orig['screen_bottom']            = ( ord('L')               , 'Go to botto
 
 # ! Volume Keys')
 kbkey_orig['h1']                       = ( None                   , 'Volume Keys')
-kbkey_orig['v_up1']                    = ( ord('+')               , 'Volume up Key 1')
-kbkey_orig['v_up2']                    = ( ord('.')               , 'Volume up Key 2')
-kbkey_orig['v_up3']                    = ( ord('=')               , 'Volume up Key 3')
-kbkey_orig['v_dn1']                    = ( ord(',')               , 'Volume down Key 1')
-kbkey_orig['v_dn2']                    = ( ord('-')               , 'Volume down Key 2')
-kbkey_orig['mute']                     = ( ord('m')               , 'Mute player')
-kbkey_orig['s_vol']                    = ( ord('v')               , 'Save volume')
+kbkey_orig['v_up1']                    = ( ord('+')               , 'Volume up Key 1')                                # global
+kbkey_orig['v_up2']                    = ( ord('.')               , 'Volume up Key 2')                                # global
+kbkey_orig['v_up3']                    = ( ord('=')               , 'Volume up Key 3')                                # global
+kbkey_orig['v_dn1']                    = ( ord(',')               , 'Volume down Key 1')                              # global
+kbkey_orig['v_dn2']                    = ( ord('-')               , 'Volume down Key 2')                              # global
+kbkey_orig['mute']                     = ( ord('m')               , 'Mute player')                                    # global
+kbkey_orig['s_vol']                    = ( ord('v')               , 'Save volume')                                    # global
 
 # ! Global / Multi Window Keys
 kbkey_orig['h2']                       = ( None                   , 'Global / Multi Window Keys')
@@ -45,14 +45,14 @@ kbkey_orig['N']                        = ( ord('N')               , 'Answer No t
 kbkey_orig['del']                      = ( ord('x')               , 'Delete an item')
 kbkey_orig['paste']                    = ( ord('p')               , 'Paste')
 kbkey_orig['t']                        = ( ord('t')               , 'Open themes window')
-kbkey_orig['transp']                   = ( ord('T')               , 'Toggle transparency')
+kbkey_orig['transp']                   = ( ord('T')               , 'Toggle transparency')                            # global
 kbkey_orig['revert_saved']             = ( ord('r')               , 'Revert to saved values')
 kbkey_orig['revert_def']               = ( ord('d')               , 'Revert to default values')
 kbkey_orig['tab']                      = ( ord('L')               , 'Alternative Tab')
 kbkey_orig['stab']                     = ( ord('H')               , 'Alternative Shift-Tab')
 kbkey_orig['no_show']                  = ( ord('x')               , 'Do not show Info / Warning message again')
-kbkey_orig['tag']                      = ( ord('w')               , 'Tag a title')
-kbkey_orig['t_tag']                    = ( ord('W')               , 'Toggle Titles Tagging')
+kbkey_orig['tag']                      = ( ord('w')               , 'Tag a title')                                    # global
+kbkey_orig['t_tag']                    = ( ord('W')               , 'Toggle Titles Tagging')                          # global
 kbkey_orig['next']                     = ( ord('n')               , 'Go to next item')
 kbkey_orig['prev']                     = ( ord('p')               , 'Go to previous item')
 kbkey_orig['no_buffer']                = ( ord('z')               , 'Buffering Window > Set to 0 (disable)')
@@ -104,7 +104,7 @@ kbkey_orig['reload']                   = ( ord('r')               , 'Reload from
 kbkey_orig['watch_theme']              = ( ord('c')               , 'Themes Window > Watch theme for changes')
 
 # ! Extra Commands Keys:)
-kbkey_orig['h5']                       = ( None                   , 'Extra Commands Keys')
+kbkey_orig['h_extra']                       = ( None                   , 'Extra Commands Keys')
 kbkey_orig['new_playlist']             = ( ord('n')               , 'Create a new playlist')
 kbkey_orig['rename_playlist']          = ( ord('r')               , 'Rename current playlist')
 kbkey_orig['open_remote_control']      = ( ord('s')               , 'Open "PyRadio Remote Control" window')
@@ -121,7 +121,7 @@ kbkey_orig['html_help']                = ( ord('h')               , 'Open html h
 
 
 # ! RadioBrowser Keys:
-kbkey_orig['h6']                       = ( None                   , 'RadioBrowser Keys')
+kbkey_orig['h_rb']                       = ( None                   , 'RadioBrowser Keys')
 kbkey_orig['rb_vote']                  = ( ord('V')               , 'Vote for station')
 kbkey_orig['rb_info']                  = ( ord('I')               , 'Station DB info')
 kbkey_orig['rb_server']                = ( ord('C')               , 'Select server to connect to')
@@ -131,7 +131,7 @@ kbkey_orig['rb_p_next']                = ( ord(']')               , 'Go to next 
 kbkey_orig['rb_p_prev']                = ( ord('[')               , 'Go to previous search results page')
 
 # ! RadioBrowser Search Keys
-kbkey_orig['h7']                       = ( None                   , 'RadioBrowser Search Window Keys')
+kbkey_orig['h_rb_s']                       = ( None                   , 'RadioBrowser Search Window Keys')
 kbkey_orig['rb_h_next']                = ( curses.ascii.SO        , 'Go to next item')                     # default: ^N
 kbkey_orig['rb_h_prev']                = ( curses.ascii.DLE       , 'Go to previous item')                 # default: ^P
 kbkey_orig['rb_h_add']                 = ( curses.ascii.EM        , 'Add item')                            # default: ^Y
@@ -153,17 +153,9 @@ kbkey_orig['F9']                       = ( curses.KEY_F9          , 'Show EXE lo
 kbkey_orig['F10']                      = ( curses.KEY_F10         , 'Uninstall PyRadio')
 
 
-# RabioBrowser Search Window Keys
-only_ctrl = [
-        'rb_h_next', 'rb_h_prev', 'rb_h_add', 'rb_h_del',
-        'rb_h_def', 'rb_h_0', 'rb_h_save',
-        ]
-
-conflicts = [
-        # Main window Ctrl-* keys
-        [
-            'gr', 'gr_next', 'gr_prev', 'p_next', 'p_prev',
-            ],
+# keys are the same as the headers of kbkey_orig
+conflicts = {
+    'h_extra':
         # extra commands
         [
             'new_playlist', 'rename_playlist', 'open_remote_control',
@@ -171,17 +163,24 @@ conflicts = [
             'open_buffer', 'last_playlist', 'clear_reg', 'clear_all_reg',
             'unnamed', 'html_help',
             ],
+    'h_main':
+        # Main window Ctrl-* keys
+        [
+            'gr', 'gr_next', 'gr_prev', 'p_next', 'p_prev',
+            ],
+    'h_rb':
         # RadioBrowser
         [
             'rb_vote', 'rb_info', 'rb_server', 'rb_sort', 'rb_p_first',
             'rb_p_next', 'rb_p_prev',
             ],
+    'h_rb_s':
         # RadioBrowser Search
         [
             'rb_h_next', 'rb_h_prev', 'rb_h_add', 'rb_h_del',
             'rb_h_def', 'rb_h_0', 'rb_h_save',
             ],
-        ]
+        }
 
 ''' this is the working dict
     it is a  deep copy of the original
