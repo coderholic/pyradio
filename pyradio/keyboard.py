@@ -6,13 +6,20 @@ from collections import OrderedDict
 import json
 import logging
 import locale
+import string
+from os.path import join
 locale.setlocale(locale.LC_ALL, '')    # set your locale
+from .cjkwrap import is_wide
+# from .simple_curses_widgets import SimpleCursesLineEdit
 
 logger = logging.getLogger(__name__)
 
+kb_letter = ''
+kb_cjk = False
+
 kbkey_orig = OrderedDict()
 # ! MovementKeys
-kbkey_orig['h0']                       = ( None                   , 'Movement Keys')
+kbkey_orig['h_movement']               = ( None                   , 'Movement Keys')
 kbkey_orig['j']                        = ( ord('j')               , 'Go down')
 kbkey_orig['k']                        = ( ord('k')               , 'Go up')
 kbkey_orig['h']                        = ( ord('h')               , 'Go left')
@@ -24,7 +31,7 @@ kbkey_orig['screen_middle']            = ( ord('M')               , 'Go to middl
 kbkey_orig['screen_bottom']            = ( ord('L')               , 'Go to bottom of screen')
 
 # ! Volume Keys')
-kbkey_orig['h1']                       = ( None                   , 'Volume Keys')
+kbkey_orig['h_volume']                 = ( None                   , 'Volume Keys')
 kbkey_orig['v_up1']                    = ( ord('+')               , 'Volume up Key 1')                                # global
 kbkey_orig['v_up2']                    = ( ord('.')               , 'Volume up Key 2')                                # global
 kbkey_orig['v_up3']                    = ( ord('=')               , 'Volume up Key 3')                                # global
@@ -34,7 +41,7 @@ kbkey_orig['mute']                     = ( ord('m')               , 'Mute player
 kbkey_orig['s_vol']                    = ( ord('v')               , 'Save volume')                                    # global
 
 # ! Global / Multi Window Keys
-kbkey_orig['h2']                       = ( None                   , 'Global / Multi Window Keys')
+kbkey_orig['h_global']                 = ( None                   , 'Global / Multi Window Keys')
 kbkey_orig['?']                        = ( ord('?')               , 'Open help window')
 kbkey_orig['s']                        = ( ord('s')               , 'Save, Accept, RadioBrowser search, etc.')
 kbkey_orig['q']                        = ( ord('q')               , 'Exit or Cancel')
@@ -59,7 +66,7 @@ kbkey_orig['no_buffer']                = ( ord('z')               , 'Buffering W
 kbkey_orig['repaint']                  = ( ord('#')               , 'Repaint screen')
 
 # ! Main Window keys
-kbkey_orig['h3']                       = ( None                   , 'Main Window keys')
+kbkey_orig['h_main']                   = ( None                   , 'Main Window keys')
 kbkey_orig['open_config']              = ( ord('c')               , 'Open config window')
 kbkey_orig['open_playlist']            = ( ord('o')               , 'Open playlists list')
 kbkey_orig['open_online']              = ( ord('O')               , 'Open online services (Radio Browser)')
@@ -92,7 +99,7 @@ kbkey_orig['hist_next']                = ( ord('>')               , 'Play next h
 kbkey_orig['hist_prev']                = ( ord('<')               , 'Play previous history item')
 
 # ! Search function
-kbkey_orig['h4']                       = ( None                   , 'Search function')
+kbkey_orig['h_search']                 = ( None                   , 'Search function')
 kbkey_orig['search']                   = ( ord('/')               , 'Open search subwindow')
 kbkey_orig['search_next']              = ( ord('n')               , 'Search down')
 kbkey_orig['search_prev']              = ( ord('N')               , 'Search up')
@@ -104,7 +111,7 @@ kbkey_orig['reload']                   = ( ord('r')               , 'Reload from
 kbkey_orig['watch_theme']              = ( ord('c')               , 'Themes Window > Watch theme for changes')
 
 # ! Extra Commands Keys:)
-kbkey_orig['h_extra']                       = ( None                   , 'Extra Commands Keys')
+kbkey_orig['h_extra']                  = ( None                   , 'Extra Commands Keys')
 kbkey_orig['new_playlist']             = ( ord('n')               , 'Create a new playlist')
 kbkey_orig['rename_playlist']          = ( ord('r')               , 'Rename current playlist')
 kbkey_orig['open_remote_control']      = ( ord('s')               , 'Open "PyRadio Remote Control" window')
@@ -121,7 +128,7 @@ kbkey_orig['html_help']                = ( ord('h')               , 'Open html h
 
 
 # ! RadioBrowser Keys:
-kbkey_orig['h_rb']                       = ( None                   , 'RadioBrowser Keys')
+kbkey_orig['h_rb']                     = ( None                   , 'RadioBrowser Keys')
 kbkey_orig['rb_vote']                  = ( ord('V')               , 'Vote for station')
 kbkey_orig['rb_info']                  = ( ord('I')               , 'Station DB info')
 kbkey_orig['rb_server']                = ( ord('C')               , 'Select server to connect to')
@@ -131,7 +138,7 @@ kbkey_orig['rb_p_next']                = ( ord(']')               , 'Go to next 
 kbkey_orig['rb_p_prev']                = ( ord('[')               , 'Go to previous search results page')
 
 # ! RadioBrowser Search Keys
-kbkey_orig['h_rb_s']                       = ( None                   , 'RadioBrowser Search Window Keys')
+kbkey_orig['h_rb_s']                   = ( None                   , 'RadioBrowser Search Window Keys')
 kbkey_orig['rb_h_next']                = ( curses.ascii.SO        , 'Go to next item')                     # default: ^N
 kbkey_orig['rb_h_prev']                = ( curses.ascii.DLE       , 'Go to previous item')                 # default: ^P
 kbkey_orig['rb_h_add']                 = ( curses.ascii.EM        , 'Add item')                            # default: ^Y
@@ -141,46 +148,25 @@ kbkey_orig['rb_h_0']                   = ( curses.ascii.ACK       , 'Go to templ
 kbkey_orig['rb_h_save']                = ( curses.ascii.ENQ       , 'Save items')                          # default: ^E
 
 # ! Shortcuts Window
-kbkey_orig['h8']                       = ( None                   , 'This Window')
+kbkey_orig['h_this']                   = ( None                   , 'This Window')
 kbkey_orig['this_next']                = ( ord(']')               , 'Go to next Group')
 kbkey_orig['this_prev']                = ( ord('[')               , 'Go to previous Group')
 
 # ! Window Keys:
-kbkey_orig['h9']                       = ( None                   , 'Windows keys')
+kbkey_orig['h_windows']                = ( None                   , 'Windows keys')
 kbkey_orig['F7']                       = ( curses.KEY_F7          , 'Remove old istallation files')
 kbkey_orig['F8']                       = ( curses.KEY_F8          , 'Media Players management')
 kbkey_orig['F9']                       = ( curses.KEY_F9          , 'Show EXE location')
 kbkey_orig['F10']                      = ( curses.KEY_F10         , 'Uninstall PyRadio')
 
-
 # keys are the same as the headers of kbkey_orig
-conflicts = {
-    'h_extra':
-        # extra commands
-        [
-            'new_playlist', 'rename_playlist', 'open_remote_control',
-            'open_dirs', 'change_player', 'hist_top', 'buffer',
-            'open_buffer', 'last_playlist', 'clear_reg', 'clear_all_reg',
-            'unnamed', 'html_help',
-            ],
-    'h_main':
-        # Main window Ctrl-* keys
-        [
-            'gr', 'gr_next', 'gr_prev', 'p_next', 'p_prev',
-            ],
-    'h_rb':
-        # RadioBrowser
-        [
-            'rb_vote', 'rb_info', 'rb_server', 'rb_sort', 'rb_p_first',
-            'rb_p_next', 'rb_p_prev',
-            ],
-    'h_rb_s':
-        # RadioBrowser Search
-        [
-            'rb_h_next', 'rb_h_prev', 'rb_h_add', 'rb_h_del',
-            'rb_h_def', 'rb_h_0', 'rb_h_save',
-            ],
-        }
+conflicts = {}
+for a_key in kbkey_orig:
+    if kbkey_orig[a_key][0] is None:
+        header = a_key
+        conflicts[header] = []
+    else:
+        conflicts[header].append(a_key)
 
 ''' this is the working dict
     it is a  deep copy of the original
@@ -195,6 +181,8 @@ def populate_dict():
 kbkey = {}
 kbkey = populate_dict()
 
+# localized keys
+lkbkey = {}
 
 def set_kbkey(a_key, value):
     ''' update kbkey dict from other modules '''
@@ -269,6 +257,44 @@ def read_keyboard_shortcuts(file_path, reset=False):
         if data is not None:
             for n in data.keys():
                 kbkey[n] = data[n]  # Modify the existing kbkey
+
+def read_localized_keyboard(file_path, keyboard_path):
+    ''' read file_path which is {'keyboard': 'name of country'},
+            file_path is in "datya dir"
+        if that succeeds, read "keyboard_path"/"name of country".jason
+            and put result in data dict
+            keyboard_path is in the code directory
+        if any of the above steps fails, populate data dict
+            with default values
+        Finally populate global lbkey from data dict using ord()
+            of both key and value
+    '''
+    global lkbkey
+    error = False
+    data = {}
+    try:
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as json_file:
+            data = json.load(json_file)
+    except (FileNotFoundError, json.JSONDecodeError, TypeError, IOError):
+        error = True
+    if 'keyboard' in data:
+        # read the actual keyboard file
+        k_file = join(keyboard_path, data['keyboard'] + '.json')
+        try:
+            with open(k_file, 'r', encoding='utf-8', errors='ignore') as k_json_file:
+                data = json.load(k_json_file)
+        except (FileNotFoundError, json.JSONDecodeError, TypeError, IOError):
+            error = True
+    else:
+        error = True
+
+    if error:
+        keys = list(string.ascii_lowercase) + list(string.ascii_uppercase)
+        values = list(string.ascii_lowercase) + list(string.ascii_uppercase)
+        data = {keys[i]: values[i] for i in range(len(keys))}
+
+    for key in data:
+        lkbkey[ord(key)] = ord(data[key])
 
 def to_str(akey):
     ''' convert kbkey keys to a string '''
@@ -414,14 +440,133 @@ def is_ctrl_key(key):
     # Ctrl+A to Ctrl+Z correspond to ASCII values 1 to 26
     return 0 <= key <= 26
 
+def chk_key(char, key, win):
+    logger.error(f'{lkbkey = }')
+    for n in lkbkey:
+        logger.error(f'{n} ({chr(n)}) : {lkbkey[n]} ({chr(lkbkey[n])})')
+    logger.error(f'{key = }')
+    logger.error(f'{chr(key) = }')
+    logger.error(f'{char = }')
+    logger.error(f'{chr(char) = }')
+    if char == key:
+        return True
+    '''
+    try:
+        letter = get_unicode_and_cjk_char(None, char)
+        logger.error(f'{letter = }')
+        this_char = ord(letter)
+        logger.error(f'{char(letter) = }')
+    except:
+        this_char = None
+    '''
+    letter = get_unicode_and_cjk_char(win, char)
+    if letter is not None:
+        logger.error(f'{letter = }')
+        this_char = ord(letter)
+        logger.error(f'{chr(this_char) = }')
+        try:
+            if this_char == lkbkey[key]:
+                return True
+        except IndexError:
+            pass
+    else:
+        logger.error('letter is None')
+    return False
+
+
+def set_kb_letter(letter):
+    global kb_letter
+    kb_letter = letter 
+    
+def set_kb_cjk(value):
+    global kb_cjk
+    kb_cjk = value
+
+def get_unicode_and_cjk_char(win, char): 
+    def _decode_string(data):
+        encodings = ['utf-8', locale.getpreferredencoding(False), 'latin1']
+        for enc in encodings:
+            try:
+                data = data.decode(enc)
+            except:
+                continue
+            break
+
+        assert type(data) != bytes  # Latin1 should have worked.
+        return data
+
+    def get_check_next_byte(win):
+        logger.error(f'{win = }')
+        char = win.getch()
+        if 128 <= char <= 191:
+            return char
+        else:
+            return None
+            raise UnicodeError
+
+    
+    set_kb_cjk(False)
+    set_kb_letter('')
+    logger.error(f'all {win = }')
+    bytes = []
+    if char <= 127:
+        ''' 1 byte '''
+        bytes.append(char)
+    #elif 194 <= char <= 223:
+    elif 192 <= char <= 223:
+        ''' 2 bytes '''
+        bytes.append(char)
+        bytes.append(get_check_next_byte(win))
+    elif 224 <= char <= 239:
+        ''' 3 bytes '''
+        bytes.append(char)
+        bytes.append(get_check_next_byte(win))
+        bytes.append(get_check_next_byte(win))
+    elif 240 <= char <= 244:
+        ''' 4 bytes '''
+        bytes.append(char)
+        bytes.append(get_check_next_byte(win))
+        bytes.append(get_check_next_byte(win))
+        bytes.append(get_check_next_byte(win))
+    ''' no zero byte allowed '''
+    while 0 in bytes:
+        bytes.remove(0)
+    
+    try:
+        buf = bytearray(bytes)
+    except TypeError:
+        return None
+    out = _decode_string(buf)
+    if out:
+        set_kb_letter(out)
+        if is_wide(out) and not kb_cjk:
+            set_kb_cjk(True)
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('=== CJK editing is ON ===')
+    else:
+        out = None
+        set_kb_letter('')
+        set_kb_cjk(False)
+    return out
+
+
+
+
+
+
+
 if __name__ == '__main__':
-    # F_PATH="/home/spiros/keyboard.json"
-    # with open(F_PATH, 'w', encoding='utf-8', errors='ignore') as j_file:
-    #     json.dump(kbkey, j_file, ensure_ascii=False)
+    # # F_PATH="/home/spiros/keyboard.json"
+    # # with open(F_PATH, 'w', encoding='utf-8', errors='ignore') as j_file:
+    # #     json.dump(kbkey, j_file, ensure_ascii=False)
 
 
-    items_list_of_lists = [[key] + list(value) for key, value in kbkey_orig.items()]
+    # items_list_of_lists = [[key] + list(value) for key, value in kbkey_orig.items()]
 
-    # Printing the result
-    for item in items_list_of_lists:
-        print(item)
+    # # Printing the result
+    # for item in items_list_of_lists:
+    #     print(item)
+
+    read_localized_keyboard('aaa','aaa')
+    for n in lkbkey:
+        print(n, lkbkey[n])

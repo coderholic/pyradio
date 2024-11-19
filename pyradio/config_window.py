@@ -3505,16 +3505,18 @@ class PyRadioKeyboardConfig():
         self._widget.show()
 
     def _focus_next(self):
-        self._focus += 1
-        if self._focus > 2:
-            self._focus = 0
-        self._update_focus()
+        if not self._editing:
+            self._focus += 1
+            if self._focus > 2:
+                self._focus = 0
+            self._update_focus()
 
     def _focus_previous(self):
-        self._focus -= 1
-        if self._focus < 0:
-            self._focus = 2
-        self._update_focus()
+        if not self._editing:
+            self._focus -= 1
+            if self._focus < 0:
+                self._focus = 2
+            self._update_focus()
 
     def _go_top(self):
         self._start = 0
@@ -3750,6 +3752,49 @@ class PyRadioKeyboardConfig():
                 self._start = self._headers[-1]
                 self._selection = self._start + 1
 
+
+    def _calculate_conflicts(self, the_headers, the_item, index, the_exceptions=None):
+        self.existing_conflict = None
+        for a_header in the_headers:
+            for group_item in conflicts[a_header]:
+                if group_item != the_item[0]:
+                    logger.error(f'conflict item: {group_item}')
+
+                    chk = [x for x in self._list if x[0] == group_item][0]
+                    existing_value = chk[3]
+                    logger.error(f'{existing_value = }')
+                    # TODO: exceptions...?
+                    if existing_value == the_item[3]:
+                        self.existing_conflict = ((index, chk[-3]))
+                        logger.error('CONFLICT!!!')
+                        break
+
+    def _validate_key(self):
+        the_item = self._list[self._selection]
+        the_header = self._list[the_item[-2]]
+        first_in_group = the_header[-2] + 1
+        logger.error(f'{the_item = }')
+        logger.error(f'{the_header = }')
+        logger.error(f'{first_in_group = }')
+        the_list = [(the_item[-3], the_item[0], the_item[3])]
+        logger.error(f'{the_list = }')
+        active_headers = []
+        for n in self._headers:
+            logger.error(f'header: {n}')
+            active_headers.append(self._list[n][0])
+        if the_header[0] == 'h_rb_s':
+            logger.error('In h_rb_s')
+            active_headers = ('h_rb_s', )
+        elif the_header[0] == 'h_this':
+            active_headers = ('h_this', 'h_movement', 'h_volune')
+            include_keys = ('q', )
+        logger.error(f'{active_headers = }')
+        self._calculate_conflicts(active_headers, the_item, the_item[-3])
+        logger.error(f'{self.existing_conflict = }')
+        if self.existing_conflict:
+            return -3
+        return 1
+
     def _save_keyboard_config(self):
         out_dict = {}
         out_list = []
@@ -3764,23 +3809,21 @@ class PyRadioKeyboardConfig():
         logger.error('>>>>>>>>>>>>')
         self.existing_conflict = ()
         for n in out_list:
+            include_keys = None
             the_item = self._list[n[0]]
             the_header = self._list[self._list[n[0]][-2]]
             logger.error(f'header: {the_header}, item: {the_item}')
             first_in_group = self._list[n[0]][-2]
             logger.error(f'{first_in_group = }')
             if the_header[0] == 'h_rb_s':
-                for group_item in conflicts[the_header[0]]:
-                    if group_item != the_item[0]:
-                        logger.error(f'conflict item: {group_item}')
-
-                        chk = [x for x in self._list if x[0] == group_item][0]
-                        existing_value = chk[3]
-                        logger.error(f'{existing_value = }')
-                        if existing_value == the_item[3]:
-                            self.existing_conflict = ((n[0], chk[-3]))
-                            logger.error('CONFLICT!!!')
-                            break
+                logger.error('In h_rb_s')
+                active_headers = ('h_rb_s', )
+            elif the_header[0] == 'h_this':
+                active_headers = ('h_this', 'h_movement', 'h_volune')
+                include_keys = ('q', )
+            self._calculate_conflicts(active_headers, the_item, n[0])
+            if self.existing_conflict:
+                break
         logger.error(f'{self.existing_conflict = }')
         if self.existing_conflict:
             return -3
@@ -3828,25 +3871,39 @@ class PyRadioKeyboardConfig():
                 return 2
             logger.error(f'{the_key = }')
 
-            ''' put char into the list and update screen '''
+            logger.error('\n\n============')
             self._list[self._selection][3] = char
             self._list[self._selection][6] = ctrl_code_to_string(char)
-            logger.error(f'{self._list[self._selection] = }')
-            logger.error('line is {}'.format(self._selection - self._start + 2))
-            self._win.addstr(
-                    self._selection - self._start + 2,
-                    self._max_length + 17,
-                    self._list[self._selection][6],
-                    curses.color_pair(6)
-                    )
-            self._win.refresh()
+            ret = self._validate_key()
+            logger.error(f'{ret = }')
+            logger.error('============\n\n')
+            if ret == 1:
+                ''' put char into the list and update screen '''
+                logger.error(f'{self._list[self._selection] = }')
+                logger.error('line is {}'.format(self._selection - self._start + 2))
+                self._win.addstr(
+                        self._selection - self._start + 2,
+                        self._max_length + 17,
+                        self._list[self._selection][6],
+                        curses.color_pair(6)
+                        )
+                self._win.refresh()
 
-            ''' disable editing '''
-            self._stop_editing()
+                ''' disable editing '''
+                self._stop_editing()
+            else:
+                self._list[self._selection][3] = self._list[self._selection][2]
+                self._list[self._selection][6] = self._list[self._selection][5]
+
+            return ret
         else:
             if char == kbkey['?']:
                 self.message = 'M_KEYBOARD_HELP'
                 return 2
+            elif char == ord('x'):
+                self._list[self._selection][3] = self._list[self._selection][2]
+                self._list[self._selection][6] = self._list[self._selection][5]
+                self.show()
             elif char == kbkey['this_next']:
                 self._get_after_header()
                 self._make_selection_visible()

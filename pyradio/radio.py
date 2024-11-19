@@ -50,7 +50,7 @@ from .schedule_win import PyRadioSimpleScheduleWindow
 from .simple_curses_widgets import SimpleCursesMenu
 from .messages_system import PyRadioMessagesSystem
 from .server import PyRadioServer, HAS_NETIFACES
-from .keyboard import kbkey
+from .keyboard import kbkey, chk_key, get_unicode_and_cjk_char
 
 CAN_CHECK_FOR_UPDATES = True
 try:
@@ -6082,6 +6082,8 @@ ____Using |fallback| theme.''')
         # if char == curses.KEY_RESIZE:
         #     logger.error('\n\nRESIZE\n\n')
         logger.error('\n\nchar = {}\n\n'.format(char))
+        # letter = get_unicode_and_cjk_char(self.outerBodyWin, char)
+        # logger.error('\n\nletter = {}\n\n'.format(letter))
         if char in (curses.KEY_RESIZE, ):
             self._i_am_resizing = True
             self._normal_mode_resize()
@@ -6184,20 +6186,21 @@ ____Using |fallback| theme.''')
                 conflict_second_item = self._keyboard_config_win.item(conflict_second)
                 conflict_second_title = conflict_second_item[-1]
                 conflict_second_header_title = self._keyboard_config_win.item(conflict_second_item[-2])[-1]
-                sec = '__' + conflict_second_title
+                sec = '_________' + conflict_second_title
                 if conflict_first_header_title !=  conflict_second_header_title:
-                    sec = '|' + conflict_second_header_title + '|\n  ' + sec
+                    sec = 'Group: |' + conflict_second_header_title + '|\n  ' + sec
 
                 msg = '''
 The following entries have a shortcut conflict.
+(Conflicting shortcut: |{0}|)
 
-|{0}|
-__{1}
-{2}
+Group: |{1}|
+_________{2}
+{3}
 
-You can press "|0|" to switch between them.
+Please insert a different shortcut!
 
-'''.format(conflict_first_header_title, conflict_first_title, sec)
+'''.format(conflict_second_item[-4], conflict_first_header_title, conflict_first_title, sec)
 
                 self._messaging_win.set_a_message(
                         'UNIVERSAL', (
@@ -8968,6 +8971,7 @@ You can press "|0|" to switch between them.
                     self._open_radio_browser()
                     return
 
+                # elif chk_key(char, kbkey['open_playlist'], self.outerBodyWin):
                 elif char == kbkey['open_playlist']:
                     self._update_status_bar_right(status_suffix='')
                     self._reset_status_bar_right()

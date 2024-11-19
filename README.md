@@ -61,7 +61,11 @@ Linux users will have to install a [resource opener](https://wiki.archlinux.org/
 
 The best way to install **PyRadio** is via a distribution package, if one exists (*Arch Linux* and derivatives can install [any of these packages](https://aur.archlinux.org/packages/?K=pyradio) from the AUR, *FreeBSD* users will find it in the [ports](https://www.freshports.org/audio/py-pyradio/), etc.).
 
-In any other case, and since **PyRadio** is currently not available via pip, you will have to [build it from source](docs/build.md).
+In any other case you will have to [build it from source](docs/build.md).
+
+**Note:** Please avoid installing PyRadio via `pip`. I am not the original creator of this project, nor do I maintain it on [The Python Package Index (PyPI)](https://pypi.org/project/pyradio/). As a result, the version available there is outdated and I cannot provide any support for it.
+
+Furthermore, please refrain from using any third-party packaging methods, such as Snap or AppImage. I am not affiliated with these services or projects, and I cannot guarantee the functionality or version of **PyRadio** provided through them. Additionally, I am unable to offer support for any issues related to these packaging methods.
 
 ## Basic usage
 

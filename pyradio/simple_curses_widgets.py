@@ -4285,6 +4285,8 @@ class SimpleCursesLineEdit():
         #self._log_file='/home/spiros/edit.log'
         #self._log_file='C:\\Users\\spiros\\edit.log'
         #self.log = self._log
+        logger.error(f'{char = }')
+        logger.error(f'{chr(char) = }')
         if not self._focused:
             return 1
         if self.log is not None:
@@ -4679,7 +4681,7 @@ class SimpleCursesLineEdit():
                 if platform.startswith('win'):
                     char = chr(char)
                 else:
-                    char = self._get_char(win, char)
+                    char = self.get_unicode_and_cjk_char(win, char)
                 if char is None:
                     return 1
                 if self._pure_ascii:
@@ -4728,9 +4730,13 @@ class SimpleCursesLineEdit():
                 self._mode_changed()
         return 1
 
-    def _get_char(self, win, char):
+    @classmethod
+    def get_unicode_and_cjk_char(cls, win, char):
         def get_check_next_byte():
-            char = win.getch()
+            if win is None:
+                char = curses.getch()
+            else:
+                char = win.getch()
             if 128 <= char <= 191:
                 return char
             else:
@@ -4763,7 +4769,7 @@ class SimpleCursesLineEdit():
             out = ''.join([chr(b) for b in bytes])
         else:
             buf = bytearray(bytes)
-            out = self._decode_string(buf)
+            out = cls._decode_string(buf)
             if out:
                 if is_wide(out) and not self._cjk:
                     self._cjk = True
@@ -4785,7 +4791,8 @@ class SimpleCursesLineEdit():
         assert type(data) != bytes  # Latin1 should have worked.
         return data
 
-    def _decode_string(self, data):
+    @classmethod
+    def _decode_string(cls, data):
         encodings = ['utf-8', locale.getpreferredencoding(False), 'latin1']
         for enc in encodings:
             try:
