@@ -1509,6 +1509,16 @@ Please do not use any keys like |Home|, |End|,
 '''
 ),
 
+    'M_INVALID_TYPE_KEY_ERROR':('Invalid Key',
+r'''
+The key pressed is |invalid|!
+
+Please use ASCII characters, punctuation and
+Control characters |only| for |PyRadio Shortcuts|.
+
+'''
+),
+
     'M_NOT_CTRL_KEY_ERROR':('Invalid Key',
 r'''
 The key pressed is |invalid|!

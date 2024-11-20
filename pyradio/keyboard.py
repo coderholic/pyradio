@@ -393,6 +393,40 @@ def letter_to_ctrl_code(letter):
     # Return None if not a valid letter or not found
     return None
 
+import curses
+
+def is_valid_char(char, win):
+    """
+    Checks if the character c is a valid ASCII character or a control combination.
+    If c is invalid, it will read from the window to clear the input buffer.
+
+    Parameters:
+        c (int): The character code obtained from getch().
+        win (curses.window): The curses window object for further input if needed.
+
+    Returns:
+        bool: True if c is valid, False otherwise.
+    """
+
+    # if char <= 127:
+    if (65 <= char <= 90) or (97 <= char <= 122) or (1 <= char <= 47):
+        ''' 1 byte '''
+        return True
+    #elif 194 <= char <= 223:
+    elif 192 <= char <= 223:
+        ''' 2 bytes '''
+        win.getch()
+    elif 224 <= char <= 239:
+        ''' 3 bytes '''
+        win.getch()
+        win.getch()
+    elif 240 <= char <= 244:
+        ''' 4 bytes '''
+        win.getch()
+        win.getch()
+        win.getch()
+    return False
+
 def is_invalid_key(key):
     """
     Check if the pressed key is a special key (like HOME, END, PgUp, etc.).

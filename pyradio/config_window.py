@@ -20,7 +20,7 @@ from .themes import *
 from .server import IPsWithNumbers
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesMenu
 from .client import PyRadioClient
-from .keyboard import kbkey, kbkey_orig, ctrl_code_to_string, is_invalid_key, is_ctrl_key, set_kbkey, conflicts
+from .keyboard import kbkey, kbkey_orig, ctrl_code_to_string, is_valid_char, is_invalid_key, is_ctrl_key, set_kbkey, conflicts
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
@@ -3798,37 +3798,11 @@ class PyRadioKeyboardConfig():
 
     def _save_keyboard_config(self):
         out_dict = {}
-        out_list = []
         for i, n in enumerate(self._list):
+            if n[1] != n[2]:
+                out_dict[n[0]] = n[2]
             if n[2] != n[3]:
                 out_dict[n[0]] = n[3]
-                out_list.append((i, n[0], n[3]))
-        logger.error(f'{out_dict = }')
-        logger.error(f'{out_list = }')
-        for n in out_list:
-            logger.error('in list: {}'.format(self._list[n[0]]))
-        logger.error('>>>>>>>>>>>>')
-        self.existing_conflict = ()
-        for n in out_list:
-            include_keys = None
-            the_item = self._list[n[0]]
-            the_header = self._list[self._list[n[0]][-2]]
-            logger.error(f'header: {the_header}, item: {the_item}')
-            first_in_group = self._list[n[0]][-2]
-            logger.error(f'{first_in_group = }')
-            if the_header[0] == 'h_rb_s':
-                logger.error('In h_rb_s')
-                active_headers = ('h_rb_s', )
-            elif the_header[0] == 'h_this':
-                active_headers = ('h_this', 'h_movement', 'h_volune')
-                include_keys = ('q', )
-            self._calculate_conflicts(active_headers, the_item, n[0])
-            if self.existing_conflict:
-                break
-        logger.error(f'{self.existing_conflict = }')
-        if self.existing_conflict:
-            return -3
-        return 1
         import json
         try:
             with open(self._cnf.keyboard_file, 'w') as json_file:
@@ -3899,6 +3873,10 @@ class PyRadioKeyboardConfig():
         elif self._editing:
             if is_invalid_key(char):
                 self.message = 'M_INVALID_KEY_ERROR'
+                logger.error('Key is INVALID')
+                return 2
+            if not is_valid_char(char, self._win):
+                self.message = 'M_INVALID_TYPE_KEY_ERROR'
                 logger.error('Key is INVALID')
                 return 2
             if char in (curses.KEY_EXIT, 27, kbkey['q']):
@@ -4001,7 +3979,6 @@ class PyRadioKeyboardConfig():
                     ret = self._save_keyboard_config()
                     if ret in (0, -2, -3):
                         return ret
-                    return 1
                     return 0
                 else:
                     # cancel

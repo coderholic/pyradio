@@ -63,10 +63,9 @@ The best way to install **PyRadio** is via a distribution package, if one exists
 
 In any other case you will have to [build it from source](docs/build.md).
 
-**Note:** Please avoid installing PyRadio via `pip`. I ([s-n-g](https://github.com/s-n-g)) am not the creator of this project, nor do I maintain it on [The Python Package Index (PyPI)](https://pypi.org/project/pyradio/). As a result, the version available there is outdated and I cannot provide any support for it. \
+**Note:** Please avoid installing **PyRadio** via **pip**. I (user [s-n-g](https://github.com/s-n-g) @ github) am not the creator of this project, nor do I maintain it on [The Python Package Index (PyPI)](https://pypi.org/project/pyradio/). As a result, the version available there is outdated and I cannot provide any support for it. \
 \
-\
-Furthermore, please refrain from using any third-party packaging methods, such as Snap or AppImage. I am not affiliated with these services or projects, and I cannot guarantee the functionality or version of **PyRadio** provided through them. Additionally, I am unable to offer support for any issues related to these packaging methods.
+Furthermore, please refrain from using any third-party packaging methods, such as **Snap** or **AppImage**. I am not affiliated with these services or projects, and I cannot guarantee the functionality or version of **PyRadio** provided through them. Additionally, I am unable to offer support for any issues related to these packaging methods.
 
 ## Basic usage
 
