@@ -1480,7 +1480,7 @@ activate them), and the last column (|New|) will print the
 latest changes, which have not been saved yet.
 
 Use |Arrow Keys|, |{j}|, |{k}|, |PgUp| and |PgDown| to move, |{g}| and |{G}| to
-go to the beginning or the end of the list, or |{this_prev}| and |{this_next}| to
+go to the beginning or the end of the list, or |[| and |]| to
 navigate the shortcut groups.
 
 To change a |Keyboard Shortcut|, select a shortcut, press
@@ -1488,10 +1488,12 @@ To change a |Keyboard Shortcut|, select a shortcut, press
 at the right of the line. Press any key to change the
 shortcut, or |Esc| to cancel the operation.
 
-To remove a |New| shortcut previously inserted, press "|x|".
+When in navigation mode (not editing a shortcut), press
+"|x|" to remove a |New| shortcut previously inserted. Press
+"|f|" to see a list of "|free|" keys that you can use.
 
 After you have finished customizing the shortcuts, press
-|OK| (press |Tab| or |{tab}| to navigate). Then |PyRadio| will try to
+|OK| (use |Tab| or |{tab}| to navigate). Then |PyRadio| will try to
 detect any conflicts, and either help you to resolve
 them or save and activate your new shortcuts.
 '''

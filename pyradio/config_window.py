@@ -7,6 +7,7 @@ from copy import deepcopy
 from textwrap import wrap
 import glob
 import csv
+import string
 from os import path, sep, rename
 from sys import platform, version_info
 from collections import OrderedDict
@@ -3839,9 +3840,47 @@ class PyRadioKeyboardConfig():
             set_kbkey(n, out_dict[n])
         return 0
 
+    def _get_available_keys(self):
+        existing_set = set([ x[-4] for x in self._list if len(x[-4]) > 0 ])
+        # Define all available characters including function keys
+        function_keys = {f'F{i}' for i in range(1, 11)}  # Creates {'F1' to 'F10'}
+        all_characters = set(string.ascii_letters + string.punctuation + " ") | function_keys
+
+        # Find available characters not in the existing set
+        available_characters = sorted(set(char for char in all_characters if char not in existing_set))
+
+        # Separate characters into categories
+        letters = sorted([char for char in available_characters if char.isalpha()])  # Sort letters
+        function_keys_list = sorted([char for char in available_characters if char.startswith('F')])  # Sort function keys
+        punctuation = sorted([char for char in available_characters if char in string.punctuation or char == " "])  # Sort punctuation
+
+        # Combine them in the desired order
+        ordered_available_characters = letters + function_keys_list + punctuation
+
+        # Create the formatted string without leading spaces
+        formatted_string = " ".join([f"|{char}|" for char in ordered_available_characters])
+
+        # Function to insert newline every 70 characters without leading "| "
+        lines = []
+        while formatted_string:
+            # Take up to line_length characters
+            line, formatted_string = formatted_string[:70], formatted_string[70:]
+            # Ensure we don't cut off mid-character by finding the last "| "
+            if "| " in line:
+                last_pipe_index = line.rfind("| ")
+                if last_pipe_index != -1:
+                    line = line[:last_pipe_index + 1]  # Include the space after "|"
+                    formatted_string = line[last_pipe_index + 1:] + formatted_string  # Remainder goes back to text
+
+            # Append the line without leading spaces (only for subsequent lines)
+            lines.append(line.strip())  # Strip leading/trailing whitespace from each line
+
+        return '\n'.join(lines).replace('\n| ', '\n')
+
     def keypress(self, char):
         ''' PyRadioKeyboardConfig keypress
             Returns:
+                -4: Show free keys
                 -3: Conflict exists (in self.existing_conflict)
                 -2: Error saving file
                 -1: Cancel
@@ -3900,15 +3939,21 @@ class PyRadioKeyboardConfig():
             if char == kbkey['?']:
                 self.message = 'M_KEYBOARD_HELP'
                 return 2
+
+            elif char == ord('f'):
+                msg = 'The following Keys are free to be used\nas Shortcut Keys:\n\n'
+                self.keys_string = msg + self._get_available_keys() + '\n\n'
+                return -4
+
             elif char == ord('x'):
                 self._list[self._selection][3] = self._list[self._selection][2]
                 self._list[self._selection][6] = self._list[self._selection][5]
                 self.show()
-            elif char == kbkey['this_next']:
+            elif char == ord(']'):
                 self._get_after_header()
                 self._make_selection_visible()
                 self.show()
-            elif char == kbkey['this_prev']:
+            elif char == ord('['):
                 self._get_after_header(next=False)
                 self._make_selection_visible()
                 self.show()

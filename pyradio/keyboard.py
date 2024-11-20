@@ -147,11 +147,6 @@ kbkey_orig['rb_h_def']                 = ( curses.ascii.STX       , 'Make item d
 kbkey_orig['rb_h_0']                   = ( curses.ascii.ACK       , 'Go to template (item 0)')             # default: ^F
 kbkey_orig['rb_h_save']                = ( curses.ascii.ENQ       , 'Save items')                          # default: ^E
 
-# ! Shortcuts Window
-kbkey_orig['h_this']                   = ( None                   , 'This Window')
-kbkey_orig['this_next']                = ( ord(']')               , 'Go to next Group')
-kbkey_orig['this_prev']                = ( ord('[')               , 'Go to previous Group')
-
 # ! Window Keys:
 kbkey_orig['h_windows']                = ( None                   , 'Windows keys')
 kbkey_orig['F7']                       = ( curses.KEY_F7          , 'Remove old istallation files')
@@ -476,13 +471,13 @@ def chk_key(char, key, win):
 
 def set_kb_letter(letter):
     global kb_letter
-    kb_letter = letter 
-    
+    kb_letter = letter
+
 def set_kb_cjk(value):
     global kb_cjk
     kb_cjk = value
 
-def get_unicode_and_cjk_char(win, char): 
+def get_unicode_and_cjk_char(win, char):
     def _decode_string(data):
         encodings = ['utf-8', locale.getpreferredencoding(False), 'latin1']
         for enc in encodings:
@@ -504,7 +499,7 @@ def get_unicode_and_cjk_char(win, char):
             return None
             raise UnicodeError
 
-    
+
     set_kb_cjk(False)
     set_kb_letter('')
     logger.error(f'all {win = }')
@@ -531,7 +526,7 @@ def get_unicode_and_cjk_char(win, char):
     ''' no zero byte allowed '''
     while 0 in bytes:
         bytes.remove(0)
-    
+
     try:
         buf = bytearray(bytes)
     except TypeError:

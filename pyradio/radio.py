@@ -6210,6 +6210,17 @@ Please insert a different shortcut!
                 self._open_simple_message_by_key('UNIVERSAL')
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug(msg)
+
+            elif ret == -4:
+                pass
+                self._messaging_win.set_a_message(
+                        'UNIVERSAL',
+                        ('Free Keys', self._keyboard_config_win.keys_string)
+                        )
+                # if logger.isEnabledFor(logging.DEBUG):
+                #     logging.debug('Universal Message provided')
+                self._open_simple_message_by_key('UNIVERSAL')
+
             return
 
         elif self.ws.operation_mode == self.ws.KEYBOARD_CONFIG_ERROR_MODE:
