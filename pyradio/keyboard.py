@@ -154,6 +154,11 @@ kbkey_orig['F8']                       = ( curses.KEY_F8          , 'Media Playe
 kbkey_orig['F9']                       = ( curses.KEY_F9          , 'Show EXE location')
 kbkey_orig['F10']                      = ( curses.KEY_F10         , 'Uninstall PyRadio')
 
+if platform.system().lower().startswith('win'):
+    kbkey_orig['rb_p_first']           = ( curses.KEY_F1          , 'Go to first search results page')
+    kbkey_orig['rb_p_next']            = ( curses.KEY_F3          , 'Go to next search results page')
+    kbkey_orig['rb_p_prev']            = ( curses.KEY_F2          , 'Go to previous search results page')
+
 # keys are the same as the headers of kbkey_orig
 conflicts = {}
 for a_key in kbkey_orig:
@@ -293,6 +298,27 @@ def read_localized_keyboard(file_path, keyboard_path):
 
 def to_str(akey):
     ''' convert kbkey keys to a string '''
+    # Handle function keys explicitly
+    if kbkey[akey] == curses.KEY_F1:
+        return "F1"
+    elif kbkey[akey] == curses.KEY_F2:
+        return "F2"
+    elif kbkey[akey] == curses.KEY_F3:
+        return "F3"
+    elif kbkey[akey] == curses.KEY_F4:
+        return "F4"
+    elif kbkey[akey] == curses.KEY_F5:
+        return "F5"
+    elif kbkey[akey] == curses.KEY_F6:
+        return "F6"
+    elif kbkey[akey] == curses.KEY_F7:
+        return "F7"
+    elif kbkey[akey] == curses.KEY_F8:
+        return "F8"
+    elif kbkey[akey] == curses.KEY_F9:
+        return "F9"
+    elif kbkey[akey] == curses.KEY_F10:
+        return "F10"
     adict = {
     'rec':          'Verital Line',
     'pause':        'Space',
@@ -303,10 +329,6 @@ def to_str(akey):
     'st_dn':        '^D',
     'p_next':       '^N',
     'p_prev':       '^P',
-    'F7':           'F7',
-    'F8':           'F8',
-    'F9':           'F9',
-    'F10':          'F10',
     }
     if akey in adict:
         return adict[akey]

@@ -75,7 +75,7 @@ These are the **RadioBrowser** specific keys one can use in addition to local pl
 | C             | Select server to connect to               |
 | s             | Search for stations                       |
 |{ [ ]          | Display the first / next /previous page   |
-|{ F2 F3        | Same functionally as above for Windows    |
+|F1 F2 F3       | Same functionally as above for Windows    |
 | S             | Sort search results                       |
 | I             | Station database info (current selection) |
 | V             | Vote for station                          |

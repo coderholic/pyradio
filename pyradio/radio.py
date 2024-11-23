@@ -781,12 +781,10 @@ class PyRadio():
         self._cls_update_stations = None
         self._cls_update_stations_message = ''
 
-        if platform.startswith('win'):
-            kbkey['rb_p_next'] = curses.KEY_F3
-            kbkey['rb_p_prev'] = curses.KEY_F2
-            kbkey['rb_p_first'] = 278
+        # set RadioBrowser Keys
         self._browser_page_chars = (kbkey['rb_p_next'], kbkey['rb_p_prev'])
         self._browser_first_page_chars = (kbkey['rb_p_first'], )
+
 
         self._messaging_win = PyRadioMessagesSystem(
                 self._cnf,
