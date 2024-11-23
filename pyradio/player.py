@@ -326,6 +326,8 @@ class Player():
 
     currently_recording = False
 
+    DO_NOT_PLAY = False
+
     def __init__(self,
                  config,
                  outputStream,
@@ -2018,6 +2020,12 @@ class Player():
             except:
                 pass
 
+        logger.error('\n-\n-\nself.DO_NOT_PLAY = {}\n-\n-'.format(self.DO_NOT_PLAY))
+        if self.DO_NOT_PLAY:
+            ''' do not start the player, just return opts '''
+            logger.error('\n-\n-\nopts = {}\n-\n-'.format(opts))
+            return opts
+
         if platform.startswith('win') and self.PLAYER_NAME == 'vlc':
             self.stop_win_vlc_status_update_thread = False
             ''' Launches vlc windowless '''
@@ -2560,17 +2568,21 @@ class MpvPlayer(Player):
 
         if playList:
             if newerMpv:
-                opts.append('--input-ipc-server=' + self.mpvsocket)
+                if not self.DO_NOT_PLAY:
+                    opts.append('--input-ipc-server=' + self.mpvsocket)
                 opts.append('--playlist=' + self._url_to_use(streamUrl))
             else:
-                opts.append('--input-unix-socket=' + self.mpvsocket)
+                if not self.DO_NOT_PLAY:
+                    opts.append('--input-unix-socket=' + self.mpvsocket)
                 opts.append('--playlist=' + self._url_to_use(streamUrl))
         else:
             if newerMpv:
-                opts.append('--input-ipc-server=' + self.mpvsocket)
+                if not self.DO_NOT_PLAY:
+                    opts.append('--input-ipc-server=' + self.mpvsocket)
                 opts.append(self._url_to_use(streamUrl))
             else:
-                opts.append('--input-unix-socket=' + self.mpvsocket)
+                if not self.DO_NOT_PLAY:
+                    opts.append('--input-unix-socket=' + self.mpvsocket)
                 opts.append(self._url_to_use(streamUrl))
 
         ''' check if buffering '''

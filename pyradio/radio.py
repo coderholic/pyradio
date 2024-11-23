@@ -8743,7 +8743,28 @@ Please insert a different shortcut!
                 return
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
-                if char in self._local_functions:
+                if char == ord('X'):
+                    self.player.DO_NOT_PLAY = True
+                    stream_url = self.stations[self.selection][1]
+                    try:
+                        enc = self.stations[self.selection][2].strip()
+                        if invalid_encoding(enc):
+                            enc = ''
+                    except:
+                        enc = ''
+                    self._cnf.DO_NOT_PLAY_OPTS = self.player.play(name='',
+                                     streamUrl=stream_url,
+                                     stop_player=self.stopPlayerFromKeyboard,
+                                     detect_if_player_exited=lambda: self.detect_if_player_exited,
+                                     enable_crash_detection_function=self._enable_player_crash_detection,
+                                     encoding=self.get_active_encoding(enc)
+                                     )
+                    logger.error(f'{self._cnf.DO_NOT_PLAY_OPTS =  }')
+                    self.log.asked_to_stop = True
+                    self.ctrl_c_handler(0,0)
+                    return -1
+
+                elif char in self._local_functions:
                     self._local_functions[char]()
                     return
                 if char == kbkey['fav']:

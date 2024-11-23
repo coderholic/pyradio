@@ -954,6 +954,14 @@ If nothing else works, try the following command:
 
         ''' curses is off '''
         if pyradio.setup_return_status:
+            if pyradio_config.DO_NOT_PLAY_OPTS is not None:
+                # print(pyradio_config.DO_NOT_PLAY_OPTS)
+                pyradio_config.remove_session_lock_file()
+                import subprocess
+                process = subprocess.Popen(pyradio_config.DO_NOT_PLAY_OPTS, stdout=None, stderr=None)
+                process.wait()
+                return
+
             if pyradio_config.WIN_UNINSTALL and platform.startswith('win'):
                 # doing it this way so that python2 does not break (#153)
                 from .win import win_press_any_key_to_unintall

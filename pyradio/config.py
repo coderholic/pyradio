@@ -1270,6 +1270,8 @@ class PyRadioStations():
 class PyRadioConfig(PyRadioStations):
     ''' PyRadio Config Class '''
 
+    DO_NOT_PLAY_OPTS = None
+
     ''' I will get this when a player is selected
         It will be used when command line parameters are evaluated
     '''
