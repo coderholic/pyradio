@@ -457,10 +457,12 @@ class PyRadio():
     def __init__(self, pyradio_config,
                  pre_select='False',
                  play='False',
+                 external_player=False,
                  req_player='',
                  theme='',
                  force_update='',
                  record=False):
+        self._do_launch_external_palyer = external_player
         self._station_images = (
             join(pyradio_config.logos_dir, 'station.jpg'),
             join(pyradio_config.logos_dir, 'station.png'),
@@ -2028,6 +2030,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 self._watch_theme(self._cnf.theme_path)
             while True:
                 try:
+                    if self._do_launch_external_palyer:
+                        curses.ungetch(kbkey['ext_player'])
                     c = self.bodyWin.getch()
                     # logger.error('DE pressed "{0} - {1}"'.format(c, chr(c)))
                     ret = self.keypress(c)
@@ -8743,25 +8747,23 @@ Please insert a different shortcut!
                 return
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
-                if char == ord('X'):
+                if char == kbkey['ext_player']:
                     self.player.DO_NOT_PLAY = True
                     stream_url = self.stations[self.selection][1]
-                    try:
-                        enc = self.stations[self.selection][2].strip()
-                        if invalid_encoding(enc):
-                            enc = ''
-                    except:
-                        enc = ''
                     self._cnf.DO_NOT_PLAY_OPTS = self.player.play(name='',
                                      streamUrl=stream_url,
-                                     stop_player=self.stopPlayerFromKeyboard,
-                                     detect_if_player_exited=lambda: self.detect_if_player_exited,
-                                     enable_crash_detection_function=self._enable_player_crash_detection,
-                                     encoding=self.get_active_encoding(enc)
+                                     stop_player=None,
+                                     detect_if_player_exited=None,
+                                     enable_crash_detection_function=None,
+                                     encoding='utf-8'
                                      )
-                    logger.error(f'{self._cnf.DO_NOT_PLAY_OPTS =  }')
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('Launching external player: {}'.format(' '.join(self._cnf.DO_NOT_PLAY_OPTS)))
+                    self._cnf.DO_NOT_PLAY_OPTS = [self.stations[self.selection][0]] + self._cnf.DO_NOT_PLAY_OPTS
                     self.log.asked_to_stop = True
                     self.ctrl_c_handler(0,0)
+                    self._cnf._online_browser = None
+
                     return -1
 
                 elif char in self._local_functions:

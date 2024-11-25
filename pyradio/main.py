@@ -245,6 +245,8 @@ If nothing else works, try the following command:
     parser.add_argument('-p', '--play', nargs='?', default='False', metavar=('STATION_NUMBER', ),
                         help='Start and play.'
                         'The value is num station or empty for random.')
+    parser.add_argument('-x', '--external-player', action='store_true',
+                        help='Play station in external player. Can be combined with --play.')
     parser.add_argument('-u', '--use-player', default='', metavar=('PLAYER', ),
             help='Use specified player. '
             'A comma-separated list can be used to specify detection order. '
@@ -914,6 +916,7 @@ If nothing else works, try the following command:
         pyradio = PyRadio(
             pyradio_config,
             play=args.play,
+            external_player=args.external_player,
             pre_select=pre_select,
             req_player=requested_player,
             theme=theme_to_use,
@@ -958,7 +961,10 @@ If nothing else works, try the following command:
                 # print(pyradio_config.DO_NOT_PLAY_OPTS)
                 pyradio_config.remove_session_lock_file()
                 import subprocess
-                process = subprocess.Popen(pyradio_config.DO_NOT_PLAY_OPTS, stdout=None, stderr=None)
+                print('\n[bold red]Launching external player[/bold red]')
+                print('Station: "[cyan]{}[/cyan]"'.format(pyradio_config.DO_NOT_PLAY_OPTS[0]))
+                print('Command: "[yellow]{}[/yellow]"'.format(' '.join(pyradio_config.DO_NOT_PLAY_OPTS[1:])))
+                process = subprocess.Popen(pyradio_config.DO_NOT_PLAY_OPTS[1:], stdout=None, stderr=None)
                 process.wait()
                 return
 

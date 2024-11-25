@@ -2020,10 +2020,8 @@ class Player():
             except:
                 pass
 
-        logger.error('\n-\n-\nself.DO_NOT_PLAY = {}\n-\n-'.format(self.DO_NOT_PLAY))
         if self.DO_NOT_PLAY:
             ''' do not start the player, just return opts '''
-            logger.error('\n-\n-\nopts = {}\n-\n-'.format(opts))
             return opts
 
         if platform.startswith('win') and self.PLAYER_NAME == 'vlc':
@@ -2509,6 +2507,8 @@ class MpvPlayer(Player):
 
         ''' Test for newer MPV versions as it supports different IPC flags. '''
         p = subprocess.Popen([self.PLAYER_CMD, '--no-video',  '--input-ipc-server=' + self.mpvsocket], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=False)
+        if self.DO_NOT_PLAY:
+            self.recording = self.NO_RECORDING
         out = p.communicate()
         if 'not found' not in str(out[0]):
             if logger.isEnabledFor(logging.DEBUG):
@@ -2995,6 +2995,8 @@ class MpPlayer(Player):
 
     def _buildStartOpts(self, streamName, streamUrl, playList=False):
         ''' Builds the options to pass to mplayer subprocess.'''
+        if self.DO_NOT_PLAY:
+            self.recording = self.NO_RECORDING
         opts = [self.PLAYER_CMD, '-vo', 'null', '-msglevel', 'all=6']
         if self._cnf.buffering_data:
             opts.extend(self._cnf.buffering_data)
@@ -3344,6 +3346,8 @@ class VlcPlayer(Player):
         #opts = [self.PLAYER_CMD, "-Irc", "--quiet", streamUrl]
         monitor_opts = None
         self._vlc_url = self._url_to_use(streamUrl)
+        if self.DO_NOT_PLAY:
+            self.recording = self.NO_RECORDING
         if self.WIN:
             ''' Get a random port (44000-44999)
                 Create a log file for vlc and make sure it is unique
@@ -3368,15 +3372,19 @@ class VlcPlayer(Player):
                 if ok_to_go_on:
                     break
 
-            opts = [self.PLAYER_CMD, '--no-video', '--no-one-instance',
-                '--no-volume-save', '-Irc', '--rc-host', '127.0.0.1:' + str(self._port),
-                '--file-logging', '--logmode', 'text', '--log-verbose', '3',
-                '--logfile', self._vlc_stdout_log_file, '-vv',
-                self._url_to_use(streamUrl)]
+            if self.DO_NOT_PLAY:
+                opts = [self.PLAYER_CMD, '--no-video', '--no-one-instance', '-Irc',
+                    self._url_to_use(streamUrl)]
+            else:
+                opts = [self.PLAYER_CMD, '--no-video', '--no-one-instance',
+                    '--no-volume-save', '-Irc', '--rc-host', '127.0.0.1:' + str(self._port),
+                    '--file-logging', '--logmode', 'text', '--log-verbose', '3',
+                    '--logfile', self._vlc_stdout_log_file, '-vv',
+                    self._url_to_use(streamUrl)]
 
-            if logger.isEnabledFor(logging.INFO):
-                logger.info('vlc listening on 127.0.0.1:{}'.format(self._port))
-                logger.info('vlc log file: "{}"'.format(self._vlc_stdout_log_file))
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('vlc listening on 127.0.0.1:{}'.format(self._port))
+                    logger.info('vlc log file: "{}"'.format(self._vlc_stdout_log_file))
 
         else:
             if self.recording == self.NO_RECORDING:
@@ -3386,6 +3394,8 @@ class VlcPlayer(Player):
                 else:
                     opts = [self.PLAYER_CMD, '--no-video', '--no-one-instance',
                             '--no-volume-save', '-Irc', '-vv']
+                if self.DO_NOT_PLAY:
+                    opts.pop(opts.index('-vv'))
             else:
                 if self.WIN:
                     opts = [self.PLAYER_CMD, '--no-video', '--no-one-instance',
@@ -3439,6 +3449,9 @@ class VlcPlayer(Player):
         self.buffering = self._player_is_buffering(opts, self.buffering_tokens)
         with self.buffering_lock:
             self.buffering_change_function()
+
+        if self.DO_NOT_PLAY:
+            opts.append(streamUrl)
 
         return opts, monitor_opts
 

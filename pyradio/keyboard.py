@@ -97,6 +97,7 @@ kbkey_orig['st_up']                    = ( curses.ascii.NAK       , 'Move statio
 kbkey_orig['st_dn']                    = ( curses.ascii.EOT       , 'Move station down')                              # default: ^D
 kbkey_orig['hist_next']                = ( ord('>')               , 'Play next history item')
 kbkey_orig['hist_prev']                = ( ord('<')               , 'Play previous history item')
+kbkey_orig['ext_player']               = ( ord('X')               , 'Launch External Player')
 
 # ! Search function
 kbkey_orig['h_search']                 = ( None                   , 'Search function')
