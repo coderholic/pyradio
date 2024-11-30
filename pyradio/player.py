@@ -2519,8 +2519,10 @@ class MpvPlayer(Player):
                 logger.debug('--input-ipc-server is not supported.')
             newerMpv = False
         logger.error('\n\nself._cnf.user_agent_string = {}\n\n'.format(self._cnf.user_agent_string))
-        opts = [self.PLAYER_CMD, '--no-video', '--quiet']
-
+        if self.DO_NOT_PLAY:
+            opts = [self.PLAYER_CMD, '--no-video']
+        else:
+            opts = [self.PLAYER_CMD, '--no-video', '--quiet']
         if self._cnf.buffering_data:
             opts.extend(self._cnf.buffering_data)
 
