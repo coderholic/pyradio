@@ -3452,6 +3452,7 @@ class PyRadioKeyboardConfig():
         logger.error(f'{keys_file =  }')
         with open(keys_file, 'r', encoding='utf-8') as f:
             self._classes = json.load(f)
+        self._needs_update = False
 
 
     def item(self, an_item_id=None):
@@ -3532,12 +3533,12 @@ class PyRadioKeyboardConfig():
     def _go_top(self):
         self._start = 0
         self._selection = 1
-        self.show()
+        self._needs_update = True
 
     def _go_bottom(self):
         self._selection = len(self._list) -1
         self._start = self._selection - self._number_of_lines + 1
-        self.show()
+        self._needs_update = True
 
     def _go_down(self, step=1):
         logger.error(f'go_down: {step = }')
@@ -3555,7 +3556,7 @@ class PyRadioKeyboardConfig():
         if next_selection >= len(self._list):
             self._selection = 1
             self._start = 0
-            self.show()
+            self._needs_update = True
             return
         line = next_selection - self._start + 2
         logger.error(f'{line = }, {self._number_of_lines = }')
@@ -3564,7 +3565,7 @@ class PyRadioKeyboardConfig():
             while line > self._number_of_lines + 1:
                 self._start += (next_selection - self._selection)
                 self._selection = next_selection
-                self.show()
+                self._needs_update = True
                 return
         if 2 <  line <= self._number_of_lines + 1:
             logger.error('=== between')
@@ -3591,7 +3592,7 @@ class PyRadioKeyboardConfig():
         if next_selection < 0:
             self._selection = len(self._list) - 1
             self._start = len(self._list) - self._number_of_lines
-            self.show()
+            self._needs_update = True
             return
         line = next_selection - self._start - 2
         line = next_selection - self._start + 1
@@ -3601,7 +3602,7 @@ class PyRadioKeyboardConfig():
             if self._selection in self._headers:
                 self._selection =- 1
             self._start = self._selection
-            self.show()
+            self._needs_update = True
             return
         if 1 <=  line <= self._number_of_lines:
             logger.error('=== between')
@@ -3648,28 +3649,40 @@ class PyRadioKeyboardConfig():
         self._make_selection_visible()
 
     def _make_selection_visible(self):
-        chk =  self._start - self._selection
-        logger.error(f'{self._start= }')
-        logger.error(f'{self._selection = }')
-        logger.error(f'{chk = }')
+        # Check if the current selection is already visible
+        if self._start <= self._selection < self._start + self._number_of_lines:
+            # Ensure that we use the expanded window space effectively
+            if self._start + self._number_of_lines > len(self._list):
+                # Adjust `self._start` to fill the screen if the end of the list is reached
+                self._start = max(0, len(self._list) - self._number_of_lines)
+            return
+
+        # Selection is not visible, adjust `self._start` as per existing behavior
+        chk = self._start - self._selection
+
+        # Case 1: Selection is near the bottom of the list
         if self._selection > len(self._list) - self._number_of_lines:
-            self._start = len(self._list) - self._number_of_lines
-        else:
-            if chk < 0:
-                # start is after selection
-                self._start = self._selection
-                if (self._start - 1) in self._headers:
-                    self._start -= 1
-            else:
-                # start is before selection
-                # is it too far?
-                if chk > self._number_of_lines:
-                    self._start = int((self._selection - self._number_of_lines) / 2)
+            self._start = max(0, len(self._list) - self._number_of_lines)
+
+        # Case 2: Selection is below the visible range
+        elif chk < 0:
+            # Try to center the selection in the visible area
+            proposed_start = self._selection - self._number_of_lines // 2
+
+            # Ensure no empty lines at the bottom
+            self._start = min(proposed_start, len(self._list) - self._number_of_lines)
+
+            # Ensure `self._start` is not negative
+            self._start = max(0, self._start)
+
+        # Case 3: Selection is above the visible range
+        elif chk > self._number_of_lines:
+            self._start = max(0, int((self._selection - self._number_of_lines) / 2))
 
     def _go_to_line(self, a_line):
         self._selection = a_line
         self._make_selection_visible()
-        self.show()
+        self._needs_update = True
 
     def _select_line(self, a_line):
         self._win.chgat(a_line, 2, self.maxX-4, curses.color_pair(6))
@@ -3679,6 +3692,7 @@ class PyRadioKeyboardConfig():
         self._win.chgat(a_line, self._max_length, self.maxX-self._max_length-2, curses.color_pair(4))
 
     def show(self, parent=None):
+        logger.error('def show()')
         if parent is not None:
             self._parent = parent
             self._init_win()
@@ -3942,6 +3956,7 @@ class PyRadioKeyboardConfig():
                  1: Continue
                  2: Display help
         '''
+        self._needs_update = False
         if char == ord('0'):
             if self.existing_conflict:
                 self._editing = False
@@ -4006,15 +4021,15 @@ class PyRadioKeyboardConfig():
             elif char == ord('x'):
                 self._list[self._selection][3] = self._list[self._selection][2]
                 self._list[self._selection][6] = self._list[self._selection][5]
-                self.show()
+                self._needs_update = True
             elif char == ord(']'):
                 self._get_after_header()
                 self._make_selection_visible()
-                self.show()
+                self._needs_update = True
             elif char == ord('['):
                 self._get_after_header(next=False)
                 self._make_selection_visible()
-                self.show()
+                self._needs_update = True
             elif char in (curses.KEY_HOME, kbkey['g']):
                 if self._focus == 0:
                     self._go_top()
@@ -4071,6 +4086,10 @@ class PyRadioKeyboardConfig():
         logger.error(f'{self._start = }')
         logger.error(f'{self._selection = }')
         logger.error('line = {}'.format(self._selection - self._start + 2))
+
+        # Centralized UI update
+        if self._needs_update:
+            self.show()
         return 1
 
 # pymode:lint_ignore=W901
