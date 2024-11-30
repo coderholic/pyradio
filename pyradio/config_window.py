@@ -11,6 +11,7 @@ import string
 from os import path, sep, rename
 from sys import platform, version_info
 from collections import OrderedDict
+import json
 
 from .common import *
 from .window_stack import Window_Stack_Constants
@@ -3443,6 +3444,15 @@ class PyRadioKeyboardConfig():
                     self._list[i][-2] = header_index
         for n in self._list:
             logger.error(f'{n}')
+        keys_file = path.join(path.dirname(__file__), 'keyboard', 'keys.json')
+        logger.error(f'{keys_file =  }')
+        with open(keys_file, 'r', encoding='utf-8') as f:
+            self._keys_to_classes = json.load(f)
+        keys_file = path.join(path.dirname(__file__), 'keyboard', 'classes.json')
+        logger.error(f'{keys_file =  }')
+        with open(keys_file, 'r', encoding='utf-8') as f:
+            self._classes = json.load(f)
+
 
     def item(self, an_item_id=None):
         logger.debug(f'{an_item_id =  }')
@@ -3710,13 +3720,17 @@ class PyRadioKeyboardConfig():
                     else:
                         self._win.addstr(i+2, 2, (self.maxX -4) * ' ', curses.color_pair(5))
                         self._win.addstr(i+2, 2, '  ' + self._list[cur][-1], curses.color_pair(5))
-                        self._win.addstr(i+2, self._max_length, self._list[cur][4], curses.color_pair(4))
+
+                        char = 'Space' if  self._list[cur][4] == ' ' else self._list[cur][4]
+                        self._win.addstr(i+2, self._max_length, char, curses.color_pair(4))
                         # display user value / char, if it exists
                         if self._list[cur][1] != self._list[cur][2]:
-                            self._win.addstr(i+2, self._max_length+9, self._list[cur][5], curses.color_pair(4))
+                            char = 'Space' if  self._list[cur][5] == ' ' else self._list[cur][5]
+                            self._win.addstr(i+2, self._max_length+9, char, curses.color_pair(4))
                         # display new value / char, if it exists
                         if self._list[cur][2] != self._list[cur][3]:
-                            self._win.addstr(i+2, self._max_length+17, self._list[cur][6], curses.color_pair(4))
+                            char = 'Space' if  self._list[cur][6] == ' ' else self._list[cur][6]
+                            self._win.addstr(i+2, self._max_length+17, char, curses.color_pair(4))
 
                         if cur == self._selection:
                             self._select_line(i+2)
@@ -3770,28 +3784,94 @@ class PyRadioKeyboardConfig():
                         logger.error('CONFLICT!!!')
                         break
 
+    def detect_conflict(self, modified_item):
+        """
+        Detect a conflict for a modified shortcut in the context of precomputed data.
+
+        Args:
+            modified_item (list): The modified shortcut item from `self._list`.
+                                  Format example: ['reload', 114, 114, 117, 'r', 'r', 'u', 2, 1, 'Reload']
+
+        Returns:
+            tuple or None:
+                - (modified_item[-3], idx): Tuple containing the key of the modified item
+                  and the index of the conflicting item in `self._list`, if a conflict exists.
+                - None: If no conflict exists.
+        """
+        # Extract key and the new shortcut code from the modified item
+        key = modified_item[0]  # Identifier for the shortcut (e.g., "reload", "mute")
+        new_shortcut_code = modified_item[3]  # The new shortcut code provided by the user
+
+        logger.error(f'{key = }')
+
+        # Step 1: Retrieve contexts for the current key
+        if key not in self._keys_to_classes:
+            return None  # No relevant context; no conflict is possible
+
+        # Collect all relevant keys for this key's contexts
+        context_classes = self._keys_to_classes[key]  # List of class names where this key is used
+        logger.error(f'{context_classes = }')
+        context_keys = set()
+        for context_class in context_classes:
+            for key_in_context in self._keys_to_classes:
+                if context_class in self._keys_to_classes[key_in_context]:
+                    context_keys.add(key_in_context)
+
+        if key not in self._classes['ExtraKeys']:
+            context_keys = context_keys.union(set(self._classes['GlobalFunctions']))
+        logger.error(f'{context_keys = }')
+
+        # Step 2: Detect conflict within the resolved context keys
+        for key_in_context in context_keys:  # Iterate through all relevant keys in the context
+            # Skip checking against the key being modified
+            if key_in_context == key:
+                continue
+
+            # Check if the new shortcut code matches the existing shortcut code for any other key
+            if kbkey[key_in_context] == new_shortcut_code:
+                # Conflict detected: Find the conflicting item's index in `self._list`
+                for idx, item in enumerate(self._list):
+                    if item[0] == key_in_context:
+                        return modified_item[-3], idx  # Return the first conflicting key and index
+
+        # No conflict found
+        return None
+
+
     def _validate_key(self):
         the_item = self._list[self._selection]
-        the_header = self._list[the_item[-2]]
-        first_in_group = the_header[-2] + 1
-        logger.error(f'{the_item = }')
-        logger.error(f'{the_header = }')
-        logger.error(f'{first_in_group = }')
-        the_list = [(the_item[-3], the_item[0], the_item[3])]
-        logger.error(f'{the_list = }')
-        active_headers = []
-        for n in self._headers:
-            logger.error(f'header: {n}')
-            active_headers.append(self._list[n][0])
-        if the_header[0] == 'h_rb_s':
-            logger.error('In h_rb_s')
-            active_headers = ('h_rb_s', )
-        elif the_header[0] == 'h_this':
-            active_headers = ('h_this', 'h_movement', 'h_volune')
-            include_keys = ('q', )
-        logger.error(f'{active_headers = }')
-        self._calculate_conflicts(active_headers, the_item, the_item[-3])
-        logger.error(f'{self.existing_conflict = }')
+        # the_header = self._list[the_item[-2]]
+        # first_in_group = the_header[-2] + 1
+        # logger.error(f'{the_item = }')
+        # logger.error(f'{the_header = }')
+        # logger.error(f'{first_in_group = }')
+        # the_list = [(the_item[-3], the_item[0], the_item[3])]
+        # logger.error(f'{the_list = }')
+        # active_headers = []
+        # logger.error('\n\nthe_item[0] = {}\n\n'.format(the_item[0]))
+        # logger.error('\n\nself._global_functions = {}\n\n'.format(self._global_functions))
+        # if the_item[0] in self._global_functions:
+        #     the_global_key = None
+        #     for n in self._global_functions:
+        #         if the_item[3] == kbkey[n]:
+        #             the_global_key = n
+        #             break
+        #     if the_global_key is not None:
+        #         logger.error('global function conflict!!!')
+        # else:
+        #     for n in self._headers:
+        #         logger.error(f'header: {n}')
+        #         active_headers.append(self._list[n][0])
+        #     if the_header[0] == 'h_rb_s':
+        #         logger.error('In h_rb_s')
+        #         active_headers = ('h_rb_s', )
+        #     elif the_header[0] == 'h_this':
+        #         active_headers = ('h_this', 'h_movement', 'h_volune')
+        #         include_keys = ('q', )
+        #     logger.error(f'{active_headers = }')
+        #     self._calculate_conflicts(active_headers, the_item, the_item[-3])
+        #     logger.error(f'{self.existing_conflict = }')
+        self.existing_conflict = self.detect_conflict(the_item)
         if self.existing_conflict:
             return -3
         return 1
@@ -3879,7 +3959,7 @@ class PyRadioKeyboardConfig():
                 self.message = 'M_INVALID_TYPE_KEY_ERROR'
                 logger.error('Key is INVALID')
                 return 2
-            if char in (curses.KEY_EXIT, 27, kbkey['q']):
+            if char in (curses.KEY_EXIT, 27):
                 self._stop_editing()
                 return
             the_key = self._list[self._selection][0]
@@ -3901,7 +3981,7 @@ class PyRadioKeyboardConfig():
                 self._win.addstr(
                         self._selection - self._start + 2,
                         self._max_length + 17,
-                        self._list[self._selection][6],
+                        'Space' if self._list[self._selection][6] == ' ' else self._list[self._selection][6],
                         curses.color_pair(6)
                         )
                 self._win.refresh()

@@ -2585,6 +2585,11 @@ class MpvPlayer(Player):
                     opts.append('--input-unix-socket=' + self.mpvsocket)
                 opts.append(self._url_to_use(streamUrl))
 
+        # if self.DO_NOT_PLAY:
+        #     # opts.append('--msg-color=yes')
+        #     opts.append('--msg-color=no')
+        #     opts.append('--msg-level=all=trace,lavf=no,ao/pipewire=no')
+
         ''' check if buffering '''
         self.buffering = self._player_is_buffering(opts, self.buffering_tokens)
         with self.buffering_lock:

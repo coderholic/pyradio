@@ -1527,9 +1527,9 @@ Please use only |Control Characters| here, (|Ctrl+A|
 to |Ctrl+Z|, excluding |Ctrl-C|, |Ctrl-S| and |Ctrl-Z| on
 Linux and macOS).
 
-Plese keep in mind that the shortcut's equivalent
-key will also work on non-line editor widgets (|n|
-will work for |Ctrl-N|, for example).
+Keep in mind that the shortcut's equivalent key
+will also work on non-line editor widgets (|n| will
+work for |Ctrl-N|, for example).
 
 '''
 ),

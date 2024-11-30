@@ -9,7 +9,10 @@ import locale
 import string
 from os.path import join
 locale.setlocale(locale.LC_ALL, '')    # set your locale
-from .cjkwrap import is_wide
+try:
+    from .cjkwrap import is_wide
+except ImportError:
+    pass
 # from .simple_curses_widgets import SimpleCursesLineEdit
 
 logger = logging.getLogger(__name__)
@@ -64,6 +67,9 @@ kbkey_orig['next']                     = ( ord('n')               , 'Go to next 
 kbkey_orig['prev']                     = ( ord('p')               , 'Go to previous item')
 kbkey_orig['no_buffer']                = ( ord('z')               , 'Buffering Window > Set to 0 (disable)')
 kbkey_orig['repaint']                  = ( ord('#')               , 'Repaint screen')
+kbkey_orig['info_rename']              = ( ord('r')               , 'Info Window > Rename station')
+kbkey_orig['reload']                   = ( ord('r')               , 'Reload from disk')
+kbkey_orig['watch_theme']              = ( ord('c')               , 'Themes Window > Watch theme for changes')
 
 # ! Main Window keys
 kbkey_orig['h_main']                   = ( None                   , 'Main Window keys')
@@ -106,10 +112,6 @@ kbkey_orig['search_next']              = ( ord('n')               , 'Search down
 kbkey_orig['search_prev']              = ( ord('N')               , 'Search up')
 
 
-# main window:)
-kbkey_orig['info_rename']              = ( ord('r')               , 'Info Window > Rename station')
-kbkey_orig['reload']                   = ( ord('r')               , 'Reload from disk')
-kbkey_orig['watch_theme']              = ( ord('c')               , 'Themes Window > Watch theme for changes')
 
 # ! Extra Commands Keys:)
 kbkey_orig['h_extra']                  = ( None                   , 'Extra Commands Keys')
@@ -300,7 +302,9 @@ def read_localized_keyboard(file_path, keyboard_path):
 def to_str(akey):
     ''' convert kbkey keys to a string '''
     # Handle function keys explicitly
-    if kbkey[akey] == curses.KEY_F1:
+    if kbkey[akey] == ord(' '):
+        return 'Space'
+    elif kbkey[akey] == curses.KEY_F1:
         return "F1"
     elif kbkey[akey] == curses.KEY_F2:
         return "F2"
@@ -347,6 +351,8 @@ def kb2str(msg):
         chk = '{' + n + '}'
         if chk in msg:
             msg = msg.replace(chk, to_str(n))
+    if msg == ' ':
+        msg = 'Space'
 
     return msg
 
@@ -608,17 +614,72 @@ def get_unicode_and_cjk_char(win, char):
 
 
 if __name__ == '__main__':
-    # # F_PATH="/home/spiros/keyboard.json"
-    # # with open(F_PATH, 'w', encoding='utf-8', errors='ignore') as j_file:
-    # #     json.dump(kbkey, j_file, ensure_ascii=False)
+    import json
+    with open('/home/spiros/projects/my-gits/pyradio/pyradio/keyboard/classes.json', 'r', encoding='utf-8') as f:
+        res = json.load(f)
+    print('===> classes.py')
+    print(res)
+    out = []
+    for n in res:
+        out += res[n]
+
+    print('\n\n===> In list')
+    out = list(set(out))
+    print(out)
+
+    missing = []
+
+    for n in kbkey_orig:
+        if n not in out and kbkey_orig[n][0]:
+            missing.append(n)
+
+    print('\n\n===> missing')
+    print(missing)
+    global_functions = {
+        'tag',
+        't_tag',
+        'transp',
+        'v_up1',
+        'v_up2',
+        'v_up3',
+        'v_dn1',
+        'v_dn2',
+        'mute',
+        's_vol',
+        't_calc_col',
+        'repaint',
+        # ord('b'): None,
+    }
+
+    missing_after_global_functions = []
+    for n in missing:
+        if n not in global_functions:
+            missing_after_global_functions.append(n)
+
+    print('\n\n===> missing after removing global_functions')
+    print(missing_after_global_functions)
 
 
-    # items_list_of_lists = [[key] + list(value) for key, value in kbkey_orig.items()]
+    extra = [
+    'new_playlist',
+    'rename_playlist',
+    'open_remote_control',
+    'open_dirs',
+    'change_player',
+    'hist_top',
+    'buffer',
+    'open_buffer',
+    'last_playlist',
+    'clear_reg',
+    'clear_all_reg',
+    'unnamed',
+    'html_help',
+    ]
 
-    # # Printing the result
-    # for item in items_list_of_lists:
-    #     print(item)
+    miss = []
+    for n in missing_after_global_functions:
+        if n not in extra:
+            miss.append(n)
 
-    read_localized_keyboard('aaa','aaa')
-    for n in lkbkey:
-        print(n, lkbkey[n])
+    print('\n\n===> missing after removing h_extra section')
+    print(miss)
