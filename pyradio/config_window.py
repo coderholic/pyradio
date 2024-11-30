@@ -3537,7 +3537,10 @@ class PyRadioKeyboardConfig():
 
     def _go_bottom(self):
         self._selection = len(self._list) -1
-        self._start = self._selection - self._number_of_lines + 1
+        if len(self._list) <= self._number_of_lines:
+            self._start = 0
+        else:
+            self._start = self._selection - self._number_of_lines + 1
         self._needs_update = True
 
     def _go_down(self, step=1):
@@ -3591,7 +3594,10 @@ class PyRadioKeyboardConfig():
         logger.error(f'{next_selection = }')
         if next_selection < 0:
             self._selection = len(self._list) - 1
-            self._start = len(self._list) - self._number_of_lines
+            if len(self._list) <= self._number_of_lines:
+                self._start = 0
+            else:
+                self._start = len(self._list) - self._number_of_lines
             self._needs_update = True
             return
         line = next_selection - self._start - 2
@@ -3649,6 +3655,9 @@ class PyRadioKeyboardConfig():
         self._make_selection_visible()
 
     def _make_selection_visible(self):
+        if len(self._list) <= self._number_of_lines:
+            self._start = 0
+            return
         # Check if the current selection is already visible
         if self._start <= self._selection < self._start + self._number_of_lines:
             # Ensure that we use the expanded window space effectively
@@ -3692,7 +3701,6 @@ class PyRadioKeyboardConfig():
         self._win.chgat(a_line, self._max_length, self.maxX-self._max_length-2, curses.color_pair(4))
 
     def show(self, parent=None):
-        logger.error('def show()')
         if parent is not None:
             self._parent = parent
             self._init_win()
