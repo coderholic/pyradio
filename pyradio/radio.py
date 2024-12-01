@@ -6202,7 +6202,10 @@ _________{2}
 
 Please insert a different shortcut!
 
-'''.format(conflict_second_item[-4], conflict_first_header_title, conflict_first_title, sec)
+'''.format(
+    'Space' if conflict_second_item[-4] == ' ' else conflict_second_item[-4],
+    conflict_first_header_title,
+    conflict_first_title, sec)
 
                 self._messaging_win.set_a_message(
                         'UNIVERSAL', (
@@ -8748,9 +8751,9 @@ Please insert a different shortcut!
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 if char == kbkey['ext_player']:
-                    self.player.DO_NOT_PLAY = True
+                    self.player.USE_EXTERNAL_PLAYER = True
                     stream_url = self.stations[self.selection][1]
-                    self._cnf.DO_NOT_PLAY_OPTS = self.player.play(name='',
+                    self._cnf.EXTERNAL_PLAYER_OPTS = self.player.play(name='',
                                      streamUrl=stream_url,
                                      stop_player=None,
                                      detect_if_player_exited=None,
@@ -8758,8 +8761,8 @@ Please insert a different shortcut!
                                      encoding='utf-8'
                                      )
                     if logger.isEnabledFor(logging.INFO):
-                        logger.info('Launching external player: {}'.format(' '.join(self._cnf.DO_NOT_PLAY_OPTS)))
-                    self._cnf.DO_NOT_PLAY_OPTS = [self.stations[self.selection][0]] + self._cnf.DO_NOT_PLAY_OPTS
+                        logger.info('Launching external player: {}'.format(' '.join(self._cnf.EXTERNAL_PLAYER_OPTS)))
+                    self._cnf.EXTERNAL_PLAYER_OPTS = [self.stations[self.selection][0]] + self._cnf.EXTERNAL_PLAYER_OPTS
                     self.log.asked_to_stop = True
                     self.ctrl_c_handler(0,0)
                     self._cnf._online_browser = None

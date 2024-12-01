@@ -957,14 +957,14 @@ If nothing else works, try the following command:
 
         ''' curses is off '''
         if pyradio.setup_return_status:
-            if pyradio_config.DO_NOT_PLAY_OPTS is not None:
-                # print(pyradio_config.DO_NOT_PLAY_OPTS)
+            if pyradio_config.EXTERNAL_PLAYER_OPTS is not None:
+                # print(pyradio_config.EXTERNAL_PLAYER_OPTS)
                 pyradio_config.remove_session_lock_file()
                 import subprocess
                 print('\n[bold red]Launching external player[/bold red]')
-                print('Station: "[cyan]{}[/cyan]"'.format(pyradio_config.DO_NOT_PLAY_OPTS[0]))
-                print('Command: "[yellow]{}[/yellow]"'.format(' '.join(pyradio_config.DO_NOT_PLAY_OPTS[1:])))
-                process = subprocess.Popen(pyradio_config.DO_NOT_PLAY_OPTS[1:], stdout=None, stderr=None)
+                print('Station: "[cyan]{}[/cyan]"'.format(pyradio_config.EXTERNAL_PLAYER_OPTS[0]))
+                print('Command: "[yellow]{}[/yellow]"'.format(' '.join(pyradio_config.EXTERNAL_PLAYER_OPTS[1:])))
+                process = subprocess.Popen(pyradio_config.EXTERNAL_PLAYER_OPTS[1:], stdout=None, stderr=None)
                 process.wait()
                 return
 

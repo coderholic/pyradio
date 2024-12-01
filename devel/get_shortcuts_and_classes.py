@@ -3,6 +3,20 @@ import os
 import ast
 import re
 import json
+import argparse
+import subprocess
+import sys
+import threading
+
+# Argument parser for command line options
+parser = argparse.ArgumentParser(description="Analyze Python project for classes and keyboard shortcuts.")
+parser.add_argument("-v", "--verbose", action="store_true", help="Display all messages")
+args = parser.parse_args()
+
+def verbose_print(message):
+    """Prints messages only if verbose mode is enabled."""
+    if args.verbose:
+        print(message)
 
 def find_keypress_functions_with_kbkeys(project_path):
     result = {}
@@ -121,16 +135,16 @@ def find_class_inheritance(classes):
             cls["inherits_from"] = None
 
 def display_classes(classes):
-    print("\nClasses Found in Files:")
+    verbose_print("\nClasses Found in Files:")
     for entry in classes:
-        print(f"File: {os.path.basename(entry['file'])}, Class: {entry['class_name']}, "
+        verbose_print(f"File: {os.path.basename(entry['file'])}, Class: {entry['class_name']}, "
               f"Start Line: {entry['start_line']}, End Line: {entry['end_line']}, "
               f"Uses: {entry['uses']}, Inherits from: {entry['inherits_from']}")
 
 def display_results(results):
-    print("\n\nFound keypress functions with kbkey references:")
+    verbose_print("\n\nFound keypress functions with kbkey references:")
     for class_name, kbkeys in results.items():
-        print(f"Class: {class_name}, kbkey References: {kbkeys}")
+        verbose_print(f"Class: {class_name}, kbkey References: {kbkeys}")
 
 def map_functional_relationships(results, classes):
     """Map functional relationships of classes with keypress shortcuts."""
@@ -180,24 +194,25 @@ def functional_structural_integration(results, classes):
     return integration_map
 
 def display_functional_relationships(map_data):
-    print("\nFunctional Relationships:")
-    for entry in map_data:
-        print(f"Class: {entry['class_name']}, Inherits From: {entry['inherits_from']}, "
-              f"Uses: {entry['uses']}, Keypress Shortcuts: {entry['kbkeys']}")
+    if args.verbose:
+        verbose_print("\nFunctional Relationships:")
+        for entry in map_data:
+            verbose_print(f"Class: {entry['class_name']}, Inherits From: {entry['inherits_from']}, "
+                  f"Uses: {entry['uses']}, Keypress Shortcuts: {entry['kbkeys']}")
 
 def display_dependencies(map_data):
-    print("\nDependencies Analysis:")
-    for entry in map_data:
-        print(f"Class: {entry['class_name']}, Depends On: {entry['dependencies']}, "
-              f"Own Keypress Shortcuts: {entry['kbkeys']}")
+    if args.verbose:
+        verbose_print("\nDependencies Analysis:")
+        for entry in map_data:
+            verbose_print(f"Class: {entry['class_name']}, Depends On: {entry['dependencies']}, "
+                  f"Own Keypress Shortcuts: {entry['kbkeys']}")
 
 def display_integration(integration_map):
-    print("\nFunctional-Structural Integration:")
-    for cls, data in integration_map.items():
-        print(f"Class: {cls}, Keypress Shortcuts: {data['kbkeys']}, "
-              f"Related Classes: {data['related_classes']}")
-
-
+    if args.verbose:
+        verbose_print("\nFunctional-Structural Integration:")
+        for cls, data in integration_map.items():
+            verbose_print(f"Class: {cls}, Keypress Shortcuts: {data['kbkeys']}, "
+                  f"Related Classes: {data['related_classes']}")
 
 def extend_results_with_related_keys(results, classes):
     """Extend results by appending keys from used and inherited classes."""
@@ -225,16 +240,16 @@ def extend_results_with_related_keys(results, classes):
     return extended_results
 
 def display_extended_results(extended_results):
-    print("\nExtended Results with Related Keys:")
-    for class_name, keys in extended_results.items():
-        print(f"Class: {class_name}, Keypress Shortcuts: {keys}")
+    if args.verbose:
+        verbose_print("\nExtended Results with Related Keys:")
+        for class_name, keys in extended_results.items():
+            verbose_print(f"Class: {class_name}, Keypress Shortcuts: {keys}")
 
 def extract_global_functions_keys(file_path):
     """Extract keys from `_global_functions` in the specified Python file."""
     global_functions_keys = []
     inside_global_functions = False
     inside_local_functions = False
-    global_functions_keys = []
     local_functions_keys = []
     file_name = os.path.join(file_path, 'radio.py')
 
@@ -325,17 +340,49 @@ def precompute_context_map(results):
             context_map[key].append(class_name)
     return context_map
 
+def ask_and_execute():
+    print("Do you want to execute './pyradio/keyboard.py'? (y/n, ENTER = 'y'): ", end='', flush=True)
+    
+    # Variable to store user's answer
+    user_answer = None
+    input_event = threading.Event()
+
+    def get_user_input():
+        nonlocal user_answer
+        user_answer = input().strip().lower()
+        input_event.set()  # Signal that input was received
+
+    # Start a thread to get the user input
+    input_thread = threading.Thread(target=get_user_input)
+    input_thread.daemon = True
+    input_thread.start()
+
+    # Wait for input or timeout
+    if input_event.wait(timeout=5):  # Wait up to 5 seconds for input
+        if user_answer == '' or user_answer == 'y':  # Treat ENTER or 'y' as confirmation
+            try:
+                # Execute the script
+                subprocess.run(["python", "./pyradio/keyboard.py"], check=True)
+            except subprocess.CalledProcessError as e:
+                print(f"Error executing script: {e}")
+            except FileNotFoundError:
+                print("File './pyradio/keyboard.py' not found.")
+        else:
+            print("You entered 'n'. Exiting...")
+    else:
+        print("\nTimeout occurred. Exiting...")
+
 if __name__ == "__main__":
     from sys import exit
     # Updated project path
     starting_dir = os.getcwd()
-    print(f'{starting_dir = }')
+    verbose_print(f'{starting_dir = }')
     project_path = os.path.join(starting_dir, 'pyradio')
-    print(f'{project_path = }')
+    verbose_print(f'{project_path = }')
     out_file = os.path.join(project_path, 'keyboard', 'classes.json')
     new_out_file = os.path.join(project_path, 'keyboard', 'keys.json')
-    print(f'{out_file = }')
-    print(f'{new_out_file = }')
+    verbose_print(f'{out_file = }')
+    verbose_print(f'{new_out_file = }')
 
     # Find and display keypress functions with kbkeys
     results = find_keypress_functions_with_kbkeys(project_path)
@@ -346,9 +393,9 @@ if __name__ == "__main__":
     find_class_usages(classes)
     find_class_inheritance(classes)
     global_functions_keys, local_functions_keys = extract_global_functions_keys(project_path)
-    results['PyRadio'] += local_functions_keys
+    results['PyRadio'].extend(local_functions_keys)
     '''
-    print(results)
+    verbose_print(results)
     for a_class in results:
         results[a_class] += global_functions_keys
     '''
@@ -378,13 +425,13 @@ if __name__ == "__main__":
 
     # Extract h_extra keys from keyboard.py
     h_extra_keys = extract_section_keys(project_path, 'h_extra')
-    print("\nExtracted h_extra keys:")
+    verbose_print("\nExtracted h_extra keys:")
     for key in sorted(h_extra_keys):
-        print(f" - {key}")
+        verbose_print(f" - {key}")
 
     # Remove h_extra keys from results
     remove_section_keys_from_results(results, h_extra_keys)
-    print("\nUpdated results after removing h_extra keys:")
+    verbose_print("\nUpdated results after removing h_extra keys:")
     display_results(results)
 
     # these three keys are added by code, they are not detected
@@ -396,12 +443,8 @@ if __name__ == "__main__":
     # info_rename is a uniq key in the info window
     results['PyRadio'].pop(results['PyRadio'].index('info_rename'))
     results['InfoWindow'] = ['info_rename']
-    
-    results['GlobalFunctions'] = global_functions_keys + ['t']
-    results['ExtraKeys'] = list(h_extra_keys)
-    print("\n\nFinal results after removing h_extra keys:")
-    display_results(results)
 
+    '''
     # remove global function keys
     for gl_key in global_functions_keys:
         for a_key in results:
@@ -411,25 +454,34 @@ if __name__ == "__main__":
                 break
             except ValueError:
                 pass
-
+            # results[a_key].extend(global_functions_keys)
+    '''
+    for a_key in results:
+        results[a_key].extend(global_functions_keys)
+    results['ExtraKeys'] = list(h_extra_keys)
+    
+    verbose_print("\n\nFinal results after removing h_extra keys:")
+    display_results(results)
+    
     with open(out_file, 'w', encoding='utf-8') as f:
         json.dump(results, f)
-
 
     precompute_map = precompute_context_map(results)
 
     with open(new_out_file, 'w', encoding='utf-8') as f:
         json.dump(precompute_map, f)
-    # print('\n\n{}'.format(global_functions_keys))
-
-    # print('\n\n{}'.format(h_extra_keys))
+        
+    # verbose_print('\n\n{}'.format(global_functions_keys))
+    # verbose_print('\n\n{}'.format(h_extra_keys))
 
     print('''
-
 Files created:
-  classes.json
-  keys.json
+  - classes.json
+  - keys.json
 Execute
-    python keyboard.py
+  - python keyboard.py
 to check for missing shortcuts
 ''')
+
+    ask_and_execute()
+    sys.exit()

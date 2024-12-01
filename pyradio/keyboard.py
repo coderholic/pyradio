@@ -436,7 +436,6 @@ def is_valid_char(char, win):
     Returns:
         bool: True if c is valid, False otherwise.
     """
-
     # if char <= 127:
     if (65 <= char <= 90) or (97 <= char <= 122) or (1 <= char <= 47):
         ''' 1 byte '''
@@ -454,6 +453,21 @@ def is_valid_char(char, win):
         win.getch()
         win.getch()
         win.getch()
+    elif char in (
+        ord('='), ord('.'), ord('+'),
+        ord('`'), ord('-'),
+        curses.KEY_F1,
+        curses.KEY_F2,
+        curses.KEY_F3,
+        curses.KEY_F4,
+        curses.KEY_F5,
+        curses.KEY_F6,
+        curses.KEY_F7,
+        curses.KEY_F8,
+        curses.KEY_F9,
+        curses.KEY_F10,
+    ):
+        return True
     return False
 
 def is_invalid_key(key):
@@ -481,6 +495,20 @@ def is_invalid_key(key):
         curses.KEY_BACKSPACE,
         # Add more keys as necessary
     ]
+    if key in (
+        curses.KEY_F1,
+        curses.KEY_F2,
+        curses.KEY_F3,
+        curses.KEY_F4,
+        curses.KEY_F5,
+        curses.KEY_F6,
+        curses.KEY_F7,
+        curses.KEY_F8,
+        curses.KEY_F9,
+        curses.KEY_F10,
+    ):
+        logger.error('Key is F-[1-10]')
+        return False
 
     # Check if the key is in the list of special keys or is greater than 255
     return key in special_keys or key > 255

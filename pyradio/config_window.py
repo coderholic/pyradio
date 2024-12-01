@@ -110,7 +110,7 @@ class PyRadioConfigWindow():
     _help_text.append(None)
     _help_text.append(['This options will open the configuration window for the RadioBrowser Online Stations Directory.',])
     _help_text.append(None)
-    _help_text.append(['This options will open the configuration window for the Shortcuts Definitions.', '|', 'Currently not available.'])
+    _help_text.append(['This options will open the configuration window for the Shortcuts Definitions.', '|', 'Please keep in mind that if you customize the keyboard shortcuts, the documentation may no longer align with your personalized settings. While the in-program runtime help will always reflect your current key configurations, the static documentation will continue to display the default shortcuts.', '|', 'To ensure you have the best experience, refer to the runtime help for the most accurate information regarding your customized key bindings!'])
     _help_text.append(['This options will open the configuration window for the Alternative Shortcuts Definitions.', '|', 'Currently not available.'])
 
     _config_options = None
@@ -3514,7 +3514,7 @@ class PyRadioKeyboardConfig():
         else:
             self._b_ok.focused = False
             self._b_cancel.focused = True
-        self._widget.show()
+        self._needs_update = True
 
     def _focus_next(self):
         if not self._editing:
@@ -3694,7 +3694,10 @@ class PyRadioKeyboardConfig():
         self._needs_update = True
 
     def _select_line(self, a_line):
-        self._win.chgat(a_line, 2, self.maxX-4, curses.color_pair(6))
+        if self._focus == 0:
+            self._win.chgat(a_line, 2, self.maxX-4, curses.color_pair(6))
+        # else:
+        #     self._unselect_line(a_line)
 
     def _unselect_line(self, a_line):
         self._win.chgat(a_line, 2, self._max_length-1, curses.color_pair(5))
@@ -3790,23 +3793,7 @@ class PyRadioKeyboardConfig():
                 self._selection = self._start + 1
 
 
-    def _calculate_conflicts(self, the_headers, the_item, index, the_exceptions=None):
-        self.existing_conflict = None
-        for a_header in the_headers:
-            for group_item in conflicts[a_header]:
-                if group_item != the_item[0]:
-                    logger.error(f'conflict item: {group_item}')
-
-                    chk = [x for x in self._list if x[0] == group_item][0]
-                    existing_value = chk[3]
-                    logger.error(f'{existing_value = }')
-                    # TODO: exceptions...?
-                    if existing_value == the_item[3]:
-                        self.existing_conflict = ((index, chk[-3]))
-                        logger.error('CONFLICT!!!')
-                        break
-
-    def detect_conflict(self, modified_item):
+    def _detect_conflict(self, modified_item):
         """
         Detect a conflict for a modified shortcut in the context of precomputed data.
 
@@ -3815,20 +3802,26 @@ class PyRadioKeyboardConfig():
                                   Format example: ['reload', 114, 114, 117, 'r', 'r', 'u', 2, 1, 'Reload']
 
         Returns:
-            tuple or None:
+            tuple or None (in self.existing_conflict):
                 - (modified_item[-3], idx): Tuple containing the key of the modified item
                   and the index of the conflicting item in `self._list`, if a conflict exists.
                 - None: If no conflict exists.
         """
+        # reset self.existing_conflict ; None means no conflict
+        self.existing_conflict = None
+
         # Extract key and the new shortcut code from the modified item
         key = modified_item[0]  # Identifier for the shortcut (e.g., "reload", "mute")
         new_shortcut_code = modified_item[3]  # The new shortcut code provided by the user
 
+        logger.error('\n\n-*-*-*-*-*-*-*-*-')
         logger.error(f'{key = }')
+        logger.error(f'{new_shortcut_code = }')
 
         # Step 1: Retrieve contexts for the current key
         if key not in self._keys_to_classes:
-            return None  # No relevant context; no conflict is possible
+            logger.error('\n-*-*-*-*-*-*-*-*- None 1\n\n')
+            return
 
         # Collect all relevant keys for this key's contexts
         context_classes = self._keys_to_classes[key]  # List of class names where this key is used
@@ -3839,61 +3832,33 @@ class PyRadioKeyboardConfig():
                 if context_class in self._keys_to_classes[key_in_context]:
                     context_keys.add(key_in_context)
 
-        if key not in self._classes['ExtraKeys']:
-            context_keys = context_keys.union(set(self._classes['GlobalFunctions']))
         logger.error(f'{context_keys = }')
+
+        tmp = [x for x in self._list if x[0] in context_keys]
+
+        logger.error('\n\ntmp\n{}'.format(tmp))
 
         # Step 2: Detect conflict within the resolved context keys
         for key_in_context in context_keys:  # Iterate through all relevant keys in the context
+            logger.error(f'checking "{key_in_context}"')
             # Skip checking against the key being modified
             if key_in_context == key:
                 continue
 
+            idx, chk = [(i, x) for i, x in enumerate(self._list) if x[0] == key_in_context][0]
+            logger.error('\n\nitem with key  -  {0}: {1}\n\n'.format(idx, chk))
             # Check if the new shortcut code matches the existing shortcut code for any other key
-            if kbkey[key_in_context] == new_shortcut_code:
-                # Conflict detected: Find the conflicting item's index in `self._list`
-                for idx, item in enumerate(self._list):
-                    if item[0] == key_in_context:
-                        return modified_item[-3], idx  # Return the first conflicting key and index
+            if chk[3] == new_shortcut_code:
+                self.existing_conflict = (modified_item[-3], idx)  # Return the first conflicting key and index
+                return
+
+        logger.error('\n-*-*-*-*-*-*-*-*- None 2\n\n')
 
         # No conflict found
-        return None
-
+        # self.existing_conflict = None
 
     def _validate_key(self):
-        the_item = self._list[self._selection]
-        # the_header = self._list[the_item[-2]]
-        # first_in_group = the_header[-2] + 1
-        # logger.error(f'{the_item = }')
-        # logger.error(f'{the_header = }')
-        # logger.error(f'{first_in_group = }')
-        # the_list = [(the_item[-3], the_item[0], the_item[3])]
-        # logger.error(f'{the_list = }')
-        # active_headers = []
-        # logger.error('\n\nthe_item[0] = {}\n\n'.format(the_item[0]))
-        # logger.error('\n\nself._global_functions = {}\n\n'.format(self._global_functions))
-        # if the_item[0] in self._global_functions:
-        #     the_global_key = None
-        #     for n in self._global_functions:
-        #         if the_item[3] == kbkey[n]:
-        #             the_global_key = n
-        #             break
-        #     if the_global_key is not None:
-        #         logger.error('global function conflict!!!')
-        # else:
-        #     for n in self._headers:
-        #         logger.error(f'header: {n}')
-        #         active_headers.append(self._list[n][0])
-        #     if the_header[0] == 'h_rb_s':
-        #         logger.error('In h_rb_s')
-        #         active_headers = ('h_rb_s', )
-        #     elif the_header[0] == 'h_this':
-        #         active_headers = ('h_this', 'h_movement', 'h_volune')
-        #         include_keys = ('q', )
-        #     logger.error(f'{active_headers = }')
-        #     self._calculate_conflicts(active_headers, the_item, the_item[-3])
-        #     logger.error(f'{self.existing_conflict = }')
-        self.existing_conflict = self.detect_conflict(the_item)
+        self._detect_conflict(self._list[self._selection])
         if self.existing_conflict:
             return -3
         return 1
@@ -3976,11 +3941,11 @@ class PyRadioKeyboardConfig():
         elif self._editing:
             if is_invalid_key(char):
                 self.message = 'M_INVALID_KEY_ERROR'
-                logger.error('Key is INVALID')
+                logger.error('1 Key is INVALID')
                 return 2
             if not is_valid_char(char, self._win):
                 self.message = 'M_INVALID_TYPE_KEY_ERROR'
-                logger.error('Key is INVALID')
+                logger.error('2 Key is INVALID')
                 return 2
             if char in (curses.KEY_EXIT, 27):
                 self._stop_editing()

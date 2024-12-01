@@ -326,7 +326,7 @@ class Player():
 
     currently_recording = False
 
-    DO_NOT_PLAY = False
+    USE_EXTERNAL_PLAYER = False
 
     def __init__(self,
                  config,
@@ -2020,7 +2020,7 @@ class Player():
             except:
                 pass
 
-        if self.DO_NOT_PLAY:
+        if self.USE_EXTERNAL_PLAYER:
             ''' do not start the player, just return opts '''
             return opts
 
@@ -2507,7 +2507,7 @@ class MpvPlayer(Player):
 
         ''' Test for newer MPV versions as it supports different IPC flags. '''
         p = subprocess.Popen([self.PLAYER_CMD, '--no-video',  '--input-ipc-server=' + self.mpvsocket], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=False)
-        if self.DO_NOT_PLAY:
+        if self.USE_EXTERNAL_PLAYER:
             self.recording = self.NO_RECORDING
         out = p.communicate()
         if 'not found' not in str(out[0]):
@@ -2519,7 +2519,7 @@ class MpvPlayer(Player):
                 logger.debug('--input-ipc-server is not supported.')
             newerMpv = False
         logger.error('\n\nself._cnf.user_agent_string = {}\n\n'.format(self._cnf.user_agent_string))
-        if self.DO_NOT_PLAY:
+        if self.USE_EXTERNAL_PLAYER:
             opts = [self.PLAYER_CMD, '--no-video']
         else:
             opts = [self.PLAYER_CMD, '--no-video', '--quiet']
@@ -2570,24 +2570,24 @@ class MpvPlayer(Player):
 
         if playList:
             if newerMpv:
-                if not self.DO_NOT_PLAY:
+                if not self.USE_EXTERNAL_PLAYER:
                     opts.append('--input-ipc-server=' + self.mpvsocket)
                 opts.append('--playlist=' + self._url_to_use(streamUrl))
             else:
-                if not self.DO_NOT_PLAY:
+                if not self.USE_EXTERNAL_PLAYER:
                     opts.append('--input-unix-socket=' + self.mpvsocket)
                 opts.append('--playlist=' + self._url_to_use(streamUrl))
         else:
             if newerMpv:
-                if not self.DO_NOT_PLAY:
+                if not self.USE_EXTERNAL_PLAYER:
                     opts.append('--input-ipc-server=' + self.mpvsocket)
                 opts.append(self._url_to_use(streamUrl))
             else:
-                if not self.DO_NOT_PLAY:
+                if not self.USE_EXTERNAL_PLAYER:
                     opts.append('--input-unix-socket=' + self.mpvsocket)
                 opts.append(self._url_to_use(streamUrl))
 
-        # if self.DO_NOT_PLAY:
+        # if self.USE_EXTERNAL_PLAYER:
         #     # opts.append('--msg-color=yes')
         #     opts.append('--msg-color=no')
         #     opts.append('--msg-level=all=trace,lavf=no,ao/pipewire=no')
@@ -3002,7 +3002,7 @@ class MpPlayer(Player):
 
     def _buildStartOpts(self, streamName, streamUrl, playList=False):
         ''' Builds the options to pass to mplayer subprocess.'''
-        if self.DO_NOT_PLAY:
+        if self.USE_EXTERNAL_PLAYER:
             self.recording = self.NO_RECORDING
         opts = [self.PLAYER_CMD, '-vo', 'null', '-msglevel', 'all=6']
         if self._cnf.buffering_data:
@@ -3353,7 +3353,7 @@ class VlcPlayer(Player):
         #opts = [self.PLAYER_CMD, "-Irc", "--quiet", streamUrl]
         monitor_opts = None
         self._vlc_url = self._url_to_use(streamUrl)
-        if self.DO_NOT_PLAY:
+        if self.USE_EXTERNAL_PLAYER:
             self.recording = self.NO_RECORDING
         if self.WIN:
             ''' Get a random port (44000-44999)
@@ -3379,7 +3379,7 @@ class VlcPlayer(Player):
                 if ok_to_go_on:
                     break
 
-            if self.DO_NOT_PLAY:
+            if self.USE_EXTERNAL_PLAYER:
                 opts = [self.PLAYER_CMD, '--no-video', '--no-one-instance', '-Irc',
                     self._url_to_use(streamUrl)]
             else:
@@ -3401,7 +3401,7 @@ class VlcPlayer(Player):
                 else:
                     opts = [self.PLAYER_CMD, '--no-video', '--no-one-instance',
                             '--no-volume-save', '-Irc', '-vv']
-                if self.DO_NOT_PLAY:
+                if self.USE_EXTERNAL_PLAYER:
                     opts.pop(opts.index('-vv'))
             else:
                 if self.WIN:
@@ -3457,7 +3457,7 @@ class VlcPlayer(Player):
         with self.buffering_lock:
             self.buffering_change_function()
 
-        if self.DO_NOT_PLAY:
+        if self.USE_EXTERNAL_PLAYER:
             opts.append(streamUrl)
 
         return opts, monitor_opts
