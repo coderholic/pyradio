@@ -3444,16 +3444,45 @@ class PyRadioKeyboardConfig():
                     self._list[i][-2] = header_index
         for n in self._list:
             logger.error(f'{n}')
+        '''
+
+        # do not read keys.json to self._keys_to_classes
+        # use self._precompute_context_map to populate it dynamically
+        # keys.json will not be part of the package
+
         keys_file = path.join(path.dirname(__file__), 'keyboard', 'keys.json')
         logger.error(f'{keys_file =  }')
         with open(keys_file, 'r', encoding='utf-8') as f:
             self._keys_to_classes = json.load(f)
+
+        '''
         keys_file = path.join(path.dirname(__file__), 'keyboard', 'classes.json')
-        logger.error(f'{keys_file =  }')
+        # logger.error(f'{keys_file =  }')
         with open(keys_file, 'r', encoding='utf-8') as f:
             self._classes = json.load(f)
+        # logger.error(f'{self._classes = }')
+        self._keys_to_classes = self._precompute_context_map(self._classes)
+        # logger.error(f'{self._keys_to_classes = }')
         self._needs_update = False
 
+
+    def _precompute_context_map(self, results):
+        """
+        Precompute a map of keys to the classes or contexts they belong to.
+
+        Args:
+            results (dict): The `results` dictionary mapping class names to their keys.
+
+        Returns:
+            dict: A map of keys to their associated contexts.
+        """
+        context_map = {}
+        for class_name, keys in results.items():
+            for key in keys:
+                if key not in context_map:
+                    context_map[key] = []
+                context_map[key].append(class_name)
+        return context_map
 
     def item(self, an_item_id=None):
         logger.debug(f'{an_item_id =  }')
