@@ -6192,15 +6192,18 @@ ____Using |fallback| theme.''')
                 if conflict_first_header_title !=  conflict_second_header_title:
                     sec = 'Group: |' + conflict_second_header_title + '|\n  ' + sec
 
-                msg = '''
-The following entries have a shortcut conflict.
-(Conflicting shortcut: |{0}|)
+                msg = '''The following entries have a shortcut conflict.
+__Conflicting shortcut: "|{0}|"
 
 Group: |{1}|
 _________{2}
 {3}
 
 Please insert a different shortcut!
+
+|Tip: |Press "|0|" to switch between the conflicting
+_____items. When not in |editing mode|, you can press
+_____"|f|" to see the |free| keys you can use.
 
 '''.format(
     'Space' if conflict_second_item[-4] == ' ' else conflict_second_item[-4],
