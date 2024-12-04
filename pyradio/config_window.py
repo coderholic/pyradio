@@ -3514,17 +3514,12 @@ class PyRadioKeyboardConfig():
         return new_file_name
 
     def _start_editing(self):
+        self.existing_conflict = None
         self._win.addstr(self._selection - self._start + 2, self.maxX-8, '[edit]', curses.color_pair(6))
         self._win.refresh()
         self._editing = True
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('editing "{}"'.format(self._list[self._selection]))
-        for i in range(self._selection, -1, -1):
-            if self._list[i][1] is None:
-                self._in_group = i
-                break
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f'editing in group "{self._list[self._in_group][0]}"')
 
     def _stop_editing(self):
         self._win.addstr(self._selection - self._start + 2, self.maxX-8, '      ', curses.color_pair(6))
@@ -3760,7 +3755,7 @@ class PyRadioKeyboardConfig():
             self._b_ok, self._b_cancel = self._widget.buttons
             self._b_ok.focused = self._b_cancel.focused = False
 
-        self._win.addstr(1, 2, 'Shortcuts', curses.color_pair(12))
+        self._win.addstr(1, 2, 'Actions', curses.color_pair(12))
         self._win.addstr(1, self._max_length-3, 'Default    User    New', curses.color_pair(12))
 
         for i in range(0, self._number_of_lines):
@@ -3921,6 +3916,7 @@ class PyRadioKeyboardConfig():
 
         # Separate characters into categories
         digits = sorted([char for char in available_characters if char.isdigit()])  # Sort digits
+        digits.pop(0)
         letters = sorted([char for char in available_characters if char.isalpha()])  # Sort letters
         function_keys_list = sorted([char for char in available_characters if char.startswith('F')])  # Sort function keys
         if 'F' in function_keys_list:
@@ -3974,6 +3970,7 @@ class PyRadioKeyboardConfig():
             logger.error(f'{the_key = }')
 
             logger.error('\n\n============')
+            self._old_key_value = (self._list[self._selection][3], self._list[self._selection][6])
             self._list[self._selection][3] = char
             self._list[self._selection][6] = ctrl_code_to_string(char)
             ret = self._validate_key()
@@ -3994,8 +3991,8 @@ class PyRadioKeyboardConfig():
                 ''' disable editing '''
                 self._stop_editing()
             else:
-                self._list[self._selection][3] = self._list[self._selection][2]
-                self._list[self._selection][6] = self._list[self._selection][5]
+                # restore previous values on conflict
+                self._list[self._selection][3], self._list[self._selection][6] = self._old_key_value
 
             return ret
         else:
@@ -4008,6 +4005,16 @@ class PyRadioKeyboardConfig():
                 self.keys_string = msg + self._get_available_keys() + '\n\n'
                 return -4
 
+            elif char == kbkey['revert_def']:
+                for i in range(len(self._list)):
+                    self._list[i][3] = self._list[i][1]
+                    self._list[i][6] = self._list[i][4]
+                self._needs_update = True
+            elif char == kbkey['revert_saved']:
+                for i in range(len(self._list)):
+                    self._list[i][3] = self._list[i][2]
+                    self._list[i][6] = self._list[i][5]
+                self._needs_update = True
             elif char == ord('x'):
                 self._list[self._selection][3] = self._list[self._selection][2]
                 self._list[self._selection][6] = self._list[self._selection][5]
@@ -4030,8 +4037,8 @@ class PyRadioKeyboardConfig():
                 self._go_down(step=5)
             elif char == curses.KEY_PPAGE:
                 self._go_up(step=5)
-            elif char in (curses.KEY_EXIT, 27, kbkey['q']):
-                return -1
+            # elif char in (curses.KEY_EXIT, 27, kbkey['q']):
+            #    return -1
             elif char in (curses.KEY_RIGHT, kbkey['l']):
                 if self._focus > 0:
                     self._focus_next()

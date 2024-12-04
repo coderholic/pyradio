@@ -1467,37 +1467,65 @@ Esc                                             |*|Cancel operation.
 )),
 
     'M_KEYBOARD_HELP':('Keyboard Shortcuts Help',
-kb2str(r'''
-This is the |Keyboard Shortcuts| configuration window help.
+r'''
+The |Keyboard Shortcuts| window will display a list of shortcuts in
+four columns:
+__|Actions|  Available actions.
+__|Default|  The default key for the item.
+__|User|___  User custom key for the item (saved value).
+__|New|____  Latest change (not saved yet).
 
-The window will display a list of the existing shortcuts:
-The first column will display the action the shortcut
-corresponds to, the second column (|Default|) will print
-the default (hardcoded) shortcut (press |{revert_def}| to activate
-them), the third column (|User|) will print the shortcut
-the user has already set for the action (press |{revert_saved}| to
-activate them), and the last column (|New|) will print the
-latest changes, which have not been saved yet.
+The following action are available:
+''' + self._format_columns(kb2str(
+r'''
+__|Arrow Keys|, |{j}|, |{k}|,            |*|
+__|PgUp|, |PgDown|                       |*| Move up, down, etc.
+__|Tab|, |{tab}| / |Sh-Tab|, |{stab}|    |*| Move to next / previous field.
+__|{g}| / |{G}|                          |*| Go to top / bottom of the list.
+__|[| / |]|                              |*| Move between sections.
+__|{revert_def}| / |{revert_saved}|      |*| Revert to default / saved shortcuts.
+__|x|                                    |*| Revert current item to saved value.
+__|f|                                    |*| Show |free| keys.
+__|Enter|, |{pause}|,                    |*|
+__|Right|, |{l}|                         |*| Enter |editing mode| (insert new shortcut).
+__|Esc|                                  |*|Exit |editing mode|.
+__|0|                                    |*| Switch between |c|ocnflicting items.
+                                         |*|Available in |editing mode| as well.
+__|{h}|                                  |*|Display this help screen.
+''')) + r'''
 
-Use |Arrow Keys|, |{j}|, |{k}|, |PgUp| and |PgDown| to move, |{g}| and |{G}| to
-go to the beginning or the end of the list, or |[| and |]| to
-navigate the shortcut groups.
+To change a |Keyboard Shortcut|, just enter the |editing mode|. This will
+be indicated by a "|[edit]|" appearing at the right of the line. Press
+any key to change the shortcut, or |Esc| to cancel the operation.
 
-To change a |Keyboard Shortcut|, select a shortcut, press
-|Right|, |{l}|, |Enter|, or |{pause}|. Then a "|[edit]|" will appear
-at the right of the line. Press any key to change the
-shortcut, or |Esc| to cancel the operation.
+After you have finished customizing the shortcuts, navigate to the |OK|
+button to save and activate your new shortcuts.
 
-When in navigation mode (not editing a shortcut), press
-"|x|" to remove a |New| shortcut previously inserted. Press
-"|f|" to see a list of "|free|" keys that you can use.
+Keep in mind that this is the only window in |PyRadio| that will not be
+closed when "|Esc|" is pressed; you will have to navigate to the |Cancel|
+button and press it, instead.
 
-After you have finished customizing the shortcuts, press
-|OK| (use |Tab| or |{tab}| to navigate). Then |PyRadio| will try to
-detect any conflicts, and either help you to resolve
-them or save and activate your new shortcuts.
+|Important Notice on Shortcut Customization
+
+As you customize your shortcuts, please be aware that adding a new
+shortcut triggers a |validation| procedure.
+
+The system is designed to be |context-aware|; if the new key you choose
+is already in use, it will check whether it conflicts within the same
+context. In such cases, an error message will be displayed, and the
+change will be rejected.
+
+However, we recognize that there may be instances where conflicting
+keys go undetected by the system. We kindly ask you to keep an eye
+out for any such conflicts. If you encounter a situation where a
+shortcut |seems to be causing issues| without triggering a validation
+error, please |report| this incident to us, at this URL:
+
+____|https://github.com/coderholic/pyradio/issues
+
+Thank you for your cooperation.
 '''
-)),
+),
 
     'M_INVALID_KEY_ERROR':('Invalid Key',
 r'''
@@ -1970,6 +1998,60 @@ so you can resolve the issue and try again.
             self._win.bkgdset(' ', curses.color_pair(13))
             self._win.erase()
             self._win.refresh()
+
+    def _format_columns(self, help_text):
+        # Step 1: Use the original help text
+        # help_text = self.help_text
+
+        # Step 2: Split lines and process each line
+        lines = help_text.strip().split('\n')
+        formatted_lines = []
+        max_left_length = 0
+
+        for line in lines:
+            # Split by '|*|' and strip whitespace
+            parts = [part.strip() for part in line.split('|*|')]
+            if len(parts) != 2:
+                continue  # Skip lines that don't conform to expected format
+
+            left_part = parts[0].strip()  # Keep '|' in left part
+            right_part = parts[1].strip()  # Right part remains as is
+
+            # Calculate lengths
+            left_length_no_pipe = len(left_part.replace('|', '').strip())
+            left_length_with_pipe = len(left_part.strip())
+
+            # Update max length of left part without pipes
+            max_left_length = max(max_left_length, left_length_no_pipe)
+
+            # Prepare formatted line with original left part
+            formatted_lines.append((left_part, right_part))
+
+        # Total width (max_left_length + 4)
+        total_width = max_left_length + 4
+
+        # Step 3: Create formatted output with proper spacing
+        output_lines = []
+        for left_part, right_part in formatted_lines:
+            # Calculate lengths again for formatting
+            left_length_no_pipe = len(left_part.replace('|', '').strip())
+            left_length_with_pipe = len(left_part.strip())
+
+            # Calculate number of spaces needed for padding after removing '|'
+            padding_spaces = total_width - left_length_no_pipe
+
+            if left_part == "":
+                # If left_part is empty, pad right_part with underscores
+                right_part = '_' * total_width + right_part
+
+            # Create a formatted line with calculated padding
+            formatted_line = left_part.ljust(len(left_part) + padding_spaces) + right_part
+            output_lines.append(formatted_line)
+
+        return '\n'.join(output_lines)
+
+    def get_formatted_help(self):
+        return self._format_columns()
 
     def show(self, parent=None):
         if logger.isEnabledFor(logging.INFO):

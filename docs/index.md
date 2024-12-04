@@ -13,6 +13,7 @@ Command line internet radio player.
 * [Command line options](#command-line-options)
 * [Controls](#controls)
     * [Global shortcuts](#global-shortcuts)
+    * [Customizing key bindings](#customizing-key-bindings)
 * [HTML help](#html-help)
 * [PyRadio Modes](#pyradio-modes)
     * [Secondary Modes](#secondary-modes)
@@ -71,6 +72,7 @@ Command line internet radio player.
 * [Update notification](#update-notification)
 * [Remote Control Server](#remote-control-server)
     * [Remote Control Client](#remote-control-client)
+* [Playing a station in the terminal](#playing-a-station-in-the-terminal)
 * [Debug mode](#debug-mode)
 * [Reporting bugs](#reporting-bugs)
 * [Packaging PyRadio](#packaging-pyradio)
@@ -90,6 +92,7 @@ Command line internet radio player.
  - Station editor (add/edit) with [CJK characters support](#cjk-characters-support)
  - Configuration editor
  - Search function
+ - Customizable key bindings
  - Easy installation / updating
  - Runs on Linux, macOS and Windows
 
@@ -126,9 +129,9 @@ Furthermore, please refrain from using any third-party packaging methods, such a
 
 ```
 # pyradio -h
-Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-u PLAYER] [-l]
-               [-lt] [-sds] [-sd] [-od] [-pc] [-d] [-ul] [-us] [-U] [-R] [-V]
-               [-ls] [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes]
+Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-x] [-u PLAYER]
+               [-l] [-lt] [-sds] [-sd] [-od] [-pc] [-d] [-ul] [-us] [-U] [-R]
+               [-V] [-ls] [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes]
                [--no-themes] [--write-theme IN_THEME OUT_THEME,]
                [--terminal TERMINAL] [--terminal-param TERMINAL_PARAM] [-oc]
                [-sc] [-cc] [-gc] [-r] [-or] [-lr] [-mkv MKV_FILE]
@@ -146,6 +149,9 @@ General options:
   -p [STATION_NUMBER], --play [STATION_NUMBER]
                         Start and play.The value is num station or empty for
                         random.
+  -x, --external-player
+                        Play station in external player. Can be combined with
+                        --play.
   -u PLAYER, --use-player PLAYER
                         Use specified player. A comma-separated list can be
                         used to specify detection order. Supported players:
@@ -247,6 +253,9 @@ Headless operation:
 
 ## Controls
 
+The following list shows a **default** key bindings list used within the program.
+
+
                       Main window                                      Playlists window                   Themes window
     -------------------------------------------------------------------------------------------------------------------------------------
     Up/Down/j/k/
@@ -315,6 +324,12 @@ When focus is on a "*Line editor*", all shortcuts will work when preceded by a "
 [1] Function not available when in **Playlist** and **Registers** mode. More info on *PyRadio's modes* below.
 
 [2] Function not available in the **RadioBrowser** Search window.
+
+### Customizing key bindings
+
+**PyRadio** provides the possibility to customize the key bindings above.
+
+Just open the configuration window and navigate to **Keyboard Shortcuts**. Please do read the help screen provided therein (press "*?" to get to it).
 
 ## HTML help
 
@@ -1170,6 +1185,18 @@ If you'd like to set up a "headless" **PyRadio** operation for your linux box, p
 **PyRadio** comes with its own client, which will make it easier to communicate with the **Remote Control Server**.
 
 For more information, please refer to [the relevant page](client.md).
+
+## Playing a station in the terminal
+
+A user request [Shortcut to quit pyradio and launch standalone player (e.g. mpv) with currently selected station](https://github.com/coderholic/pyradio/issues/252) lead to the possibility to use any player in the terminal.
+
+This action will be triggered by pressing "*X*".
+
+After the player stops, **PyRadio** will stop as well.
+
+**Note:** On Windows, **mpv** and **VLC** will open a new player window instead of executing in the terminal.
+
+In addition, a command line parameter has been added "*-x*" ("*--exteranl-player*") which when used in conjuction with the "*-p*" ("*--play*") command line parameter, will instruct **PyRadio** to play a station and terminate after the playback stops.
 
 ## Debug mode
 

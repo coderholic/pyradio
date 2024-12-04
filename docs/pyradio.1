@@ -2,7 +2,7 @@
 .\" Copyright (C) 2018-2024 Spiros Georgaras <sng@hellug.gr>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH pyradio 1 "June 2024" pyradio
+.TH pyradio 1 "December 2024" pyradio
 
 .SH Name
 .PP
@@ -1949,6 +1949,16 @@ If so, a notification message will be displayed, informing the user about it and
 .SH Cleaning Up
 
 \fBpyradio\fR will uninstall all previously installed versions when updated (using the \fB-U\fR command line parameter), so no extra steps are needed any more to house keep your system.
+
+.SH Playing a station in the terminal
+
+A user request \fBShortcut to quit pyradio and launch standalone player (e.g. mpv) with currently selected station\fR (\fIhttps://github.com/coderholic/pyradio/issues/252\fR) lead to the possibility to use any player in the terminal.
+
+This action will be triggered by pressing "\fIX\fR".
+
+After the player stops, \fBpyradio\fR will stop as well.
+
+In addition, a command line parameter has been added "\fI-x\fR" ("\fI--exteranl-player\fR") which when used in conjuction with the "\fI-p\fR" ("\fI--play\fR") command line parameter, will instruct \fBpyradio\fR to play a station and terminate after the playback stops.
 
 .SH Debug Mode
 .PP

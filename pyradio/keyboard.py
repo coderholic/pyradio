@@ -436,6 +436,8 @@ def is_valid_char(char, win):
     Returns:
         bool: True if c is valid, False otherwise.
     """
+    if char in (9, ord('\t')):
+        return False
     # if char <= 127:
     if (65 <= char <= 90) or (97 <= char <= 122) or (1 <= char <= 47):
         ''' 1 byte '''
@@ -456,6 +458,9 @@ def is_valid_char(char, win):
     elif char in (
         ord('='), ord('.'), ord('+'),
         ord('`'), ord('-'),
+        ord('1'), ord('2'), ord('3'),
+        ord('4'), ord('5'), ord('6'),
+        ord('7'), ord('8'), ord('9'),
         curses.KEY_F1,
         curses.KEY_F2,
         curses.KEY_F3,
