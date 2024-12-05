@@ -3401,9 +3401,11 @@ class PyRadioKeyboardConfig():
             self,
             config,
             parent,
-            global_functions):
+            distro='None',
+            global_functions=None):
         self._cnf = config
         self._parent = parent
+        self._distro=distro
         self._global_functions = global_functions
 
         self._list = []
@@ -3805,6 +3807,13 @@ class PyRadioKeyboardConfig():
                         #     self._unselect_line(i+2)
                 except IndexError:
                     pass
+        if self._distro != 'None':
+            try:
+                X = int((self.maxX - 20 - len(self._distro) - 1) / 2)
+                self._win.addstr(self.maxY - 1, X, ' Package provided by ', curses.color_pair(5))
+                self._win.addstr(self._distro + ' ', curses.color_pair(4))
+            except (ValueError, curses.error):
+                pass
         self._win.refresh()
         self._widget.show()
 
@@ -3916,11 +3925,11 @@ class PyRadioKeyboardConfig():
                 continue
             if n[3] and n[2] != n[3]:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('New shortcut found: {0}: {1}'.format(n[0], n[6]))
+                    logger.debug('New shortcut found: kbkey["{0}"]: "{1}"'.format(n[0], n[6]))
                 out_dict[n[0]] = n[3]
             if n[2] and n[1] != n[2]:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('New shortcut found: {0}: {1}'.format(n[0], n[5]))
+                    logger.debug('New shortcut found: kbkey["{0}"]: "{1}"'.format(n[0], n[5]))
                 out_dict[n[0]] = n[2]
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(f'{out_dict = }')

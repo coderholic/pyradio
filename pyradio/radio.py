@@ -5215,6 +5215,7 @@ ____Using |fallback| theme.''')
             self._keyboard_config_win = PyRadioKeyboardConfig(
                     config=self._cnf,
                     parent=self.outerBodyWin,
+                    distro=self._cnf.distro,
                     global_functions=self._global_functions
                     )
         self._keyboard_config_win.show(parent=self.outerBodyWin)
@@ -5228,7 +5229,7 @@ ____Using |fallback| theme.''')
         else:
             self._browser_config_win.select_servers()
 
-    def _browser_init_config_from_config(self, parent=None, init=False):
+    def _browser_init_config_from_config(self, parent=None, init=False, distro='None'):
         ''' Show browser config window from config
         '''
         if parent is None:
@@ -5249,7 +5250,8 @@ ____Using |fallback| theme.''')
         if parent is None:
             parent = self.outerBodyWin
         if self._cnf._online_browser:
-            self._cnf._online_browser.show_config(parent, init, self._cannot_delete_function)
+            self._cnf._online_browser.show_config(
+                parent, init, self._cannot_delete_function, distro=distro)
         else:
             if self._browser_config_win is None:
                 self._show_connect_to_server_message()
@@ -8959,7 +8961,7 @@ _____"|f|" to see the |free| keys you can use.
                     ''' open config '''
                     if self._cnf.browsing_station_service:
                         self.ws.operation_mode = self.ws.RADIO_BROWSER_CONFIG_MODE
-                        self._browser_init_config(init=True)
+                        self._browser_init_config(init=True, distro=self._cnf.distro)
                     else:
                         if self._cnf.locked:
                             self._open_simple_message_by_key('M_SESSION_LOCKED')

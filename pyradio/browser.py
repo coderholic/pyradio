@@ -1549,7 +1549,7 @@ class RadioBrowser(PyRadioStationsBrowser):
         self.keyboard_handler = self._search_win
         self._search_win.show()
 
-    def show_config(self, parent=None, init=False, cannot_delete_function=None):
+    def show_config(self, parent=None, init=False, cannot_delete_function=None, distro='None'):
         if init:
             self._config_win = RadioBrowserConfigWindow(
                 parent=parent,
@@ -1565,6 +1565,7 @@ class RadioBrowser(PyRadioStationsBrowser):
                 current_ping_count=self._default_ping_count,
                 current_ping_timeout=self._default_ping_timeout,
                 init=init,
+                distro=distro,
                 with_browser=True,
                 global_functions=self._global_functions,
                 cannot_delete_function=cannot_delete_function
@@ -1825,7 +1826,7 @@ class RadioBrowserConfigWindow():
             init=False,
             stations_dir=None,
             data_dir=None,
-            distro=None,
+            distro='None',
             global_functions=None,
             with_browser=False,
             cannot_delete_function=None
