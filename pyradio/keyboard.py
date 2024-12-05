@@ -250,16 +250,15 @@ def read_keyboard_shortcuts(file_path, reset=False):
     global kbkey  # Declare kbkey as global since we're reassigning it
     if reset:
         kbkey = populate_dict()  # Reassign kbkey with a new OrderedDict
-    else:
-        data = None
-        try:
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as json_file:
-                data = json.load(json_file)
-        except (FileNotFoundError, json.JSONDecodeError, TypeError, IOError):
-            pass
-        if data is not None:
-            for n in data.keys():
-                kbkey[n] = data[n]  # Modify the existing kbkey
+    data = None
+    try:
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as json_file:
+            data = json.load(json_file)
+    except (FileNotFoundError, json.JSONDecodeError, TypeError, IOError):
+        pass
+    if data is not None:
+        for n in data.keys():
+            kbkey[n] = data[n]  # Modify the existing kbkey
 
 def read_localized_keyboard(file_path, keyboard_path):
     ''' read file_path which is {'keyboard': 'name of country'},

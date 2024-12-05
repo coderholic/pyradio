@@ -21,7 +21,7 @@ from .themes import *
 from .server import IPsWithNumbers
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesMenu
 from .client import PyRadioClient
-from .keyboard import kbkey, kbkey_orig, ctrl_code_to_string, is_valid_char, is_invalid_key, is_ctrl_key, set_kbkey, conflicts
+from .keyboard import kbkey, kbkey_orig, ctrl_code_to_string, is_valid_char, is_invalid_key, is_ctrl_key, set_kbkey, conflicts, read_keyboard_shortcuts
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
@@ -3407,7 +3407,7 @@ class PyRadioKeyboardConfig():
         self._global_functions = global_functions
 
         self._list = []
-        self._dict = OrderedDict()
+        tmp_dict = OrderedDict()
         for i, key in enumerate(kbkey_orig):
             ''' the dict contains
                 [
@@ -3417,24 +3417,27 @@ class PyRadioKeyboardConfig():
                     8: title
                 ]
             '''
-            self._dict[key] =  [
+            tmp_dict[key] =  [
                     kbkey_orig[key][0], 0, 0, '', '', '', i, 0, kbkey_orig[key][1]]
         for key in kbkey:
-            self._dict[key][1] = kbkey[key]
-            self._dict[key][2] = self._dict[key][1]
-            self._dict[key][3] = ctrl_code_to_string(self._dict[key][0])
-            self._dict[key][4] = ctrl_code_to_string(self._dict[key][1])
-            self._dict[key][5] = ctrl_code_to_string(self._dict[key][2])
-        for n in self._dict:
-            logger.error(f'{n}: {self._dict[n]}')
+            tmp_dict[key][1] = kbkey[key]
+            tmp_dict[key][2] = tmp_dict[key][1]
+            tmp_dict[key][3] = ctrl_code_to_string(tmp_dict[key][0])
+            tmp_dict[key][4] = ctrl_code_to_string(tmp_dict[key][1])
+            tmp_dict[key][5] = ctrl_code_to_string(tmp_dict[key][2])
+        if logger.isEnabledFor(logging.DEBUG):
+            for n in tmp_dict:
+                logger.debug(f'{n}: {tmp_dict[n]}')
         ''' dct contains
             [0: key, 1:def_code, 2:old_code, 3:new_code, 4:def_string, 5:old_string, 6:new_string, 7:description]
         '''
-        self._list = [[key] + list(value) for key, value in self._dict.items()]
+        self._list = [[key] + list(value) for key, value in tmp_dict.items()]
         self._max_length = max(len(sublist[-1]) for sublist in self._list) + 8
-        logger.error(f'{self._max_length = }')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'{self._max_length = }')
         self._headers = [i for i, x in enumerate(self._list) if x[1] is None]
-        logger.error(f'{self._headers = }')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'{self._headers = }')
 
         # insert header index into self._list
         for x in range(len(self._headers)):
@@ -3442,8 +3445,9 @@ class PyRadioKeyboardConfig():
             for i in range(len(self._list)):
                 if i > header_index:
                     self._list[i][-2] = header_index
-        for n in self._list:
-            logger.error(f'{n}')
+        if logger.isEnabledFor(logging.DEBUG):
+            for n in self._list:
+                logger.debug(f'{n}')
         '''
 
         # do not read keys.json to self._keys_to_classes
@@ -3485,7 +3489,8 @@ class PyRadioKeyboardConfig():
         return context_map
 
     def item(self, an_item_id=None):
-        logger.debug(f'{an_item_id =  }')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'{an_item_id =  }')
         if an_item_id is None:
             return self._list[self._selection]
         return self._list[an_item_id]
@@ -3568,8 +3573,9 @@ class PyRadioKeyboardConfig():
         self._needs_update = True
 
     def _go_down(self, step=1):
-        logger.error(f'go_down: {step = }')
-        logger.error(f'{len(self._list) = }, {self._selection = }')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'go_down: {step = }')
+            logger.debug(f'{len(self._list) = }, {self._selection = }')
         next_selection = self._selection + step
         if next_selection >= len(self._list) and step > 1:
             if self._selection == len(self._list) -1:
@@ -3579,33 +3585,40 @@ class PyRadioKeyboardConfig():
             return
         if next_selection in self._headers:
             next_selection += 1
-        logger.error(f'{next_selection = }')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'{next_selection = }')
         if next_selection >= len(self._list):
             self._selection = 1
             self._start = 0
             self._needs_update = True
             return
         line = next_selection - self._start + 2
-        logger.error(f'{line = }, {self._number_of_lines = }')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'{line = }, {self._number_of_lines = }')
         if line > self._number_of_lines + 1 :
-            logger.error('GREATER!')
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('GREATER!')
             while line > self._number_of_lines + 1:
                 self._start += (next_selection - self._selection)
                 self._selection = next_selection
                 self._needs_update = True
                 return
         if 2 <  line <= self._number_of_lines + 1:
-            logger.error('=== between')
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('=== between')
             self._unselect_line(self._selection - self._start + 2)
-            logger.error(f'unselecting {self._selection - self._start + 2}')
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'unselecting {self._selection - self._start + 2}')
             self._select_line(next_selection - self._start + 2)
-            logger.error(f'selecting {next_selection - self._start + 2}')
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'selecting {next_selection - self._start + 2}')
             self._selection = next_selection
             self._win.refresh()
 
     def _go_up(self, step=1):
-        logger.error(f'go_up: {step = }')
-        logger.error(f'{self._selection = }')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'go_up: {step = }')
+            logger.debug(f'{self._selection = }')
         next_selection = self._selection - step
         if next_selection < 0 and step > 1:
             if self._selection == 1:
@@ -3615,7 +3628,8 @@ class PyRadioKeyboardConfig():
             return
         if next_selection in self._headers:
             next_selection -= 1
-        logger.error(f'{next_selection = }')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'{next_selection = }')
         if next_selection < 0:
             self._selection = len(self._list) - 1
             if len(self._list) <= self._number_of_lines:
@@ -3635,10 +3649,12 @@ class PyRadioKeyboardConfig():
             self._needs_update = True
             return
         if 1 <=  line <= self._number_of_lines:
-            logger.error('=== between')
-            logger.error(f'unselecting {self._selection - self._start + 2}')
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('=== between')
+                logger.debug(f'unselecting {self._selection - self._start + 2}')
             self._unselect_line(self._selection - self._start + 2)
-            logger.error(f'selecting {self._selection - self._start + 2}')
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'selecting {self._selection - self._start + 2}')
             self._select_line(next_selection - self._start + 2)
             self._selection = next_selection
             self._win.refresh()
@@ -3669,10 +3685,11 @@ class PyRadioKeyboardConfig():
         self._start_line = 1
         self._end_line = self.maxY - 4
         self._number_of_lines = self.maxY - 6
-        logger.error(f'{self.maxY = }')
-        logger.error(f'{self._start_line = }')
-        logger.error(f'{self._end_line = }')
-        logger.error(f'{self._number_of_lines = }')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'{self.maxY = }')
+            logger.debug(f'{self._start_line = }')
+            logger.debug(f'{self._end_line = }')
+            logger.debug(f'{self._number_of_lines = }')
         if self._widget is not None and not self._too_small:
             # move buttons to end of window
             self._widget.move(self.maxY - 3)
@@ -3763,7 +3780,6 @@ class PyRadioKeyboardConfig():
             if cur < len(self._list):
                 try:
                     if self._list[cur][1] is None:
-                        logger.error(f'=== header at {i+2}')
                         self._win.addstr(i+2, 2, (self.maxX -4) * ' ', curses.color_pair(4))
                         self._win.addstr(i+2, 2, self._list[cur][-1], curses.color_pair(4))
                     else:
@@ -3838,29 +3854,34 @@ class PyRadioKeyboardConfig():
         key = modified_item[0]  # Identifier for the shortcut (e.g., "reload", "mute")
         new_shortcut_code = modified_item[3]  # The new shortcut code provided by the user
 
-        logger.error('\n\n-*-*-*-*-*-*-*-*-')
-        logger.error(f'{key = }')
-        logger.error(f'{new_shortcut_code = }')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('\n\n-*-*-*-*-*-*-*-*-')
+            logger.debug(f'{key = }')
+            logger.debug(f'{new_shortcut_code = }')
 
         # Step 1: Retrieve contexts for the current key
         if key not in self._keys_to_classes:
-            logger.error('\n-*-*-*-*-*-*-*-*- None 1\n\n')
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('\n-*-*-*-*-*-*-*-*- None 1\n\n')
             return
 
         # Collect all relevant keys for this key's contexts
         context_classes = self._keys_to_classes[key]  # List of class names where this key is used
-        logger.error(f'{context_classes = }')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'{context_classes = }')
         context_keys = set()
         for context_class in context_classes:
             for key_in_context in self._keys_to_classes:
                 if context_class in self._keys_to_classes[key_in_context]:
                     context_keys.add(key_in_context)
 
-        logger.error(f'{context_keys = }')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'{context_keys = }')
 
         tmp = [x for x in self._list if x[0] in context_keys]
 
-        logger.error('\n\ntmp\n{}'.format(tmp))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('\n\ntmp\n{}'.format(tmp))
 
         # Step 2: Detect conflict within the resolved context keys
         for key_in_context in context_keys:  # Iterate through all relevant keys in the context
@@ -3870,16 +3891,15 @@ class PyRadioKeyboardConfig():
                 continue
 
             idx, chk = [(i, x) for i, x in enumerate(self._list) if x[0] == key_in_context][0]
-            logger.error('\n\nitem with key  -  {0}: {1}\n\n'.format(idx, chk))
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('\n\nitem with key  -  {0}: {1}\n\n'.format(idx, chk))
             # Check if the new shortcut code matches the existing shortcut code for any other key
             if chk[3] == new_shortcut_code:
                 self.existing_conflict = (modified_item[-3], idx)  # Return the first conflicting key and index
                 return
 
-        logger.error('\n-*-*-*-*-*-*-*-*- None 2\n\n')
-
-        # No conflict found
-        # self.existing_conflict = None
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('\n-*-*-*-*-*-*-*-*- None 2\n\n')
 
     def _validate_key(self):
         self._detect_conflict(self._list[self._selection])
@@ -3890,19 +3910,28 @@ class PyRadioKeyboardConfig():
     def _save_keyboard_config(self):
         out_dict = {}
         for i, n in enumerate(self._list):
-            if n[1] != n[2]:
-                out_dict[n[0]] = n[2]
-            if n[2] != n[3]:
+            if n[1] == n[2] == n[3]:
+                continue
+            if n[1] == n[3]:
+                continue
+            if n[3] and n[2] != n[3]:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('New shortcut found: {0}: {1}'.format(n[0], n[6]))
                 out_dict[n[0]] = n[3]
+            if n[2] and n[1] != n[2]:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('New shortcut found: {0}: {1}'.format(n[0], n[5]))
+                out_dict[n[0]] = n[2]
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'{out_dict = }')
         import json
         try:
-            with open(self._cnf.keyboard_file, 'w') as json_file:
+            with open(self._cnf.keyboard_file, 'w', encoding='utf-8') as json_file:
                 json.dump(out_dict, json_file)
         except (FileNotFoundError, TypeError, ValueError, IOError) as e:
             # file save failure
             return -2
-        for n in out_dict:
-            set_kbkey(n, out_dict[n])
+        read_keyboard_shortcuts(self._cnf.keyboard_file, reset=True)
         return 0
 
     def _get_available_keys(self):
@@ -3954,11 +3983,13 @@ class PyRadioKeyboardConfig():
         elif self._editing:
             if is_invalid_key(char):
                 self.message = 'M_INVALID_KEY_ERROR'
-                logger.error('1 Key is INVALID')
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('1 Key is INVALID')
                 return 2
             if not is_valid_char(char, self._win):
                 self.message = 'M_INVALID_TYPE_KEY_ERROR'
-                logger.error('2 Key is INVALID')
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('2 Key is INVALID')
                 return 2
             if char in (curses.KEY_EXIT, 27):
                 self._stop_editing()
@@ -3967,19 +3998,21 @@ class PyRadioKeyboardConfig():
             if the_key in conflicts['h_rb_s'] and not is_ctrl_key(char):
                 self.message ='M_NOT_CTRL_KEY_ERROR'
                 return 2
-            logger.error(f'{the_key = }')
-
-            logger.error('\n\n============')
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'{the_key = }')
+                logger.debug('\n\n============')
             self._old_key_value = (self._list[self._selection][3], self._list[self._selection][6])
             self._list[self._selection][3] = char
             self._list[self._selection][6] = ctrl_code_to_string(char)
             ret = self._validate_key()
-            logger.error(f'{ret = }')
-            logger.error('============\n\n')
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'{ret = }')
+                logger.debug('============\n\n')
             if ret == 1:
                 ''' put char into the list and update screen '''
-                logger.error(f'{self._list[self._selection] = }')
-                logger.error('line is {}'.format(self._selection - self._start + 2))
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f'{self._list[self._selection] = }')
+                    logger.debug('line is {}'.format(self._selection - self._start + 2))
                 self._win.addstr(
                         self._selection - self._start + 2,
                         self._max_length + 17,
@@ -4078,11 +4111,11 @@ class PyRadioKeyboardConfig():
             elif char in self._global_functions:
                 self._global_functions[char]()
 
-
-        logger.error('=============')
-        logger.error(f'{self._start = }')
-        logger.error(f'{self._selection = }')
-        logger.error('line = {}'.format(self._selection - self._start + 2))
+        # if logger.isEnabledFor(logging.DEBUG):
+        #     logger.debug('=============')
+        #     logger.debug(f'{self._start = }')
+        #     logger.debug(f'{self._selection = }')
+        #     logger.debug('line = {}'.format(self._selection - self._start + 2))
 
         # Centralized UI update
         if self._needs_update:

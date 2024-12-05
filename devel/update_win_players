@@ -28,7 +28,12 @@ function get_mplayer(){
 
     echo -en "    Reading published ${cMagenta}MPlayer${cReset} versions ... "
 
-    FOUND=$(curl -s -L 'https://sourceforge.net/projects/mplayerwin/files/MPlayer-MEncoder' 2>/dev/null | grep '<tr title' | sed -e 's/<tr title="//' -e 's/".*//'|grep -e '^r')
+    FOUND=$(curl -s -L 'https://sourceforge.net/projects/mplayerwin/files/MPlayer-MEncoder' 2>/dev/null | \
+        grep '<tr title' | \
+        sed -e 's/.*<tr title="//' \
+            -e 's/".*//' | \
+        sed -n 1p
+        )
 
     if [ $? -ne 0 ]
     then

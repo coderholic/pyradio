@@ -6083,7 +6083,7 @@ ____Using |fallback| theme.''')
         # # logger.error('\n\nbackup params\n{}\n\n'.format(self._cnf.backup_player_params))
         # if char == curses.KEY_RESIZE:
         #     logger.error('\n\nRESIZE\n\n')
-        logger.error('\n\nchar = {}\n\n'.format(char))
+        # logger.error('\n\nchar = {}\n\n'.format(char))
         # letter = get_unicode_and_cjk_char(self.outerBodyWin, char)
         # logger.error('\n\nletter = {}\n\n'.format(letter))
         if char in (curses.KEY_RESIZE, ):

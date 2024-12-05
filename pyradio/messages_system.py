@@ -1491,7 +1491,7 @@ __|Right|, |{l}|                         |*| Enter |editing mode| (insert new sh
 __|Esc|                                  |*|Exit |editing mode|.
 __|0|                                    |*| Switch between |c|ocnflicting items.
                                          |*|Available in |editing mode| as well.
-__|{h}|                                  |*|Display this help screen.
+__|{?}|                                  |*|Display this help screen.
 ''')) + r'''
 
 To change a |Keyboard Shortcut|, just enter the |editing mode|. This will
