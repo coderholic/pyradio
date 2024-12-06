@@ -25,21 +25,21 @@ try:
     import ctypes
     import win32api
     import win32ui
-except:
+except ImportError:
     pass
 
 try:
     from urllib.request import urlopen
-except:
+except ImportError:
     try:
         from urllib2 import urlopen
-    except:
+    except ImportError:
         pass
 
 try:
     import requests
     HAVE_REQUESTS = True
-except:
+except ImportError:
     HAVE_REQUESTS = False
 
 VERSION = ''
@@ -48,7 +48,7 @@ HAS_PIPX = True if shutil.which('pipx') else False
 
 try:
     from rich import print
-except:
+except ImportError:
     print('''Error: Module "rich" not found!
 
 Please install the above module and try again.

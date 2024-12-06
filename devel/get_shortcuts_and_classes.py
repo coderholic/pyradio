@@ -18,6 +18,116 @@ def verbose_print(message):
     if args.verbose:
         print(message)
 
+##############################################################################
+#
+#
+#                        Start: JSON files comparison
+#
+#
+##############################################################################
+def compare_json_files(file1, file2):
+    """
+    Compare two JSON files and print the result based on specific criteria.
+
+    Parameters:
+    - file1: str - The path to the first JSON file.
+    - file2: str - The path to the second JSON file.
+
+    Returns:
+    - bool: True if the files are equal based on specified criteria, False otherwise.
+    """
+    try:
+        # Read the first JSON file
+        with open(file1, 'r', encoding='utf-8') as f1:
+            dict1 = json.load(f1)
+
+        # Read the second JSON file
+        with open(file2, 'r', encoding='utf-8') as f2:
+            dict2 = json.load(f2)
+
+        # Compare the dictionaries using custom comparison function
+        if compare_dicts(dict1, dict2):
+            print("The JSON files are equal based on the specified criteria.")
+            return True
+        else:
+            print("The JSON files are not equal based on the specified criteria.")
+            return False
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return False
+
+def compare_dicts(dict1, dict2):
+    """
+    Compare two dictionaries based on specific criteria:
+    1. Same number of keys
+    2. Same keys
+    3. Same values for each key (considering unordered lists)
+
+    Parameters:
+    - dict1: dict - The first dictionary.
+    - dict2: dict - The second dictionary.
+
+    Returns:
+    - bool: True if both dictionaries are equal based on specified criteria, False otherwise.
+    """
+
+    # Check if both dictionaries have the same number of keys
+    if len(dict1) != len(dict2):
+        print("Different number of keys.")
+        return False
+
+    # Check if both dictionaries have the same keys
+    if dict1.keys() != dict2.keys():
+        print("Different keys found.")
+        return False
+
+    # Check if all values for every key are the same
+    for key in dict1.keys():
+        value1 = dict1[key]
+        value2 = dict2[key]
+
+        # Compare lists as unordered collections
+        if isinstance(value1, list) and isinstance(value2, list):
+            if sorted(value1) != sorted(value2):
+                print(f"Different values for key '{key}': {value1} != {value2}")
+                return False
+        else:
+            if value1 != value2:
+                print(f"Different values for key '{key}': {value1} != {value2}")
+                return False
+
+    return True
+
+def handle_json_files(file1, file2, are_equal):
+    """
+    Handle JSON files based on their comparison result.
+
+    Parameters:
+    - file1: str - The path to the first JSON file (classes.json).
+    - file2: str - The path to the second JSON file (classes_new.json).
+    - are_equal: bool - Result of the comparison between the two files.
+    """
+    try:
+        if are_equal:
+            # If files are equal, remove classes_new.json
+            os.remove(file2)
+            print(f"{file2} has been removed because the files are equal.")
+        else:
+            # If files are not equal, remove classes.json and rename classes_new.json to classes.json
+            os.remove(file1)
+            os.rename(file2, file1)
+            print(f"{file1} has been removed and {file2} has been renamed to {file1}.")
+
+    except Exception as e:
+        print(f"An error occurred while handling files: {e}")
+##############################################################################
+#
+#
+#                         End: JSON files comparison
+#
+#
+##############################################################################
 def find_keypress_functions_with_kbkeys(project_path):
     result = {}
 
@@ -342,7 +452,7 @@ def precompute_context_map(results):
 
 def ask_and_execute():
     print("Do you want to execute './pyradio/keyboard.py'? (y/n, ENTER = 'y'): ", end='', flush=True)
-    
+
     # Variable to store user's answer
     user_answer = None
     input_event = threading.Event()
@@ -379,7 +489,8 @@ if __name__ == "__main__":
     verbose_print(f'{starting_dir = }')
     project_path = os.path.join(starting_dir, 'pyradio')
     verbose_print(f'{project_path = }')
-    out_file = os.path.join(project_path, 'keyboard', 'classes.json')
+    final_file = os.path.join(project_path, 'keyboard', 'classes.json')
+    out_file = os.path.join(project_path, 'keyboard', 'classes_new.json')
     new_out_file = os.path.join(project_path, 'keyboard', 'keys.json')
     verbose_print(f'{out_file = }')
     verbose_print(f'{new_out_file = }')
@@ -439,7 +550,7 @@ if __name__ == "__main__":
     results['PyRadio'].append('rb_p_first')
     results['PyRadio'].append('rb_p_next')
     results['PyRadio'].append('rb_p_prev')
-    
+
     # info_rename is a uniq key in the info window
     results['PyRadio'].pop(results['PyRadio'].index('info_rename'))
     results['InfoWindow'] = ['info_rename']
@@ -459,18 +570,24 @@ if __name__ == "__main__":
     for a_key in results:
         results[a_key].extend(global_functions_keys)
     results['ExtraKeys'] = list(h_extra_keys)
-    
+
     verbose_print("\n\nFinal results after removing h_extra keys:")
     display_results(results)
-    
+
     with open(out_file, 'w', encoding='utf-8') as f:
         json.dump(results, f)
 
-    precompute_map = precompute_context_map(results)
 
-    with open(new_out_file, 'w', encoding='utf-8') as f:
-        json.dump(precompute_map, f)
-        
+    # compare old and new file
+    ret = compare_json_files(final_file, out_file)
+    handle_json_files(final_file, out_file, ret)
+
+    if not ret:
+        precompute_map = precompute_context_map(results)
+
+        with open(new_out_file, 'w', encoding='utf-8') as f:
+            json.dump(precompute_map, f)
+
     # verbose_print('\n\n{}'.format(global_functions_keys))
     # verbose_print('\n\n{}'.format(h_extra_keys))
 
