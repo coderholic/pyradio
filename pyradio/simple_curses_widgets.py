@@ -45,7 +45,7 @@ except:
     from schedule import PyRadioTime
 # from .cjkwrap import is_wide, cjklen, cjkljust, cjkslices
 # from .schedule import PyRadioTime
-from .keyboard import kbkey
+from .keyboard import kbkey, get_kb_letter
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
@@ -4678,10 +4678,15 @@ class SimpleCursesLineEdit():
                         self._disp_curs_pos = self._curs_pos
                         self._displayed_string = self.string[self._first:self._first+self._max_chars_to_display]
             else:
+                logger.error('HERE')
                 if platform.startswith('win'):
                     char = chr(char)
                 else:
-                    char = self.get_unicode_and_cjk_char(win, char)
+                    ch = get_kb_letter()
+                    if ch:
+                        char = ch
+                    else:
+                        char = self.get_unicode_and_cjk_char(win, char)
                 if char is None:
                     return 1
                 if self._pure_ascii:
@@ -4732,11 +4737,14 @@ class SimpleCursesLineEdit():
 
     @classmethod
     def get_unicode_and_cjk_char(cls, win, char):
+        logger.info(f'1---> {char = }')
         def get_check_next_byte():
             if win is None:
                 char = curses.getch()
+                logger.info(f'2---> {char = }')
             else:
                 char = win.getch()
+                logger.info(f'3---> {char = }')
             if 128 <= char <= 191:
                 return char
             else:

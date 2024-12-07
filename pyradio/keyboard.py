@@ -13,6 +13,32 @@ try:
     from .cjkwrap import is_wide
 except ImportError:
     pass
+
+from collections import deque
+from threading import Lock
+
+input_queue = deque()
+queue_lock = Lock()
+
+def enqueue_input(char, reset=False):
+    global input_queue
+    if reset:
+        input_queue(clear)
+    with queue_lock:
+        input_queue.append(char)
+
+def dequeue_input():
+    global input_queue
+    with queue_lock:
+        if input_queue:
+            return input_queue.popleft()
+        return None
+
+def clear_input_queue():
+    global input_queue
+    with queue_lock:
+        input_queue.clear()
+
 # from .simple_curses_widgets import SimpleCursesLineEdit
 
 logger = logging.getLogger(__name__)
@@ -437,40 +463,24 @@ def is_valid_char(char, win):
     """
     if char in (9, ord('\t')):
         return False
-    # if char <= 127:
-    if (65 <= char <= 90) or (97 <= char <= 122) or (1 <= char <= 47):
-        ''' 1 byte '''
-        return True
-    #elif 194 <= char <= 223:
-    elif 192 <= char <= 223:
-        ''' 2 bytes '''
-        win.getch()
-    elif 224 <= char <= 239:
-        ''' 3 bytes '''
-        win.getch()
-        win.getch()
-    elif 240 <= char <= 244:
-        ''' 4 bytes '''
-        win.getch()
-        win.getch()
-        win.getch()
-    elif char in (
-        ord('='), ord('.'), ord('+'),
-        ord('`'), ord('-'),
-        ord('1'), ord('2'), ord('3'),
-        ord('4'), ord('5'), ord('6'),
-        ord('7'), ord('8'), ord('9'),
-        curses.KEY_F1,
-        curses.KEY_F2,
-        curses.KEY_F3,
-        curses.KEY_F4,
-        curses.KEY_F5,
-        curses.KEY_F6,
-        curses.KEY_F7,
-        curses.KEY_F8,
-        curses.KEY_F9,
-        curses.KEY_F10,
-    ):
+    if (65 <= char <= 90) or (97 <= char <= 122) or (1 <= char <= 47) or \
+            char in (
+                ord('='), ord('.'), ord('+'),
+                ord('`'), ord('-'),
+                ord('1'), ord('2'), ord('3'),
+                ord('4'), ord('5'), ord('6'),
+                ord('7'), ord('8'), ord('9'),
+                curses.KEY_F1,
+                curses.KEY_F2,
+                curses.KEY_F3,
+                curses.KEY_F4,
+                curses.KEY_F5,
+                curses.KEY_F6,
+                curses.KEY_F7,
+                curses.KEY_F8,
+                curses.KEY_F9,
+                curses.KEY_F10,
+            ):
         return True
     return False
 
@@ -566,13 +576,24 @@ def chk_key(char, key, win):
 
 def set_kb_letter(letter):
     global kb_letter
-    kb_letter = letter
+    if letter and letter.isprintable():  # Check if the letter is printable
+        kb_letter = letter
+        logger.error(f'>>> {kb_letter = }')  # Log the printable letter
+    else:
+        kb_letter = ''  # Ignore non-printable characters
+        logger.error(f'>>> Ignored non-printable letter: {repr(letter)}')
+
+def get_kb_letter():
+    global kb_letter
+    logger.error(f'*** {kb_letter = }')
+    return kb_letter
 
 def set_kb_cjk(value):
     global kb_cjk
     kb_cjk = value
 
 def get_unicode_and_cjk_char(win, char):
+    logger.error(f'{char = }')
     def _decode_string(data):
         encodings = ['utf-8', locale.getpreferredencoding(False), 'latin1']
         for enc in encodings:
@@ -588,6 +609,7 @@ def get_unicode_and_cjk_char(win, char):
     def get_check_next_byte(win):
         logger.error(f'{win = }')
         char = win.getch()
+        enqueue_input(char)
         if 128 <= char <= 191:
             return char
         else:
@@ -596,6 +618,7 @@ def get_unicode_and_cjk_char(win, char):
 
 
     set_kb_cjk(False)
+    logger.info('reseting kb_letter')
     set_kb_letter('')
     logger.error(f'all {win = }')
     bytes = []
@@ -628,6 +651,7 @@ def get_unicode_and_cjk_char(win, char):
         return None
     out = _decode_string(buf)
     if out:
+        logger.info('setting kb_letter')
         set_kb_letter(out)
         if is_wide(out) and not kb_cjk:
             set_kb_cjk(True)
@@ -635,8 +659,10 @@ def get_unicode_and_cjk_char(win, char):
                 logger.debug('=== CJK editing is ON ===')
     else:
         out = None
+        logger.info('invalid kb_letter')
         set_kb_letter('')
         set_kb_cjk(False)
+    logger.error(f'final {kb_letter = }')
     return out
 
 

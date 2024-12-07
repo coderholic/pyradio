@@ -50,7 +50,7 @@ from .schedule_win import PyRadioSimpleScheduleWindow
 from .simple_curses_widgets import SimpleCursesMenu
 from .messages_system import PyRadioMessagesSystem
 from .server import PyRadioServer, HAS_NETIFACES
-from .keyboard import kbkey, chk_key, get_unicode_and_cjk_char
+from .keyboard import kbkey, chk_key, get_unicode_and_cjk_char, dequeue_input, input_queue, get_kb_letter, set_kb_letter
 
 CAN_CHECK_FOR_UPDATES = True
 try:
@@ -2028,15 +2028,49 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             ''' start theme file thread  '''
             if self._cnf.auto_update_theme:
                 self._watch_theme(self._cnf.theme_path)
+            self._global_letter = None
+            remaining_keys = 0
             while True:
                 try:
                     if self._do_launch_external_palyer:
                         curses.ungetch(kbkey['ext_player'])
                     c = self.bodyWin.getch()
-                    # logger.error('DE pressed "{0} - {1}"'.format(c, chr(c)))
-                    ret = self.keypress(c)
-                    if (ret == -1):
-                        return
+                    logger.error(f'{c = }')
+
+                    if remaining_keys > 0:
+                        # Skip processing for replayed keys
+                        remaining_keys -= 1
+                        ret = self.keypress(c)  # Handle shortcut
+                        if ret == -1:
+                            return
+                        continue
+
+                    # Process input through get_unicode_and_cjk_char
+                    letter = get_unicode_and_cjk_char(self.bodyWin, c)
+                    # set_kb_letter(None)
+                    if letter:
+                        # set_kb_letter(letter)  # Save the decoded letter
+                        # Call keypress for single-byte shortcuts
+                        if len(input_queue) == 0:  # Single-byte input
+                            ret = self.keypress(c)  # Handle shortcut
+                            if ret == -1:
+                                return
+                        else:
+                            # Set remaining_keys based on input_queue length for multi-byte input
+                            remaining_keys = len(input_queue)
+                    else:
+                        # Single-byte character or invalid input
+                        ret = self.keypress(c)  # Handle shortcut
+                        if ret == -1:
+                            return
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug(f'{get_kb_letter() = }')
+                    # Replay input_queue into curses' input buffer
+                    while input_queue:
+                        # Re-insert input in reverse order
+                        deq = dequeue_input()
+                        curses.ungetch(deq)
+
                 except KeyboardInterrupt:
                     # ok
                     self.detect_if_player_exited = False
