@@ -1339,7 +1339,8 @@ class PyRadioThemeSelector():
                 l_char = char
             self._global_functions[l_char]()
             return -3, False
-        if char in (kbkey['edit'], ):
+        if char in (kbkey['edit'], ) or \
+                check_localized(char, (kbkey['edit'], )):
             ''' edit theme '''
             pass
             # if self._themes[self._selection][1] == '' or \
@@ -1348,13 +1349,16 @@ class PyRadioThemeSelector():
             #     return -2, False
             # else:
             #     pass
-        elif char in (kbkey['add'], ):
+        elif char in (kbkey['add'], ) or \
+                check_localized(char, (kbkey['add'], )):
             ''' new theme '''
             pass
-        elif char == kbkey['reload']:
+        elif char == kbkey['reload'] or \
+                check_localized(char, (kbkey['reload'], )):
             return -4, False
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
-                      kbkey['l'], curses.KEY_RIGHT):
+                      kbkey['l'], curses.KEY_RIGHT) or \
+                check_localized(char, (kbkey['l'], )):
             self._applied_theme = self._selection
             self._applied_theme_name = self._themes[self._selection][0]
             #if self.changed_from_config:
@@ -1362,14 +1366,16 @@ class PyRadioThemeSelector():
             #    self._config_theme_name = self._themes[self._selection][0]
             self.refresh()
             return self._selection, False
-        elif char in (kbkey['pause'], kbkey['s'], kbkey['watch_theme']):
+        elif char in (kbkey['pause'], kbkey['s'], kbkey['watch_theme']) or \
+                check_localized(char, (kbkey['pause'], kbkey['s'])):
             self._applied_theme = self._selection
             self._applied_theme_name = self._themes[self._selection][0]
             if not self.changed_from_config:
                 self._config_theme = self._selection
                 self._config_theme_name = self._themes[self._selection][0]
             self._theme_is_watched = False
-            if char == kbkey['watch_theme']:
+            if char == kbkey['watch_theme'] or \
+                check_localized(char, (kbkey['watch_theme'], )):
                 if self._selection > self._first_theme_to_watch and \
                         self._themes[self._selection][1]:
                     ''' we are at "User Themes" '''
@@ -1388,16 +1394,20 @@ class PyRadioThemeSelector():
                             logger.debug('Theme set to auto update: "{}"'.format(self._applied_theme_name))
             self.refresh()
             return self._selection, True
-        elif char in (curses.KEY_UP, kbkey['k']):
+        elif char in (curses.KEY_UP, kbkey['k']) or \
+                check_localized(char, (kbkey['k'], )):
             self.jumpnr = ''
             self._go_up()
-        elif char in (curses.KEY_DOWN, kbkey['j']):
+        elif char in (curses.KEY_DOWN, kbkey['j']) or \
+                check_localized(char, (kbkey['j'], )):
             self.jumpnr = ''
             self._go_down()
-        elif char in (curses.KEY_HOME, kbkey['g']):
+        elif char in (curses.KEY_HOME, kbkey['g']) or \
+                check_localized(char, (kbkey['g'], )):
             self.jumpnr = ''
             self._go_home()
-        elif char in (curses.KEY_END, kbkey['G']):
+        elif char in (curses.KEY_END, kbkey['G']) or \
+                check_localized(char, (kbkey['G'], )):
             if self.jumpnr == '':
                 self._go_end()
             else:
@@ -1429,7 +1439,8 @@ class PyRadioThemeSelector():
             self.selection = sel
         elif char in map(ord,map(str,range(0, 10))):
             self.jumpnr += chr(char)
-        elif char in (curses.KEY_EXIT, 27, kbkey['q'], kbkey['h'], curses.KEY_LEFT):
+        elif char in (curses.KEY_EXIT, 27, kbkey['q'], kbkey['h'], curses.KEY_LEFT) or \
+                check_localized(char, (kbkey['q'], kbkey['h'])):
             self.jumpnr = ''
             self._win.nodelay(True)
             char = self._win.getch()

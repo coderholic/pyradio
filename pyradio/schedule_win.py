@@ -1302,30 +1302,35 @@ class PyRadioSimpleScheduleWindow():
                 else:
                     self._widgets[7].set_time_pyradio_time(self._widgets[13].active_time)
 
-        elif char == kbkey['?']:
+        elif char == kbkey['?'] or \
+                check_localized(char, (kbkey['?'], )):
             return 2
 
-        elif char in (curses.KEY_EXIT, kbkey['q'], 27):
+        elif char in (curses.KEY_EXIT, kbkey['q'], 27) or \
+                check_localized(char, (kbkey['q'], )):
             self._stop = True
             self._exit = True
             return -1
 
-        elif self._focus == 0 and char in (
+        elif self._focus == 0 and (char in (
                 curses.KEY_ENTER, ord('\n'), ord('\r'),
-                curses.KEY_RIGHT, kbkey['l'], kbkey['pause']
-                ) and self._widgets[2].checked:
+                curses.KEY_RIGHT, kbkey['l'], kbkey['pause']) or \
+                check_localized(char, (kbkey['pause'], kbkey['l']))) and \
+                self._widgets[2].checked:
             return 4
 
-        elif self._focus == 1 and char in (
+        elif self._focus == 1 and (char in (
                 curses.KEY_ENTER, ord('\n'), ord('\r'),
-                curses.KEY_RIGHT, kbkey['l'], kbkey['pause']
+                curses.KEY_RIGHT, kbkey['l'], kbkey['pause'] or \
+                check_localized(char, (kbkey['pause'], kbkey['l'])))
                 ) and self._widgets[2].checked:
             return 5
 
-        elif self._focus == 19 and char in (
-                kbkey['l'], kbkey['h'], curses.KEY_LEFT, curses.KEY_RIGHT
-                ):
-            if char in (kbkey['h'], curses.KEY_LEFT):
+        elif self._focus == 19 and (char in (
+                kbkey['l'], kbkey['h'], curses.KEY_LEFT, curses.KEY_RIGHT) or \
+                check_localized(char, (kbkey['l'], kbkey['h']))):
+            if char in (kbkey['h'], curses.KEY_LEFT) or \
+                check_localized(char, (kbkey['h'], )):
                 self._repeat_index -= 1
                 if self._repeat_index < 0 :
                     self._repeat_index = len(self._repeat) - 1
@@ -1335,25 +1340,30 @@ class PyRadioSimpleScheduleWindow():
                     self._repeat_index = 0
             self._widgets[19].string = self._repeat[self._repeat_index].ljust(self._max_repeat_len)
 
-        elif char in (kbkey['k'], curses.KEY_UP):
+        elif char in (kbkey['k'], curses.KEY_UP) or \
+                check_localized(char, (kbkey['k'], )):
             self._go_up()
 
-        elif char in (kbkey['j'], curses.KEY_DOWN):
+        elif char in (kbkey['j'], curses.KEY_DOWN) or \
+                check_localized(char, (kbkey['j'], )):
             self._go_down()
 
-        elif char in (ord('\t'), 9, kbkey['tab']):
+        elif char in (ord('\t'), 9, kbkey['tab']) or \
+                check_localized(char, (kbkey['tab'], )):
             if self._widgets[self._focus].w_id in (3, 5, 7, 9, 11, 13):
                 self._widgets[self._focus].keypress(char)
             else:
                 self._next_widget()
 
-        elif char in (curses.KEY_BTAB, kbkey['stab']):
+        elif char in (curses.KEY_BTAB, kbkey['stab']) or \
+                check_localized(char, (kbkey['stab'], )):
             if self._widgets[self._focus].w_id in (3, 5, 7, 9, 11, 13):
                 self._widgets[self._focus].keypress(char)
             else:
                 self._previous_widget()
 
-        elif char == kbkey['info']:
+        elif char == kbkey['info'] or \
+                check_localized(char, (kbkey['info'], )):
             self._show_info()
             return 10
 
@@ -1386,13 +1396,15 @@ class PyRadioSimpleScheduleWindow():
                 pass
 
             elif self._widgets[self._focus].w_id == 14:
-                if char in (kbkey['l'], curses.KEY_RIGHT):
+                if char in (kbkey['l'], curses.KEY_RIGHT) or \
+                        check_localized(char, (kbkey['l'], )):
                     self._current_player_id += 1
                     if self._current_player_id == len(self._supported_players):
                         self._current_player_id = 0
                     self._widgets[14].string = self._supported_players[self._current_player_id]
                     # self._fix_recording_from_player_selection()
-                elif char in (kbkey['h'], curses.KEY_LEFT):
+                elif char in (kbkey['h'], curses.KEY_LEFT) or \
+                        check_localized(char, (kbkey['h'], )):
                     self._current_player_id -= 1
                     if self._current_player_id < 0:
                         self._current_player_id = len(self._supported_players) - 1
