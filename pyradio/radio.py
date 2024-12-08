@@ -50,7 +50,7 @@ from .schedule_win import PyRadioSimpleScheduleWindow
 from .simple_curses_widgets import SimpleCursesMenu
 from .messages_system import PyRadioMessagesSystem
 from .server import PyRadioServer, HAS_NETIFACES
-from .keyboard import kbkey, chk_key, get_unicode_and_cjk_char, dequeue_input, input_queue, get_kb_letter, set_kb_letter
+from .keyboard import kbkey, get_lkbkey, chk_key, get_unicode_and_cjk_char, dequeue_input, input_queue, get_kb_letter, set_kb_letter, check_localized
 
 CAN_CHECK_FOR_UPDATES = True
 try:
@@ -228,24 +228,28 @@ class SelectPlayer():
 
     def keypress(self, char):
         ''' SelectPlayer keypress '''
+        l_char = None
         if char in (
             kbkey['j'], curses.KEY_DOWN,
             kbkey['k'], curses.KEY_UP
-        ):
+        ) or \
+                check_localized(char, (kbkey['j'], kbkey['k'])):
             self._selected = 1 if self._selected == 0 else 0
             self._update_selection()
         elif char in (
             curses.KEY_ENTER, ord('\n'), ord('\r'),
             kbkey['s'], kbkey['pause'],
             kbkey['l'], curses.KEY_RIGHT
-        ):
+        ) or \
+                check_localized(char, (kbkey['s'], kbkey['l'], kbkey['pause'],)):
             if not (self._no_vlc and \
                     self._available_players[self._selected] == 'vlc'):
                 return self._available_players[self._selected]
             else:
                 self._vlc_no_recording()
         elif char in (kbkey['h'], curses.KEY_LEFT,
-                      kbkey['q'], curses.KEY_EXIT, 27):
+                      kbkey['q'], curses.KEY_EXIT, 27) or \
+                check_localized(char, (kbkey['h'], kbkey['q'])):
             return None
         return ''
 
@@ -1910,7 +1914,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             logger.debug('File watch thread stopped on: {}'.format(a_file))
 
     def run(self):
-        logger.error('kbkey\n{}'.format(kbkey))
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('Keyboard Shortcuts:\n{}'.format(kbkey))
+            logger.info('Localized Keyboard Shortcuts:\n{}'.format(get_lkbkey()))
         # self._watch_theme()
         self._register_signals_handlers()
         if self.ws.operation_mode == self.ws.DEPENDENCY_ERROR:
@@ -5976,8 +5982,12 @@ ____Using |fallback| theme.''')
             self._remote_control_window.show(self.outerBodyWin)
 
     def _reload_playlist_after_confirmation(self, char):
-        if char in (kbkey['y'], kbkey['Y']):
-            if not self._cnf.locked and char == kbkey['Y']:
+        if char in (kbkey['y'], kbkey['Y']) or \
+                check_localized(char, (kbkey['y'], kbkey['n'])):
+            if not self._cnf.locked and (
+                        char == kbkey['Y'] or \
+                        check_localized(char, (kbkey['y'], ))
+                        ):
                 self._cnf.confirm_playlist_reload = False
             self.reloadCurrentPlaylist(self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE)
             self.ws.close_window()
@@ -6002,7 +6012,8 @@ ____Using |fallback| theme.''')
             logger.debug('Deleted station: "{}"'.format(deleted_station[0]))
         self.ws.close_window()
         self._align_stations_and_refresh(self.ws.REMOVE_STATION_MODE)
-        if not self._cnf.locked and char == kbkey['Y']:
+        if not self._cnf.locked and (char == kbkey['Y'] or \
+                check_localized(char, (kbkey['Y'], ))):
             self._cnf.confirm_station_deletion = False
         self._cnf.stations_history.remove_station(deleted_station[0])
 
@@ -6122,6 +6133,7 @@ ____Using |fallback| theme.''')
         # logger.error('\n\nchar = {}\n\n'.format(char))
         # letter = get_unicode_and_cjk_char(self.outerBodyWin, char)
         # logger.error('\n\nletter = {}\n\n'.format(letter))
+        l_char = None
         if char in (curses.KEY_RESIZE, ):
             self._i_am_resizing = True
             self._normal_mode_resize()
@@ -6161,7 +6173,8 @@ ____Using |fallback| theme.''')
 
         ''' if small exit '''
         if self._limited_height_mode or self._limited_width_mode:
-            if char == kbkey['pause']:
+            if char == kbkey['pause'] or \
+                    check_localized(char, (kbkey['pause'],)):
                 if self.player.isPlaying() and \
                         self.player.playback_is_on and \
                         self.player.recording and \
@@ -6171,11 +6184,15 @@ ____Using |fallback| theme.''')
                     self._stop_player()
                 self.refreshBody()
 
-            elif char in self._global_functions:
-                self._global_functions[char]()
+            elif char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
 
         if self.ws.operation_mode == self.ws.NO_THEMES_MODE:
-            if char == kbkey['no_show']:
+            if char == kbkey['no_show'] or \
+                    check_localized(char, (kbkey['no_show'],)):
                 self._cnf.show_no_themes_message = False
                 self._cnf.dirty_config = True
                 self._cnf.save_config()
@@ -6184,11 +6201,15 @@ ____Using |fallback| theme.''')
             return
 
         if self.ws.operation_mode == self.ws.WIN_UNINSTALL_MODE:
-            if char in self._global_functions:
-                self._global_functions[char]()
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
             else:
                 self.ws.close_window()
-                if char in (kbkey['y'], ):
+                if char in (kbkey['y'], ) or \
+                        check_localized(char, (kbkey['y'],)):
                     return -1
                 else:
                     self._cnf.WIN_UNINSTALL = False
@@ -6320,17 +6341,24 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         if self.ws.operation_mode == self.ws.WIN_PRINT_EXE_LOCATION_MODE:
-            if char in self._global_functions:
-                self._global_functions[char]()
-            elif char in (kbkey['q'], curses.KEY_EXIT, 27):
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
+            elif char in (kbkey['q'], curses.KEY_EXIT, 27) or \
+                    check_localized(char, (kbkey['q'],)):
                 self.ws.close_window()
                 curses.ungetch('q')
                 #self.refreshBody()
             return
 
         if self.ws.operation_mode == self.ws.WIN_MANAGE_PLAYERS_MSG_MODE:
-            if char in self._global_functions:
-                self._global_functions[char]()
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
             else:
                 self.ws.close_window()
                 curses.ungetch('q')
@@ -6338,8 +6366,11 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         if self.ws.operation_mode == self.ws.WIN_REMOVE_OLD_INSTALLATION_MODE:
-            if char in self._global_functions:
-                self._global_functions[char]()
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
             else:
                 self.ws.close_window()
                 self.refreshBody()
@@ -6358,7 +6389,8 @@ _____"|f|" to see the |free| keys you can use.
             return -1
 
         elif (self.jumpnr or self._cnf.jump_tag > -1) and \
-                char in (curses.KEY_EXIT, kbkey['q'], 27) and \
+                (char in (curses.KEY_EXIT, kbkey['q'], 27) or \
+                    check_localized(char, (kbkey['q'],))) and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
             ''' Reset jumpnr '''
             self._update_status_bar_right(status_suffix='')
@@ -6373,7 +6405,9 @@ _____"|f|" to see the |free| keys you can use.
                 Open Register - char = '
 
             '''
-        elif not self._register_open_pressed and char == kbkey['open_regs'] and \
+        elif not self._register_open_pressed and \
+                (char == kbkey['open_regs'] or \
+                check_localized(char, (kbkey['open_regs'],))) and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
             ''' ' pressed - get into open register mode '''
             if self._cnf.browsing_station_service:
@@ -6388,11 +6422,13 @@ _____"|f|" to see the |free| keys you can use.
             return
         elif (self._register_open_pressed
                 and self.ws.operation_mode == self.ws.NORMAL_MODE):
-            if char == kbkey['?']:
+            if char == kbkey['?'] or \
+                    check_localized(char, (kbkey['?'],)):
                 self._open_message_win_by_key('H_REGISTERS')
                 return
             ''' get station to register - accept a-z, 0-9 and - '''
-            if char == kbkey['open_regs']:
+            if char == kbkey['open_regs'] or \
+                    check_localized(char, (kbkey['open_regs'],)):
                 self._set_active_stations()
                 self.saved_active_stations = self.active_stations[:]
                 logger.error('self.saved_active_stations = {}'.format(self.saved_active_stations))
@@ -6419,7 +6455,9 @@ _____"|f|" to see the |free| keys you can use.
 
                 Extra Commands - char = \
             '''
-        elif not self._backslash_pressed and char == kbkey['open_extra'] and \
+        elif not self._backslash_pressed and \
+                ( char == kbkey['open_extra'] or \
+                 check_localized(char, (kbkey['open_extra'],))) and \
                 self.ws.operation_mode in (self.ws.NORMAL_MODE,
                     self.ws.PLAYLIST_MODE):
             ''' \\ pressed '''
@@ -6433,13 +6471,15 @@ _____"|f|" to see the |free| keys you can use.
                 self.ws.operation_mode in (self.ws.NORMAL_MODE,
                 self.ws.PLAYLIST_MODE):
 
-            if char == kbkey['open_dirs']:
+            if char == kbkey['open_dirs'] or \
+                    check_localized(char, (kbkey['open_dirs'],)):
                 ''' open dir window '''
                 self._backslash_pressed = False
                 self._update_status_bar_right(status_suffix='')
                 self._show_open_dir_window()
 
-            elif char == kbkey['change_player'] and \
+            elif ( char == kbkey['change_player'] or \
+                  check_localized(char, (kbkey['change_player'],))) and \
                     self.ws.operation_mode == self.ws.NORMAL_MODE:
                 ''' change player  '''
                 self._update_status_bar_right(status_suffix='')
@@ -6455,7 +6495,8 @@ _____"|f|" to see the |free| keys you can use.
                     )
                     self._change_player.show()
 
-            elif char == kbkey['open_remote_control'] and \
+            elif ( char == kbkey['open_remote_control'] or \
+                  check_localized(char, (kbkey['open_remote_control'],))) and \
                     self.ws.operation_mode == self.ws.NORMAL_MODE:
                 ''' open remote control '''
                 self._update_status_bar_right(status_suffix='')
@@ -6467,7 +6508,8 @@ _____"|f|" to see the |free| keys you can use.
                 else:
                     self._print_netifaces_not_installed_error()
 
-            elif char in (kbkey['html_help'], ):
+            elif char in (kbkey['html_help'], ) or \
+                    check_localized(char, (kbkey['html_help'],)):
                 ''' open html help '''
                 self._update_status_bar_right(status_suffix='')
                 html = HtmlHelp()
@@ -6476,7 +6518,8 @@ _____"|f|" to see the |free| keys you can use.
                         browser=self._cnf.browsing_station_service
                         )
 
-            elif char == kbkey['rename_playlist']:
+            elif char == kbkey['rename_playlist'] or \
+                    check_localized(char, (kbkey['rename_playlist'],)):
                 ''' rename playlist '''
                 self._update_status_bar_right(status_suffix='')
                 if self._cnf.browsing_station_service:
@@ -6503,7 +6546,8 @@ _____"|f|" to see the |free| keys you can use.
                     self._rename_playlist_dialog.show()
                     self.ws.operation_mode = self.ws.RENAME_PLAYLIST_MODE
 
-            elif char == kbkey['new_playlist']:
+            elif char == kbkey['new_playlist'] or \
+                    check_localized(char, (kbkey['open_remote_control'],)):
                 ''' create new playlist '''
                 self._update_status_bar_right(status_suffix='')
                 if self._cnf.browsing_station_service:
@@ -6524,7 +6568,8 @@ _____"|f|" to see the |free| keys you can use.
                     self._rename_playlist_dialog.show()
                     self.ws.operation_mode = self.ws.CREATE_PLAYLIST_MODE
 
-            elif char == kbkey['last_playlist']:
+            elif char == kbkey['last_playlist'] or \
+                    check_localized(char, (kbkey['last_playlist'],)):
                 self._update_status_bar_right(status_suffix='')
                 self._cnf.open_last_playlist = not self._cnf.open_last_playlist
                 self._show_notification_with_delay(
@@ -6534,7 +6579,8 @@ _____"|f|" to see the |free| keys you can use.
                         mode_to_set=self.ws.operation_mode,
                         callback_function=self.refreshBody)
 
-            elif char == kbkey['paste']:
+            elif char == kbkey['paste'] or \
+                    check_localized(char, (kbkey['paste'],)):
                 ''' paste '''
                 self._update_status_bar_right(status_suffix='')
                 if self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -6559,16 +6605,19 @@ _____"|f|" to see the |free| keys you can use.
                 else:
                     self._paste(playlist=self.stations[self.selection][-1])
 
-            elif char == kbkey['?']:
+            elif char == kbkey['?'] or \
+                    check_localized(char, (kbkey['?'],)):
                 self._open_message_win_by_key('H_EXTRA')
                 return
 
-            elif char == kbkey['unnamed']:
+            elif char == kbkey['unnamed'] or \
+                    check_localized(char, (kbkey['unnamed'],)):
                 self._update_status_bar_right(status_suffix='')
                 self._show_unnamed_register()
                 return
 
-            elif char == kbkey['open_extra']:
+            elif char == kbkey['open_extra'] or \
+                    check_localized(char, (kbkey['open_extra'],)):
                 ''' \\ pressed - go back in history '''
                 if self._cnf.dirty_playlist:
                     if self._cnf.auto_save_playlist:
@@ -6582,7 +6631,8 @@ _____"|f|" to see the |free| keys you can use.
                 else:
                     self._goto_history_back_handler()
 
-            elif char == kbkey['hist_top']:
+            elif char == kbkey['hist_top'] or \
+                    check_localized(char, (kbkey['hist_top'],)):
                 ''' ] pressed - go to first playlist in history '''
                 self._update_status_bar_right(status_suffix='')
                 if self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -6593,7 +6643,8 @@ _____"|f|" to see the |free| keys you can use.
                     else:
                         self._show_no_more_playlist_history()
 
-            elif char == kbkey['clear_reg']:
+            elif char == kbkey['clear_reg'] or \
+                    check_localized(char, (kbkey['clear_reg'],)):
                 self._update_status_bar_right(status_suffix='')
                 if ((self._cnf.is_register and \
                         self.ws.operation_mode == self.ws.NORMAL_MODE) or \
@@ -6608,7 +6659,8 @@ _____"|f|" to see the |free| keys you can use.
                                     mode_to_set=self.ws.NORMAL_MODE,
                                     callback_function=self.refreshBody)
 
-            elif char == kbkey['clear_all_reg']:
+            elif char == kbkey['clear_all_reg'] or \
+                    check_localized(char, (kbkey['clear_all_reg'],)):
                 self._update_status_bar_right(status_suffix='')
                 if (self.ws.operation_mode == self.ws.NORMAL_MODE or \
                         (self.ws.operation_mode == self.ws.PLAYLIST_MODE and \
@@ -6623,7 +6675,8 @@ _____"|f|" to see the |free| keys you can use.
                                 mode_to_set=self.ws.NORMAL_MODE,
                                 callback_function=self.refreshBody)
 
-            elif char == kbkey['buffer']:
+            elif char == kbkey['buffer'] or \
+                    check_localized(char, (kbkey['buffer'],)):
                 self._update_status_bar_right(status_suffix='')
                 if self._cnf.buffering_data:
                     self._cnf.buffering_data = []
@@ -6651,7 +6704,8 @@ _____"|f|" to see the |free| keys you can use.
                     logger.debug('buffering data = {}'.format(self._cnf.buffering_data))
                 return
 
-            elif char == kbkey['open_buffer']:
+            elif char == kbkey['open_buffer'] or \
+                    check_localized(char, (kbkey['open_buffer'],)):
                 self._update_status_bar_right(status_suffix='')
                 if self.ws.operation_mode == self.ws.NORMAL_MODE:
                     self._buffering_win = PyRadioBuffering(
@@ -6677,7 +6731,9 @@ _____"|f|" to see the |free| keys you can use.
 
             '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-        elif not self._register_assign_pressed and char == kbkey['add_to_reg'] and \
+        elif not self._register_assign_pressed and \
+                (char == kbkey['add_to_reg'] or \
+                 check_localized(char, (kbkey['add_to_reg'],))) and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
             ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
@@ -6704,7 +6760,8 @@ _____"|f|" to see the |free| keys you can use.
         elif (self._register_assign_pressed and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE):
             ''' get station to register - accept a-z, 0-9 and - '''
-            if char == kbkey['?']:
+            if char == kbkey['?'] or \
+                    check_localized(char, (kbkey['h'],)):
                 self._open_message_win_by_key('H_YANK')
                 return
             self._update_status_bar_right(status_suffix='')
@@ -6753,7 +6810,8 @@ _____"|f|" to see the |free| keys you can use.
             self.ws.close_window()
             self.refreshBody()
             ret = -1
-            if char == kbkey['y']:
+            if char == kbkey['y'] or \
+                    check_localized(char, (kbkey['y'],)):
                 ret = self._need_to_update_stations_csv = self._cls_update_stations.update_stations_csv(print_messages=False)
                 if self._need_to_update_stations_csv == -6:
                     self._update_stations_error_count = 0
@@ -6776,7 +6834,8 @@ _____"|f|" to see the |free| keys you can use.
                 if self._cnf.station_title == 'stations':
                     self.reloadCurrentPlaylist(self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE)
 
-            elif char == kbkey['n']:
+            elif char == kbkey['n'] or \
+                    check_localized(char, (kbkey['n'],)):
                 self._update_stations_error_count = 0
                 while True:
                     # logger.error('\n\ncalling self._cls_update_stations.write_synced_version\n\n')
@@ -6861,7 +6920,8 @@ _____"|f|" to see the |free| keys you can use.
                 self._change_player = None
 
         elif self.ws.operation_mode == self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE:
-            if char == kbkey['s']:
+            if char == kbkey['s'] or \
+                    check_localized(char, (kbkey['s'],)):
                 self._stop_remote_control_server()
             self.ws.close_window()
             self.refreshBody()
@@ -6882,7 +6942,9 @@ _____"|f|" to see the |free| keys you can use.
                 self.ws.close_window()
                 self.refreshBody()
 
-        elif char == kbkey['screen_top'] and self.ws.operation_mode in \
+        elif ( char == kbkey['screen_top']  or \
+                  check_localized(char, (kbkey['screen_top'],))) and \
+                self.ws.operation_mode in \
                 (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
             self._reset_status_bar_right()
             if self.number_of_items > 0:
@@ -6891,20 +6953,24 @@ _____"|f|" to see the |free| keys you can use.
             self._do_display_notify()
             return
 
-        elif char == kbkey['screen_middle'] and self.ws.operation_mode in \
-                (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
-            self._reset_status_bar_right()
-            if self.number_of_items > 0:
-                if self.number_of_items < self.bodyMaxY:
-                    self.selection = int(self.number_of_items / 2)
-                else:
-                    self.selection = self.startPos + int((self.bodyMaxY - 1) / 2)
-                self.refreshBody()
-            self._do_display_notify()
-            return
+        elif (char == kbkey['screen_middle'] or \
+                  check_localized(char, (kbkey['screen_middle'],))) and \
+                  self.ws.operation_mode in \
+                  (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
+              self._reset_status_bar_right()
+              if self.number_of_items > 0:
+                  if self.number_of_items < self.bodyMaxY:
+                      self.selection = int(self.number_of_items / 2)
+                  else:
+                      self.selection = self.startPos + int((self.bodyMaxY - 1) / 2)
+                  self.refreshBody()
+              self._do_display_notify()
+              return
 
-        elif char == kbkey['screen_bottom'] and self.ws.operation_mode in \
-                (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
+        elif (char == kbkey['screen_bottom'] or \
+                  check_localized(char, (kbkey['screen_bottom'],))) and \
+                  self.ws.operation_mode in \
+                  (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
             self._reset_status_bar_right()
             if self.number_of_items > 0:
                 if self.number_of_items < self.bodyMaxY:
@@ -6915,7 +6981,8 @@ _____"|f|" to see the |free| keys you can use.
             self._do_display_notify()
             return
 
-        elif char in (kbkey['t'], ) and \
+        elif ( char in (kbkey['t'], ) or \
+                  check_localized(char, (kbkey['t'],))) and \
                 self.ws.operation_mode not in (self.ws.EDIT_STATION_MODE,
                     self.ws.ADD_STATION_MODE, self.ws.THEME_MODE,
                     self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE,) and \
@@ -6955,7 +7022,9 @@ _____"|f|" to see the |free| keys you can use.
             self._show_theme_selector()
             return
 
-        elif char == kbkey['goto_playing'] and self.ws.operation_mode in \
+        elif ( char == kbkey['goto_playing'] or \
+                  check_localized(char, (kbkey['goto_playing'],))) and \
+                self.ws.operation_mode in \
                 (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
             self._reset_status_bar_right()
             self._goto_playing_station()
@@ -7040,7 +7109,8 @@ _____"|f|" to see the |free| keys you can use.
 
         elif self.ws.operation_mode == self.ws.CONFIG_MODE and \
                 char not in self._chars_to_bypass:
-            if char in (kbkey['revert_saved'], kbkey['revert_def']):
+            if char in (kbkey['revert_saved'], kbkey['revert_def']) or \
+                    check_localized(char, (kbkey['revert_saved'], kbkey['revert_def'])):
                 self._player_select_win = None
                 self._encoding_select_win = None
                 self._playlist_select_win = None
@@ -7567,8 +7637,11 @@ _____"|f|" to see the |free| keys you can use.
 
         elif self.ws.operation_mode == self.ws.BROWSER_SERVER_SELECTION_MODE and \
                 char not in self._chars_to_bypass:
-            if char in self._global_functions:
-                self._global_functions[char]()
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
                 return
             if self._server_selection_window:
                 ret = self._server_selection_window.keypress(char)
@@ -7601,7 +7674,8 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode == self.ws.DELETE_PLAYLIST_MODE:
-            if char == kbkey['y']:
+            if char == kbkey['y'] or \
+                    check_localized(char, (kbkey['y'],)):
                 try:
                     remove(self.stations[self.selection][-1])
                 except:
@@ -7763,8 +7837,11 @@ _____"|f|" to see the |free| keys you can use.
 
         elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE:
 
-            if char in self._global_functions and \
+            if (char in self._global_functions  or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None) and \
                     not self._cnf._online_browser.line_editor_has_focus():
+                if l_char is None:
+                    l_char = char
                 self._global_functions[char]()
                 return
 
@@ -7814,8 +7891,11 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode == self.ws.BROWSER_SORT_MODE:
-            if char in self._global_functions:
-                self._global_functions[char]()
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
                 return
             ret = self._cnf._online_browser.keypress(char)
             if ret < 1:
@@ -7925,12 +8005,16 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_CREATE_NEW_THEME_MODE:
-            if char in self._global_functions:
-                self._global_functions[char]()
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
                 return
             if self.theme_forced_selection:
                 self._theme_selector.set_theme(self.theme_forced_selection)
-            if char in (kbkey['y'], ):
+            if char in (kbkey['y'], ) or \
+                    check_localized(char, (kbkey['y'],)):
                 pass
                 #ret = self._cnf.copy_playlist_to_config_dir()
                 #if ret == 0:
@@ -7943,7 +8027,8 @@ _____"|f|" to see the |free| keys you can use.
                 #else:
                 #    ''' error '''
                 #    self._print_foreign_playlist_copy_error()
-            elif char not in (kbkey['repaint'], curses.KEY_RESIZE):
+            elif char not in (kbkey['repaint'], curses.KEY_RESIZE) or \
+                    check_localized(char, (kbkey['repaint'],)):
                 self.ws.close_window()
                 self.refreshBody()
                 ''' Do this here to properly resize '''
@@ -7953,7 +8038,8 @@ _____"|f|" to see the |free| keys you can use.
                 char not in self._chars_to_bypass and \
                 char not in self._chars_to_bypass_for_search:
             ''' Return from station selection window for pasting '''
-            if char == kbkey['?']:
+            if char == kbkey['?'] or \
+                    check_localized(char, (kbkey['?'],)):
                 self._open_message_win_by_key('H_CONFIG_PLAYLIST')
             else:
                 ret, a_playlist = self._playlist_select_win.keypress(char)
@@ -8061,11 +8147,16 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG_TO_EXIT:
-            if char in self._global_functions:
-                self._global_functions[char]()
-            elif char in (kbkey['y'], kbkey['n']):
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
+            elif char in (kbkey['y'], kbkey['n']) or \
+                    check_localized(char, (kbkey['y'], kbkey['n'])):
                 self.ws.close_window()
-                if char == kbkey['y']:
+                if char == kbkey['y'] or \
+                        check_localized(char, (kbkey['y'],)):
                     ret = self._cnf._online_browser.save_config()
                     if ret == -2:
                         ''' save ok  '''
@@ -8081,7 +8172,8 @@ _____"|f|" to see the |free| keys you can use.
                         ''' not modified '''
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('Online browser config not saved (not modifed)')
-                elif char == kbkey['n']:
+                elif char == kbkey['n'] or \
+                        check_localized(char, (kbkey['n'],)):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Saving Online browser config canceled!!!')
                 self._open_playlist_from_history()
@@ -8089,11 +8181,16 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_CONFIG:
-            if char in self._global_functions:
-                self._global_functions[char]()
-            elif char in (kbkey['y'], kbkey['n']):
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
+            elif char in (kbkey['y'], kbkey['n']) or \
+                    check_localized(char, (kbkey['y'], kbkey['n'])):
                 self.ws.close_window()
-                if char == kbkey['y']:
+                if char == kbkey['y'] or \
+                    check_localized(char, (kbkey['y'], )):
                     ret = self._browser_config_win.save_config()
                     if ret == -2:
                         ''' save ok  '''
@@ -8109,7 +8206,8 @@ _____"|f|" to see the |free| keys you can use.
                         ''' not modified '''
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('Online browser config not saved (not modifed)')
-                elif char == kbkey['n']:
+                elif char == kbkey['n'] or \
+                    check_localized(char, (kbkey['n'], )):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Saving Online browser config canceled!!!')
                     self._browser_config_win.reset_dirty_config()
@@ -8119,11 +8217,16 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_BROWSER:
-            if char in self._global_functions:
-                self._global_functions[char]()
-            elif char in (kbkey['y'], kbkey['n']):
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
+            elif char in (kbkey['y'], kbkey['n']) or \
+                    check_localized(char, (kbkey['y'], kbkey['n'])):
                 self.ws.close_window()
-                if char == kbkey['y']:
+                if char == kbkey['y'] or \
+                    check_localized(char, (kbkey['y'], )):
                     ret = self._cnf._online_browser.save_config()
                     if ret == -2:
                         ''' save ok  '''
@@ -8140,7 +8243,8 @@ _____"|f|" to see the |free| keys you can use.
                         ''' not modified '''
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('Online browser config not saved (not modifed)')
-                elif char == kbkey['n']:
+                elif char == kbkey['n'] or \
+                    check_localized(char, (kbkey['n'], )):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Saving Online browser config canceled!!!')
                     self._cnf._online_browser.reset_dirty_config()
@@ -8150,7 +8254,8 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode == self.ws.CLEAR_REGISTER_MODE:
-            if char in (kbkey['y'], kbkey['n']):
+            if char in (kbkey['y'], kbkey['n']) or \
+                    check_localized(char, (kbkey['y'], kbkey['n'])):
                 self.ws.close_window()
                 if char == kbkey['y']:
                     self._clear_register_file()
@@ -8158,16 +8263,22 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode == self.ws.CLEAR_ALL_REGISTERS_MODE:
-            if char in self._global_functions:
-                self._global_functions[char]()
-            elif char in (kbkey['y'], kbkey['n']):
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
+            elif char in (kbkey['y'], kbkey['n']) or \
+                    check_localized(char, (kbkey['y'], kbkey['n'])):
                 self.ws.close_window()
                 if char == kbkey['y']:
                     self._clear_all_register_files()
                 self.refreshBody()
             return
 
-        elif char in (kbkey['search'], ) and self.ws.operation_mode in self._search_modes:
+        elif (char in (kbkey['search'], ) or \
+                check_localized(char, (kbkey['search'],))) and \
+                self.ws.operation_mode in self._search_modes:
             self._reset_status_bar_right()
             if self.maxY > 5:
                 self._give_me_a_search_class(self.ws.operation_mode)
@@ -8176,20 +8287,27 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode == self.ws.UPDATE_NOTIFICATION_MODE:
-            if char in self._global_functions:
-                self._global_functions[char]()
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
             else:
                 with self._update_notify_lock:
                     self._update_version = ''
                 self.ws.close_window()
-                if char == kbkey['y']:
+                if char == kbkey['y'] or \
+                    check_localized(char, (kbkey['y'], )):
                     self._print_update_ok_notification()
                 self.refreshBody()
             return
 
         elif self.ws.operation_mode == self.ws.UPDATE_NOTIFICATION_OK_MODE:
-            if char in self._global_functions:
-                self._global_functions[char]()
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
                 return
             # ok
             self.detect_if_player_exited = False
@@ -8206,7 +8324,8 @@ _____"|f|" to see the |free| keys you can use.
 
         # elif char in (kbkey['n'], ) and \
         #         self.ws.operation_mode in self._search_modes.keys():
-        elif char in (kbkey['search_next'], ) and \
+        elif (char in (kbkey['search_next'], ) or \
+                check_localized(char, (kbkey['search_next'],))) and \
                 self.ws.operation_mode in self._search_modes:
             self._give_me_a_search_class(self.ws.operation_mode)
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -8253,7 +8372,8 @@ _____"|f|" to see the |free| keys you can use.
                 curses.ungetch('/')
             return
 
-        elif char in (kbkey['search_prev'], ) and \
+        elif (char in (kbkey['search_prev'], ) or \
+                check_localized(char, (kbkey['search_prev'],))) and \
                 self.ws.operation_mode in self._search_modes:
             self._give_me_a_search_class(self.ws.operation_mode)
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -8376,13 +8496,17 @@ _____"|f|" to see the |free| keys you can use.
                 self._open_message_win_by_key('H_GROUP')
             return
 
-        elif char in (kbkey['transp'], ):
+        elif char in (kbkey['transp'], ) or \
+                    check_localized(char, (kbkey['transp'],)):
             self._update_status_bar_right()
             self._toggle_transparency()
             return
 
-        elif char in self._global_functions:
-            self._global_functions[char]()
+        elif char in self._global_functions or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
             return
 
         elif self.ws.operation_mode == self.ws.PLAYLIST_SCAN_ERROR_MODE:
@@ -8393,11 +8517,16 @@ _____"|f|" to see the |free| keys you can use.
             return -1
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE:
-            if char in self._global_functions:
-                self._global_functions[char]()
-            elif char in (kbkey['y'], kbkey['Y']):
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
+            elif char in (kbkey['y'], kbkey['Y']) or \
+                    check_localized(char, (kbkey['y'], kbkey['n'])):
                 self.ws.close_window()
-                if not self._cnf.locked and char == kbkey['Y']:
+                if not self._cnf.locked and (char == kbkey['Y'] or \
+                    check_localized(char, (kbkey['Y'], ))):
                     self._cnf.auto_save_playlist = True
                 ret = self.saveCurrentPlaylist()
                 #if ret == -1:
@@ -8410,7 +8539,8 @@ _____"|f|" to see the |free| keys you can use.
                     self.stopPlayer()
                 self.ctrl_c_handler(0, 0)
                 return -1
-            elif char in (kbkey['n'], ):
+            elif char in (kbkey['n'], ) or \
+                    check_localized(char, (kbkey['n'], )):
                 ''' exit program '''
                 # ok
                 self.detect_if_player_exited = False
@@ -8419,7 +8549,8 @@ _____"|f|" to see the |free| keys you can use.
                 self.ctrl_c_handler(0, 0, False)
                 self._wait_for_threads()
                 return -1
-            elif char in (curses.KEY_EXIT, kbkey['q'], 27):
+            elif char in (curses.KEY_EXIT, kbkey['q'], 27) or \
+                    check_localized(char, (kbkey['q'], )):
                 self.bodyWin.nodelay(True)
                 char = self.bodyWin.getch()
                 self.bodyWin.nodelay(False)
@@ -8434,12 +8565,17 @@ _____"|f|" to see the |free| keys you can use.
 
         elif self.ws.operation_mode in (self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE,
                                         self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_BACK_IN_HISTORY_MODE):
-            if char in self._global_functions:
-                self._global_functions[char]()
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
             else:
                 self.ws.close_window()
-                if char in (kbkey['y'], kbkey['Y']):
-                    if not self._cnf.locked and char == kbkey['Y']:
+                if char in (kbkey['y'], kbkey['Y']) or \
+                        check_localized(char, (kbkey['y'], kbkey['Y'])):
+                    if not self._cnf.locked and char == kbkey['Y'] or \
+                            check_localized(char, (kbkey['Y'], )):
                         self._cnf.auto_save_playlist = True
                     ret = self.saveCurrentPlaylist()
                     if ret == 0:
@@ -8452,14 +8588,16 @@ _____"|f|" to see the |free| keys you can use.
                     else:
                         if self._cnf.browsing_station_service:
                             self._cnf.removed_playlist_history_item()
-                elif char in (kbkey['n'], ):
+                elif char in (kbkey['n'], ) or \
+                        check_localized(char, ( kbkey['n'], )):
                     if self.ws.operation_mode == self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE:
                         self._open_playlist()
                     else:
                         self._goto_history_back_handler()
                         if self._function_to_repeat:
                             self._function_to_repeat()
-                elif char in (curses.KEY_EXIT, kbkey['q'], 27):
+                elif char in (curses.KEY_EXIT, kbkey['q'], 27) or \
+                        check_localized(char, (kbkey['q'], )):
                     self.bodyWin.nodelay(True)
                     char = self.bodyWin.getch()
                     self.bodyWin.nodelay(False)
@@ -8473,14 +8611,20 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode == self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:
-            if char in self._global_functions:
-                self._global_functions[char]()
-            elif char in (kbkey['y'], kbkey['Y']):
-                if not self._cnf.locked and char == kbkey['Y']:
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
+            elif char in (kbkey['y'], kbkey['Y']) or \
+                    check_localized(char, (kbkey['y'], kbkey['Y'])):
+                if not self._cnf.locked and char == kbkey['Y'] or \
+                        check_localized(char, (kbkey['Y'], )):
                     self._cnf.confirm_playlist_reload = False
                 self.ws.close_window()
                 self.reloadCurrentPlaylist(self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE)
-            elif char in (kbkey['n'], ):
+            elif char in (kbkey['n'], ) or \
+                    check_localized(char, (kbkey['n'], )):
                 ''' close confirmation message '''
                 self.stations = self._cnf.stations
                 self.ws.close_window()
@@ -8490,8 +8634,11 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode == self.ws.PLAYLIST_RELOAD_CONFIRM_MODE:
-            if char in self._global_functions:
-                self._global_functions[char]()
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
                 return
             self._reload_playlist_after_confirmation(char)
             return
@@ -8500,10 +8647,14 @@ _____"|f|" to see the |free| keys you can use.
                 self.ws.REMOVE_STATION_MODE,
                 self.ws.REMOVE_GROUP_MODE
         ):
-            if char in self._global_functions:
-                self._global_functions[char]()
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
                 return
-            if char in (kbkey['y'], kbkey['Y']):
+            if char in (kbkey['y'], kbkey['Y']) or \
+                    check_localized(char, (kbkey['y'], kbkey['Y'])):
                 self._remove_station(char)
             else:
                 if logger.isEnabledFor(logging.DEBUG):
@@ -8514,9 +8665,13 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode == self.ws.FOREIGN_PLAYLIST_ASK_MODE:
-            if char in self._global_functions:
-                self._global_functions[char]()
-            elif char in (kbkey['y'], ):
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
+            elif char in (kbkey['y'], ) or \
+                    check_localized(char, (kbkey['y'], )):
                 ret = self._cnf.copy_playlist_to_config_dir()
                 if ret == 0:
                     ind = self._cnf.current_playlist_index()
@@ -8528,7 +8683,8 @@ _____"|f|" to see the |free| keys you can use.
                 else:
                     ''' error '''
                     self._print_foreign_playlist_copy_error()
-            elif char in (kbkey['n'], ):
+            elif char in (kbkey['n'], ) or \
+                    check_localized(char, (kbkey['n'], )):
                 self.ws.close_window()
                 self.refreshBody()
                 if logger.isEnabledFor(logging.DEBUG):
@@ -8538,7 +8694,9 @@ _____"|f|" to see the |free| keys you can use.
         elif self.ws.operation_mode == self.ws.STATION_INFO_MODE:
             self._update_status_bar_right()
             icy_data_name = self.player.icy_data('icy-name')
-            if char == kbkey['info_rename'] and self.stations[self.playing][0] != icy_data_name:
+            if (char == kbkey['info_rename'] or \
+                    check_localized(char, (kbkey['info_rename'], )))and \
+                    self.stations[self.playing][0] != icy_data_name:
                 self._cnf.renamed_stations.append([
                     self.stations[self.playing][0],
                     icy_data_name
@@ -8619,7 +8777,8 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode == self.ws.RECORD_WINDOW_MODE:
-            if char == kbkey['no_show']:
+            if char == kbkey['no_show'] or \
+                    check_localized(char, (kbkey['no_show'], )):
                 self._cnf.show_recording_start_message = False
                 self._cnf.dirty_config = True
             self.ws.close_window()
@@ -8627,8 +8786,11 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
-            if char in self._global_functions:
-                self._global_functions[char]()
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
                 return
             self._handle_passive_windows()
             return
@@ -8668,7 +8830,8 @@ _____"|f|" to see the |free| keys you can use.
                 return
 
 
-            if char in (kbkey['?'], ):
+            if char in (kbkey['?'], ) or \
+                    check_localized(char, (kbkey['?'], )):
                 self._update_status_bar_right()
                 self._print_help()
                 return
@@ -8680,7 +8843,8 @@ _____"|f|" to see the |free| keys you can use.
                     self.refreshBody()
                 return
 
-            if char in (kbkey['g'], kbkey['G']):
+            if char in (kbkey['g'], kbkey['G']) or \
+                    check_localized(char, (kbkey['g'], kbkey['G'])):
                 self._jump_to_jumpnr(char)
                 self.refreshBody()
                 self._reset_status_bar_right()
@@ -8697,15 +8861,18 @@ _____"|f|" to see the |free| keys you can use.
                 if char not in (curses.ascii.EOT, curses.ascii.NAK, 4, 21):
                     self._update_status_bar_right()
 
-            if char in (kbkey['g'], curses.KEY_HOME):
+            if char in (kbkey['g'], curses.KEY_HOME) or \
+                    check_localized(char, (kbkey['g'], )):
                 self._update_status_bar_right()
                 self.setStation(0)
                 self.refreshBody()
                 return
 
-            if char in (curses.KEY_EXIT, kbkey['q'], 27) or \
+            if char in (curses.KEY_EXIT, kbkey['q'], 27)  or \
+                    check_localized(char, (kbkey['q'], )) or \
                     (self.ws.operation_mode == self.ws.PLAYLIST_MODE and \
-                    char in (kbkey['h'], curses.KEY_LEFT)):
+                    (char in (kbkey['h'], curses.KEY_LEFT) or \
+                    check_localized(char, (kbkey['h'],)))):
                 ''' exit program or playlist mode '''
                 self.bodyWin.nodelay(True)
                 char = self.bodyWin.getch()
@@ -8772,11 +8939,13 @@ _____"|f|" to see the |free| keys you can use.
                 else:
                     return
 
-            if char in (curses.KEY_DOWN, kbkey['j']):
+            if char in (curses.KEY_DOWN, kbkey['j']) or \
+                    check_localized(char, (kbkey['j'], )):
                 self._move_cursor_one_down()
                 return
 
-            if char in (curses.KEY_UP, kbkey['k']):
+            if char in (curses.KEY_UP, kbkey['k']) or \
+                    check_localized(char, (kbkey['k'], )):
                 self._move_cursor_one_up()
                 return
 
@@ -8789,7 +8958,8 @@ _____"|f|" to see the |free| keys you can use.
                 return
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
-                if char == kbkey['ext_player']:
+                if char == kbkey['ext_player'] or \
+                    check_localized(char, (kbkey['ext_player'], )):
                     self.player.USE_EXTERNAL_PLAYER = True
                     stream_url = self.stations[self.selection][1]
                     self._cnf.EXTERNAL_PLAYER_OPTS = self.player.play(name='',
@@ -8811,7 +8981,11 @@ _____"|f|" to see the |free| keys you can use.
                 elif char in self._local_functions:
                     self._local_functions[char]()
                     return
-                if char == kbkey['fav']:
+                elif (l_char := check_localized(char, self._local_functions.keys(), True)) is not None:
+                    self._local_functions[l_char]()
+                    return
+                if char == kbkey['fav'] or \
+                        check_localized(char, (kbkey['fav'], )):
                     if self._cnf.station_path == self._cnf.favorites_path:
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('Favorites: Cannot add to myself :)')
@@ -8828,16 +9002,19 @@ _____"|f|" to see the |free| keys you can use.
                             if logger.isEnabledFor(logging.DEBUG):
                                 logger.debug('Favorites: Nothing to add')
 
-                elif char == kbkey['rec']:
+                elif char == kbkey['rec'] or \
+                        check_localized(char, (kbkey['rec'], )):
                     self._toggle_recording()
 
-                elif char == kbkey['gr']:
+                elif char == kbkey['gr'] or \
+                        check_localized(char, (kbkey['gr'], )):
                     ''' ^G - show groups '''
                     self._reset_status_bar_right()
                     self._group_selection_window = None
                     self._show_group_selection()
 
-                elif char in (kbkey['gr_next'], kbkey['gr_prev']):
+                elif char in (kbkey['gr_next'], kbkey['gr_prev']) or \
+                        check_localized(char, (kbkey['gr_next'], kbkey['gr_prev'])):
                     if self._cnf._online_browser is None:
                         # logger.error('^E ^Y')
                         d = [x for x, y in enumerate(self.stations) if y[1] == '-' ]
@@ -8854,7 +9031,8 @@ _____"|f|" to see the |free| keys you can use.
                                     ind = -1
                                 else:
                                     ind = d.index(self.selection)
-                                    if char == kbkey['gr_prev']:
+                                    if char == kbkey['gr_prev'] or \
+                                            check_localized(char, (kbkey['gr_prev'],)):
                                         ind -= 1
                                         if ind < 0:
                                             ind = len(d) - 1
@@ -8870,7 +9048,8 @@ _____"|f|" to see the |free| keys you can use.
                                     ind = d[0]
                                     # logger.error('x1 ind = {}'.format(ind))
                                 else:
-                                    if char == kbkey['gr_prev']:
+                                    if char == kbkey['gr_prev'] or \
+                                            check_localized(char, (kbkey['gr_prev'],)):
                                         try:
                                             ind = [n for n in d if n < self.selection][-1]
                                             # logger.error('x2 ind = {}'.format(ind))
@@ -8900,30 +9079,39 @@ _____"|f|" to see the |free| keys you can use.
                                                                     self.playing,
                                                                     self.stations]
 
-                elif char == kbkey['F8'] and platform.startswith('win'):
+                elif char == kbkey['F8']  or \
+                        check_localized(char, (kbkey['F8'],)) and \
+                        platform.startswith('win'):
                     ''' manage players on Windows
                         will present them after curses end
                     '''
                     self._cnf.WIN_MANAGE_PLAYERS = True
                     self._show_win_manage_players()
 
-                elif char == kbkey['F9'] and platform.startswith('win'):
+                elif char == kbkey['F9']  or \
+                        check_localized(char, (kbkey['F9'],)) and \
+                        platform.startswith('win'):
                     ''' show exe location on Windows
                         will present them after curses end
                     '''
                     self._cnf.WIN_PRINT_PATHS = True
                     self._show_win_print_exe_paths()
 
-                elif char == kbkey['F10'] and platform.startswith('win'):
+                elif char == kbkey['F10'] or \
+                        check_localized(char, (kbkey['F10'],)) and \
+                        platform.startswith('win'):
                     ''' uninstall on Windows '''
                     self._cnf.WIN_UNINSTALL = True
                     self._show_win_uninstall()
 
-                elif char == kbkey['F7'] and platform.startswith('win'):
+                elif char == kbkey['F7'] or \
+                        check_localized(char, (kbkey['F7'],)) and \
+                        platform.startswith('win'):
                     ''' delete old installation files on Windows '''
                     self._show_win_remove_old_installation()
 
-                elif char in (kbkey['add'], kbkey['append']):
+                elif char in (kbkey['add'], kbkey['append']) or \
+                        check_localized(char, (kbkey['add'], kbkey['append'])):
                     self._reset_status_bar_right()
                     if not self._cnf.browsing_station_service:
                         self._station_editor = PyRadioEditor(
@@ -8932,20 +9120,23 @@ _____"|f|" to see the |free| keys you can use.
                             self.outerBodyWin,
                             self._cnf.default_encoding,
                             global_functions=self._global_functions)
-                        if char == kbkey['append']:
+                        if char == kbkey['append'] or \
+                                check_localized(char, (kbkey['append'], )):
                             self._station_editor.append = True
                         self._station_editor.show()
                         self._station_editor.item = ['', '', '']
                         self.ws.operation_mode = self.ws.ADD_STATION_MODE
 
-                elif char == kbkey['paste']:
+                elif char == kbkey['paste'] or \
+                        check_localized(char, (kbkey['paste'], )):
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
                         self._print_not_applicable()
                     else:
                         self._paste()
 
-                elif char == kbkey['rb_vote']:
+                elif char == kbkey['rb_vote'] or \
+                        check_localized(char, (kbkey['rb_vote'], )):
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
                         self._open_simple_message_by_key('M_RB_VOTE')
@@ -8954,30 +9145,35 @@ _____"|f|" to see the |free| keys you can use.
                         else:
                             self._cnf._online_browser.vote(self.selection)
 
-                elif char == kbkey['rb_info']:
+                elif char == kbkey['rb_info'] or \
+                        check_localized(char, (kbkey['rb_info'], )):
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
                         self._browser_station_info()
                     else:
                         self._normal_station_info()
 
-                elif char == kbkey['rb_server']:
+                elif char == kbkey['rb_server'] or \
+                        check_localized(char, (kbkey['rb_server'], )):
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
                         self.ws.operation_mode = self.ws.BROWSER_SERVER_SELECTION_MODE
                         self._browser_server_selection()
 
-                elif char == kbkey['rb_sort']:
+                elif char == kbkey['rb_sort'] or \
+                        check_localized(char, (kbkey['rb_sort'], )):
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
                         self.ws.operation_mode = self.ws.BROWSER_SORT_MODE
                         self._browser_sort()
 
-                elif char == kbkey['info']:
+                elif char == kbkey['info'] or \
+                        check_localized(char, (kbkey['info'], )):
                     self._reset_status_bar_right()
                     self._normal_station_info()
 
-                elif char == kbkey['edit']:
+                elif char == kbkey['edit'] or \
+                        check_localized(char, (kbkey['edit'], )):
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
                         return
@@ -8991,7 +9187,8 @@ _____"|f|" to see the |free| keys you can use.
                     self._station_editor.show(self.stations[self.selection])
                     self.ws.operation_mode = self.ws.EDIT_STATION_MODE
 
-                elif char == kbkey['open_config']:
+                elif char == kbkey['open_config'] or \
+                        check_localized(char, (kbkey['open_config'], )):
                     ''' open config '''
                     if self._cnf.browsing_station_service:
                         self.ws.operation_mode = self.ws.RADIO_BROWSER_CONFIG_MODE
@@ -9016,7 +9213,8 @@ _____"|f|" to see the |free| keys you can use.
                         self._show_config_window()
                     return
 
-                elif char in (kbkey['open_enc'], ):
+                elif char in (kbkey['open_enc'], ) or \
+                        check_localized(char, (kbkey['open_enc'], )):
                     self._reset_status_bar_right()
                     self._old_station_encoding = self.stations[self.selection][2]
                     if self._old_station_encoding == '':
@@ -9035,7 +9233,8 @@ _____"|f|" to see the |free| keys you can use.
                     self._encoding_select_win.refresh_win()
                     self._encoding_select_win.setEncoding(self._old_station_encoding)
 
-                elif char == kbkey['open_online']:
+                elif char == kbkey['open_online'] or \
+                        check_localized(char, (kbkey['open_online'], )):
                     ''' Open Online services
                         Currently only BrowserInfoBrowser is available
                         so go ahead and open this one.
@@ -9046,7 +9245,8 @@ _____"|f|" to see the |free| keys you can use.
                     return
 
                 # elif chk_key(char, kbkey['open_playlist'], self.outerBodyWin):
-                elif char == kbkey['open_playlist']:
+                elif char == kbkey['open_playlist'] or \
+                        check_localized(char, (kbkey['open_playlist'], )):
                     self._update_status_bar_right(status_suffix='')
                     self._reset_status_bar_right()
                     self._set_rename_stations()
@@ -9058,7 +9258,8 @@ _____"|f|" to see the |free| keys you can use.
                     return
 
                 elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
-                              curses.KEY_RIGHT, kbkey['l']):
+                              curses.KEY_RIGHT, kbkey['l']) or \
+                              check_localized(char, (kbkey['l'], )):
                     if self.player.isPlaying() and \
                             self.player.playback_is_on:
                         self._stop_player()
@@ -9066,11 +9267,13 @@ _____"|f|" to see the |free| keys you can use.
                     self._do_display_notify()
                     return
 
-                elif char in (curses.KEY_LEFT, kbkey['h']):
+                elif char in (curses.KEY_LEFT, kbkey['h']) or \
+                        check_localized(char, (kbkey['h'], )):
                     self._stop_player()
                     return
 
-                elif char in (kbkey['pause'], ):
+                elif char in (kbkey['pause'], ) or \
+                        check_localized(char, (kbkey['pause'], )):
                     if self.player.isPlaying() and \
                             self.player.playback_is_on and \
                             self.player.recording and \
@@ -9080,7 +9283,8 @@ _____"|f|" to see the |free| keys you can use.
                         self._stop_player()
                     return
 
-                elif char in (kbkey['del'], curses.KEY_DC):
+                elif char in (kbkey['del'], curses.KEY_DC) or \
+                        check_localized(char, (kbkey['del'], )):
                     # TODO: make it impossible when session locked?
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
@@ -9101,7 +9305,8 @@ _____"|f|" to see the |free| keys you can use.
                                 self._ask_to_remove_station()
                     return
 
-                elif char in (kbkey['s'], ):
+                elif char in (kbkey['s'], ) or \
+                        check_localized(char, (kbkey['s'], )):
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
                         # self._print_not_implemented_yet()
@@ -9121,13 +9326,15 @@ _____"|f|" to see the |free| keys you can use.
                                     callback_function=self.refreshBody)
                     return
 
-                elif char in (kbkey['random'], ):
+                elif char in (kbkey['random'], ) or \
+                        check_localized(char, (kbkey['random'], )):
                     self._reset_status_bar_right(random_request=True)
                     ''' Pick a random radio station '''
                     self.play_random()
                     return
 
-                elif char in (kbkey['Reload'], ):
+                elif char in (kbkey['Reload'], ) or \
+                        check_localized(char, (kbkey['Reload'], )):
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
                         return
@@ -9146,7 +9353,8 @@ _____"|f|" to see the |free| keys you can use.
                             self._reload_playlist_after_confirmation(char)
                     return
 
-                elif char in (kbkey['https'], ):
+                elif char in (kbkey['https'], ) or \
+                        check_localized(char, (kbkey['https'], )):
                     ''' change force http '''
                     self._reset_status_bar_right()
                     self.ws.operation_mode = self.ws.CONNECTION_MODE
@@ -9158,7 +9366,8 @@ _____"|f|" to see the |free| keys you can use.
                     self._connection_type_edit.show()
                     return
 
-                elif char in (kbkey['extra_p_pamars'], ):
+                elif char in (kbkey['extra_p_pamars'], ) or \
+                        check_localized(char, (kbkey['extra_p_pamars'], )):
                     self._random_requested = False
                     self.jumpnr = ''
                     self._reset_status_bar_right()
@@ -9171,7 +9380,8 @@ _____"|f|" to see the |free| keys you can use.
                     self._player_select_win.show()
                     return
 
-                elif char == kbkey['jump']:
+                elif char == kbkey['jump'] or \
+                        check_localized(char, (kbkey['jump'], )):
                     self._random_requested = False
                     self.jumpnr = ''
                     ''' tag for jump '''
@@ -9179,7 +9389,8 @@ _____"|f|" to see the |free| keys you can use.
                     self._update_status_bar_right(status_suffix=str(self._cnf.jump_tag + 1) + str(kbkey['jump']))
                     return
 
-                elif char in (kbkey['st_up'], 21):
+                elif char in (kbkey['st_up'], 21) or \
+                        check_localized(char, (kbkey['st_up'], )):
                     ''' ^U, move station Up '''
                     self._random_requested = False
                     if self.jumpnr:
@@ -9188,7 +9399,8 @@ _____"|f|" to see the |free| keys you can use.
                     self._reset_status_bar_right()
                     return
 
-                elif char in (kbkey['st_dn'], 4):
+                elif char in (kbkey['st_dn'], 4) or \
+                        check_localized(char, (kbkey['st_dn'], )):
                     ''' ^D, move station Down '''
                     self._random_requested = False
                     if self.jumpnr:
@@ -9201,10 +9413,12 @@ _____"|f|" to see the |free| keys you can use.
                 self._random_requested = False
 
                 # logger.error('DE pl 1 active_stations = \n\n{}\n\n'.format(self.active_stations))
-                if char == kbkey['pause']:
+                if char == kbkey['pause'] or \
+                        check_localized(char, (kbkey['pause'], )):
                     self.stopPlayer()
 
-                elif char in (kbkey['del'], curses.KEY_DC):
+                elif char in (kbkey['del'], curses.KEY_DC) or \
+                        check_localized(char, (kbkey['del'], )):
                     if self._cnf.locked:
                         txt='___Cannot delete playlist!!!___\n______Session is locked'
                         self._show_notification_with_delay(
@@ -9227,7 +9441,8 @@ _____"|f|" to see the |free| keys you can use.
                         self._ask_to_delete_playlist()
 
                 elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
-                              curses.KEY_RIGHT, kbkey['l']):
+                              curses.KEY_RIGHT, kbkey['l']) or \
+                              check_localized(char, (kbkey['l'], )):
                     self._update_status_bar_right(status_suffix='')
                     if self._cnf.open_register_list:
                         self.playlist_selections[self.ws.REGISTER_MODE] = [self.selection, self.startPos, self.playing]
@@ -9291,7 +9506,8 @@ _____"|f|" to see the |free| keys you can use.
                             # if self._cnf.open_last_playlist:
                             #     self._cnf.save_last_playlist()
 
-                elif char == kbkey['reload']:
+                elif char == kbkey['reload'] or \
+                        check_localized(char, (kbkey['reload'], )):
                     self._update_status_bar_right()
                     ''' read playlists from disk '''
                     self._open_simple_message_by_key_and_mode(
@@ -9300,7 +9516,8 @@ _____"|f|" to see the |free| keys you can use.
                     )
                     self._reload_playlists()
 
-                elif char in (kbkey['open_regs'], ):
+                elif char in (kbkey['open_regs'], ) or \
+                        check_localized(char, (kbkey['open_regs'], )):
                     ''' Toggle playlists / registers '''
                     if self._cnf.open_register_list:
                         ''' going back to playlists '''
@@ -9357,7 +9574,8 @@ _____"|f|" to see the |free| keys you can use.
         self._random_requested = False
         if self.number_of_items > 0:
             if self.jumpnr == '':
-                if char == kbkey['G']:
+                if char == kbkey['G'] or \
+                        check_localized(char, (kbkey['G'],)):
                     self.setStation(-1)
                 else:
                     self.setStation(0)

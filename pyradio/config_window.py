@@ -21,7 +21,7 @@ from .themes import *
 from .server import IPsWithNumbers
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesMenu
 from .client import PyRadioClient
-from .keyboard import kbkey, kbkey_orig, ctrl_code_to_string, is_valid_char, is_invalid_key, is_ctrl_key, set_kbkey, conflicts, read_keyboard_shortcuts
+from .keyboard import kbkey, kbkey_orig, ctrl_code_to_string, is_valid_char, is_invalid_key, is_ctrl_key, set_kbkey, conflicts, read_keyboard_shortcuts, check_localized
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
@@ -745,6 +745,7 @@ class PyRadioConfigWindow():
                  8  show keyboard config window
                  9  show alternative keyboard window
         '''
+        l_char = None
         if self.too_small:
             return 1, []
         # logger.error('max = {0}, len = {1}'.format(self.maxY, len(self._config_options)))
@@ -771,8 +772,11 @@ class PyRadioConfigWindow():
                     return 0, []
                 return -1, []
 
-        if char in self._global_functions:
-            self._global_functions[char]()
+        if char in self._global_functions or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
 
         elif val[0] == 'resource_opener':
             if not (platform.startswith('win') or \
@@ -1344,6 +1348,7 @@ class ExtraParametersEditor():
                 2: Display line editor help
         '''
         ret = 1
+        l_char = None
         if char == kbkey['?'] and self._focus > 0:
             return 2
         elif char in (curses.KEY_EXIT, 27, kbkey['q']) and \
@@ -1397,8 +1402,11 @@ class ExtraParametersEditor():
                 ''' cancel '''
                 self.edit_string = ''
                 ret = 0
-        elif char in self._global_functions:
-            self._global_functions[char]()
+        elif char in self._global_functions or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
             return 1
 
         if ret == 1:
@@ -1990,8 +1998,12 @@ class ExtraParameters():
                  5 - add parameter
                  6 - line editor help
         '''
-        if char in self._global_functions:
-            self._global_functions[char]()
+        l_char = None
+        if char in self._global_functions or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
             return -1
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
                       kbkey['pause'], kbkey['l'], curses.KEY_RIGHT, kbkey['s']):
@@ -2246,10 +2258,15 @@ class PyRadioSelectPlayer():
                3 - Editor is visible
                4 - Editor exited
         '''
+        l_char = None
         if self.editing == 0:
             ''' focus on players '''
-            if char in self._global_functions:
-                self._global_functions[char]()
+            if char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
+
             elif char in (9, kbkey['tab'] ):
                 if self.from_config  and self._players[self.selection][1]:
                     self._switch_column()
@@ -2653,8 +2670,12 @@ class PyRadioSelectEncodings():
 
     def keypress(self, char):
         ''' PyRadioSelectEncodings keypress '''
-        if char in self._global_functions.keys():
-            self._global_functions[char]()
+        l_char = None
+        if char in self._global_functions or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
 
         elif char in (kbkey['revert_def'], ):
             self.encoding = self._config_encoding
@@ -3055,8 +3076,12 @@ class PyRadioSelectPlaylist():
          0, station path    - selected station path (for paste window)
          1, ''              - Cancel
         '''
-        if char in self._global_functions:
-            self._global_functions[char]()
+        l_char = None
+        if char in self._global_functions or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
 
         elif self._select_playlist_error == -1 or \
                 self._select_playlist_error == 0:
@@ -3356,12 +3381,16 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
 
     def keypress(self, char):
         ''' PyRadioSelectStation keypress '''
+        l_char = None
         if char == kbkey['revert_saved']:
             self.setStation(self._orig_playlist)
             return -1, ''
 
-        elif char in self._global_functions:
-            self._global_functions[char]()
+        elif char in self._global_functions or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
             return -1, ''
 
         return PyRadioSelectPlaylist.keypress(self, char)
@@ -3980,6 +4009,7 @@ class PyRadioKeyboardConfig():
                  1: Continue
                  2: Display help
         '''
+        l_char = None
         self._needs_update = False
         if char == ord('0'):
             if self.existing_conflict:
@@ -4117,8 +4147,11 @@ class PyRadioKeyboardConfig():
                 else:
                     # cancel
                     return -1
-            elif char in self._global_functions:
-                self._global_functions[char]()
+            elif char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
 
         # if logger.isEnabledFor(logging.DEBUG):
         #     logger.debug('=============')

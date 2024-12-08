@@ -7,7 +7,7 @@ import locale
 from curses.ascii import ACK as KEY_ACK, STX as KEY_STX
 from sys import platform
 from .window_stack import Window_Stack_Constants
-from .keyboard import kbkey, kb2str, kb2strL
+from .keyboard import kbkey, kb2str, kb2strL, check_localized
 
 locale.setlocale(locale.LC_ALL, "")
 
@@ -2073,6 +2073,7 @@ so you can resolve the issue and try again.
 
     def keypress(self, char):
         ''' PyRadioMessagesSystem keypress '''
+        l_char = None
         if not self.too_small and self._can_scroll:
             if char in (kbkey['g'], curses.KEY_HOME):
                 self._pad_pos = 0

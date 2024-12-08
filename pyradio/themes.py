@@ -10,7 +10,7 @@ from math import sqrt
 import colorsys
 from .log import Log
 from .common import *
-from .keyboard import kbkey
+from .keyboard import kbkey, check_localized
 
 logger = logging.getLogger(__name__)
 
@@ -1330,10 +1330,14 @@ class PyRadioThemeSelector():
               True  : theme is to be saved in config
               False : theme is not to be saved in config
         """
+        l_char = None
         if  self._too_small or self._cnf.locked:
             return -1, False
-        if char in self._global_functions:
-            self._global_functions[char]()
+        if char in self._global_functions or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
             return -3, False
         if char in (kbkey['edit'], ):
             ''' edit theme '''
@@ -1474,5 +1478,6 @@ class PyRadioThemeEditor():
 
     def keypress(self, char):
         ''' PyRadioThemeEditor keypress '''
+        l_char = None
         pass
 

@@ -16,6 +16,10 @@ except ImportError:
 
 from collections import deque
 from threading import Lock
+# from .simple_curses_widgets import SimpleCursesLineEdit
+
+logger = logging.getLogger(__name__)
+
 
 input_queue = deque()
 queue_lock = Lock()
@@ -38,10 +42,6 @@ def clear_input_queue():
     global input_queue
     with queue_lock:
         input_queue.clear()
-
-# from .simple_curses_widgets import SimpleCursesLineEdit
-
-logger = logging.getLogger(__name__)
 
 kb_letter = ''
 kb_cjk = False
@@ -211,7 +211,49 @@ kbkey = {}
 kbkey = populate_dict()
 
 # localized keys
-lkbkey = {}
+lkbkey = None
+
+def check_localized(char, k_list, return_key=False):
+    # global kb_letter
+    # global lkbkey
+    logger.error('\n\n')
+    logger.error(f'{k_list = }')
+    logger.error(f'{kb_letter = }')
+    if char and kb_letter and lkbkey is not None:
+        # logger.error(f'{char = }')
+        # logger.error(f'{chr(char) = }')
+        for n in k_list:
+            # logger.error(f'k_list: {n = }')
+            logger.error(f'k_list: {chr(n) = }')
+            if kb_letter in lkbkey:
+                x = lkbkey[kb_letter]
+                logger.error(f'{x = }')
+                if x == chr(n):
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('localized char found: "{0}" == "{1}"'.format(chr(n), x))
+                    logger.error('\n\n')
+                    if return_key:
+                        logger.info(f'returning {n}')
+                        return n
+                    logger.info('returning True')
+                    return True
+            else:
+                logger.error('kb_letter not in lkbkey')
+                continue
+    logger.error('\n\n')
+    if return_key:
+        logger.info('returning None')
+        return None
+    logger.info('returning False')
+    return False
+
+def set_lkbkey(adict):
+    global lkbkey
+    lkbkey = adict
+
+def get_lkbkey():
+    global lkbkey
+    return lkbkey
 
 def set_kbkey(a_key, value):
     ''' update kbkey dict from other modules '''
@@ -297,7 +339,7 @@ def read_localized_keyboard(file_path, keyboard_path):
         Finally populate global lbkey from data dict using ord()
             of both key and value
     '''
-    global lkbkey
+    # global lkbkey
     error = False
     data = {}
     try:
@@ -321,8 +363,8 @@ def read_localized_keyboard(file_path, keyboard_path):
         values = list(string.ascii_lowercase) + list(string.ascii_uppercase)
         data = {keys[i]: values[i] for i in range(len(keys))}
 
-    for key in data:
-        lkbkey[ord(key)] = ord(data[key])
+    # for key in data:
+    #     lkbkey[ord(key)] = ord(data[key])
 
 def to_str(akey):
     ''' convert kbkey keys to a string '''

@@ -22,7 +22,7 @@ from rich.align import Align
 from rich import print
 from pyradio import version, stations_updated
 from .common import validate_resource_opener_path
-from .keyboard import kbkey, lkbkey, read_keyboard_shortcuts, read_localized_keyboard
+from .keyboard import kbkey, lkbkey, read_keyboard_shortcuts, read_localized_keyboard, get_lkbkey, set_lkbkey, check_localized
 from .browser import probeBrowsers
 from .install import get_github_long_description
 from .common import is_rasberrypi
@@ -1270,6 +1270,11 @@ class PyRadioStations():
 class PyRadioConfig(PyRadioStations):
     ''' PyRadio Config Class '''
 
+    # TODO: this will be a config option
+    # for the moment it will be hardcoded here
+    # default value: english
+    localize = 'greek'
+
     EXTERNAL_PLAYER_OPTS = None
 
     ''' I will get this when a player is selected
@@ -2120,6 +2125,35 @@ class PyRadioConfig(PyRadioStations):
                     except:
                         pass
 
+    def _read_localized_shortcuts(self, name=None):
+        if name is None:
+            name = self.localize
+        if not name or name == 'english':
+            return {}
+        # Construct potential paths
+        script_dir_path = path.join(path.dirname(__file__), 'keyboard', name + '.json')
+        full_path = path.join(self.data_dir, name + '.json')
+
+        reversed_dict = None
+        # Check which file path exists
+        if path.exists(script_dir_path):
+            target_path = script_dir_path
+        elif path.exists(full_path):
+            target_path = full_path
+        else:
+            # Return an empty dictionary if neither path exists
+            target_path = None
+
+        if target_path is not None:
+            # Open and load the JSON file
+            with open(target_path, 'r', encoding='utf-8') as file:
+                data = json.load(file)
+
+            # Reverse the keys and values
+            reversed_dict = {value: key for key, value in data.items()}
+
+        set_lkbkey(reversed_dict)
+
     def read_config(self, distro_config=False):
         self._read_config(distro_config=True)
         self.config_opts = deepcopy(self.opts)
@@ -2406,6 +2440,9 @@ class PyRadioConfig(PyRadioStations):
         # do this here to get proper extra parameters config filepath if XDG is on
         self.player_params_file = path.join(self.data_dir, 'player-params.json')
         if not distro_config:
+            # read localized shortcuts
+            self._read_localized_shortcuts(name=None)
+
             if path.exists(self.player_params_file + '.restore'):
                 try:
                     copyfile(self.player_params_file + '.restore', self.player_params_file)
@@ -2423,7 +2460,7 @@ class PyRadioConfig(PyRadioStations):
         # do this here to get proper schedule and keyboard config filepath if XDG is on
         self.schedule_file = path.join(self.data_dir, 'schedule.json')
         self.keyboard_file = path.join(self.data_dir, 'keyboard.json')
-        self.localize_file = path.join(self.data_dir, 'localize.json')
+        self.localize_file = path.join(self.data_dir, self.localize + '.json')
         if not self.headless:
             read_keyboard_shortcuts(self.keyboard_file)
             read_localized_keyboard(self.localize_file, path.join(path.dirname(__file__), 'keyboard'))

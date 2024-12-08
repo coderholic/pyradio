@@ -45,7 +45,7 @@ except:
     from schedule import PyRadioTime
 # from .cjkwrap import is_wide, cjklen, cjkljust, cjkslices
 # from .schedule import PyRadioTime
-from .keyboard import kbkey, get_kb_letter
+from .keyboard import kbkey, get_kb_letter, check_localized
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
@@ -391,6 +391,7 @@ class SimpleCursesString(SimpleCursesWidget):
                 -1 continue
                  0 action (select)
         '''
+        l_char = None
         ret = -1
         if self._right_arrow_selects and char in (
                 curses.KEY_ENTER, ord('\n'), ord('\r'),
@@ -639,8 +640,12 @@ class SimpleCursesDate(SimpleCursesWidget):
         '''
         # logger.error('char = {}'.format(char))
 
-        if char in self._global_functions.keys():
-            self._global_functions[char]()
+        l_char = None
+        if char in self._global_functions or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
             return 0
 
         if char == kbkey['t']:
@@ -1020,8 +1025,12 @@ class SimpleCursesTime(SimpleCursesWidget):
                  0: Continue
                  1: Show help
         '''
-        if char in self._global_functions.keys():
-            self._global_functions[char]()
+        l_char = None
+        if char in self._global_functions or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
             return 0
 
         if char == kbkey['t']:
@@ -1316,6 +1325,7 @@ class SimpleCursesCounter(SimpleCursesWidget):
                 1 - Continue
                 2 - Display help
         '''
+        l_char = None
         if (not self._focused) or (not self._enabled):
             return 1
 
@@ -1676,6 +1686,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                 2 - Cursor moved
                 3 - Display help
         '''
+        l_char = None
         if (not self._focused) or (not self._enabled):
             return 1
 
@@ -2747,6 +2758,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 1 - Continue
                 2 - Display help
         '''
+        l_char = None
         if self._too_small:
             return 1
 
@@ -2757,8 +2769,11 @@ class SimpleCursesMenu(SimpleCursesWidget):
         self._old_start_pos = self._start_pos
         # log_it('  == old_sel = {0}, start = {1}'.format(self._old_selection, self._old_start_pos))
 
-        if char in self._global_functions.keys():
-            self._global_functions[char]()
+        if char in self._global_functions or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
             return 1
 
         elif char in (
@@ -3169,6 +3184,7 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
 
     def keypress(self, char):
         ''' SimpleCursesCheckBox keypress '''
+        l_char = None
         if self._focused and \
                 self.enabled and \
                 char in (kbkey['pause'], curses.KEY_ENTER, ord('\n'), ord('\r')):
@@ -3308,6 +3324,7 @@ class SimpleCursesPushButton(SimpleCursesWidget):
 
     def keypress(self, char):
         ''' SimpleCursesPushButton keypress '''
+        l_char = None
         if char in (
                 kbkey['pause'], curses.KEY_ENTER, ord('\n'), ord('\r')
                 ) and self._focused:
@@ -4287,6 +4304,7 @@ class SimpleCursesLineEdit():
         #self.log = self._log
         logger.error(f'{char = }')
         logger.error(f'{chr(char) = }')
+        l_char = None
         if not self._focused:
             return 1
         if self.log is not None:
@@ -4300,15 +4318,18 @@ class SimpleCursesLineEdit():
                     self._mode_changed()
             self._local_functions[char]()
 
-        if char in self._global_functions and \
+        if (char in self._global_functions or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None) and \
                 self._backslash_pressed:
             ''' toggle paste mode '''
+            if l_char is None:
+                l_char = char
             self._backslash_pressed = False
             if not self._paste_mode_always_on:
                 self._paste_mode = False
                 if self._mode_changed:
                     self._mode_changed()
-            self._global_functions[char]()
+            self._global_functions[l_char]()
             return 1
 
         if platform.startswith('win'):
@@ -5037,6 +5058,7 @@ class SimpleCursesBoolean(SimpleCursesCounter):
                 1 - Continue
                 2 - Display help
         '''
+        l_char = None
         if (not self._focused) or (not self._enabled):
             return 1
 

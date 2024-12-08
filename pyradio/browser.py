@@ -23,7 +23,7 @@ from .cjkwrap import cjklen
 from .countries import countries
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesWidgetColumns, SimpleCursesCheckBox, SimpleCursesCounter, SimpleCursesBoolean, DisabledWidget, SimpleCursesString, SimpleCursesWidget
 from .ping import ping
-from .keyboard import kbkey, ctrl_code_to_simple_code, kb2chr, ctrl_code_to_string
+from .keyboard import kbkey, ctrl_code_to_simple_code, kb2chr, ctrl_code_to_string, check_localized
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
@@ -2348,6 +2348,7 @@ class RadioBrowserConfigWindow():
                3: Display server selection window
                4: Return from server selection window
         '''
+        l_char = None
         if self._too_small:
             if char in (
                 curses.KEY_EXIT, 27, kbkey['q']
@@ -2364,8 +2365,11 @@ class RadioBrowserConfigWindow():
                 logger.error('---=== Server Selection is None ===---')
                 self._server_selection_window = None
 
-        if char in self._global_functions.keys():
-            self._global_functions[char]()
+        if char in self._global_functions.keys() or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
             return 1
 
         elif char in (
@@ -3291,6 +3295,7 @@ class RadioBrowserSearchWindow():
                 4 - Error in search paremeter
                 5 - Save search history
         '''
+        l_char = None
         if char in (curses.KEY_EXIT, 27):
             return -1
 
@@ -4018,6 +4023,7 @@ class RadioBrowserSort():
                  1: Continue
         '''
 
+        l_char = None
         if self._too_small:
             return 1
 
@@ -4195,6 +4201,7 @@ class RadioBrowserServersSelect():
                  1: Continue
         '''
 
+        l_char = None
         if self._too_small:
             if char in (curses.KEY_EXIT, 27, kbkey['q']):
                 return -1
@@ -4326,11 +4333,15 @@ class RadioBrowserServers():
                  2: Show help
         '''
 
+        l_char = None
         if self._too_small:
             return 1
 
-        if char in self._global_functions:
-            self._global_functions[char]()
+        if char in self._global_functions or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
             return 1
         elif char in (
             curses.KEY_EXIT, kbkey['q'], 27,

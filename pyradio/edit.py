@@ -20,7 +20,7 @@ from .server import IPsWithNumbers
 from .cjkwrap import cjkslices
 from .xdg import CheckDir
 from .html_help import HtmlHelp
-from .keyboard import kbkey, kb2str, kb2chr
+from .keyboard import kbkey, kb2str, kb2chr, check_localized
 
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
@@ -133,6 +133,7 @@ class PyRadioOpenDir(SimpleCursesMenu):
                 1 - Continue
                 2 - Display help
         '''
+        l_char = None
         if char in self._ord:
             self.dir = self._dir[char-ord('1')]
             return 0
@@ -736,6 +737,7 @@ class PyRadioEditor():
                  4: window too small
         """
         ret = 0
+        l_char = None
         if self._too_small:
             if char in (curses.KEY_EXIT, 27, kbkey['q']):
                 self.new_station = None
@@ -816,9 +818,11 @@ class PyRadioEditor():
                     self.new_station = None
                     self._reset_editors_modes()
                     ret = -1
-            elif char in self._global_functions.keys():
-                logger.error('>> global functions')
-                self._global_functions[char]()
+            elif char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
 
         if self._focus > 2:
             self._reset_editors_modes()
@@ -1183,6 +1187,7 @@ class PyRadioRecordingDir():
                  4: display rec dir help        (4, None, False)
         """
         ret = 0
+        l_char = None
         if self._too_small:
             if char in (curses.KEY_EXIT, 27, kbkey['q']):
                 return -1, None, False
@@ -1257,8 +1262,11 @@ class PyRadioRecordingDir():
                     # cancel
                     self._widgets[0].string = ''
                     ret = -1
-            elif char in self._global_functions.keys():
-                self._global_functions[char]()
+            elif char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
         #self._show_title()
         #self.show()
         return 0, None, False
@@ -1611,6 +1619,7 @@ class PyRadioResourceOpener():
                  4: display resource opener help      (4, None)
         """
         ret = 0
+        l_char = None
         if self._too_small:
             if char in (curses.KEY_EXIT, 27, kbkey['q']):
                 return -1, None, False
@@ -1671,8 +1680,11 @@ class PyRadioResourceOpener():
                     # cancel
                     self._widgets[0].string = ''
                     ret = -1
-            elif char in self._global_functions:
-                self._global_functions[char]()
+            elif char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
         #self._show_title()
         #self.show()
         return 0, None
@@ -2144,6 +2156,7 @@ class PyRadioRenameFile():
                  2: display line editor help
         """
         ret = 0
+        l_char = None
         if self._too_small:
             if char in (curses.KEY_EXIT, 27, kbkey['q']):
                 return -1, '', '', False, False, False
@@ -2206,8 +2219,11 @@ class PyRadioRenameFile():
                     # cancel
                     self._widgets[0].string = ''
                     ret = -1
-            elif char in self._global_functions.keys():
-                self._global_functions[char]()
+            elif char in self._global_functions or \
+                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
         #self._show_title()
         #self.show()
         return self._get_result(ret)
@@ -2311,8 +2327,12 @@ class PyRadioBuffering():
                  0: go on   - []
                  1: Ok      = [buffering parameters]
         """
-        if char in self._global_functions.keys():
-            self._global_functions[char]()
+        l_char = None
+        if char in self._global_functions or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
 
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'), kbkey['s']):
             self._cache_data.delay = self._delay
@@ -2434,8 +2454,12 @@ class PyRadioConnectionType():
                  0: go on
                  1: Ok
         """
-        if char in self._global_functions.keys():
-            self._global_functions[char]()
+        l_char = None
+        if char in self._global_functions or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
 
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'), kbkey['s']):
             return 1
@@ -2611,6 +2635,7 @@ class PyRadioServerWindow():
                  0: saved
                  1: go on
         '''
+        l_char = None
         if self._selection == 0 and \
                 char in (ord('\n'), ord('\r'), curses.KEY_ENTER,
                          kbkey['pause'], kbkey['l'], curses.KEY_RIGHT):

@@ -11,7 +11,7 @@ import platform
 from .simple_curses_widgets import DisabledWidget, SimpleCursesCheckBox, SimpleCursesPushButton, SimpleCursesTime, SimpleCursesString, SimpleCursesDate, SimpleCursesLineEdit
 from .cjkwrap import cjklen, cjkslices
 from .schedule import PyRadioScheduleItem, PyRadioScheduleItemType, PyRadioScheduleTimeType, PyRadioTime, PyRadioScheduleList, format_date_to_iso8851, random_string, datetime_to_my_time, is_date_before
-from .keyboard import kbkey
+from .keyboard import kbkey, check_localized
 
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
@@ -1169,6 +1169,7 @@ class PyRadioSimpleScheduleWindow():
              7: Stop time is in the past
              8: Start time < end time
         '''
+        l_char = None
         # if char == ord('0'):
         #     self._error_num = self._validate_selection()
         #     logger.error('self._error_num = {}'.format(self._error_num))
@@ -1182,6 +1183,7 @@ class PyRadioSimpleScheduleWindow():
         # logger.error(f'{self._focus = }')
         # logger.error(f'{char = }')
 
+        l_char = None
         if self._widgets[self._focus].w_id == 22:
             ret = self._widgets[22].keypress(self._win, char)
             logger.error('return = {}'.format(ret))
@@ -1193,8 +1195,11 @@ class PyRadioSimpleScheduleWindow():
                 # line editor help
                 return 9
 
-        elif char in self._global_functions.keys():
-            self._global_functions[char]()
+        elif char in self._global_functions or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
             return 0
 
         elif char == ord('n') and self._focus in range(2,14):
