@@ -3323,8 +3323,8 @@ class RadioBrowserSearchWindow():
                 class_name != 'SimpleCursesLineEdit':
             self._goto_first_history_item()
 
-        elif (char in (kbkey['G'], ord('$'))
-                check_localized(char, (kbkey['G']))) and \
+        elif (char in (kbkey['G'], ord('$')) or \
+                    check_localized(char, (kbkey['G']))) and \
                 class_name != 'SimpleCursesLineEdit':
             self._goto_last_history_item()
 
@@ -3348,7 +3348,7 @@ class RadioBrowserSearchWindow():
             ''' enter on cancel button  '''
             return -1
 
-        elif (char in (kbkey['pause'], curses.KEY_ENTER, ord('\n'), ord('\r')) ro \
+        elif (char in (kbkey['pause'], curses.KEY_ENTER, ord('\n'), ord('\r')) or \
                 check_localized(char, (kbkey['pause'], ))) and \
                 self._focus == len(self._widgets) - 2:
             ''' enter on ok button  '''

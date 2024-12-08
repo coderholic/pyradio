@@ -2075,17 +2075,21 @@ so you can resolve the issue and try again.
         ''' PyRadioMessagesSystem keypress '''
         l_char = None
         if not self.too_small and self._can_scroll:
-            if char in (kbkey['g'], curses.KEY_HOME):
+            if char in (kbkey['g'], curses.KEY_HOME) or \
+                check_localized(char, (kbkey['g'], )):
                 self._pad_pos = 0
                 self._pad_refresh()
-            elif char in (kbkey['G'], curses.KEY_END):
+            elif char in (kbkey['G'], curses.KEY_END) or \
+                check_localized(char, (kbkey['G'], )):
                 self._pad_pos = self._lines_count - self._maxY + 3
                 self._pad_refresh()
-            elif char in (curses.KEY_DOWN, kbkey['j']):
+            elif char in (curses.KEY_DOWN, kbkey['j']) or \
+                check_localized(char, (kbkey['j'], )):
                 if self._lines_count - self._maxY + 2 >= self._pad_pos:
                     self._pad_pos += 1
                     self._pad_refresh()
-            elif char in (curses.KEY_UP, kbkey['k']):
+            elif char in (curses.KEY_UP, kbkey['k']) or \
+                check_localized(char, (kbkey['k'], )):
                 if self._pad_pos > 0:
                     self._pad_pos -= 1
                     self._pad_refresh()
