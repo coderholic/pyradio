@@ -814,12 +814,14 @@ class PyRadioConfigWindow():
 
         elif val[0] == 'radiobrowser':
             if char in (curses.KEY_RIGHT, kbkey['l'], kbkey['pause'],
-                        curses.KEY_ENTER, ord('\r'), ord('\n')):
+                        curses.KEY_ENTER, ord('\r'), ord('\n')) or \
+                    check_localized(char, (kbkey['l'], kbkey['pause'])):
                 return 3, []
 
         elif val[0] == 'shortcuts_keys':
             if char in (curses.KEY_RIGHT, kbkey['l'], kbkey['pause'],
-                        curses.KEY_ENTER, ord('\r'), ord('\n')):
+                        curses.KEY_ENTER, ord('\r'), ord('\n')) or \
+                    check_localized(char, (kbkey['l'], kbkey['pause'])):
                 return 8, []
 
         elif val[0] == 'remote_control_server_port':
@@ -828,7 +830,8 @@ class PyRadioConfigWindow():
                 return -1, []
 
         elif val[0] == 'enable_notifications':
-            if char in (curses.KEY_RIGHT, kbkey['l']):
+            if char in (curses.KEY_RIGHT, kbkey['l']) or \
+                    check_localized(char, (kbkey['l'], )):
                 t = int(val[1][1])
                 if t == -1:
                     t = 0
@@ -845,7 +848,8 @@ class PyRadioConfigWindow():
                 self._print_title()
                 self._win.refresh()
                 return -1, []
-            elif char in (curses.KEY_LEFT, kbkey['h']):
+            elif char in (curses.KEY_LEFT, kbkey['h']) or \
+                    check_localized(char, (kbkey['h'], )):
                 t = int(val[1][1])
                 if t == -1:
                     t = -1
@@ -862,7 +866,8 @@ class PyRadioConfigWindow():
                 return -1, []
 
         elif val[0] == 'calculated_color_factor':
-            if char in (curses.KEY_RIGHT, kbkey['l']):
+            if char in (curses.KEY_RIGHT, kbkey['l']) or \
+                    check_localized(char, (kbkey['l'], )):
                 if self._cnf.use_themes:
                     t = float(val[1][1])
                     if t < .2:
@@ -884,7 +889,8 @@ class PyRadioConfigWindow():
                     self._cnf._show_colors_cannot_change()
                 return -1, []
 
-            elif char in (curses.KEY_LEFT, kbkey['h']):
+            elif char in (curses.KEY_LEFT, kbkey['h']) or \
+                    check_localized(char, (kbkey['h'], )):
                 if self._cnf.use_themes:
                     t = float(val[1][1])
                     if t > 0:
@@ -908,7 +914,8 @@ class PyRadioConfigWindow():
 
         elif val[0] == 'remote_control_server_ip':
             if char in (ord('\n'), ord('\r'), curses.KEY_ENTER,
-                        curses.KEY_RIGHT, kbkey['l'], kbkey['pause']):
+                        curses.KEY_RIGHT, kbkey['l'], kbkey['pause']) or \
+                    check_localized(char, (kbkey['l'], kbkey['pause'])):
                 self._config_options[val[0]][1] = self.nip.next()
                 disp = self._config_options[val[0]][1].ljust(15)
                 # if self._config_options[val[0]][1] == 'localhost':
@@ -924,7 +931,8 @@ class PyRadioConfigWindow():
                 self._print_title()
                 self._win.refresh()
                 return -1, []
-            elif char in (curses.KEY_LEFT, kbkey['h']):
+            elif char in (curses.KEY_LEFT, kbkey['h']) or \
+                    check_localized(char, (kbkey['h'], )):
                 if self._config_options[val[0]][1] == 'localhost':
                     self._config_options[val[0]][1] = 'LAN'
                     disp = 'LAN      '
@@ -942,7 +950,8 @@ class PyRadioConfigWindow():
         elif val[0] == 'console_theme':
             if char in (
                     curses.KEY_RIGHT, kbkey['l'], kbkey['pause']
-                        ):
+                        ) or \
+                    check_localized(char, (kbkey['l'], kbkey['pause'])):
                 if self._config_options['console_theme'][1] == 'dark':
                     self._config_options['console_theme'][1] = 'light'
                 else:
@@ -951,7 +960,8 @@ class PyRadioConfigWindow():
             return -1, []
 
         elif val[0] == 'connection_timeout':
-            if char in (curses.KEY_RIGHT, kbkey['l']):
+            if char in (curses.KEY_RIGHT, kbkey['l']) or \
+                    check_localized(char, (kbkey['l'], )):
                 t = int(val[1][1])
                 if t == 0:
                     t = 4
@@ -965,7 +975,8 @@ class PyRadioConfigWindow():
                     self._win.refresh()
                 return -1, []
 
-            elif char in (curses.KEY_LEFT, kbkey['h']):
+            elif char in (curses.KEY_LEFT, kbkey['h']) or \
+                    check_localized(char, (kbkey['h'], )):
                 t = int(val[1][1])
                 if t > 5:
                     t -= 1
@@ -980,7 +991,8 @@ class PyRadioConfigWindow():
                 return -1, []
 
         if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
-                    kbkey['pause'], kbkey['l'], curses.KEY_RIGHT):
+                    kbkey['pause'], kbkey['l'], curses.KEY_RIGHT) or \
+                    check_localized(char, (kbkey['l'], kbkey['pause'])):
             ''' alter option value '''
             vals = list(self._config_options.items())
             sel = vals[self.selection][0]
@@ -1349,15 +1361,20 @@ class ExtraParametersEditor():
         '''
         ret = 1
         l_char = None
-        if char == kbkey['?'] and self._focus > 0:
+        if (char == kbkey['?'] or \
+                check_localized(char, (kbkey['?'], ))) and \
+                self._focus > 0:
             return 2
-        elif char in (curses.KEY_EXIT, 27, kbkey['q']) and \
+        elif (char in (curses.KEY_EXIT, 27, kbkey['q']) or \
+                check_localized(char, (kbkey['q'], ))) and \
                 self._focus > 0:
             self.edit_string = ''
             ret = 0
-        elif char in (ord('\t'), 9, curses.KEY_DOWN, kbkey['tab']):
+        elif char in (ord('\t'), 9, curses.KEY_DOWN, kbkey['tab']) or \
+                check_localized(char, (kbkey['tab'], )):
             self._focus_next()
-        elif char in (curses.KEY_BTAB, curses.KEY_UP, kbkey['stab']):
+        elif char in (curses.KEY_BTAB, curses.KEY_UP, kbkey['stab']) or \
+                check_localized(char, (kbkey['stab'], )):
             self._focus_previous()
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
             if self._focus == 0:
@@ -1371,7 +1388,9 @@ class ExtraParametersEditor():
                 ''' cancel '''
                 self.edit_string = ''
                 ret = 0
-        elif char == kbkey['s'] and self._focus > 0:
+        elif (char == kbkey['s'] or \
+                    check_localized(char, (kbkey['s'], ))) and \
+                    self._focus > 0:
             ''' s, execute '''
             if self._widgets[1].enabled:
                 self.edit_string = self._line_editor.string.strip()
@@ -2006,7 +2025,8 @@ class ExtraParameters():
             self._global_functions[l_char]()
             return -1
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
-                      kbkey['pause'], kbkey['l'], curses.KEY_RIGHT, kbkey['s']):
+                      kbkey['pause'], kbkey['l'], curses.KEY_RIGHT, kbkey['s']) or \
+                    check_localized(char, (kbkey['s'], kbkey['pause'], kbkey['l'])):
             ''' activate selection '''
             self._list.keypress(char)
             # logger.error('DE active ={}, selection={}'.format(self.active, self.selection))
@@ -2023,7 +2043,7 @@ class ExtraParameters():
             curses.KEY_EXIT, 27,
             kbkey['q'], curses.KEY_LEFT,
             kbkey['h']
-        ):
+        ) or check_localized(char, (kbkey['q'], kbkey['h'])):
             self._win.nodelay(True)
             char = self._win.getch()
             self._win.nodelay(False)
@@ -2032,7 +2052,8 @@ class ExtraParameters():
                 self.reset()
                 return -2
 
-        elif char == kbkey['?']:
+        elif char == kbkey['?'] or \
+                check_localized(char, (kbkey['?'], )):
             ''' display help '''
             return 1
         ret = self._list.keypress(char)
@@ -2267,7 +2288,8 @@ class PyRadioSelectPlayer():
                     l_char = char
                 self._global_functions[l_char]()
 
-            elif char in (9, kbkey['tab'] ):
+            elif char in (9, kbkey['tab']) or \
+                    check_localized(char, (kbkey['tab'], )):
                 if self.from_config  and self._players[self.selection][1]:
                     self._switch_column()
 
@@ -2275,7 +2297,7 @@ class PyRadioSelectPlayer():
                 curses.KEY_EXIT, 27,
                 kbkey['q'], curses.KEY_LEFT,
                 kbkey['h']
-            ):
+            ) or check_localized(char, (kbkey['q'], kbkey['h'])):
                 self._win.nodelay(True)
                 char = self._win.getch()
                 self._win.nodelay(False)
@@ -2283,10 +2305,12 @@ class PyRadioSelectPlayer():
                     ''' ESCAPE '''
                     return 1
 
-            elif char == kbkey['revert_saved']:
+            elif char == kbkey['revert_saved'] or \
+                    check_localized(char, (kbkey['revert_saved'], )):
                 self.reset()
 
-            elif char == kbkey['s']:
+            elif char == kbkey['s'] or \
+                    check_localized(char, (kbkey['s'], )):
                 working_players = []
                 for a_player in self._players:
                     if a_player[1]:
@@ -2302,7 +2326,8 @@ class PyRadioSelectPlayer():
             if self.focus:
                 ''' focus on players '''
                 if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
-                            kbkey['pause'], kbkey['l'], curses.KEY_RIGHT):
+                            kbkey['pause'], kbkey['l'], curses.KEY_RIGHT) or \
+                        check_localized(char, (kbkey['l'], kbkey['pause'])):
                     self._players[self.selection][1] = not self._players[self.selection][1]
                     self.refresh_selection()
 
@@ -2329,14 +2354,16 @@ class PyRadioSelectPlayer():
                         self._players.insert(self.selection, x)
                     self.refresh_selection()
 
-                elif char in (curses.KEY_UP, kbkey['k']):
+                elif char in (curses.KEY_UP, kbkey['k']) or \
+                        check_localized(char, (kbkey['k'], )):
                     self.selection -= 1
                     if self.selection < 0:
                         self.selection = len(self._players) - 1
                     self.refresh_selection()
                     self._extra.set_player(self.selected_player_name(), True)
 
-                elif char in (curses.KEY_DOWN, kbkey['j']):
+                elif char in (curses.KEY_DOWN, kbkey['j']) or \
+                        check_localized(char, (kbkey['j'], )):
                     self.selection += 1
                     if self.selection == len(self._players):
                         self.selection = 0
@@ -2677,29 +2704,34 @@ class PyRadioSelectEncodings():
                 l_char = char
             self._global_functions[l_char]()
 
-        elif char in (kbkey['revert_def'], ):
+        elif char in (kbkey['revert_def'], ) or \
+                check_localized(char, (kbkey['revert_def'], )):
             self.encoding = self._config_encoding
             self.setEncoding(self.encoding, init=True)
 
-        elif char in (kbkey['revert_saved'], ):
+        elif char in (kbkey['revert_saved'], ) or \
+                check_localized(char, (kbkey['revert_saved'], )):
             self.encoding = self._orig_encoding
             self.setEncoding(self.encoding, init=True)
 
-        elif char in (curses.KEY_UP, kbkey['k']):
+        elif char in (curses.KEY_UP, kbkey['k']) or \
+                check_localized(char, (kbkey['k'], )):
             self.selection -= 1
             if self.selection < 0:
                 self.selection = len(self._encodings) - 1
             self._fix_startPos(-1)
             self.refresh_selection()
 
-        elif char in (curses.KEY_DOWN, kbkey['j']):
+        elif char in (curses.KEY_DOWN, kbkey['j']) or \
+                check_localized(char, (kbkey['j'], )):
             self.selection += 1
             if self.selection == len(self._encodings):
                 self.selection = 0
             self._fix_startPos(1)
             self.refresh_selection()
 
-        elif char in (curses.KEY_RIGHT, kbkey['l']):
+        elif char in (curses.KEY_RIGHT, kbkey['l']) or \
+                check_localized(char, (kbkey['l'], )):
             self._column, self._row = self._selection_to_col_row(self.selection)
             self._column += 1
             if self._column == self._num_of_columns:
@@ -2716,7 +2748,8 @@ class PyRadioSelectEncodings():
             self._fix_startPos(1)
             self.refresh_selection()
 
-        elif char in (curses.KEY_LEFT, kbkey['h']):
+        elif char in (curses.KEY_LEFT, kbkey['h']) or \
+                check_localized(char, (kbkey['h'], )):
             self._column, self._row = self._selection_to_col_row(self.selection)
             self._column -= 1
             if self._column == -1:
@@ -2748,19 +2781,22 @@ class PyRadioSelectEncodings():
             self._fix_startPos(-5)
             self.refresh_selection()
 
-        elif char in (curses.KEY_HOME, kbkey['g']):
+        elif char in (curses.KEY_HOME, kbkey['g']) or \
+                check_localized(char, (kbkey['g'], )):
             self.selection = 0
             self.startPos = 0
             self.refresh_selection()
 
-        elif char in (curses.KEY_END, kbkey['G']):
+        elif char in (curses.KEY_END, kbkey['G']) or \
+                check_localized(char, (kbkey['G'], )):
             self.selection = len(self._encodings) - 1
             self.startPos = self._num_of_rows - self.list_maxY + 1
             self.refresh_selection()
 
         elif char in (curses.KEY_EXIT, 27,
                       kbkey['q'], curses.KEY_LEFT,
-                      kbkey['h']):
+                      kbkey['h']) or \
+                    check_localized(char, (kbkey['q'], kbkey['h'])):
             self._win.nodelay(True)
             char = self._win.getch()
             self._win.nodelay(False)
@@ -2769,7 +2805,8 @@ class PyRadioSelectEncodings():
                 return 1, ''
 
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
-                      kbkey['pause'], kbkey['s']):
+                      kbkey['pause'], kbkey['s']) or \
+                    check_localized(char, (kbkey['pause'], kbkey['s'])):
             return 0, self._encodings[self.selection][0]
 
         return -1, ''
@@ -3089,16 +3126,19 @@ class PyRadioSelectPlaylist():
             self._select_playlist_error = -2
             self.refresh_selection()
 
-        elif char == kbkey['screen_middle']:
+        elif char == kbkey['screen_middle'] or \
+                check_localized(char, (kbkey['screen_middle'], )):
             if self._num_of_items > 0:
                 self.setPlaylistById(int(self._num_of_items / 2) - 1)
                 #self._put_selection_in_the_middle(force=True)
                 self.refresh_selection()
 
-        elif char == kbkey['revert_saved']:
+        elif char == kbkey['revert_saved'] or \
+                check_localized(char, (kbkey['revert_saved'], )):
             self.setPlaylist(self._orig_playlist)
 
-        elif char in (curses.KEY_EXIT, 27, kbkey['q'], curses.KEY_LEFT, kbkey['h']):
+        elif char in (curses.KEY_EXIT, 27, kbkey['q'], curses.KEY_LEFT, kbkey['h']) or \
+                check_localized(char, (kbkey['q'], kbkey['h'])):
             self._win.nodelay(True)
             char = self._win.getch()
             self._win.nodelay(False)
@@ -3108,13 +3148,15 @@ class PyRadioSelectPlaylist():
                 return 1, ''
 
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
-                      kbkey['pause'], kbkey['l'], curses.KEY_RIGHT):
+                      kbkey['pause'], kbkey['l'], curses.KEY_RIGHT) or \
+                    check_localized(char, (kbkey['l'], kbkey['pause'])):
             if type(self) is PyRadioSelectStation:
                 if self._selected_playlist_id in self._groups_ids:
                     return -1, ''
             return self._get_result()
 
-        elif char in (curses.KEY_DOWN, kbkey['j']):
+        elif char in (curses.KEY_DOWN, kbkey['j']) or \
+                check_localized(char, (kbkey['j'], )):
             self.jumpnr = ''
             if self._num_of_items > 0:
                 self.setPlaylistById(self._selected_playlist_id + 1,
@@ -3125,7 +3167,8 @@ class PyRadioSelectPlaylist():
                     self.startPos += 1
                 self.refresh_selection()
 
-        elif char in (curses.KEY_UP, kbkey['k']):
+        elif char in (curses.KEY_UP, kbkey['k']) or \
+                check_localized(char, (kbkey['k'], )):
             self.jumpnr = ''
             if self._num_of_items > 0:
                 self.setPlaylistById(self._selected_playlist_id - 1,
@@ -3173,7 +3216,8 @@ class PyRadioSelectPlaylist():
                         self.startPos = self._num_of_items - self.maxY + 2
             self.refresh_selection()
 
-        elif char in (curses.KEY_HOME, kbkey['g']):
+        elif char in (curses.KEY_HOME, kbkey['g']) or \
+                check_localized(char, (kbkey['g'], )):
             self.jumpnr = ''
             self._selected_playlist_id = 0
             self.startPos = 0
@@ -3185,7 +3229,8 @@ class PyRadioSelectPlaylist():
             self.startPos = self._num_of_items - self.maxY + 2
             self.refresh_selection()
 
-        elif char in (kbkey['G'], ):
+        elif char in (kbkey['G'], ) or \
+                check_localized(char, (kbkey['G'], )):
             if self.jumpnr:
                 try:
                     if type(self) is PyRadioSelectStation:
@@ -3382,7 +3427,8 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
     def keypress(self, char):
         ''' PyRadioSelectStation keypress '''
         l_char = None
-        if char == kbkey['revert_saved']:
+        if char == kbkey['revert_saved'] or \
+                check_localized(char, (kbkey['revert_saved'], )):
             self.setStation(self._orig_playlist)
             return -1, ''
 
@@ -4068,7 +4114,8 @@ class PyRadioKeyboardConfig():
 
             return ret
         else:
-            if char == kbkey['?']:
+            if char == kbkey['?'] or \
+                    check_localized(char, (kbkey['?'], )):
                 self.message = 'M_KEYBOARD_HELP'
                 return 2
 
@@ -4077,12 +4124,14 @@ class PyRadioKeyboardConfig():
                 self.keys_string = msg + self._get_available_keys() + '\n\n'
                 return -4
 
-            elif char == kbkey['revert_def']:
+            elif char == kbkey['revert_def'] or \
+                    check_localized(char, (kbkey['revert_def'], )):
                 for i in range(len(self._list)):
                     self._list[i][3] = self._list[i][1]
                     self._list[i][6] = self._list[i][4]
                 self._needs_update = True
-            elif char == kbkey['revert_saved']:
+            elif char == kbkey['revert_saved'] or \
+                    check_localized(char, (kbkey['revert_saved'], )):
                 for i in range(len(self._list)):
                     self._list[i][3] = self._list[i][2]
                     self._list[i][6] = self._list[i][5]
@@ -4099,10 +4148,12 @@ class PyRadioKeyboardConfig():
                 self._get_after_header(next=False)
                 self._make_selection_visible()
                 self._needs_update = True
-            elif char in (curses.KEY_HOME, kbkey['g']):
+            elif char in (curses.KEY_HOME, kbkey['g']) or \
+                    check_localized(char, (kbkey['g'], )):
                 if self._focus == 0:
                     self._go_top()
-            elif char in (curses.KEY_END, kbkey['G']):
+            elif char in (curses.KEY_END, kbkey['G']) or \
+                    check_localized(char, (kbkey['G'], )):
                 if self._focus == 0:
                     self._go_bottom()
             elif char == curses.KEY_NPAGE:
@@ -4111,31 +4162,38 @@ class PyRadioKeyboardConfig():
                 self._go_up(step=5)
             # elif char in (curses.KEY_EXIT, 27, kbkey['q']):
             #    return -1
-            elif char in (curses.KEY_RIGHT, kbkey['l']):
+            elif char in (curses.KEY_RIGHT, kbkey['l']) or \
+                    check_localized(char, (kbkey['l'], )):
                 if self._focus > 0:
                     self._focus_next()
                 else:
                     self._start_editing()
-            elif char in (curses.KEY_LEFT, kbkey['h']):
+            elif char in (curses.KEY_LEFT, kbkey['h']) or \
+                    check_localized(char, (kbkey['h'], )):
                 if self._focus > 0:
                     self._focus_previous()
                 else:
                     self._start_editing()
-            elif char in (curses.KEY_DOWN, kbkey['j']):
+            elif char in (curses.KEY_DOWN, kbkey['j']) or \
+                    check_localized(char, (kbkey['j'], )):
                 if self._focus == 0:
                     self._go_down()
                 else:
                     self._focus_next()
-            elif char in (curses.KEY_UP, kbkey['k']):
+            elif char in (curses.KEY_UP, kbkey['k']) or \
+                    check_localized(char, (kbkey['k'], )):
                 if self._focus == 0:
                     self._go_up()
                 else:
                     self._focus_previous()
-            elif char in (ord('\t'), 9, kbkey['tab']):
+            elif char in (ord('\t'), 9, kbkey['tab']) or \
+                    check_localized(char, (kbkey['tab'], )):
                 self._focus_next()
-            elif char in (curses.KEY_BTAB, kbkey['stab']):
+            elif char in (curses.KEY_BTAB, kbkey['stab']) or \
+                    check_localized(char, (kbkey['stab'], )):
                 self._focus_previous()
-            elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'), kbkey['pause']):
+            elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'), kbkey['pause']) or \
+                    check_localized(char, (kbkey['pause'], )):
                 if self._focus == 0:
                     self._start_editing()
                 elif self._focus == 1:
