@@ -396,11 +396,12 @@ class SimpleCursesString(SimpleCursesWidget):
         if self._right_arrow_selects and char in (
                 curses.KEY_ENTER, ord('\n'), ord('\r'),
                 curses.KEY_RIGHT, kbkey['l'], kbkey['pause']
-                ):
+                ) or \
+                check_localized(char, (kbkey['l'], kbkey['pause'])):
             ret = 0
         elif not self._right_arrow_selects and char in (
                 kbkey['pause'], ord('\n'), ord('\r'), curses.KEY_ENTER
-                ):
+                ) or check_localized(char, (kbkey['pause'], )):
             ret = 0
         if ret == 0 and self._callback_function_on_activation:
             self._callback_function_on_activation()
@@ -648,15 +649,18 @@ class SimpleCursesDate(SimpleCursesWidget):
             self._global_functions[l_char]()
             return 0
 
-        if char == kbkey['t']:
+        if char == kbkey['t'] or \
+                check_localized(char, (kbkey['t'], )):
             self._enabled = not self._enabled
             self.show()
             return 0
 
-        if char in (curses.KEY_EXIT, kbkey['q'], 27):
+        if char in (curses.KEY_EXIT, kbkey['q'], 27) or \
+                check_localized(char, (kbkey['q'], )):
             return -1
 
-        elif char == kbkey['?']:
+        elif char == kbkey['?'] or \
+                check_localized(char, (kbkey['?'], )):
             return 1
 
         elif char in (curses.KEY_HOME, ):
@@ -675,13 +679,16 @@ class SimpleCursesDate(SimpleCursesWidget):
                 delta = 3
             self.increase(delta=delta)
 
-        elif char in (kbkey['h'], curses.KEY_LEFT):
+        elif char in (kbkey['h'], curses.KEY_LEFT) or \
+                check_localized(char, (kbkey['h'], )):
             self.decrease()
 
-        elif char in (kbkey['l'], curses.KEY_RIGHT):
+        elif char in (kbkey['l'], curses.KEY_RIGHT) or \
+                check_localized(char, (kbkey['l'], )):
             self.increase()
 
-        elif char in (9, kbkey['l'], kbkey['tab']):
+        elif char in (9, kbkey['l'], kbkey['tab']) or \
+                check_localized(char, (kbkey['l'], kbkey['tab'])):
             ''' TAB '''
             if self._next_func and self.selected == 2:
                 self._next_func()
@@ -692,7 +699,8 @@ class SimpleCursesDate(SimpleCursesWidget):
                     self.selected = 0
             self.show()
 
-        elif char in (curses.KEY_BTAB, kbkey['h'], kbkey['stab']):
+        elif char in (curses.KEY_BTAB, kbkey['h'], kbkey['stab']) or \
+                check_localized(char, (kbkey['h'], kbkey['stab'])):
             ''' Shift-TAB '''
             if self._previous_func and self.selected == 0:
                 self._previous_func()
@@ -1033,25 +1041,29 @@ class SimpleCursesTime(SimpleCursesWidget):
             self._global_functions[l_char]()
             return 0
 
-        if char == kbkey['t']:
+        if char == kbkey['t'] or \
+                check_localized(char, (kbkey['t'], )):
             self._enabled = not self._enabled
             self.show()
             return 0
 
-        if char in (curses.KEY_EXIT, kbkey['q'], 27):
+        if char in (curses.KEY_EXIT, kbkey['q'], 27) or \
+                check_localized(char, (kbkey['q'], )):
             return -1
 
         elif char in (ord('f'), ):
             self.set_time_format(PyRadioTime.NO_AM_PM_FORMAT)
 
-        elif char == kbkey['?']:
+        elif char == kbkey['?'] or \
+                check_localized(char, (kbkey['?'], )):
             return 1
 
         elif self.selected in (3, 4) and \
                 char in (curses.KEY_LEFT, curses.KEY_RIGHT,
                          curses.KEY_ENTER, ord('\n'), ord('\r'),
                          kbkey['pause'], kbkey['h'], kbkey['l']
-                ):
+                ) or \
+                check_localized(char, (kbkey['l'], kbkey['h'], kbkey['pause'])):
             old_time_format = self.time_format
             if self.selected == 3:
                 '''' change AM check box  '''
@@ -1088,7 +1100,8 @@ class SimpleCursesTime(SimpleCursesWidget):
             self._check_time_format(old_hours)
             self.show()
 
-        elif char in (kbkey['h'], curses.KEY_LEFT):
+        elif char in (kbkey['h'], curses.KEY_LEFT) or \
+                check_localized(char, (kbkey['h'], )):
             old_hours = self._num[0][0]
             self._num[self.selected][0] -= self._num[self.selected][3]
             if self._num[self.selected][0] < self._num[self.selected][1]:
@@ -1096,7 +1109,8 @@ class SimpleCursesTime(SimpleCursesWidget):
             self._check_time_format(old_hours)
             self.show()
 
-        elif char in (kbkey['l'], curses.KEY_RIGHT):
+        elif char in (kbkey['l'], curses.KEY_RIGHT) or \
+                check_localized(char, (kbkey['l'], )):
             old_hours = self._num[0][0]
             self._num[self.selected][0] += self._num[self.selected][3]
             if self._num[self.selected][0] > self._num[self.selected][2]:
@@ -1104,7 +1118,8 @@ class SimpleCursesTime(SimpleCursesWidget):
             self._check_time_format(old_hours)
             self.show()
 
-        elif char in (9, kbkey['l'], kbkey['tab']):
+        elif char in (9, kbkey['l'], kbkey['tab']) or \
+                check_localized(char, (kbkey['l'], kbkey['tab'])):
             ''' TAB '''
             if self._next_func and self.selected == self._max_selection:
                 self._next_func()
@@ -1115,7 +1130,8 @@ class SimpleCursesTime(SimpleCursesWidget):
                     self.selected = 0
             self.show()
 
-        elif char in (curses.KEY_BTAB, kbkey['h'], kbkey['stab']):
+        elif char in (curses.KEY_BTAB, kbkey['h'], kbkey['stab']) or \
+                check_localized(char, (kbkey['h'], kbkey['stab'])):
             ''' Shift-TAB '''
             if self._previous_func and self.selected == 0:
                 self._previous_func()
@@ -1331,10 +1347,11 @@ class SimpleCursesCounter(SimpleCursesWidget):
 
         if char in (
             curses.KEY_EXIT, kbkey['q'], 27,
-        ):
+        ) or check_localized(char, (kbkey['q'], )):
             return -1
 
-        elif char == kbkey['?']:
+        elif char == kbkey['?'] or \
+                check_localized(char, (kbkey['?'], )):
             return 2
 
         elif char in (curses.KEY_NPAGE, ):
@@ -1351,14 +1368,16 @@ class SimpleCursesCounter(SimpleCursesWidget):
             self.show(self._win)
             return 0
 
-        elif char in (kbkey['h'], curses.KEY_LEFT):
+        elif char in (kbkey['h'], curses.KEY_LEFT) or \
+                check_localized(char, (kbkey['h'], )):
             self._value -= self._step
             if self._value < self._min:
                 self._value = self._min
             self.show(self._win)
             return 0
 
-        elif char in (kbkey['l'], curses.KEY_RIGHT):
+        elif char in (kbkey['l'], curses.KEY_RIGHT) or \
+                check_localized(char, (kbkey['l'], )):
             self._value += self._step
             if self._value > self._max:
                 self._value = self._max
@@ -1692,16 +1711,18 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
 
         if char in (
             curses.KEY_EXIT, kbkey['q'], 27,
-        ):
+        ) or check_localized(char, (kbkey['q'], )):
             return -1
 
-        elif char == kbkey['?']:
+        elif char == kbkey['?'] or \
+                check_localized(char, (kbkey['?'], )):
             return 3
 
         elif self._right_arrow_selects and char in (
                 curses.KEY_RIGHT, kbkey['l'], kbkey['pause'],
                 ord('\n'), ord('\r'), curses.KEY_ENTER
-                ):
+                ) or \
+                check_localized(char, (kbkey['l'], kbkey['pause'])):
             self.active = self.selection
             logger.error('DE active = {}'.format(self.active))
             ''' Do not refresh the widget, it will
@@ -1713,18 +1734,20 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
 
         elif not self._right_arrow_selects and char in (
                 kbkey['pause'], ord('\n'), ord('\r'), curses.KEY_ENTER
-                ):
+                ) or check_localized(char, (kbkey['pause'], )):
             self.active = self.selection
             logger.error('DE active = {}'.format(self.active))
             self.show()
             return 0
 
-        elif char in (kbkey['g'], curses.KEY_HOME):
+        elif char in (kbkey['g'], curses.KEY_HOME) or \
+                check_localized(char, (kbkey['g'], )):
             self.selection = 0
             self.show()
             return 2
 
-        elif char in (kbkey['G'], curses.KEY_END):
+        elif char in (kbkey['G'], curses.KEY_END) or \
+                check_localized(char, (kbkey['G'], )):
             self.selection = len(self.items) - 1
             self.show()
             return 2
@@ -1749,7 +1772,8 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
             self.show()
             return 2
 
-        elif char in (kbkey['k'], curses.KEY_UP):
+        elif char in (kbkey['k'], curses.KEY_UP) or \
+                check_localized(char, (kbkey['k'], )):
             pY, pX = self._coords[self.selection]
             if self._on_up_callback_function and pY == 0:
                 self._on_up_callback_function()
@@ -1760,7 +1784,8 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                 self.show()
             return 2
 
-        elif char in (kbkey['j'], curses.KEY_DOWN):
+        elif char in (kbkey['j'], curses.KEY_DOWN) or \
+                check_localized(char, (kbkey['j'], )):
             pY, pX = self._coords[self.selection]
             # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
             # logger.error('DE rows = {}'.format(self._rows))
@@ -1774,7 +1799,8 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                 self.show()
             return 2
 
-        elif char in (kbkey['l'], curses.KEY_RIGHT):
+        elif char in (kbkey['l'], curses.KEY_RIGHT) or \
+                check_localized(char, (kbkey['l'], )):
             pY, pX = self._coords[self.selection]
             if self._on_right_callback_function and \
                     (pX == self._columns - 1 or self._last_in_row(pY, pX)):
@@ -1802,7 +1828,8 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                 self.show()
             return 2
 
-        elif char in (kbkey['h'], curses.KEY_LEFT):
+        elif char in (kbkey['h'], curses.KEY_LEFT) or \
+                check_localized(char, (kbkey['h'], )):
             pY, pX = self._coords[self.selection]
             if self._on_left_callback_function and pX == 0:
                 self._on_left_callback_function()
@@ -2779,14 +2806,17 @@ class SimpleCursesMenu(SimpleCursesWidget):
         elif char in (
             curses.KEY_EXIT, kbkey['q'], 27,
             kbkey['h'], curses.KEY_LEFT
-        ):
+        ) or \
+                check_localized(char, (kbkey['q'], kbkey['h'])):
             return -1
 
-        elif char == kbkey['?']:
+        elif char == kbkey['?'] or \
+                check_localized(char, (kbkey['?'], )):
             return 2
 
         elif self._can_add_items and \
-                char in (kbkey['add'], ):
+                char in (kbkey['add'], ) or \
+                check_localized(char, (kbkey['add'], )):
             if len(self._items) == 0:
                 return 0
             if self._add_item_function:
@@ -2794,7 +2824,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
             return 5
 
         elif self._can_delete_items and \
-                char in (kbkey['del'], curses.KEY_DC):
+                char in (kbkey['del'], curses.KEY_DC) or \
+                check_localized(char, (kbkey['del'], )):
             if len(self._items) == 0:
                 return 0
             if self._has_captions:
@@ -2812,7 +2843,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
             return 0
 
         elif self._can_delete_items and \
-                char == kbkey['edit']:
+                char == kbkey['edit'] or \
+                check_localized(char, (kbkey['edit'], )):
             if len(self._items) == 0:
                 return 0
             if self._has_captions:
@@ -2828,13 +2860,15 @@ class SimpleCursesMenu(SimpleCursesWidget):
             return 4
 
         elif self._can_delete_items and \
-                char == kbkey['add']:
+                char == kbkey['add'] or \
+                check_localized(char, (kbkey['add'], )):
             return 5
 
         elif self._right_arrow_selects and char in (
                 ord('\n'), ord('\r'), curses.KEY_ENTER,
                 kbkey['l'], kbkey['pause'], curses.KEY_RIGHT
-                ):
+                ) or \
+                check_localized(char, (kbkey['l'], kbkey['pause'])):
             ''' Do not refresh the widget, it will
                 probably be hidden next
             '''
@@ -2845,13 +2879,14 @@ class SimpleCursesMenu(SimpleCursesWidget):
 
         elif not self._right_arrow_selects and char in (
                 kbkey['pause'], ord('\n'), ord('\r'), curses.KEY_ENTER
-                ):
+                ) or check_localized(char, (kbkey['pause'], )):
             self._toggle_active_item()
             if self._on_activate_callback_function:
                 self._on_activate_callback_function()
             return 0
 
-        elif char in (kbkey['g'], curses.KEY_HOME):
+        elif char in (kbkey['g'], curses.KEY_HOME) or \
+                check_localized(char, (kbkey['g'], )):
             if len(self._items) == 0:
                 return 1
             self._selection = 0
@@ -2862,7 +2897,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._start_pos = 0
                 self._refresh()
 
-        elif char in (kbkey['G'], curses.KEY_END):
+        elif char in (kbkey['G'], curses.KEY_END) or \
+                check_localized(char, (kbkey['G'], )):
             if len(self._items) == 0:
                 return 1
             self._selection = len(self._items) - 1
@@ -2879,7 +2915,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._start_pos = 0
                 self._refresh()
 
-        elif char == kbkey['goto_playing']:
+        elif char == kbkey['goto_playing'] or \
+                check_localized(char, (kbkey['goto_playing'], )):
             if len(self._items) == 0:
                 return 1
             self._selection = self._active
@@ -2888,21 +2925,24 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._refresh()
             # self._toggle_selected_item()
 
-        elif char == kbkey['h']:
+        elif char == kbkey['h'] or \
+                check_localized(char, (kbkey['h'], )):
             if len(self._items) == 0:
                 return 1
             self._selection = self._start_pos
             self._verify_selection_not_on_caption()
             self._toggle_selected_item()
 
-        elif char == kbkey['screen_middle']:
+        elif char == kbkey['screen_middle'] or \
+                check_localized(char, (kbkey['screen_middle'], )):
             if len(self._items) == 0:
                 return 1
             self._selection = self._start_pos + int(self._body_maxY /2) - 1
             self._verify_selection_not_on_caption()
             self._toggle_selected_item()
 
-        elif char == kbkey['l']:
+        elif char == kbkey['l'] or \
+                check_localized(char, (kbkey['l'], )):
             if len(self._items) == 0:
                 return 1
             self._selection = self._start_pos + self._body_maxY - 1
@@ -2954,7 +2994,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
             if not self._toggle_selected_item():
                 self._refresh()
 
-        elif char in (kbkey['k'], curses.KEY_UP):
+        elif char in (kbkey['k'], curses.KEY_UP) or \
+                check_localized(char, (kbkey['k'], )):
             if len(self._items) == 0:
                 # log_it('*** no items')
                 return 1
@@ -2983,7 +3024,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 # log_it('self._refresh')
                 self._refresh()
 
-        elif char in (kbkey['j'], curses.KEY_DOWN):
+        elif char in (kbkey['j'], curses.KEY_DOWN) or \
+                check_localized(char, (kbkey['j'], )):
             if len(self._items) == 0:
                 return 1
             self._selection += 1
@@ -3187,7 +3229,8 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
         l_char = None
         if self._focused and \
                 self.enabled and \
-                char in (kbkey['pause'], curses.KEY_ENTER, ord('\n'), ord('\r')):
+                (char in (kbkey['pause'], curses.KEY_ENTER, ord('\n'), ord('\r')) or \
+                check_localized(char, (kbkey['pause'], ))):
             self.checked = not self._checked
             if self._checked and \
                     self._callback_function is not None:
@@ -3325,9 +3368,10 @@ class SimpleCursesPushButton(SimpleCursesWidget):
     def keypress(self, char):
         ''' SimpleCursesPushButton keypress '''
         l_char = None
-        if char in (
+        if (char in (
                 kbkey['pause'], curses.KEY_ENTER, ord('\n'), ord('\r')
-                ) and self._focused:
+            ) or check_localized(char, (kbkey['pause'], ))) and \
+                self._focused:
             if self._callback_function:
                 self._callback_function(self._parent, w_id=None)
                 return True
@@ -4379,7 +4423,9 @@ class SimpleCursesLineEdit():
                 self._mode_changed()
             return 1
 
-        elif char in (kbkey['?'], ) and self._can_show_help():
+        elif (char in (kbkey['?'], ) or \
+                check_localized(char, (kbkey['?'], ))) and \
+                self._can_show_help():
             ''' display help '''
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('action: help')
@@ -4634,7 +4680,8 @@ class SimpleCursesLineEdit():
             if self._use_paste_mode and self._paste_mode:
                 self._disable_paste_mode = True
 
-        elif char in (9, kbkey['tab'] ):
+        elif char in (9, kbkey['tab'] ) or \
+                check_localized(char, (kbkey['tab'], )):
             ''' TAB '''
             self._backslash_pressed = False
             if self._key_tab_function_handler is not None:
@@ -4648,7 +4695,8 @@ class SimpleCursesLineEdit():
             if self._use_paste_mode and self._paste_mode:
                 self._disable_paste_mode = True
 
-        elif char in (curses.KEY_BTAB, kbkey['stab'] ):
+        elif char in (curses.KEY_BTAB, kbkey['stab'] ) or \
+                check_localized(char, (kbkey['stab'], )):
             ''' Shift-TAB '''
             self._backslash_pressed = False
             if self._key_stab_function_handler is not None:
@@ -4666,7 +4714,9 @@ class SimpleCursesLineEdit():
             ''' do not accept any other control characters '''
             self._backslash_pressed = False
 
-        elif char == kbkey['paste'] and self._backslash_pressed \
+        elif (char == kbkey['paste'] or \
+                check_localized(char, (kbkey['paste'], ))) and \
+            self._backslash_pressed \
                 and self._use_paste_mode:
             ''' toggle paste mode '''
             self._backslash_pressed = False
@@ -5062,7 +5112,8 @@ class SimpleCursesBoolean(SimpleCursesCounter):
         if (not self._focused) or (not self._enabled):
             return 1
 
-        if char in (curses.KEY_EXIT, kbkey['q'], 27):
+        if char in (curses.KEY_EXIT, kbkey['q'], 27) or \
+                check_localized(char, (kbkey['q'], )):
             return -1
 
         elif char == kbkey['?']:
@@ -5071,7 +5122,8 @@ class SimpleCursesBoolean(SimpleCursesCounter):
         elif char in (kbkey['pause'],
                       ord('\n'), ord('\r'), curses.KEY_ENTER,
                       kbkey['h'], curses.KEY_LEFT,
-                      kbkey['l'], curses.KEY_RIGHT):
+                      kbkey['l'], curses.KEY_RIGHT) or \
+                check_localized(char, (kbkey['l'], kbkey['l'], kbkey['pause'])):
             self.toggle()
             self.show(self._win)
             return 0
