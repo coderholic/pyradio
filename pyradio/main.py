@@ -504,7 +504,10 @@ If nothing else works, try the following command:
                         if len(sp) == 2:
                             d_line = '[magenta]' + sp[0] + '[/magenta]' + ' = '
                         if sp[0] in pyradio_config.opts.keys():
-                            d_line += '[bold green]' + str(pyradio_config.opts[sp[0]][1]) + '[/bold green]'
+                            if sp[0] == 'localized_keys':
+                                d_line += '[bold green]' + str(pyradio_config.localize) + '[/bold green]'
+                            else:
+                                d_line += '[bold green]' + str(pyradio_config.opts[sp[0]][1]) + '[/bold green]'
                         else:
                             if sp[0] == 'distro':
                                 d_line += '[bold green]' + str(pyradio_config.distro) + '[/bold green]'

@@ -8,7 +8,7 @@ from textwrap import wrap
 import glob
 import csv
 import string
-from os import path, sep, rename
+from os import path, sep, rename, listdir
 from sys import platform, version_info
 from collections import OrderedDict
 import json
@@ -36,7 +36,6 @@ def set_global_functions(global_functions):
 
 
 class PyRadioConfigWindow():
-    n_u = Window_Stack_Constants
 
     parent = None
     _win = None
@@ -111,7 +110,7 @@ class PyRadioConfigWindow():
     _help_text.append(['This options will open the configuration window for the RadioBrowser Online Stations Directory.',])
     _help_text.append(None)
     _help_text.append(['This options will open the configuration window for the Shortcuts Definitions.', '|', 'Please keep in mind that if you customize the keyboard shortcuts, the documentation may no longer align with your personalized settings. While the in-program runtime help will always reflect your current key configurations, the static documentation will continue to display the default shortcuts.', '|', 'To ensure you have the best experience, refer to the runtime help for the most accurate information regarding your customized key bindings!'])
-    _help_text.append(['This options will open the configuration window for the Alternative Shortcuts Definitions.', '|', 'Currently not available.'])
+    _help_text.append(['The "Localized Shortcuts" option allows you to define and customize keyboard shortcuts based on your preferred language. This feature enhances your experience by providing a seamless way to interact with the program in your chosen language.', '|', 'You can choose a language name from the list to load the corresponding character mapping file. This file contains the relationship between English letters (A-Z, a-z) and the letters used in your selected language.', '|', 'If the languiage does not exit, you will be able to create it.'])
 
     _config_options = None
 
@@ -752,6 +751,7 @@ class PyRadioConfigWindow():
         self._max_start =  len(self._config_options) -1 - self.maxY
         # logger.error('mas_start = {}'.format(self._max_start))
         val = list(self._config_options.items())[self.selection]
+        logger.error(f'{val[0] = }')
         Y = self.selection - self._start + 1
 
         if char in self._local_functions:
@@ -781,7 +781,7 @@ class PyRadioConfigWindow():
         elif val[0] == 'resource_opener':
             if not (platform.startswith('win') or \
                 platform.startswith('dar')):
-                return self.n_u.INSERT_RESOURCE_OPENER, []
+                return Window_Stack_Constants.INSERT_RESOURCE_OPENER, []
             return -1, []
 
         elif val[0] == 'recording_dir':
@@ -810,19 +810,25 @@ class PyRadioConfigWindow():
                         client.server_ip + ':' + client.server_port,
                         client.last_reply
                         ]
-            return self.n_u.INSERT_RECORDINGS_DIR_MODE, []
+            return Window_Stack_Constants.INSERT_RECORDINGS_DIR_MODE, []
 
         elif val[0] == 'radiobrowser':
             if char in (curses.KEY_RIGHT, kbkey['l'], kbkey['pause'],
                         curses.KEY_ENTER, ord('\r'), ord('\n')) or \
                     check_localized(char, (kbkey['l'], kbkey['pause'])):
-                return 3, []
+                return Window_Stack_Constants.RADIO_BROWSER_CONFIG_MODE, []
 
         elif val[0] == 'shortcuts_keys':
             if char in (curses.KEY_RIGHT, kbkey['l'], kbkey['pause'],
                         curses.KEY_ENTER, ord('\r'), ord('\n')) or \
                     check_localized(char, (kbkey['l'], kbkey['pause'])):
-                return 8, []
+                return Window_Stack_Constants.KEYBOARD_CONFIG_MODE, []
+
+        elif val[0] == 'localized_keys':
+            if char in (curses.KEY_RIGHT, kbkey['l'], kbkey['pause'],
+                        curses.KEY_ENTER, ord('\r'), ord('\n')) or \
+                    check_localized(char, (kbkey['l'], kbkey['pause'])):
+                return Window_Stack_Constants.LOCALIZED_CONFIG_MODE, []
 
         elif val[0] == 'remote_control_server_port':
             ret = self._port_line_editor.keypress(self._win, char)
@@ -997,9 +1003,9 @@ class PyRadioConfigWindow():
             vals = list(self._config_options.items())
             sel = vals[self.selection][0]
             if sel == 'player':
-                return self.n_u.SELECT_PLAYER_MODE, []
+                return Window_Stack_Constants.SELECT_PLAYER_MODE, []
             elif sel == 'default_encoding':
-                return self.n_u.SELECT_ENCODING_MODE, []
+                return Window_Stack_Constants.SELECT_ENCODING_MODE, []
             elif sel == 'theme':
                 if self._cnf.use_themes:
                     self._cnf.theme = self._old_theme
@@ -1007,9 +1013,9 @@ class PyRadioConfigWindow():
                         logger.error('DE\n\nshowing theme self._cnf.theme = {}\n\n'.format(self._cnf.theme))
                 self._show_theme_selector_function()
             elif sel == 'default_playlist':
-                return self.n_u.SELECT_PLAYLIST_MODE, []
+                return Window_Stack_Constants.SELECT_PLAYLIST_MODE, []
             elif sel == 'default_station':
-                return self.n_u.SELECT_STATION_MODE, []
+                return Window_Stack_Constants.SELECT_STATION_MODE, []
             elif sel == 'confirm_station_deletion' or \
                     sel == 'open_last_playlist' or \
                     sel == 'confirm_playlist_reload' or \
@@ -4216,6 +4222,182 @@ class PyRadioKeyboardConfig():
         #     logger.debug(f'{self._start = }')
         #     logger.debug(f'{self._selection = }')
         #     logger.debug('line = {}'.format(self._selection - self._start + 2))
+
+        # Centralized UI update
+        if self._needs_update:
+            self.show()
+        return 1
+
+
+class PyRadioLocalized():
+    """  Read and write localized data """
+    _focus = 0
+    _widget = None
+    _b_ok = None
+    _b_cancel = None
+    _dirty_config = False
+    _too_small = False
+    _editing = False
+    maxY = 0
+    maxX = 0
+    _start_line = 0
+    _end_line = 0
+    _number_of_lines = 0
+    _start = 0
+    _selection = 1
+
+    def __init__(
+            self,
+            config,
+            parent,
+            distro='None',
+            global_functions=None):
+        self._cnf = config
+        self._parent = parent
+        self._distro=distro
+        self._global_functions = global_functions
+        self.localize = self._cnf.localize
+        self._orig_localize = self.localize
+        self._read_files()
+
+    def _read_files(self):
+        # Directories to scan for JSON files
+        directories = [
+            self._cnf.data_dir,
+            path.join(path.dirname(__file__), 'keyboard')
+        ]
+
+        # Collect all JSON filenames
+        filenames = set()
+        for directory in directories:
+            if path.exists(directory) and path.isdir(directory):
+                for file in listdir(directory):
+                    if file.endswith('.json'):
+                        filenames.add(file)
+
+        filenames = list(filenames)
+        to_remove = (
+            'classes.json',
+            'keys.json',
+            'player-params.json'
+        )
+        for n in to_remove:
+            if n in filenames:
+                filenames.pop(filenames.index(n))
+
+        # Sort and return the list of filenames
+        self._files = sorted(filenames)
+
+    def _print_title(self):
+        self._dirty_config = False if self.localize == self._orig_localize else True
+        title = 'Localized Shortcuts'
+        col = 12
+        dirty_title = ' *' if self._dirty_config else '─ '
+        X = int((self.maxX - len(title) - 1) / 2)
+        try:
+            self._win.addstr(0, X, dirty_title, curses.color_pair(col))
+        except:
+            self._win.addstr(0, X, dirty_title.encode('utf-8'), curses.color_pair(col))
+        self._win.addstr(title + ' ', curses.color_pair(4))
+
+    def _init_win(self):
+        self.maxY, self.maxX = self._parent.getmaxyx()
+        self._too_small = False
+        if self.maxY < 12 or self.maxX < 45:
+            self._too_small = True
+        # logger.error('\n\nmaxY = {}\n\n'.format(self.maxY))
+        # self._second_column = int(self.maxX / 2)
+        self._win = curses.newwin(self.maxY, self.maxX, 1, 0)
+        self._win.bkgdset(' ', curses.color_pair(12))
+        self._win.erase()
+        self._win.box()
+        self._print_title()
+        self._start_line = 1
+        self._end_line = self.maxY - 4
+        self._number_of_lines = self.maxY - 6
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'{self.maxY = }')
+            logger.debug(f'{self._start_line = }')
+            logger.debug(f'{self._end_line = }')
+            logger.debug(f'{self._number_of_lines = }')
+        if self._widget is not None and not self._too_small:
+            # move buttons to end of window
+            self._widget.move(self.maxY - 3)
+        self._make_selection_visible()
+
+    def _make_selection_visible(self):
+        pass
+
+    def show(self, parent=None):
+        if parent is not None:
+            self._parent = parent
+            self._init_win()
+        if self._too_small:
+            msg = 'Window too small to display content!'
+            if self.maxX < len(msg) + 2:
+                msg = 'Window too small!'
+            try:
+                self._win.addstr(
+                    int(self.maxY / 2),
+                    int((self.maxX - len(msg)) / 2),
+                    msg, curses.color_pair(5))
+            except:
+                pass
+            self._win.refresh()
+            return
+
+        if self._distro != 'None':
+            try:
+                X = int((self.maxX - 20 - len(self._distro) - 1) / 2)
+                self._win.addstr(self.maxY - 1, X, ' Package provided by ', curses.color_pair(5))
+                self._win.addstr(self._distro + ' ', curses.color_pair(4))
+            except (ValueError, curses.error):
+                pass
+
+        self._print_title()
+        if self._widget is None:
+            self._widget = SimpleCursesHorizontalPushButtons(
+                    Y=self.maxY-3, captions=('OK', 'Cancel'),
+                    color_focused=curses.color_pair(9),
+                    color=curses.color_pair(4),
+                    bracket_color=curses.color_pair(5),
+                    parent=self._win)
+            self._widget.calculate_buttons_position()
+            self._b_ok, self._b_cancel = self._widget.buttons
+            self._b_ok.focused = self._b_cancel.focused = False
+
+        self._win.refresh()
+        self._widget.show()
+
+    def keypress(self, char):
+        ''' PyRadioLocalized keypress
+            Returns:
+                -4: Show free keys
+                -3: Conflict exists (in self.existing_conflict)
+                -2: Error saving file
+                -1: Cancel
+                 0: Done
+                 1: Continue
+                 2: Display help
+        '''
+        l_char = None
+        self._needs_update = False
+        if self._editing:
+            pass
+        else:
+            if char in (curses.KEY_EXIT, 27, kbkey['q'], curses.KEY_LEFT, kbkey['h']) or \
+                    check_localized(char, (kbkey['q'], kbkey['h'])):
+                self._win.nodelay(True)
+                char = self._win.getch()
+                self._win.nodelay(False)
+                if char == -1:
+                    ''' ESCAPE '''
+                    return -1
+            elif char in self._global_functions or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+                if l_char is None:
+                    l_char = char
+                self._global_functions[l_char]()
 
         # Centralized UI update
         if self._needs_update:

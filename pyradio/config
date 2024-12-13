@@ -191,6 +191,14 @@ remote_control_server_ip = localhost
 remote_control_server_port = 9998
 remote_control_server_auto_start = False
 
+# The language file to use as localized (alternative) keys
+#
+# This file will either be in the "keyboard" dir of the package
+# or the Data dir (user customization)
+#
+# Default value: None
+localized_keys = None
+
 # Enable "XDG Base Directory Specification" compliance. Enabling this options
 # will lead to operational data files being dispersed to XDG directories
 #

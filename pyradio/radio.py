@@ -50,7 +50,7 @@ from .schedule_win import PyRadioSimpleScheduleWindow
 from .simple_curses_widgets import SimpleCursesMenu
 from .messages_system import PyRadioMessagesSystem
 from .server import PyRadioServer, HAS_NETIFACES
-from .keyboard import kbkey, get_lkbkey, chk_key, get_unicode_and_cjk_char, dequeue_input, input_queue, get_kb_letter, set_kb_letter, check_localized
+from .keyboard import kbkey, get_lkbkey, chk_key, get_unicode_and_cjk_char, dequeue_input, input_queue, get_kb_letter, set_kb_letter, check_localized, to_str, ctrl_code_to_string
 
 CAN_CHECK_FOR_UPDATES = True
 try:
@@ -645,6 +645,7 @@ class PyRadio():
             self.ws.OPEN_DIR_MODE: self._show_open_dir_window,
             self.ws.DELETE_PLAYLIST_MODE: self._ask_to_delete_playlist,
             self.ws.KEYBOARD_CONFIG_MODE: self._redisplay_keyboard_config,
+            self.ws.LOCALIZED_CONFIG_MODE: self._redisplay_localized_config,
         }
 
         self._help_keys = {
@@ -1915,8 +1916,16 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
     def run(self):
         if logger.isEnabledFor(logging.INFO):
-            logger.info('Keyboard Shortcuts:\n{}'.format(kbkey))
-            logger.info('Localized Keyboard Shortcuts:\n{}'.format(get_lkbkey()))
+            from .keyboard import to_str, ctrl_code_to_string
+            logger.info('Keyboard Shortcuts Codes:\n{}'.format(kbkey))
+            out = {}
+            for n in kbkey:
+                if kbkey[n] < 33:
+                    out[n] = ctrl_code_to_string(kbkey[n])
+                else:
+                    out[n] = to_str(n)
+            logger.info('Keyboard Shortcuts resolved:\n{}'.format(out))
+            logger.info('Localized Keyboard Shortcuts: "{}"\n{}'.format(self._cnf.localize, get_lkbkey()))
         # self._watch_theme()
         self._register_signals_handlers()
         if self.ws.operation_mode == self.ws.DEPENDENCY_ERROR:
@@ -5263,6 +5272,21 @@ ____Using |fallback| theme.''')
     def _redisplay_keyboard_config(self):
         self._keyboard_config_win.show(parent=self.outerBodyWin)
 
+    def _localized_init_config(self, parent=None):
+        if parent is None:
+            parent = self.outerBodyWin
+        if self._keyboard_config_win is None:
+            self._keyboard_localized_win = PyRadioLocalized(
+                    config=self._cnf,
+                    parent=self.outerBodyWin,
+                    distro=self._cnf.distro,
+                    global_functions=self._global_functions
+                    )
+        self._keyboard_localized_win.show(parent=self.outerBodyWin)
+
+    def _redisplay_localized_config(self):
+        self._keyboard_localized_win.show(parent=self.outerBodyWin)
+
     def _browser_server_selection(self):
         if self._cnf._online_browser:
             self._cnf._online_browser.select_servers()
@@ -6214,6 +6238,17 @@ ____Using |fallback| theme.''')
                 else:
                     self._cnf.WIN_UNINSTALL = False
                     self.refreshBody()
+            return
+
+        if self.ws.operation_mode == self.ws.LOCALIZED_CONFIG_MODE:
+            ret = self._keyboard_localized_win.keypress(char)
+            if ret in (-1, 0):
+                if ret == 0:
+                    # new shortcuts saved
+                    pass
+                self._keyboard_localized_win = None
+                self.ws.close_window()
+                self.refreshBody()
             return
 
         if self.ws.operation_mode == self.ws.KEYBOARD_CONFIG_MODE:
@@ -7200,7 +7235,12 @@ _____"|f|" to see the |free| keys you can use.
                 msg = ( 'Error saving config. Press any key to exit...',
                         'Config saved successfully!!!',
                         'Config saved - Restarting playback (parameters changed)')
-                if ret not in (2, 3, 5, 6, 8):
+                if ret not in (
+                    2, 5, 6,
+                    self.ws.RADIO_BROWSER_CONFIG_MODE,
+                    self.ws.KEYBOARD_CONFIG_MODE,
+                    self.ws.LOCALIZED_CONFIG_MODE
+                ):
                     self.ws.close_window()
                     self.bodyWin.box()
                     self._print_body_header()
@@ -7324,7 +7364,7 @@ _____"|f|" to see the |free| keys you can use.
                                 txt='___Config not modified!!!___',
                                 mode_to_set=self.ws.NORMAL_MODE,
                                 callback_function=self.refreshBody)
-                elif ret == 3:
+                elif ret == self.ws.RADIO_BROWSER_CONFIG_MODE:
                     ''' open RadioBrowser  browser config '''
                     self.ws.operation_mode = self.ws.RADIO_BROWSER_CONFIG_MODE
                     self._browser_init_config(init=True, browser_name='RadioBrowser ', distro=self._cnf.distro)
@@ -7354,10 +7394,16 @@ _____"|f|" to see the |free| keys you can use.
                             )
                     return
 
-                elif ret == 8:
+                elif ret == self.ws.KEYBOARD_CONFIG_MODE:
                     ''' keyboard window '''
                     self.ws.operation_mode = self.ws.KEYBOARD_CONFIG_MODE
                     self._keyboard_init_config()
+                    return
+
+                elif ret == self.ws.LOCALIZED_CONFIG_MODE:
+                    ''' keyboard localized window '''
+                    self.ws.operation_mode = self.ws.LOCALIZED_CONFIG_MODE
+                    self._localized_init_config()
                     return
 
                 else:

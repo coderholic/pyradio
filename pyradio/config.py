@@ -1270,10 +1270,8 @@ class PyRadioStations():
 class PyRadioConfig(PyRadioStations):
     ''' PyRadio Config Class '''
 
-    # TODO: this will be a config option
-    # for the moment it will be hardcoded here
-    # default value: english
-    localize = 'greek'
+    localize = None
+    _old_localize = None
 
     EXTERNAL_PLAYER_OPTS = None
 
@@ -1346,7 +1344,7 @@ class PyRadioConfig(PyRadioStations):
     opts['radiobrowser'] = ['RadioBrowser', '-']
     opts['shortcuts'] = ['Keyboard Shortcuts', '']
     opts['shortcuts_keys'] = ['Shortcuts', '-']
-    opts['shortcuts_alt'] = ['Alternative Shortcuts', '-']
+    opts['localized_keys'] = ['Localized Shortcuts', '-']
     opts['requested_player'] = ['', '']
     opts['dirty_config'] = ['', False]
 
@@ -2133,26 +2131,34 @@ class PyRadioConfig(PyRadioStations):
         # Construct potential paths
         script_dir_path = path.join(path.dirname(__file__), 'keyboard', name + '.json')
         full_path = path.join(self.data_dir, name + '.json')
+        logger.error(f'{script_dir_path = }')
+        logger.error(f'{full_path = }')
 
-        reversed_dict = None
+        reversed_dict = {}
         # Check which file path exists
-        if path.exists(script_dir_path):
-            target_path = script_dir_path
-        elif path.exists(full_path):
+        if path.exists(full_path):
             target_path = full_path
+        elif path.exists(script_dir_path):
+            target_path = script_dir_path
         else:
             # Return an empty dictionary if neither path exists
             target_path = None
 
-        if target_path is not None:
+        logger.error(f'{target_path = }')
+        if target_path is None:
+            set_lkbkey({})
+        else:
             # Open and load the JSON file
-            with open(target_path, 'r', encoding='utf-8') as file:
-                data = json.load(file)
+            try:
+                with open(target_path, 'r', encoding='utf-8') as file:
+                    data = json.load(file)
+            except Exception as e:
+                reversed_dict = {}
 
             # Reverse the keys and values
             reversed_dict = {value: key for key, value in data.items()}
 
-        set_lkbkey(reversed_dict)
+            set_lkbkey(reversed_dict)
 
     def read_config(self, distro_config=False):
         self._read_config(distro_config=True)
@@ -2371,6 +2377,11 @@ class PyRadioConfig(PyRadioStations):
                         tmp[0] = prog
                         self._linux_resource_opener = ' '.join(tmp)
                         self.opts['resource_opener'][1] = sp[1]
+            elif sp[0] == 'localized_keys':
+                logger.error(f'{sp[1] = }')
+                self.localize = None if sp[1].strip().lower() == 'none' else sp[1].strip().lower()
+                logger.error(f'{self.localize = }')
+                self._old_localize = self.localize
 
         # logger.error('\n\nself.params{}\n\n'.format(self.params))
         ''' read distro from package config file '''
@@ -2457,13 +2468,16 @@ class PyRadioConfig(PyRadioStations):
             self._first_read = False
             # logger.error('\n\nfile = {0}\nplayer extra params = {1}\n\n'.format(self.player_params_file, self.params))
 
-        # do this here to get proper schedule and keyboard config filepath if XDG is on
-        self.schedule_file = path.join(self.data_dir, 'schedule.json')
-        self.keyboard_file = path.join(self.data_dir, 'keyboard.json')
-        self.localize_file = path.join(self.data_dir, self.localize + '.json')
-        if not self.headless:
+            # do this here to get proper schedule and keyboard config filepath if XDG is on
+            self.schedule_file = path.join(self.data_dir, 'schedule.json')
+            self.keyboard_file = path.join(self.data_dir, 'keyboard.json')
+            logger.error(f'{self.keyboard_file = }')
+        if not self.headless and not distro_config:
             read_keyboard_shortcuts(self.keyboard_file)
-            read_localized_keyboard(self.localize_file, path.join(path.dirname(__file__), 'keyboard'))
+            read_localized_keyboard(
+                self.localize,
+                self.data_dir
+            )
 
     def _make_sure_dirs_exist(self):
         home_rec_dir = path.join(path.expanduser('~'), 'pyradio-recordings')
@@ -2623,6 +2637,8 @@ class PyRadioConfig(PyRadioStations):
             if self.saved_params[a_key] != self.params[a_key]:
                 self.dirty_config = True
                 return True
+        if self.localize != self._old_localize:
+            return True
         return False
 
     def _validate_config_key(
@@ -2678,7 +2694,12 @@ class PyRadioConfig(PyRadioStations):
                     )
             if chk:
                 out.append(chk)
+
+        if self.localize is not None:
+            out.append(f'localized_keys = {self.localize}')
+
         if not self.show_no_themes_message:
+            out.append('')
             out.append('#')
             out.append('# User option (response to a message window)')
             out.append('# Show a message if themes are disabled')
@@ -2686,6 +2707,7 @@ class PyRadioConfig(PyRadioStations):
             out.append('# Default value: True')
             out.append('show_no_themes_message = False')
         if not self.show_recording_start_message:
+            out.append('')
             out.append('#')
             out.append('# User option (response to a message window)')
             out.append('# Show a message when recording is enabled')

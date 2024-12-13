@@ -7,7 +7,7 @@ import json
 import logging
 import locale
 import string
-from os.path import join
+from os.path import join, exists, dirname
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 try:
     from .cjkwrap import is_wide
@@ -216,35 +216,35 @@ lkbkey = None
 def check_localized(char, k_list, return_key=False):
     # global kb_letter
     # global lkbkey
-    logger.error('\n\n')
-    logger.error(f'{k_list = }')
-    logger.error(f'{kb_letter = }')
+    # logger.error('\n\n')
+    # logger.error(f'{k_list = }')
+    # logger.error(f'{kb_letter = }')
     if char and kb_letter and lkbkey is not None:
         # logger.error(f'{char = }')
         # logger.error(f'{chr(char) = }')
         for n in k_list:
             # logger.error(f'k_list: {n = }')
-            logger.error(f'k_list: {chr(n) = }')
+            # logger.error(f'k_list: {chr(n) = }')
             if kb_letter in lkbkey:
                 x = lkbkey[kb_letter]
-                logger.error(f'{x = }')
+                # logger.error(f'{x = }')
                 if x == chr(n):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('localized char found: "{0}" == "{1}"'.format(chr(n), x))
-                    logger.error('\n\n')
+                    # logger.error('\n\n')
                     if return_key:
-                        logger.info(f'returning {n}')
+                        # logger.info(f'returning {n}')
                         return n
-                    logger.info('returning True')
+                    # logger.info('returning True')
                     return True
             else:
-                logger.error('kb_letter not in lkbkey')
+                # logger.error('kb_letter not in lkbkey')
                 continue
-    logger.error('\n\n')
+    # logger.error('\n\n')
     if return_key:
-        logger.info('returning None')
+        # logger.info('returning None')
         return None
-    logger.info('returning False')
+    # logger.info('returning False')
     return False
 
 def set_lkbkey(adict):
@@ -328,43 +328,48 @@ def read_keyboard_shortcuts(file_path, reset=False):
         for n in data.keys():
             kbkey[n] = data[n]  # Modify the existing kbkey
 
-def read_localized_keyboard(file_path, keyboard_path):
-    ''' read file_path which is {'keyboard': 'name of country'},
-            file_path is in "datya dir"
-        if that succeeds, read "keyboard_path"/"name of country".jason
-            and put result in data dict
-            keyboard_path is in the code directory
-        if any of the above steps fails, populate data dict
-            with default values
-        Finally populate global lbkey from data dict using ord()
-            of both key and value
+def read_localized_keyboard(localize, data_dir):
+    ''' read localized file from disk
+
+        localize
+            the name of the language to be used
+            the file will be localize + .json
+        data_dir
+            the package's data dir
+
+        Finally populate global lbkey from the data dict
     '''
     # global lkbkey
     error = False
-    data = {}
-    try:
-        with open(file_path, 'r', encoding='utf-8', errors='ignore') as json_file:
-            data = json.load(json_file)
-    except (FileNotFoundError, json.JSONDecodeError, TypeError, IOError):
+    data = None
+
+    if localize is None or localize == 'english':
         error = True
-    if 'keyboard' in data:
-        # read the actual keyboard file
-        k_file = join(keyboard_path, data['keyboard'] + '.json')
-        try:
-            with open(k_file, 'r', encoding='utf-8', errors='ignore') as k_json_file:
-                data = json.load(k_json_file)
-        except (FileNotFoundError, json.JSONDecodeError, TypeError, IOError):
-            error = True
     else:
-        error = True
+        user_file = join(data_dir, localize + '.json')
+        package_file = join(dirname(__file__), 'keyboard', localize + '.json')
+        target_file = None
+        if exists(package_file):
+            target_file = package_file
+        if exists(user_file):
+            target_file = user_file
+
+        if target_file is None:
+            error = True
+        else:
+            try:
+                with open(target_file, 'r', encoding='utf-8', errors='ignore') as json_file:
+                    data = json.load(json_file)
+            except (FileNotFoundError, json.JSONDecodeError, TypeError, IOError):
+                error = True
 
     if error:
-        keys = list(string.ascii_lowercase) + list(string.ascii_uppercase)
-        values = list(string.ascii_lowercase) + list(string.ascii_uppercase)
-        data = {keys[i]: values[i] for i in range(len(keys))}
+        # keys = list(string.ascii_lowercase) + list(string.ascii_uppercase)
+        # values = list(string.ascii_lowercase) + list(string.ascii_uppercase)
+        # data = {keys[i]: values[i] for i in range(len(keys))}
+        data = None
 
-    # for key in data:
-    #     lkbkey[ord(key)] = ord(data[key])
+    set_lkbkey(data)
 
 def to_str(akey):
     ''' convert kbkey keys to a string '''
