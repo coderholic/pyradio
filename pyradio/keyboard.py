@@ -3,6 +3,7 @@ import curses
 import curses.ascii
 import platform
 from collections import OrderedDict
+from collections.abc import Iterable
 import json
 import logging
 import locale
@@ -219,18 +220,20 @@ def check_localized(char, k_list, return_key=False):
     # logger.error('\n\n')
     # logger.error(f'{k_list = }')
     # logger.error(f'{kb_letter = }')
-    if char and kb_letter and lkbkey is not None:
+    if char and kb_letter and isinstance(k_list, Iterable) and lkbkey is not None:
         # logger.error(f'{char = }')
         # logger.error(f'{chr(char) = }')
         for n in k_list:
             # logger.error(f'k_list: {n = }')
             # logger.error(f'k_list: {chr(n) = }')
+            # logger.error(f'*** { kb_letter =  }')
+            # logger.error(f'*** { lkbkey =  }')
             if kb_letter in lkbkey:
                 x = lkbkey[kb_letter]
                 # logger.error(f'{x = }')
                 if x == chr(n):
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('localized char found: "{0}" == "{1}"'.format(chr(n), x))
+                        logger.debug('localized char found: "{0}" => "{1}"'.format(kb_letter, x))
                     # logger.error('\n\n')
                     if return_key:
                         # logger.info(f'returning {n}')
@@ -346,8 +349,8 @@ def read_localized_keyboard(localize, data_dir):
     if localize is None or localize == 'english':
         error = True
     else:
-        user_file = join(data_dir, localize + '.json')
-        package_file = join(dirname(__file__), 'keyboard', localize + '.json')
+        user_file = join(data_dir, 'lkb_' + localize + '.json')
+        package_file = join(dirname(__file__), 'keyboard', 'lkb_' + localize + '.json')
         target_file = None
         if exists(package_file):
             target_file = package_file
@@ -367,9 +370,14 @@ def read_localized_keyboard(localize, data_dir):
         # keys = list(string.ascii_lowercase) + list(string.ascii_uppercase)
         # values = list(string.ascii_lowercase) + list(string.ascii_uppercase)
         # data = {keys[i]: values[i] for i in range(len(keys))}
-        data = None
+        set_lkbkey({})
+        return
 
-    set_lkbkey(data)
+    # Reverse the keys and values
+    reversed_dict = {value: key for key, value in data.items()}
+
+    # logger.error('\n\nsetting lkbkey 2\n{}\n\n'.format(reversed_dict))
+    set_lkbkey(reversed_dict)
 
 def to_str(akey):
     ''' convert kbkey keys to a string '''
@@ -625,14 +633,16 @@ def set_kb_letter(letter):
     global kb_letter
     if letter and letter.isprintable():  # Check if the letter is printable
         kb_letter = letter
-        logger.error(f'>>> {kb_letter = }')  # Log the printable letter
+        # logger.error(f'>>> {kb_letter = }')  # Log the printable letter
     else:
         kb_letter = ''  # Ignore non-printable characters
-        logger.error(f'>>> Ignored non-printable letter: {repr(letter)}')
+        # logger.error(f'>>> Ignored non-printable letter: {repr(letter)}')
+    if logger.isEnabledFor(logging.DEBUG) and kb_letter:
+        logger.debug(f'setting {kb_letter = }')
 
 def get_kb_letter():
     global kb_letter
-    logger.error(f'*** {kb_letter = }')
+    # logger.error(f'*** {kb_letter = }')
     return kb_letter
 
 def set_kb_cjk(value):
@@ -640,7 +650,7 @@ def set_kb_cjk(value):
     kb_cjk = value
 
 def get_unicode_and_cjk_char(win, char):
-    logger.error(f'{char = }')
+    # logger.error(f'{char = }')
     def _decode_string(data):
         encodings = ['utf-8', locale.getpreferredencoding(False), 'latin1']
         for enc in encodings:
@@ -654,7 +664,7 @@ def get_unicode_and_cjk_char(win, char):
         return data
 
     def get_check_next_byte(win):
-        logger.error(f'{win = }')
+        # logger.error(f'{win = }')
         char = win.getch()
         enqueue_input(char)
         if 128 <= char <= 191:
@@ -665,9 +675,9 @@ def get_unicode_and_cjk_char(win, char):
 
 
     set_kb_cjk(False)
-    logger.info('reseting kb_letter')
+    # logger.info('reseting kb_letter')
     set_kb_letter('')
-    logger.error(f'all {win = }')
+    # logger.error(f'all {win = }')
     bytes = []
     if char <= 127:
         ''' 1 byte '''
@@ -698,7 +708,7 @@ def get_unicode_and_cjk_char(win, char):
         return None
     out = _decode_string(buf)
     if out:
-        logger.info('setting kb_letter')
+        # logger.info('setting kb_letter')
         set_kb_letter(out)
         if is_wide(out) and not kb_cjk:
             set_kb_cjk(True)
@@ -706,13 +716,459 @@ def get_unicode_and_cjk_char(win, char):
                 logger.debug('=== CJK editing is ON ===')
     else:
         out = None
-        logger.info('invalid kb_letter')
+        # logger.info('invalid kb_letter')
         set_kb_letter('')
         set_kb_cjk(False)
-    logger.error(f'final {kb_letter = }')
+    # if logger.isEnabledFor(logging.DEBUG):
+    #    logger.debug(f'setting {kb_letter = }')
     return out
 
 
+class LetterProvider:
+    """
+    A class to provide and manage letter sequences based on various predefined keyboard layouts.
+
+    This class maintains an internal index to select the current layout and offers methods to
+    navigate through available layouts, retrieve layout sequences, and add new custom layouts.
+    """
+
+    index = 1
+
+    def __init__(self):
+        # Predefined layouts
+        self._layouts = {
+            "Alphabetical": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
+            "QWERTY": "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM",
+            "AZERTY": "azertyuiopqsdfghjklmwxcvbnAZERTYUIOPQSDFGHJKLMWXCVBN",
+            "QWERTZ": "qwertzuiopasdfghjklyxcvbnmQWERTZUIOPASDFGHJKLYXCVBNM",
+            "DVORAK": "pyfgcrlaoeuidhtnsqjkxbmwvzPYFGCRLAOEUIDHTNSQJKXBMWVZ",
+            "COLEMAK": "qwfpgjluyarstdhneiozxcvbkmQWFPGJLUYARSTDHNEIOZXCVBKM",
+        }
+
+    @property
+    def layout_name(self):
+        """
+        Gets the name of the currently selected keyboard layout, determined by `self.index`.
+
+        Returns:
+            str: The name of the current layout.
+        """
+        layouts = list(self._layouts.keys())
+        return layouts[self.index]
+
+    @property
+    def max_length(self):
+        """
+        Returns the maximum number of characters among all stored keyboard layouts.
+
+        Returns:
+            int: The length of the longest layout string.
+        """
+        return max([len(x) for x in self._layouts])
+
+    def get_layout(self):
+        """
+        Retrieves the letter sequence for the currently selected keyboard layout, based on `self.index`.
+
+        If the current layout name is not found for any reason, the alphabetical layout is returned as a fallback.
+
+        Returns:
+            str: The sequence of letters in the current layout.
+        """
+        layout_name = list(self._layouts.keys())[self.index]
+        return self._layouts.get(layout_name, self._layouts["Alphabetical"])
+
+    def get_next_layout(self):
+        """
+        Advances `self.index` to select the next available keyboard layout and returns its name.
+
+        If the end of the list is reached, wraps around to the first layout.
+
+        Returns:
+            str: The name of the newly selected layout.
+        """
+        layouts = list(self._layouts.keys())
+        self.index += 1
+        if self.index >= len(layouts):
+            self.index = 0
+        return layouts[self.index]
+
+    def get_previous_layout(self):
+        """
+        Moves `self.index` to select the previous keyboard layout and returns its name.
+
+        If the beginning of the list is reached, wraps around to the last layout.
+
+        Returns:
+            str: The name of the newly selected layout.
+        """
+        layouts = list(self._layouts.keys())
+        self.index -= 1
+        if self.index < 0:
+            self.index = len(layouts) - 1
+        return layouts[self.index]
+
+    def add_layout(self, layout_name, layout_string):
+        """
+        Adds a new keyboard layout to the provider.
+
+        The layout must be exactly 52 characters long, typically consisting of:
+        26 lowercase letters (a-z) followed by 26 uppercase letters (A-Z).
+
+        Args:
+            layout_name (str): The name of the new keyboard layout.
+            layout_string (str): The 52-character sequence (26 lowercase + 26 uppercase) for the new layout.
+
+        Returns:
+            None
+
+        Raises:
+            ValueError: If `layout_string` is not exactly 52 characters long.
+        """
+        if len(layout_string) != 52:
+            raise ValueError("Layout string must contain exactly 52 characters (26 lowercase + 26 uppercase).")
+        self._layouts[layout_name] = layout_string
+
+    def list_layouts(self):
+        """
+    Lists all currently available keyboard layouts by name.
+
+    Returns:
+        list of str: A list of layout names, in the order they were defined or added.
+    """
+        return list(self._layouts.keys())
+
+
+class LetterDisplay:
+
+    _active_widget = 0
+    _editing = None
+    _focused = False
+    _letter_width = 7
+    _layout = "QWERTY"
+    _provider = LetterProvider()
+
+    def __init__(self, parent, focused=False, start_line=0):
+        self._win = None
+        self._parent = parent
+        self._focused = focused
+        self._start_line = start_line
+
+
+        self._layouts = self._provider.list_layouts()
+        self._letters = self._provider.get_layout()
+        # self._letters = list(string.ascii_lowercase + string.ascii_uppercase)
+        # self._letters_dict = {letter: 'α' for letter in string.ascii_letters}
+        self._letters_dict = {}
+
+        self._selection = 0
+        self.next_table = [0] * len(self._letters)
+        self.prev_table = [0] * len(self._letters)
+        self._create_win(parent)
+        self._win.keypad(True)
+
+    @property
+    def Y(self):
+        return self._start_line
+
+    @Y.setter
+    def Y(self, val):
+        create_win = self._start_line != val
+        self._start_line = val
+        if create_win:
+            self._create_win()
+            self.show()
+
+    @property
+    def height(self):
+        return self._height
+
+    @property
+    def focused(self):
+        return self._focused
+
+    @focused.setter
+    def focused(self, val):
+        self._focused = val
+
+    @property
+    def letters_dict(self):
+        return self._letters_dict
+
+    @letters_dict.setter
+    def letters_dict(self, val):
+        self._letters_dict = {}
+        for n in val:
+            self._letters_dict[n] = val[n]
+
+    @property
+    def editing(self):
+        return self._editing
+
+    @editing.setter
+    def editing(self, value):
+        if value:
+            self._active_widget = 1
+            self._selection = 0
+            self._editing = value
+        else:
+            self._editing = None
+            if self._active_widget == 1:
+                self._active_widget = 0
+                self.show()
+                return
+            self._show_editing()
+        self._win.refresh()
+
+    @property
+    def active_widget(self):
+        return self._active_widget
+
+    @active_widget.setter
+    def active_widget(self, value):
+        self._active_widget = value
+
+    @property
+    def selected_letter(self):
+        return self._letters[self._selection]
+
+    @property
+    def selection(self):
+        return self._selection
+
+    @selection.setter
+    def selection(self, value):
+        self._selection = value
+
+    def _show_editing(self):
+        if self.editing:
+            self._win.addstr(
+                0,
+                (self._num_letters_per_line * self._letter_width - self._provider.max_length) // 2 + len('Lowercase Letters  '),
+                '  [',
+                curses.color_pair(5))
+            self._win.addstr(self.editing, curses.color_pair(2))
+            self._win.addstr(']', curses.color_pair(5))
+        else:
+            self._win.addstr(
+                0,
+                (self._num_letters_per_line * self._letter_width - self._provider.max_length) // 2 + len('Lowercase Letters  '),
+                ' ' * (self._width - (self._num_letters_per_line * self._letter_width - self._provider.max_length) // 2 - len('Lowercase Letters  ') - 2),
+                curses.color_pair(5))
+
+    def set_letter(self, a_letter):
+        self._letters_dict[self.selected_letter] = a_letter
+        if self._selection < 26:
+            sel = self._selection + 26
+            self._letters_dict[self._letters[sel]] = a_letter.upper()
+        self._selection = (self._selection + 1) % len(self._letters)
+        self.show()
+
+    def _calculate_num_of_letters_per_line(self):
+        # self._num_letters_per_line = (self._width - 2) // self._letter_width
+        self._num_letters_per_line = min(13, (self._width - 2) // self._letter_width)
+
+    def _clear_parent(self, col):
+        self._parent.bkgd(' ', curses.color_pair(col))
+        self._parent.clear()
+        self._parent.refresh()
+
+    def _create_win(self, parent):
+        if self._win is not None:
+            self._win.clear()
+        self._parent = parent
+        # self._clear_parent(2)
+        self.calculate_window_size()
+        self._win = self._parent.subwin(self._height, self._width, self._start_line, 1)
+        self._update_navigation_tables()
+        self._win.bkgd(' ', curses.color_pair(5))
+
+    def calculate_window_size(self):
+        _, self._width = self._parent.getmaxyx()
+        self._width -= 2
+        """Calculate the dynamic height required for the window."""
+        self._calculate_num_of_letters_per_line()
+
+        # Lines for lowercase letters
+        lowercase_lines = (26 + self._num_letters_per_line - 1) // self._num_letters_per_line
+
+        # Lines for uppercase letters
+        uppercase_lines = (26 + self._num_letters_per_line - 1) // self._num_letters_per_line
+
+        # Total lines including captions and spacing
+        self._height = lowercase_lines + uppercase_lines + 6 # 3 display + 2 captions + 1 line of spacing
+        return self._height
+
+    def _update_navigation_tables(self):
+        """Calculate the dynamic height required for the window."""
+        self._calculate_num_of_letters_per_line()
+        logger.debug(f'{self._num_letters_per_line = }')
+
+        lowercase_indices = list(range(26))
+        uppercase_indices = list(range(26, len(self._letters)))
+        # logger.debug(f'{ lowercase_indices = }')
+        # logger.debug(f'{uppercase_indices = }')
+
+        lowercase_columns = [lowercase_indices[i::self._num_letters_per_line] for i in range(self._num_letters_per_line)]
+        uppercase_columns = [uppercase_indices[i::self._num_letters_per_line] for i in range(self._num_letters_per_line)]
+        # logger.debug(f'{lowercase_columns = }')
+        # logger.debug(f'{uppercase_columns = }')
+
+        combined_columns = []
+        for i in range(self._num_letters_per_line):
+            combined_columns.append((lowercase_columns[i] if i < len(lowercase_columns) else []) +
+                                    (uppercase_columns[i] if i < len(uppercase_columns) else []))
+        # logger.debug(f'{combined_columns = }')
+
+        for col in combined_columns:
+            for j, index in enumerate(col):
+                self.next_table[index] = col[(j + 1) % len(col)]
+                self.prev_table[index] = col[(j - 1) % len(col)]
+        # logger.debug(f'{self.next_table = }')
+        # logger.debug(f'{self.prev_table = }')
+
+    def show(self, parent=None):
+        if parent:
+            self._create_win(parent)
+
+        """Calculate the dynamic height required for the window."""
+        self._calculate_num_of_letters_per_line()
+
+        # print layout
+
+        start_line_offset = 0
+        highlight = curses.color_pair(4) if self._focused else curses.color_pair(5)
+        self._win.addstr(
+            start_line_offset,
+            (self._num_letters_per_line * self._letter_width - self._provider.max_length) // 2,
+            "Lowercase Letters",
+            highlight
+        )
+        self._win.addstr(start_line_offset, 1, "Display:", curses.color_pair(5))
+        if self._focused:
+            if self._active_widget == 0:
+                self._win.addstr(' ' + self._layout + ' ', curses.color_pair(9))
+                self._win.addstr(' ' * (self._provider.max_length - len(self._layout)), curses.color_pair(2))
+            else:
+                self._win.addstr(' ' + self._layout + ' ', curses.color_pair(2))
+                self._win.addstr(' ' * (self._provider.max_length - len(self._layout) + 1), curses.color_pair(2))
+        else:
+            self._win.addstr(' ' + self._layout.ljust(self._provider.max_length + 1), curses.color_pair(2))
+        for i in range(0, 26, self._num_letters_per_line):
+            for j in range(self._num_letters_per_line):
+                index = i + j
+                if index < 26:
+                    self._draw_letter(index, i // self._num_letters_per_line + start_line_offset + 1, j * self._letter_width + 2)
+
+        uppercase_start_line = start_line_offset + ((26 + self._num_letters_per_line - 1) // self._num_letters_per_line) + 2
+        self._win.addstr(
+            uppercase_start_line,
+             (self._num_letters_per_line * self._letter_width - self._provider.max_length) // 2,
+            "Uppercase Letters",
+            highlight
+        )
+        for i in range(26, len(self._letters), self._num_letters_per_line):
+            for j in range(self._num_letters_per_line):
+                index = i + j
+                if index < len(self._letters):
+                    self._draw_letter(index, (i - 26) // self._num_letters_per_line + uppercase_start_line + 1, j * self._letter_width + 2)
+
+        selected_letter = self._letters[self._selection]
+
+        self._show_editing()
+
+        self._win.refresh()
+
+    def _draw_letter(self, index, line, col):
+        if line < self._height - 1 and col < self._width - 1:
+            letter = self._letters[index]
+            dict_value = self._letters_dict[letter]
+            self._win.addstr(line, col, f"{letter}:", curses.color_pair(5))
+            if self._focused:
+                if index == self._selection and self._active_widget == 1:
+                    self._win.addstr(line, col + len(letter) + 1, "    ", curses.color_pair(9))
+                    self._win.addstr(line, col + len(letter) + 2, dict_value, curses.color_pair(9))
+                else:
+                    self._win.addstr(line, col + len(letter) + 1, "    ", curses.color_pair(2))
+                    self._win.addstr(line, col + len(letter) + 2, dict_value.ljust(self._letter_width-3), curses.color_pair(2))
+            else:
+                self._win.addstr(line, col + len(letter) + 1, ' ' + dict_value.ljust(self._letter_width-3), curses.color_pair(2))
+
+    def _read_file(self, index):
+        error = False
+        data = {}
+        keys = list(string.ascii_lowercase) + list(string.ascii_uppercase)
+        if index < 2:
+            error = True
+        else:
+            try:
+                with open(self._files[index][1], 'r', encoding='utf-8', errors='ignore') as json_file:
+                    data = json.load(json_file)
+            except (FileNotFoundError, json.JSONDecodeError, TypeError, IOError):
+                error = True
+        if error:
+            data = {keys[i]: '' for i in range(len(keys))}
+        return data
+
+    def focus_previous(self):
+        ''' focus previous widget
+            - if active widget is the "Display",
+              return -1, to decrease focus on parent
+            - if active widget is the letters display,
+              adjust self._active_widget, and return 0
+        '''
+        if self._active_widget == 1:
+            self._active_widget = 0
+            return 0
+        return -1
+
+    def focus_next(self):
+        ''' focus next widget
+            - if active widget is the letters display,
+              return 1, to increase focus on parent
+            - if active widget is the "Display",
+              adjust self._active_widget, and return 0
+        '''
+        if self._active_widget == 0:
+            self._active_widget = 1
+            return 0
+        return 1
+
+    def keypress(self, char):
+        ''' LetterDisplay keypress
+            Returns
+                -1: cancel
+                 0: continue
+                 1: ok - result in self.letters_dict
+                 2: help
+        '''
+        if self._active_widget == 0:
+            if char == curses.KEY_LEFT and self._focused:
+                self._layout = self._provider.get_previous_layout()
+                self._letters = self._provider.get_layout()
+            elif char == curses.KEY_RIGHT and self._focused:
+                self._layout = self._provider.get_next_layout()
+                self._letters = self._provider.get_layout()
+        elif self._active_widget == 1:
+            if char == curses.KEY_LEFT and self._focused:
+                self._selection = (self._selection - 1) % len(self._letters)
+            elif char in (curses.KEY_RIGHT, ord('\n')) and self._focused:
+                self._selection = (self._selection + 1) % len(self._letters)
+            elif char == curses.KEY_UP and self._focused:
+                self._selection = self.prev_table[self._selection]
+            elif char == curses.KEY_DOWN and self._focused:
+                self._selection = self.next_table[self._selection]
+            elif char == curses.KEY_HOME and self._focused:
+                self._selection = 0
+            elif char == curses.KEY_END and self._focused:
+                self._selection = len(self._letters) - 1
+        if char == ord('?'):
+             return 2
+        elif char == ord('\x1b'):
+            return -1
+
+        self.show()
+        return 0
 
 
 

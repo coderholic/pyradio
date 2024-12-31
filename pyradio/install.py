@@ -1124,33 +1124,18 @@ class PyRadioUpdate():
     def _mkdir(self, name, dir_exist_function=None, _permission_error_function=None):
         if os.path.isdir(name):
             self._clean_up()
-        if sys.version_info[0] == 2:
-            try:
-                os.makedirs(name)
-            except OSError as e:
-                if e.errno == 13:
-                    if _permission_error_function:
-                        _permission_error_function(name)
-                    else:
-                        print('Insufficient permissions...')
-                elif e.errno == 17:
-                    if dir_exist_function:
-                        dir_exist_function(name)
-                    else:
-                        print('Dir already exists...')
-        else:
-            try:
-                os.makedirs(name)
-            except PermissionError:
-                if _permission_error_function:
-                    _permission_error_function(name)
-                else:
-                    print('Insufficient permissions...')
-            except FileExistsError:
-                if dir_exist_function:
-                    dir_exist_function(name)
+        try:
+            os.makedirs(name)
+        except PermissionError:
+            if _permission_error_function:
+                _permission_error_function(name)
             else:
-                print('Dir already exists...')
+                print('Insufficient permissions...')
+        except FileExistsError:
+            if dir_exist_function:
+                dir_exist_function(name)
+        else:
+            print('Dir already exists...')
 
     def _empty_dir(self, name=None):
         ddir = self._dir if name is None else name
@@ -1426,8 +1411,6 @@ if __name__ == '__main__':
 
     if VERSION is None:
         VERSION = PyRadioInstallPyReleaseVersion
-
-    print(f'== {package = }')
 
     if args.uninstall:
         if platform.system().lower().startswith('win'):

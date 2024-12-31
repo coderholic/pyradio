@@ -4,7 +4,7 @@ import curses
 import curses.ascii
 from time import sleep
 import logging
-from sys import version_info, platform
+from sys import platform
 from os import path, remove, sep, access, X_OK, environ
 from string import punctuation as string_punctuation
 try:
@@ -153,10 +153,6 @@ class PyRadioSearch(SimpleCursesLineEdit):
             key_up_function_handler=self._get_history_previous,
             key_down_function_handler=self._get_history_next,
             **kwargs)
-        if version_info < (3, 0):
-            self._range_command = 'xrange'
-        else:
-            self._range_command = 'range'
 
     def show(self, parent_win, repaint=False):
         if repaint:
@@ -224,13 +220,13 @@ class PyRadioSearch(SimpleCursesLineEdit):
                     stop=stop
                 )
 
-            for n in eval(self._range_command)(start, len(a_list)):
+            for n in range(start, len(a_list)):
                 if active_search_term.lower() in self._get_string(a_list[n]):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('forward search term "{0}" found at {1}'.format(self.string, n))
                     return n
             """ if not found start from list top """
-            for n in eval(self._range_command)(0, start):
+            for n in range(0, start):
                 if active_search_term.lower() in self._get_string(a_list[n]):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('forward search term "{0}" found at {1}'.format(self.string, n))
@@ -259,13 +255,13 @@ class PyRadioSearch(SimpleCursesLineEdit):
                     stop=stop
                 )
 
-            for n in eval(self._range_command)(start, -1, -1):
+            for n in range(start, -1, -1):
                 if active_search_term.lower() in self._get_string(a_list[n]):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('backward search term "{0}" found at {1}'.format(self.string, n))
                     return n
             """ if not found start from list end """
-            for n in eval(self._range_command)(len(a_list) - 1, start, -1):
+            for n in range(len(a_list) - 1, start, -1):
                 if active_search_term.lower() in self._get_string(a_list[n]):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('backward search term "{0}" found at {1}'.format(self.string, n))

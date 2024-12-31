@@ -4,7 +4,7 @@ import socket
 import logging
 from os import remove
 from os.path import basename, exists
-from sys import platform, version_info
+from sys import platform
 from time import sleep
 import requests
 
@@ -58,8 +58,6 @@ class IPs():
             ip = requests.get('https://api.ipify.org').text
         except requests.exceptions.RequestException:
             return None
-        if version_info[0] < 3:
-            ip = ip.encode('utf-8')
         return ip
 
     def _get_linux_ips(self):
@@ -73,10 +71,7 @@ class IPs():
                 for entry in iface:
                     # dirty way to get real interfaces
                     if 'broadcast' in str(entry):
-                        if version_info[0] > 2:
-                            out.append(entry['addr'])
-                        else:
-                            out.append(entry['addr'].encode('utf-8'))
+                        out.append(entry['addr'])
         return sorted(list(set(out)))
 
     def _get_win_ips(self):

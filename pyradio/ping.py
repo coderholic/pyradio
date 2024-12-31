@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import subprocess
-from sys import platform, version_info
+from sys import platform
 
 import locale
 locale.setlocale(locale.LC_ALL, "")
@@ -41,24 +41,13 @@ def linux_ping(server, count=1, timeout_in_seconds=1):
             -1: error
     '''
     try:
-        if version_info[0] < 3:
-            return 1
-            r=subprocess.Popen(
-                ['ping', '-c', str(count), '-w',
-                 str(timeout_in_seconds), server],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT
-            )
-            out = r.communicate()
-            return 0 if '100%' in out[0] else 1
-        else:
-            r=subprocess.Popen(
-                ['ping', '-c', str(count), '-w',
-                 str(timeout_in_seconds), server],
-                stderr=subprocess.DEVNULL,
-                stdout=subprocess.PIPE
-            ).stdout.read()
-            return 0 if '100%' in str(r) else 1
+        r = subprocess.Popen(
+            ['ping', '-c', str(count), '-w',
+             str(timeout_in_seconds), server],
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE
+        ).stdout.read()
+        return 0 if '100%' in str(r) else 1
     except:
         return -1
 

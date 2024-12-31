@@ -9,7 +9,7 @@ import glob
 import csv
 import string
 from os import path, sep, rename, listdir
-from sys import platform, version_info
+from sys import platform
 from collections import OrderedDict
 import json
 
@@ -21,7 +21,7 @@ from .themes import *
 from .server import IPsWithNumbers
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesMenu
 from .client import PyRadioClient
-from .keyboard import kbkey, kbkey_orig, ctrl_code_to_string, is_valid_char, is_invalid_key, is_ctrl_key, set_kbkey, conflicts, read_keyboard_shortcuts, check_localized
+from .keyboard import kbkey, kbkey_orig, ctrl_code_to_string, is_valid_char, is_invalid_key, is_ctrl_key, set_kbkey, conflicts, read_keyboard_shortcuts, check_localized, LetterDisplay, get_kb_letter
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
@@ -110,7 +110,7 @@ class PyRadioConfigWindow():
     _help_text.append(['This options will open the configuration window for the RadioBrowser Online Stations Directory.',])
     _help_text.append(None)
     _help_text.append(['This options will open the configuration window for the Shortcuts Definitions.', '|', 'Please keep in mind that if you customize the keyboard shortcuts, the documentation may no longer align with your personalized settings. While the in-program runtime help will always reflect your current key configurations, the static documentation will continue to display the default shortcuts.', '|', 'To ensure you have the best experience, refer to the runtime help for the most accurate information regarding your customized key bindings!'])
-    _help_text.append(['The "Localized Shortcuts" option allows you to define and customize keyboard shortcuts based on your preferred language. This feature enhances your experience by providing a seamless way to interact with the program in your chosen language.', '|', 'You can choose a language name from the list to load the corresponding character mapping file. This file contains the relationship between English letters (A-Z, a-z) and the letters used in your selected language.', '|', 'If the languiage does not exit, you will be able to create it.'])
+    _help_text.append(['The "Localized Shortcuts" option allows you to define and customize keyboard shortcuts based on your preferred language. This feature enhances your experience by providing a seamless way to interact with the program in your chosen language.', '|', 'You can choose a language name from the list to load the corresponding character mapping file. This file contains the relationship between English letters (A-Z, a-z) and the letters used in your selected language.', '|', 'If the language does not exit, you will be able to create it.'])
 
     _config_options = None
 
@@ -3425,7 +3425,7 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
         else:
             pad_string = str(i + self.startPos - 1).rjust(pad)
         length = self.maxX - 2 - len(pad_string) - 6
-        pad_char = '_' if version_info.major == 2 else '─'
+        pad_char = '─'
         return '{0}. {1}'.format(pad_string,
                 (' ' + self._items[i + self.startPos] + ' ').center(length, pad_char) + 6 * pad_char
                                  )
@@ -4231,20 +4231,6 @@ class PyRadioKeyboardConfig():
 
 class PyRadioLocalized():
     """  Read and write localized data """
-    _focus = 0
-    _widget = None
-    _b_ok = None
-    _b_cancel = None
-    _dirty_config = False
-    _too_small = False
-    _editing = False
-    maxY = 0
-    maxX = 0
-    _start_line = 0
-    _end_line = 0
-    _number_of_lines = 0
-    _start = 0
-    _selection = 1
 
     def __init__(
             self,
@@ -4252,15 +4238,135 @@ class PyRadioLocalized():
             parent,
             distro='None',
             global_functions=None):
+        self._focus = 0
+        self._widgets = [None, None, None, None]
+        self._b_ok = None
+        self._b_cancel = None
+        self._dirty_config = False
+        self._too_small = False
+        self.maxY = 0
+        self.maxX = 0
+        self._start_line = 0
+        self._end_line = 0
+        self._number_of_lines = 0
+        self._start = 0
+        self._selection = 0
+        self._base_layout_name = None
+
         self._cnf = config
         self._parent = parent
         self._distro=distro
         self._global_functions = global_functions
         self.localize = self._cnf.localize
         self._orig_localize = self.localize
-        self._read_files()
+        # self._read_keys()
+        self._read_file_list()
+        items=[x[0] for x in self._files]
+        if self.localize in items:
+            index = items.index(self.localize)
+        else:
+            index = 1
+        self._read_layout_file(index)
+        logger.error(f'===> {self._files = }')
 
-    def _read_files(self):
+    @property
+    def layout(self):
+        return self._widgets[0].selection
+
+    @layout.setter
+    def layout(self, value):
+        self._widgets[0].selection = value
+
+    @property
+    def layout_name(self):
+        return self._files[self._widgets[0].selection][0]
+
+    @layout_name.setter
+    def layout_name(self, value):
+        self._files[self._widgets[0].selection][0] = value
+
+    @property
+    def layout_path(self):
+        return self._files[self._widgets[0].selection][1]
+
+    @layout_path.setter
+    def layout_path(self, value):
+        self._files[self._widgets[0].selection][1] = value
+
+    @property
+    def layout_read_olny(self):
+        return not self._files[self._widgets[0].selection][2]
+
+    @layout_read_olny.setter
+    def layout_read_only(self, value):
+        self._files[self._widgets[0].selection][2] = value
+
+    @property
+    def layout_dict(self):
+        return self._files[self._widgets[0].selection][-1]
+
+    @layout_dict.setter
+    def layout_dict(self, value):
+        self._files[self._widgets[0].selection][-1] = value
+
+    @property
+    def editing(self):
+        return self._widgets[1].editing
+
+    @editing.setter
+    def editing(self, value):
+        self._widgets[1].editing = value
+        if value:
+            self._focus = 1
+            self._update_focus()
+            self.show()
+        else:
+            logger.error(f'{self._files = }')
+            logger.error(f'{self.localize = }')
+            old_index = [(i, x) for i, x in enumerate(self._files) if x[0] == self.localize]
+            logger.error(f'{old_index = }')
+            if old_index:
+                self._widgets[0].active = old_index[0][0]
+            else:
+                self._widgets[0].active = 1
+            self._widgets[0].show()
+
+    def _read_keys(self):
+        try:
+            files = [
+                path.join(self._cnf.data_dir, 'lkb_' + self.localize + '.json'),
+                path.join(path.dirname(__file__), 'keyboard', 'lkb_' + self.localize + '.json')
+            ]
+            target_file = files[0]
+            if path.exists(files[-1]):
+                target_file = files[-1]
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'reading localized file: {target_file}')
+            with open(target_file, 'r', encoding='utf-8') as f:
+                self._keys= json.load(f)
+        except Exception as e:
+            # set default _keys
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'{e}')
+            keys = list(string.ascii_lowercase) + list(string.ascii_uppercase)
+            self._keys = {keys[i]: '' for i in range(len(keys))}
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'{self._keys =}')
+
+    def _read_file_list(self):
+        ''' Read layout file names from disk (not the content)
+
+            item 0 will always be "Define New Layout"
+            item 1 will always be "No Layout"
+
+            Returns self._files: list of lists
+                formtat:
+                    [title, path, writable, None]
+                        title       : the name of the layout
+                        path        : the path of the file, None if localy inserted
+                        writable    : True if in data dir, else false
+                        None        : placeholder for keys dict (to be populated by _read_layout_file)
+        '''
         # Directories to scan for JSON files
         directories = [
             self._cnf.data_dir,
@@ -4268,25 +4374,63 @@ class PyRadioLocalized():
         ]
 
         # Collect all JSON filenames
-        filenames = set()
-        for directory in directories:
+        dict_filenames = {}
+        for i, directory in enumerate(directories):
             if path.exists(directory) and path.isdir(directory):
                 for file in listdir(directory):
-                    if file.endswith('.json'):
-                        filenames.add(file)
+                    if file.startswith('lkb_') and \
+                            file.endswith('.json'):
+                        dict_filenames[file[4:-5]] = (
+                            path.join(directory, file),
+                            True if i == 0 else False
+                        )
 
-        filenames = list(filenames)
-        to_remove = (
-            'classes.json',
-            'keys.json',
-            'player-params.json'
-        )
-        for n in to_remove:
-            if n in filenames:
-                filenames.pop(filenames.index(n))
+        # Prepare the list of filenames with metadata
+        filenames = [
+            [title, data[0], data[1], None]  # Title, path
+            for title, data in dict_filenames.items()
+        ]
 
         # Sort and return the list of filenames
-        self._files = sorted(filenames)
+        self._files = [['Define New Layout', None, False, None], ['No Layout', None, False, None]] + sorted(filenames)
+        self._files.append(['Item 1', None, False, None])
+        self._files.append(['Item 2', None, False, None])
+        self._files.append(['Item 3', None, False, None])
+        self._files.append(['Item 4', None, False, None])
+        self._files.append(['Item 5', None, False, None])
+        self._files.append(['Item 6', None, False, None])
+        self._files.append(['Item 7', None, False, None])
+        self._files.append(['Item 8', None, False, None])
+        self._files.append(['Item 9', None, False, None])
+
+    def _read_layout_file(self, index):
+        ''' read a layout file from disk
+            based on index in self._files
+
+            only act on it if self._files[index][-1] is None
+
+            if index < 2 create a dict of letters with empty values
+            else read the actual file
+        '''
+        if self._files[index][-1] is None:
+            error = False
+            data = None
+            keys = list(string.ascii_lowercase) + list(string.ascii_uppercase)
+            if index < 2:
+                error = True
+            else:
+                try:
+                    with open(self._files[index][1], 'r', encoding='utf-8', errors='ignore') as json_file:
+                        data = json.load(json_file)
+                except (FileNotFoundError, json.JSONDecodeError, TypeError, IOError):
+                    error = True
+            if data is not None:
+                # validate data: make sure all english letters are in the dict keys
+                if not all(key in data for key in keys):
+                    error = True
+            if error:
+                data = {keys[i]: '' for i in range(len(keys))}
+            self._files[index][-1] = data
 
     def _print_title(self):
         self._dirty_config = False if self.localize == self._orig_localize else True
@@ -4302,10 +4446,11 @@ class PyRadioLocalized():
 
     def _init_win(self):
         self.maxY, self.maxX = self._parent.getmaxyx()
-        self._too_small = False
-        if self.maxY < 12 or self.maxX < 45:
-            self._too_small = True
-        # logger.error('\n\nmaxY = {}\n\n'.format(self.maxY))
+        if self.maxX < 80 or self.maxY < 22:
+            self.too_small = True
+        else:
+            self.too_small = False
+        # logger.error('\n\nmaxY = {} < 22, maxX = {} < 80, too small = {}\n\n'.format(self.maxY, self.maxX, self.too_small))
         # self._second_column = int(self.maxX / 2)
         self._win = curses.newwin(self.maxY, self.maxX, 1, 0)
         self._win.bkgdset(' ', curses.color_pair(12))
@@ -4320,19 +4465,27 @@ class PyRadioLocalized():
             logger.debug(f'{self._start_line = }')
             logger.debug(f'{self._end_line = }')
             logger.debug(f'{self._number_of_lines = }')
-        if self._widget is not None and not self._too_small:
-            # move buttons to end of window
-            self._widget.move(self.maxY - 3)
-        self._make_selection_visible()
+        if not self.too_small:
+            self._make_selection_visible()
 
     def _make_selection_visible(self):
         pass
 
-    def show(self, parent=None):
+    def show(self, parent=None, reset=False):
+        self._old_widget_0_selection = -1
+        if reset:
+            # logger.error('\n\nRESET\n\n')
+            # if self._widgets[0] is not None:
+            #     self._old_widget_0_selection = self.layout
+            # self._widgets[0] = None
+            # self._widgets[1] = None
+            pass
+
         if parent is not None:
             self._parent = parent
             self._init_win()
-        if self._too_small:
+
+        if self.too_small:
             msg = 'Window too small to display content!'
             if self.maxX < len(msg) + 2:
                 msg = 'Window too small!'
@@ -4355,19 +4508,190 @@ class PyRadioLocalized():
                 pass
 
         self._print_title()
-        if self._widget is None:
-            self._widget = SimpleCursesHorizontalPushButtons(
-                    Y=self.maxY-3, captions=('OK', 'Cancel'),
-                    color_focused=curses.color_pair(9),
-                    color=curses.color_pair(4),
-                    bracket_color=curses.color_pair(5),
-                    parent=self._win)
-            self._widget.calculate_buttons_position()
-            self._b_ok, self._b_cancel = self._widget.buttons
+        menu_height = 9
+        if self._widgets[0] is None:
+            items=[x[0] for x in self._files]
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'menu {items = }')
+            if self.localize in items:
+                index = items.index(self.localize)
+            else:
+                index = 1
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'{self.localize = }')
+                logger.debug(f'active layout {index = }')
+            # widget 0: menu
+            self._widgets[0] = SimpleCursesMenu(
+                2, 2, self._win,
+                active=index,
+                min_height=menu_height-1,
+                max_height=menu_height,
+                max_width=30,
+                items=items,
+                selection=index,
+                title=' Available Layouts ',
+                window_type=2,
+                color=curses.color_pair(5),
+                color_title=curses.color_pair(9),
+                color_border=curses.color_pair(4),
+                color_active=curses.color_pair(4),
+                color_cursor_selection=curses.color_pair(6),
+                color_cursor_active=curses.color_pair(9),
+                can_edit_items=True,
+                on_edit_item_callback_function=self._edit_layout,
+                on_up_callback_function=self._layout_changed,
+                on_down_callback_function=self._layout_changed,
+                on_activate_callback_function=self._layout_activated
+            )
+            self._widgets[0].enabled = True
+            self._widgets[0].focused = True
+            self._widgets[0]._id = 0
+            if self._old_widget_0_selection > -1:
+                self.layout = self._old_widget_0_selection
+
+        # widget 1: letters
+        if self._widgets[1] is None:
+            self._widgets[1] = LetterDisplay(
+                parent=self._win,
+                start_line=menu_height+2
+            )
+            self._widgets[1].focused = False
+            self._widgets[1]._id = 1
+            self._widgets[1].letters_dict = self.layout_dict
+
+        # widget 2,3 : buttons
+        if self._widgets[-1] is None:
+            self._h_buttons = SimpleCursesHorizontalPushButtons(
+                Y=self._widgets[1].Y+self._widgets[1].height-3,
+                captions=('OK', 'Cancel'),
+                color_focused=curses.color_pair(9),
+                color=curses.color_pair(4),
+                bracket_color=curses.color_pair(5),
+                parent=self._win
+            )
+            self._h_buttons.calculate_buttons_position()
+            self._widgets[2], self._widgets[3] = self._h_buttons.buttons
+            self._b_ok, self._b_cancel = self._h_buttons.buttons
+            self._widgets[2]._id = 2
+            self._widgets[3]._id = 3
             self._b_ok.focused = self._b_cancel.focused = False
+        else:
+            self._h_buttons.calculate_buttons_position(parent=self._win)
+            try:
+                self._widgets[-1].move(self._widgets[1].Y + self._widgets[1].height - 2)
+                self._widgets[-2].move(self._widgets[1].Y + self._widgets[1].height - 2)
+            except:
+                pass
 
         self._win.refresh()
-        self._widget.show()
+        for i in range(len(self._widgets)):
+            try:
+                self._widgets[i].show()
+            except AttributeError:
+                pass
+
+    def _update_focus(self):
+        for i in range(len(self._widgets)):
+            self._widgets[i].focused = True if i == self._focus else False
+
+    def _focus_next(self):
+        self._needs_update = True
+        if self._focus == 0:
+            self._focus = 1
+            self._widgets[1].active_widget = 0
+        elif self._focus == 1:
+            if self.editing:
+                self._focus += self._widgets[1].focus_next()
+                if self._focus == 2 and \
+                        not self._widgets[2].enabled:
+                    self._focus = 3
+            else:
+                self._widgets[1].active_widget = 0
+                self._focus = 2
+        elif self._focus == 2:
+            self._focus = 3
+        elif self._focus == 3:
+            if self.editing:
+                self._focus = 1
+                self._widgets[1].active_widget = 0
+            else:
+                self._focus = 0
+        self._update_focus()
+
+    def _focus_previous(self):
+        self._needs_update = True
+        if self._focus == 0:
+            self._focus = len(self._widgets) - 1
+        elif self._focus == 1:
+            if self.editing:
+                if self._widgets[1].active_widget == 1:
+                    self._widgets[1].active_widget = 0
+                else:
+                    self._focus = 3
+            else:
+                if self.layout == 0 or \
+                        self.layout_read_olny:
+                    self._focus += self._widgets[1].focus_previous()
+                else:
+                    self._widgets[1].active_widget = 0
+                    self._focus = 0
+        elif self._focus == 2:
+            self._focus = 1
+            self._widgets[1].active_widget = 0
+        elif self._focus == 3:
+            self._focus = 2 if self._widgets[2].enabled else 1
+            if self._focus == 1 and self.editing:
+                self._widgets[1].active_widget = 1
+        self._update_focus()
+
+    def _edit_layout(self, index, item):
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('entering editing mode')
+        if self.layout == 0 or \
+                not self.layout_read_olny:
+            self.editing = 'new layout'
+        else:
+            self.editing = self._widgets[0].current_item
+        logger.error(f'{self.editing = }')
+        self._set_ok_enabled()
+
+    def _layout_activated(self):
+        if self.layout == 0:
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('add new layout')
+            self._edit_layout(0, self._files[0][0])
+            self._base_layout_name = None
+        else:
+            self.localize = self._widgets[0].active_item()
+            if logger.isEnabledFor(logging.INFO):
+                logger.info(f'layout set as default: "{self.localize}"')
+
+    def _layout_changed(self):
+        # if logger.isEnabledFor(logging.DEBUG):
+        #     logger.debug('Layout changed to: {}, "{}"'.format(self.layout, self._widgets[0].item))
+        self._read_layout_file(self.layout)
+        self._widgets[1].letters_dict = self.layout_dict
+        # if logger.isEnabledFor(logging.DEBUG):
+        #     logger.debug(f'letters loaded: {self.layout_dict}')
+        self._widgets[1].show()
+
+    def _cancel_editing_mode(self, index):
+        self._read_layout_file(self.layout)
+        self._widgets[1].letters_dict = self.layout_dict
+        self.editing = None
+        self._widgets[2].enabled = True
+        # self.show()
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('canceling editing mode')
+
+    def _set_ok_enabled(self):
+        if self.editing:
+            # logger.error('\n\n')
+            # logger.error('checking\n{}'.format(self._files[self._selection][-1]))
+            # logger.error('\n\n')
+            self._widgets[2].enabled = all(value != '' for value in self._widgets[1].letters_dict.values())
+        else:
+            self._widgets[2].enabled = True
 
     def keypress(self, char):
         ''' PyRadioLocalized keypress
@@ -4382,22 +4706,70 @@ class PyRadioLocalized():
         '''
         l_char = None
         self._needs_update = False
-        if self._editing:
-            pass
-        else:
-            if char in (curses.KEY_EXIT, 27, kbkey['q'], curses.KEY_LEFT, kbkey['h']) or \
-                    check_localized(char, (kbkey['q'], kbkey['h'])):
-                self._win.nodelay(True)
-                char = self._win.getch()
-                self._win.nodelay(False)
-                if char == -1:
-                    ''' ESCAPE '''
+        self._set_ok_enabled()
+
+        if char in (curses.KEY_EXIT, 27, ):
+            self._win.nodelay(True)
+            char = self._win.getch()
+            self._win.nodelay(False)
+            if char == -1:
+                ''' ESCAPE '''
+                if self.editing:
+                    self._cancel_editing_mode(3)
+                else:
                     return -1
-            elif char in self._global_functions or \
-                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
-                if l_char is None:
-                    l_char = char
-                self._global_functions[l_char]()
+        elif not self.editing and (
+                char == kbkey['add'] or \
+                check_localized(char, (kbkey['add'], ))
+        ):
+            self._base_layout_name = None
+            self._old_widget_0_selection = self.layout
+
+        elif not self.editing and (
+                char == kbkey['edit'] or \
+                check_localized(char, (kbkey['edit'], ))
+        ):
+            if self.layout > 1:
+                self._base_layout_name = self.layout_name
+                self._edit_layout(self.layout, self.layout_name)
+                if self.layout_read_olny:
+                    return 3
+        elif char in (9, ord('\t'), kbkey['tab']):
+            self._focus_next()
+        elif char in (curses.KEY_BTAB, kbkey['stab']):
+            self._focus_previous()
+        elif self._focus == 0:
+            self._widgets[self._focus].keypress(char)
+        elif self._focus == 1:
+            if self.editing:
+                letter = get_kb_letter()
+                if letter:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('setting letter "{}": "{}"'.format(self._widgets[1].selected_letter, letter))
+                    self._widgets[1].set_letter(letter)
+                    # self._files[self._widgets[0].selection][-1] = self._widgets[1].letters_dict
+                    self._set_ok_enabled()
+                    self.show()
+                else:
+                    self._widgets[self._focus].keypress(char)
+            else:
+                self._widgets[self._focus].keypress(char)
+        elif self._focus == 2:
+            # ok button
+            if char in (ord('\n'), ord('\r'), ord(' ')):
+                return 1
+        elif self._focus == 3:
+            # cancel button
+            if self.editing:
+                self._cancel_editing_mode(3)
+            else:
+                if char in (ord('\n'), ord('\r'), ord(' ')):
+                    return -1
+        elif char in self._global_functions or \
+            (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
 
         # Centralized UI update
         if self._needs_update:

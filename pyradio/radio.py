@@ -16,7 +16,7 @@ import os
 import random
 import signal
 from copy import deepcopy
-from sys import version as python_version, version_info, platform
+from sys import version as python_version, platform
 from os.path import join, basename, getmtime, getsize
 from os import remove, rename
 from platform import uname
@@ -466,6 +466,7 @@ class PyRadio():
                  theme='',
                  force_update='',
                  record=False):
+        self.program_restart = False
         self._do_launch_external_palyer = external_player
         self._station_images = (
             join(pyradio_config.logos_dir, 'station.jpg'),
@@ -1027,7 +1028,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
     def setup(self, stdscr):
         if logger.isEnabledFor(logging.INFO):
-            logger.info('<<<===---  Program start  ---===>>>')
+            if self.program_restart:
+                logger.info('\n\n<<<===---  TUI restart  ---===>>>')
+            else:
+                logger.info('\n\n<<<===---  Program start  ---===>>>')
+            self.program_restart = False
             if self._cnf.distro == 'None':
                 logger.info('PyRadio {0}: TUI initialization on python v. {1} on "{2}"'.format(self._cnf.current_pyradio_version, python_version.replace('\n', ' ').replace('\r', ' '), ', '.join(uname())))
             else:
@@ -1049,7 +1054,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         else:
             if curses.COLORS > 32:
                 self._cnf.start_colors_at = 15
-            logger.info('Terminal supports {0} colors (first color to define = {1})'.format(curses.COLORS, self._cnf.start_colors_at))
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('Terminal supports {0} colors (first color to define = {1})'.format(curses.COLORS, self._cnf.start_colors_at))
         self.stdscr = stdscr
 
         try:
@@ -1551,15 +1557,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                         ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_header=True)
                 if ticks:
                     for n in ticks:
-                        if version_info < (3, 0):
-                            self.outerBodyWin.addstr(0, n + 2, u'┬'.encode('utf-8', 'replace'), curses.color_pair(13))
-                            self.outerBodyWin.addstr(self.outerBodyMaxY - 1, n + 2, u'┴'.encode('utf-8', 'replace'), curses.color_pair(13))
-                        else:
-                            try:
-                                self.outerBodyWin.addstr(0, n + 2, '┬', curses.color_pair(13))
-                                self.outerBodyWin.addstr(self.outerBodyMaxY - 1, n + 2, '┴', curses.color_pair(13))
-                            except:
-                                pass
+                        try:
+                            self.outerBodyWin.addstr(0, n + 2, '┬', curses.color_pair(13))
+                            self.outerBodyWin.addstr(self.outerBodyMaxY - 1, n + 2, '┴', curses.color_pair(13))
+                        except:
+                            pass
 
             align = 1
 
@@ -1733,24 +1735,14 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         old_disp = ' ' + station[0] + ' '
         old_len = cjklen(old_disp)
         # if cjklen(to_disp) < self.maxX - (pad + 6):
-        if version_info < (3, 0):
-            to_disp = cjkcenter(old_disp + '__', self.bodyMaxX, '_')
-            # logger.error('cjklen = {0}, old cjklen = {1}'.format(cjklen(to_disp), old_len))
-            out = cjkslices(to_disp, pad + 5)[1] + ' '
-            # logger.error('out = "{}"'.format(out))
-            if out[0] == '_' or out[0] == ' ':
-                return '{0}. __{1}'.format(str(lineNum + self.startPos + 1).rjust(pad), out)
-            else:
-                return '{0}. __{1}'.format(str(lineNum + self.startPos + 1).rjust(pad), self._cjk_ljust(old_disp, self.bodyMaxX - pad - 4, '_'))
+        to_disp = cjkcenter(old_disp + '──', self.bodyMaxX, '─')
+        # logger.error('cjklen = {0}, old cjklen = {1}'.format(cjklen(to_disp), old_len))
+        out = cjkslices(to_disp, pad + 5)[1] + ' '
+        # logger.error('out = "{}"'.format(out))
+        if out[0] == '─' or out[0] == ' ':
+            return '{0}. ──{1}'.format(str(lineNum + self.startPos + 1).rjust(pad), out)
         else:
-            to_disp = cjkcenter(old_disp + '──', self.bodyMaxX, '─')
-            # logger.error('cjklen = {0}, old cjklen = {1}'.format(cjklen(to_disp), old_len))
-            out = cjkslices(to_disp, pad + 5)[1] + ' '
-            # logger.error('out = "{}"'.format(out))
-            if out[0] == '─' or out[0] == ' ':
-                return '{0}. ──{1}'.format(str(lineNum + self.startPos + 1).rjust(pad), out)
-            else:
-                return '{0}. ──{1}'.format(str(lineNum + self.startPos + 1).rjust(pad), self._cjk_ljust(old_disp, self.bodyMaxX - pad - 4, '─'))
+            return '{0}. ──{1}'.format(str(lineNum + self.startPos + 1).rjust(pad), self._cjk_ljust(old_disp, self.bodyMaxX - pad - 4, '─'))
 
     def _cjk_ljust(self, text, width, char):
         if cjklen(text) >= width:
@@ -2049,8 +2041,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 try:
                     if self._do_launch_external_palyer:
                         curses.ungetch(kbkey['ext_player'])
+                        self._do_launch_external_palyer = False
                     c = self.bodyWin.getch()
-                    logger.error(f'{c = }')
+                    # logger.error(f'{c = }')
 
                     if remaining_keys > 0:
                         # Skip processing for replayed keys
@@ -2078,8 +2071,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                         ret = self.keypress(c)  # Handle shortcut
                         if ret == -1:
                             return
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug(f'{get_kb_letter() = }')
+                    # if logger.isEnabledFor(logging.DEBUG):
+                    #     logger.debug(f'{get_kb_letter() = }')
                     # Replay input_queue into curses' input buffer
                     while input_queue:
                         # Re-insert input in reverse order
@@ -2166,7 +2159,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             if self._cnf.online_browser:
                 if self._cnf.online_browser.is_config_dirty():
                     self._cnf.online_browser.save_config()
-                self._cnf.online_browser = None
+                # self._cnf.online_browser = None
         self._wait_for_threads()
         '''
         this a daemonic thread, to make sure it always
@@ -2607,13 +2600,18 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     logger.debug('+++ icon download: asked to stop. Stopping...')
                 return
             if response.status_code == 200:
-                with open(self._station_images[2], 'wb') as local_file:
-                    for chunk in response.iter_content(chunk_size=128):
-                        if stop():
-                            if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug('+++ icon download: asked to stop. Stopping...')
-                            return
-                        local_file.write(chunk)
+                try:
+                    with open(self._station_images[2], 'wb') as local_file:
+                        for chunk in response.iter_content(chunk_size=128):
+                            if stop():
+                                if logger.isEnabledFor(logging.DEBUG):
+                                    logger.debug('+++ icon download: asked to stop. Stopping...')
+                                return
+                            local_file.write(chunk)
+                except (FileNotFoundError, PermissionError, OSError):
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('+++ icon download: error saving icon. Stopping...')
+                    return
             if not (exists(self._station_images[0]) or exists(self._station_images[1])):
                 if stop():
                     if logger.isEnabledFor(logging.DEBUG):
@@ -2795,52 +2793,29 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         else:
             line = pl_line
         f_data = ' [{0}, {1}]'.format(station[2], station[1])
-        if version_info < (3, 0):
-            if cjklen(line.decode('utf-8', 'replace')) + cjklen(f_data.decode('utf-8', 'replace')) > self.bodyMaxX:
-                ''' this is too long, try to shorten it
-                    by removing file size '''
-                f_data = ' [{0}]'.format(station[1])
-            if cjklen(line.decode('utf-8', 'replace')) + cjklen(f_data.decode('utf-8', 'replace')) > self.bodyMaxX:
-                ''' still too long. start removing chars '''
-                while cjklen(line.decode('utf-8', 'replace')) + cjklen(f_data.decode('utf-8', 'replace')) > self.bodyMaxX - 1:
-                    f_data = f_data[:-1]
-                f_data += ']'
-            ''' if too short, pad f_data to the right '''
-            if cjklen(line.decode('utf-8', 'replace')) + cjklen(f_data.decode('utf-8', 'replace')) < self.bodyMaxX:
-                while cjklen(line.decode('utf-8', 'replace')) + cjklen(f_data.decode('utf-8', 'replace')) < self.maxX:
-                    line += ' '
-        else:
-            if cjklen(line) + cjklen(f_data) > self.bodyMaxX:
-                ''' this is too long, try to shorten it
-                    by removing file size '''
-                f_data = ' [{0}]'.format(station[1])
-            if cjklen(line) + cjklen(f_data) > self.bodyMaxX:
-                ''' still too long. start removing chars '''
-                while cjklen(line) + cjklen(f_data) > self.bodyMaxX - 1:
-                    f_data = f_data[:-1]
-                f_data += ']'
-            ''' if too short, pad f_data to the right '''
-            if cjklen(line) + cjklen(f_data) < self.maxX:
-                while cjklen(line) + cjklen(f_data) < self.bodyMaxX:
-                    line += ' '
+        if cjklen(line) + cjklen(f_data) > self.bodyMaxX:
+            ''' this is too long, try to shorten it
+                by removing file size '''
+            f_data = ' [{0}]'.format(station[1])
+        if cjklen(line) + cjklen(f_data) > self.bodyMaxX:
+            ''' still too long. start removing chars '''
+            while cjklen(line) + cjklen(f_data) > self.bodyMaxX - 1:
+                f_data = f_data[:-1]
+            f_data += ']'
+        ''' if too short, pad f_data to the right '''
+        if cjklen(line) + cjklen(f_data) < self.maxX:
+            while cjklen(line) + cjklen(f_data) < self.bodyMaxX:
+                line += ' '
         line += f_data
         return line
 
     def _format_station_line(self, line):
-        if version_info < (3, 0):
-            if len(line.decode('utf-8', 'replace')) != cjklen(line.decode('utf-8', 'replace')):
-                while cjklen(line.decode('utf-8', 'replace')) > self.bodyMaxX:
-                    line = line[:-1]
-                return line
-            else:
-                return line[:self.bodyMaxX]
+        if len(line) != cjklen(line):
+            while cjklen(line) > self.bodyMaxX:
+                line = line[:-1]
+            return line
         else:
-            if len(line) != cjklen(line):
-                while cjklen(line) > self.bodyMaxX:
-                    line = line[:-1]
-                return line
-            else:
-                return line[:self.bodyMaxX]
+            return line[:self.bodyMaxX]
 
     def _print_help(self):
         # logger.error('DE \n\nself.ws.operation_mode = {}\n\n'.format(self.ws.operation_mode))
@@ -4527,6 +4502,8 @@ ____Using |fallback| theme.''')
             max_width=max_width,
             win_width=self.bodyMaxX)
 
+        logger.error(f'{self.player._icy_data = }')
+
         msg = txt + tail
         #logger.error('msg\n{}'.format(msg))
         if tail and not self._cnf.browsing_station_service:
@@ -5275,6 +5252,7 @@ ____Using |fallback| theme.''')
     def _localized_init_config(self, parent=None):
         if parent is None:
             parent = self.outerBodyWin
+        logger.error('self._keyboard_config_win is None: {}'.format(self._keyboard_config_win is None))
         if self._keyboard_config_win is None:
             self._keyboard_localized_win = PyRadioLocalized(
                     config=self._cnf,
@@ -5285,7 +5263,7 @@ ____Using |fallback| theme.''')
         self._keyboard_localized_win.show(parent=self.outerBodyWin)
 
     def _redisplay_localized_config(self):
-        self._keyboard_localized_win.show(parent=self.outerBodyWin)
+        self._keyboard_localized_win.show(parent=self.outerBodyWin, reset=True)
 
     def _browser_server_selection(self):
         if self._cnf._online_browser:
@@ -6249,6 +6227,12 @@ ____Using |fallback| theme.''')
                 self._keyboard_localized_win = None
                 self.ws.close_window()
                 self.refreshBody()
+            elif ret == 2:
+                # display help
+                pass
+            elif ret == 3:
+                # edit read only
+                self._open_simple_message_by_key('M_LOC_READ_ONLY')
             return
 
         if self.ws.operation_mode == self.ws.KEYBOARD_CONFIG_MODE:
@@ -8981,6 +8965,7 @@ _____"|f|" to see the |free| keys you can use.
                                 reset_playing=False
                             )
                         self.ctrl_c_handler(0,0)
+                        self._cnf.EXTERNAL_PLAYER_OPTS = None
                         return -1
                 else:
                     return
@@ -9005,9 +8990,17 @@ _____"|f|" to see the |free| keys you can use.
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 if char == kbkey['ext_player'] or \
-                    check_localized(char, (kbkey['ext_player'], )):
+                        check_localized(char, (kbkey['ext_player'], )):
+                    if self.stations[self.selection][1] == '-':
+                        ''' this is a group '''
+                        return
                     self.player.USE_EXTERNAL_PLAYER = True
                     stream_url = self.stations[self.selection][1]
+                    self._set_active_stations()
+                    self.playing = self.selection
+                    self.selections[0][2] = self.playing
+                    self._click_station()
+                    self._add_station_to_stations_history()
                     self._cnf.EXTERNAL_PLAYER_OPTS = self.player.play(name='',
                                      streamUrl=stream_url,
                                      stop_player=None,
@@ -9020,7 +9013,7 @@ _____"|f|" to see the |free| keys you can use.
                     self._cnf.EXTERNAL_PLAYER_OPTS = [self.stations[self.selection][0]] + self._cnf.EXTERNAL_PLAYER_OPTS
                     self.log.asked_to_stop = True
                     self.ctrl_c_handler(0,0)
-                    self._cnf._online_browser = None
+                    # self._cnf._online_browser = None
 
                     return -1
 
@@ -10460,10 +10453,7 @@ _____"|f|" to see the |free| keys you can use.
                     except:
                         pass
                     for j, col in enumerate(column_separator):
-                        if version_info < (3, 0):
-                            self.outerBodyWin.addstr(i + 1, col + 2, u'│'.encode('utf-8', 'replace'), curses.color_pair(13))
-                        else:
-                            self.outerBodyWin.addstr(i + 1, col + 2, '│', curses.color_pair(13))
+                        self.outerBodyWin.addstr(i + 1, col + 2, '│', curses.color_pair(13))
                         try:
                             if j == highlight:
                                 self.outerBodyWin.addstr(column_name[j], curses.color_pair(sort_column_color))

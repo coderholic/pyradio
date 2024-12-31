@@ -175,10 +175,7 @@ class MKVToolNix:
         r = subprocess.Popen(
             [self.mkvmerge, '-i', self._mkv_file ],
             stdout=subprocess.PIPE).stdout.read()
-        if sys.version_info.major < 3:
-            s = r
-        else:
-            s = r.decode('utf-8')
+        s = r.decode('utf-8')
         # Validate files
         if 'container: Matroska' not in s:
             if print_messages:
@@ -273,10 +270,7 @@ class MKVToolNix:
             r = p.communicate()
             self.HAS_MKVTOOLNIX = True if p.returncode == 0 else False
             if self.HAS_MKVTOOLNIX:
-                if sys.version_info.major < 3:
-                    self.mkvmerge = r[0].strip()
-                else:
-                    self.mkvmerge = r[0].decode('utf-8').strip()
+                self.mkvmerge = r[0].decode('utf-8').strip()
             if not self.HAS_MKVTOOLNIX and sys.platform.lower().startswith('dar'):
                 mkvmerge_file = os.path.join(self._cnf.data_dir, 'mkvmerge')
                 if os.path.exists(mkvmerge_file):
@@ -292,10 +286,7 @@ class MKVToolNix:
             r = subprocess.Popen(
                 [self.mkvinfo, a_file ],
                 stdout=subprocess.PIPE).stdout.read()
-            if sys.version_info.major < 3:
-                s = r
-            else:
-                s = r.decode(encoding)
+            s = r.decode(encoding)
         except:
             return None
         if s:

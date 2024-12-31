@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from sys import version_info
-
 
 def get_encodings():
     encoding_list = [
@@ -103,11 +101,5 @@ def get_encodings():
         ['utf-8', 'U8, UTF, utf_8', 'All languages'],
         ['utf_8_sig', '', 'All languages'],
     ]
-    if version_info < (3, 0):
-        for del_it in ('cp273', 'cp1125', 'cp65001', 'koi8_t', 'kz1048'):
-            for item in encoding_list:
-                if item[0] == del_it:
-                    encoding_list.remove(item)
-                    break
     return encoding_list
 

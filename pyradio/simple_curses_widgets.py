@@ -36,7 +36,7 @@ python -m pip install --user dateutil
 ''')
     exit(1)
 import logging
-from sys import version_info, platform
+from sys import platform
 try:
     from .cjkwrap import is_wide, cjklen, cjkljust, cjkslices
     from .schedule import PyRadioTime
@@ -1775,6 +1775,8 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
         elif char in (kbkey['k'], curses.KEY_UP) or \
                 check_localized(char, (kbkey['k'], )):
             pY, pX = self._coords[self.selection]
+            # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
+            # logger.error('DE rows = {}'.format(self._rows))
             if self._on_up_callback_function and pY == 0:
                 self._on_up_callback_function()
             else:
@@ -1880,8 +1882,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
     CENTERED = 1
     POS_Y_X = 2
 
-    _selection = _start_pos = 0
-    _global_functions = _local_functions = {}
+    _global_functions = {}
+    _local_functions = {}
     _can_add_items = _can_delete_items = False
 
     def __init__(self,
@@ -1927,7 +1929,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                  validate_add_entry=None,
                  entry_cannot_be_added_function=None,
                  can_edit_items=False,
-                 edit_item_function=None,
+                 on_edit_item_callback_function=None,
                  validate_edit_entry=None,
                  entry_cannot_be_edited_function=None,
                  can_delete_items=False,
@@ -2037,7 +2039,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 Set either to True, to enable item addition,
                 edit or deletion
             add_item_function
-            edit_item_function
+            on_edit_item_callback_function
                 A function to provide the TUI interface (or whatever)
                 to add / edit a new / existing item
                     Function prototype:
@@ -2068,6 +2070,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 A function to execute when items have changed
                 (after adding, editing, deleting)
         '''
+        self._selection = 0
+        self._start_pos = 0
         self._focused = self._enabled = True
         self._bordered = bordered
         self._too_small = False
@@ -2127,7 +2131,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
         self._validate_edit_entry = validate_edit_entry
         self._validate_add_entry = validate_add_entry
         self._add_item_function = add_item_function
-        self._edit_item_function = edit_item_function
+        self._on_edit_item_callback_function = on_edit_item_callback_function
         self._entry_cannot_be_added_function = entry_cannot_be_added_function
         self._entry_cannot_be_edited_function = entry_cannot_be_edited_function
         self._entry_cannot_be_deleted_function = entry_cannot_be_deleted_function
@@ -2159,7 +2163,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
     @property
     def too_small(self):
         '''Returns if the widget is too small '''
-        return self.too_small
+        return self._too_small
 
     @property
     def current_item(self):
@@ -2784,6 +2788,9 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 0 - Item selected
                 1 - Continue
                 2 - Display help
+                3 - Add item
+                4 - Edit item
+                5 - Delete item
         '''
         l_char = None
         if self._too_small:
@@ -2821,7 +2828,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 return 0
             if self._add_item_function:
                 self._add_item_function(self, self._selection, self._items[self._selection])
-            return 5
+            return 3
 
         elif self._can_delete_items and \
                 char in (kbkey['del'], curses.KEY_DC) or \
@@ -2842,7 +2849,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._refresh()
             return 0
 
-        elif self._can_delete_items and \
+        elif self._can_edit_items and \
                 char == kbkey['edit'] or \
                 check_localized(char, (kbkey['edit'], )):
             if len(self._items) == 0:
@@ -2857,14 +2864,16 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     if self._entry_cannot_be_edited_function:
                         self._entry_cannot_be_edited_function('___Item cannot be edited!___')
                     return 0
+            if self._on_edit_item_callback_function is not None:
+                self._on_edit_item_callback_function(self._selection, self._items[self._selection])
             return 4
 
         elif self._can_delete_items and \
-                char == kbkey['add'] or \
+                    char == kbkey['add'] or \
                 check_localized(char, (kbkey['add'], )):
             return 5
 
-        elif self._right_arrow_selects and char in (
+        elif not self._right_arrow_selects and char in (
                 ord('\n'), ord('\r'), curses.KEY_ENTER,
                 kbkey['l'], kbkey['pause'], curses.KEY_RIGHT
                 ) or \
@@ -2872,12 +2881,12 @@ class SimpleCursesMenu(SimpleCursesWidget):
             ''' Do not refresh the widget, it will
                 probably be hidden next
             '''
-            self._toggle_active_item()
+            self._toggle_selected_item()
             if self._on_select_callback_function:
                 self._on_select_callback_function()
             return 0
 
-        elif not self._right_arrow_selects and char in (
+        elif self._right_arrow_selects and char in (
                 kbkey['pause'], ord('\n'), ord('\r'), curses.KEY_ENTER
                 ) or check_localized(char, (kbkey['pause'], )):
             self._toggle_active_item()
@@ -2889,13 +2898,18 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 check_localized(char, (kbkey['g'], )):
             if len(self._items) == 0:
                 return 1
+            logger.error('-----')
             self._selection = 0
             self._verify_selection_not_on_caption()
             if self._start_pos == 0:
+                logger.error('*****')
                 self._toggle_selected_item()
             else:
+                logger.error('=====')
                 self._start_pos = 0
                 self._refresh()
+            if self._on_up_callback_function is not None:
+                self._on_up_callback_function()
 
         elif char in (kbkey['G'], curses.KEY_END) or \
                 check_localized(char, (kbkey['G'], )):
@@ -2914,6 +2928,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
             else:
                 self._start_pos = 0
                 self._refresh()
+            if self._on_down_callback_function is not None:
+                self._on_down_callback_function()
 
         elif char == kbkey['goto_playing'] or \
                 check_localized(char, (kbkey['goto_playing'], )):
@@ -2924,6 +2940,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._make_sure_selection_is_visible()
             self._refresh()
             # self._toggle_selected_item()
+            if self._on_down_callback_function is not None:
+                self._on_down_callback_function()
 
         elif char == kbkey['h'] or \
                 check_localized(char, (kbkey['h'], )):
@@ -2940,6 +2958,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._selection = self._start_pos + int(self._body_maxY /2) - 1
             self._verify_selection_not_on_caption()
             self._toggle_selected_item()
+            if self._on_down_callback_function is not None:
+                self._on_down_callback_function()
 
         elif char == kbkey['l'] or \
                 check_localized(char, (kbkey['l'], )):
@@ -2968,6 +2988,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     return 1
             if not self._toggle_selected_item():
                 self._refresh()
+            if self._on_up_callback_function is not None:
+                self._on_up_callback_function()
 
         elif char in (curses.KEY_NPAGE, ):
             if len(self._items) == 0:
@@ -2993,6 +3015,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
                         return 1
             if not self._toggle_selected_item():
                 self._refresh()
+            if self._on_down_callback_function is not None:
+                self._on_down_callback_function()
 
         elif char in (kbkey['k'], curses.KEY_UP) or \
                 check_localized(char, (kbkey['k'], )):
@@ -3009,6 +3033,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 if self._scroll:
                     self._start_pos = self._selection - self._body_maxY + 1
                     self._refresh()
+                    if self._on_up_callback_function is not None:
+                        self._on_up_callback_function()
                     return 1
             if self._scroll:
                 # log_it('*** scroll')
@@ -3018,11 +3044,15 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     self._start_pos -= 1
                     # log_it('We need to scroll: start: {0}, selection = {1}'.format(self._start_pos,self._selection))
                     self._refresh()
+                    if self._on_up_callback_function is not None:
+                        self._on_up_callback_function()
                     return 1
             # log_it('going from {0} to {1}, start at {2}'.format(self._old_selection, self._selection, self._start_pos))
             if not self._toggle_selected_item():
                 # log_it('self._refresh')
                 self._refresh()
+            if self._on_up_callback_function is not None:
+                self._on_up_callback_function()
 
         elif char in (kbkey['j'], curses.KEY_DOWN) or \
                 check_localized(char, (kbkey['j'], )):
@@ -3038,6 +3068,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._start_pos = 0
                 if self._scroll:
                     self._refresh()
+                    if self._on_down_callback_function is not None:
+                        self._on_down_callback_function()
                     return 1
             if self._scroll:
                 # we have scrolling items
@@ -3046,10 +3078,14 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     self._start_pos = self._selection - self._body_maxY + 1
                     # log_it('We need to scroll: start: {0}, selection {1}'.format(self._start_pos, self._selection))
                     self._refresh()
+                    if self._on_down_callback_function is not None:
+                        self._on_down_callback_function()
                     return 1
 
             if not self._toggle_selected_item():
                 self._refresh()
+            if self._on_down_callback_function is not None:
+                self._on_down_callback_function()
 
         elif char in self._local_functions.keys():
             self._local_functions(char)
@@ -4731,7 +4767,7 @@ class SimpleCursesLineEdit():
                 logger.debug('action: add-character')
             if self.log is not None:
                 self.log('====================\n')
-            if version_info < (3, 0) or (self._pure_ascii and not platform.startswith('win')):
+            if self._pure_ascii and not platform.startswith('win'):
                 if 32 <= char < 127:
                     ''' accept only ascii characters '''
                     if self._chars_to_accept:
@@ -4749,7 +4785,7 @@ class SimpleCursesLineEdit():
                         self._disp_curs_pos = self._curs_pos
                         self._displayed_string = self.string[self._first:self._first+self._max_chars_to_display]
             else:
-                logger.error('HERE')
+                logger.error('working on the character')
                 if platform.startswith('win'):
                     char = chr(char)
                 else:
@@ -4844,18 +4880,15 @@ class SimpleCursesLineEdit():
         ''' no zero byte allowed '''
         while 0 in bytes:
             bytes.remove(0)
-        if version_info < (3, 0):
-            out = ''.join([chr(b) for b in bytes])
+        buf = bytearray(bytes)
+        out = cls._decode_string(buf)
+        if out:
+            if is_wide(out) and not self._cjk:
+                self._cjk = True
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('=== CJK editing is ON ===')
         else:
-            buf = bytearray(bytes)
-            out = cls._decode_string(buf)
-            if out:
-                if is_wide(out) and not self._cjk:
-                    self._cjk = True
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('=== CJK editing is ON ===')
-            else:
-                out = None
+            out = None
         return out
 
     def _encode_string(self, data):

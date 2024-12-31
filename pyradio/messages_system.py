@@ -192,6 +192,7 @@ Esc|, |{q}                                      |*|  Exit alternative mode.
 !Extra Command mode ({open_extra})
 {open_extra}                                    |*|  Open previous playlist.
 {hist_top}                                      |*|  Open first opened playlist.
+{change_player}                                 |*|  Change |m|edia player.
 {new_playlist}                                  |*|  Create a |n|ew playlist.
 {paste}                                         |*|  Select playlist / register to |p|aste to.
 {rename_playlist}                               |*|  |R|ename current playlist.
@@ -1572,6 +1573,24 @@ so you can resolve the issue and try again.
 
 '''
 ),
+
+    'M_LOC_READ_ONLY': ('Read-Only Warning',
+r'''You are attempting to edit a |read-only| layout.
+
+While it is perfectly fine to customize a layout provided
+by |PyRadio|, please note the following:
+
+__1. This is a |read-only| layout file provided by the package.
+__2. Your changes will be saved as a new local file.
+__3. The local file will override the original layout provided
+_____by the package.
+
+Proceed with caution to ensure your customizations do not
+unintentionally disrupt functionality.
+
+'''
+),
+
         }
         # INSERT NEW ITEMS ABOVE
         if self._db_info_message is not None:

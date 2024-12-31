@@ -2131,8 +2131,8 @@ class PyRadioConfig(PyRadioStations):
         # Construct potential paths
         script_dir_path = path.join(path.dirname(__file__), 'keyboard', name + '.json')
         full_path = path.join(self.data_dir, name + '.json')
-        logger.error(f'{script_dir_path = }')
-        logger.error(f'{full_path = }')
+        # logger.error(f'{script_dir_path = }')
+        # logger.error(f'{full_path = }')
 
         reversed_dict = {}
         # Check which file path exists
@@ -2144,7 +2144,7 @@ class PyRadioConfig(PyRadioStations):
             # Return an empty dictionary if neither path exists
             target_path = None
 
-        logger.error(f'{target_path = }')
+        # logger.error(f'{target_path = }')
         if target_path is None:
             set_lkbkey({})
         else:
@@ -2158,6 +2158,7 @@ class PyRadioConfig(PyRadioStations):
             # Reverse the keys and values
             reversed_dict = {value: key for key, value in data.items()}
 
+            # logger.error('\n\nsetting lkbkey 1\n{}\n\n'.format(reversed_dict))
             set_lkbkey(reversed_dict)
 
     def read_config(self, distro_config=False):
@@ -2378,9 +2379,9 @@ class PyRadioConfig(PyRadioStations):
                         self._linux_resource_opener = ' '.join(tmp)
                         self.opts['resource_opener'][1] = sp[1]
             elif sp[0] == 'localized_keys':
-                logger.error(f'{sp[1] = }')
+                # logger.error(f'{sp[1] = }')
                 self.localize = None if sp[1].strip().lower() == 'none' else sp[1].strip().lower()
-                logger.error(f'{self.localize = }')
+                # logger.error(f'{self.localize = }')
                 self._old_localize = self.localize
 
         # logger.error('\n\nself.params{}\n\n'.format(self.params))
@@ -2471,7 +2472,7 @@ class PyRadioConfig(PyRadioStations):
             # do this here to get proper schedule and keyboard config filepath if XDG is on
             self.schedule_file = path.join(self.data_dir, 'schedule.json')
             self.keyboard_file = path.join(self.data_dir, 'keyboard.json')
-            logger.error(f'{self.keyboard_file = }')
+            # logger.error(f'{self.keyboard_file = }')
         if not self.headless and not distro_config:
             read_keyboard_shortcuts(self.keyboard_file)
             read_localized_keyboard(

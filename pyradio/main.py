@@ -210,12 +210,8 @@ sleep 2
 
 def shell():
     version_too_old = False
-    if sys.version_info[0] == 2:
-        if sys.version_info < (2, 7):
-            version_too_old = True
-        elif sys.version_info.major == 3 and sys.version_info < (3, 7):
-            version_too_old = True
-    if version_too_old:
+    if sys.version_info[0] == 2 or \
+            (sys.version_info.major == 3 and sys.version_info < (3, 7)):
         print('PyRadio requires python 3.7+...')
         sys.exit(1)
 
@@ -614,7 +610,7 @@ If nothing else works, try the following command:
             if pyradio_config.distro != 'None' and \
                     not platform.startswith('win'):
                 action = 'uninstall' if args.uninstall else 'update'
-                print('[magenta]PyRadio[/magenta] has been installed using either [green]pip[/green] or your [green]distribution\'s\npackage manager[/green]. Please use that to {} it.\n'.format(action))
+                print('[magenta]PyRadio[/magenta] has been installed using your [green]distribution\'s\npackage manager[/green]. Please use that to {} it.\n'.format(action))
                 return
 
         if args.update:
@@ -662,6 +658,7 @@ If nothing else works, try the following command:
             print('      Data dir: "[red]{}[/red]"'.format(pyradio_config.data_dir))
             print('     State dir: "[red]{}[/red]"'.format(pyradio_config.state_dir))
             print('     Cache dir: "[red]{}[/red]"'.format(pyradio_config.cache_dir))
+            print('      Code dir: "[red]{}[/red]"'.format(path.dirname(__file__)))
             print('Recordings dir: "[red]{}[/red]"'.format(pyradio_config.recording_dir))
             return
 
@@ -945,32 +942,40 @@ If nothing else works, try the following command:
             from .win import find_and_remove_recording_data
             find_and_remove_recording_data(pyradio_config.recording_dir)
 
-        ''' curses wrapper '''
-        if platform.startswith('win') and sys.version_info >= (3, 12):
-            ''' fix for windows python 3.12, base on
-                https://github.com/zephyrproject-rtos/windows-curses/issues/50#issuecomment-1840485627
-            '''
-            pyradio.setup(_win_python_3_12())
-            try:
-                curses.endwin()
-            except:
-                pass
-        else:
-            curses.wrapper(pyradio.setup)
+        while True:
+            ''' curses wrapper '''
+            if platform.startswith('win') and sys.version_info >= (3, 12):
+                ''' fix for windows python 3.12, base on
+                    https://github.com/zephyrproject-rtos/windows-curses/issues/50#issuecomment-1840485627
+                '''
+                pyradio.setup(_win_python_3_12())
+                try:
+                    curses.endwin()
+                except:
+                    pass
+            else:
+                curses.wrapper(pyradio.setup)
+            pyradio.program_restart = True
 
-        ''' curses is off '''
-        if pyradio.setup_return_status:
-            if pyradio_config.EXTERNAL_PLAYER_OPTS is not None:
+            if pyradio.setup_return_status and \
+                    pyradio_config.EXTERNAL_PLAYER_OPTS is not None:
+                ''' curses is off: entering external player loop '''
                 # print(pyradio_config.EXTERNAL_PLAYER_OPTS)
-                pyradio_config.remove_session_lock_file()
+                # pyradio_config.remove_session_lock_file()
                 import subprocess
                 print('\n[bold red]Launching external player[/bold red]')
                 print('Station: "[cyan]{}[/cyan]"'.format(pyradio_config.EXTERNAL_PLAYER_OPTS[0]))
                 print('Command: "[yellow]{}[/yellow]"'.format(' '.join(pyradio_config.EXTERNAL_PLAYER_OPTS[1:])))
                 process = subprocess.Popen(pyradio_config.EXTERNAL_PLAYER_OPTS[1:], stdout=None, stderr=None)
                 process.wait()
-                return
+                pyradio.play = 'False'
+                pyradio.stopPlayer()
+            else:
+                break
 
+        ''' curses is off '''
+        pyradio_config._online_browser = None
+        if pyradio.setup_return_status:
             if pyradio_config.WIN_UNINSTALL and platform.startswith('win'):
                 # doing it this way so that python2 does not break (#153)
                 from .win import win_press_any_key_to_unintall

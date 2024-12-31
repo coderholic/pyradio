@@ -314,6 +314,8 @@ class PyRadioTheme():
                 use_transparency = value
             elif name == 'theme_path':
                 theme_path = value
+        logger.error(f'{a_theme  = }')
+        logger.error(f'{theme_path  = }')
         ret = self.open_theme(a_theme, theme_path, print_errors)
         if ret < 0:
             self._load_default_theme(self.applied_theme_name)
@@ -516,6 +518,8 @@ class PyRadioTheme():
 
         else:
             ret, ret_ind = self._cnf.is_project_theme(a_theme)
+            logger.error(f'{ret = }')
+            logger.error(f'{ret_ind = }')
             if ret is not None:
                 ''' this is a project theme! '''
                 a_path = ret.default_theme_path
@@ -1019,6 +1023,7 @@ class PyRadioThemeSelector():
             if n.can_auto_update:
                 for k in n.THEME:
                     tmp_themes.append([k, n.default_theme_path])
+        logger.error('\n\nthemes\n{}\n\n'.format(tmp_themes))
         if tmp_themes:
             tmp_themes.reverse()
             tmp_themes.append(['Ext. Themes Projects', '-'])

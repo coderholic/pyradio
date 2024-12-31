@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import locale
-from sys import version_info as python_version
 from calendar import monthrange
 from random import choice
 from string import printable
@@ -829,13 +828,7 @@ class PyRadioTime():
 
     def set_date(self, a_date_string):
         if a_date_string:
-            if python_version[0] == 2:
-                sp = a_date_string.split('-')
-                for i in range(0, len(sp)):
-                    sp[i] = int(sp[i])
-                self.date = ddate(sp[0], sp[1], sp[2])
-            else:
-                self.date = ddate.fromisoformat(a_date_string)
+            self.date = ddate.fromisoformat(a_date_string)
         else:
             self.date = ddate.today()
 
