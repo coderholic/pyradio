@@ -31,7 +31,7 @@ from .server import IPsWithNumbers
 from .xdg import XdgDirs, XdgMigrate, CheckDir
 from .install import get_a_linux_resource_opener
 from .html_help import is_graphical_environment_running
-from .log import Log
+from .log import Log, TIME_FORMATS
 
 try:
     from subprocess import Popen, DEVNULL
@@ -1323,6 +1323,7 @@ class PyRadioConfig(PyRadioStations):
     opts['remove_station_icons'] = ['    Remove cached icons: ', True]
     opts['recording_dir'] = ['Recordings dir: ', '']
     opts['resource_opener'] = ['Resource Opener: ', 'auto']
+    opts['show_time'] = ['Show time: ', '-1']
     opts['conn_title'] = ['Connection Options: ', '']
     opts['connection_timeout'] = ['Connection timeout: ', '10']
     opts['force_http'] = ['Force http connections: ', False]
@@ -1494,6 +1495,17 @@ class PyRadioConfig(PyRadioStations):
             return path.join(self.state_dir, 'server-headless.txt')
         else:
             return path.join(self.state_dir, 'server.txt')
+
+    @property
+    def show_time(self):
+        return self.opts['show_time'][1]
+
+    @show_time.setter
+    def show_time(self, val):
+        old_val = self.opts['show_time'][1]
+        self.opts['show_time'][1] = val
+        if old_val != val:
+            self.dirty_config = True
 
     @property
     def open_last_playlist(self):
@@ -2378,6 +2390,15 @@ class PyRadioConfig(PyRadioStations):
                         tmp[0] = prog
                         self._linux_resource_opener = ' '.join(tmp)
                         self.opts['resource_opener'][1] = sp[1]
+            elif sp[0] == 'show_time':
+                tmp = sp[1].split(' ')[0]
+                try:
+                    x = int(tmp)
+                    if not (-1 <= x < len(TIME_FORMATS)):
+                        tmp = '-1'
+                except (ValueError, TypeError):
+                        tmp = '-1'
+                self.opts['show_time'][1] = tmp
             elif sp[0] == 'localized_keys':
                 # logger.error(f'{sp[1] = }')
                 self.localize = None if sp[1].strip().lower() == 'none' else sp[1].strip().lower()
@@ -2413,6 +2434,7 @@ class PyRadioConfig(PyRadioStations):
             self.opts['force_transparency'][1] = False
             self.opts['enable_mouse'][1] = False
             self.opts['calculated_color_factor'][1] = '0'
+            self.opts['show_time'][1] = '-1'
 
         ''' check if default playlist exists '''
         if self.opts['default_playlist'][1] != 'stations':
@@ -2479,6 +2501,7 @@ class PyRadioConfig(PyRadioStations):
                 self.localize,
                 self.data_dir
             )
+        self.active_show_time = self.show_time
 
     def _make_sure_dirs_exist(self):
         home_rec_dir = path.join(path.expanduser('~'), 'pyradio-recordings')
@@ -2899,6 +2922,7 @@ class PyRadioConfig(PyRadioStations):
         self.dirty_config = False
         self.params_changed = False
         self._linux_resource_opener = self.resource_opener
+        self.active_show_time = self.show_time
         return 0
 
     def read_playlist_file(

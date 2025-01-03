@@ -16,6 +16,19 @@ logger = logging.getLogger(__name__)
 
 locale.setlocale(locale.LC_ALL, "")
 
+def compare_color_pairs(pair1, pair2, curses_colors):
+    # Retrieve the foreground and background colors for each pair
+    fg1, bg1 = curses.pair_content(pair1)
+    fg2, bg2 = curses.pair_content(pair2)
+    # logger.error('pair: {}, fg = {}, bg = {}'.format(pair1, fg1, bg1))
+    # logger.error('pair: {}, fg = {}, bg = {}'.format(pair2, fg2, bg2))
+
+    # Compare the foreground and background colors
+    if (curses_colors[fg1] == curses_colors[fg2]) and \
+            (curses_colors[bg1] == curses_colors[bg2]):
+        return True  # The color pairs are identical
+    return False  # The color pairs are different
+
 def isLightOrDark(rgbColor=[0,128,255]):
     [r,g,b]=rgbColor
     '''
@@ -180,6 +193,7 @@ class PyRadioTheme():
             transparency=None,
             calculate_transparency_function=None
             ):
+        self._cnf.time_color = 6
         if self._cnf.use_themes:
             if calculate_transparency_function is None:
                 transp = self.calculate_transparency()
@@ -284,7 +298,14 @@ class PyRadioTheme():
                     }
             for k in colors:
                 curses.init_pair(k, colors[k][0], colors[k][1])
-            # curses.start_color()
+                # logger.error('pair {}: {}'.format(k, colors[k]))
+            if compare_color_pairs(6, 7, self._curses_colors):
+                if compare_color_pairs(9, 7, self._curses_colors):
+                    self._cnf.time_color = 8
+                else:
+                    self._cnf.time_color = 9
+            # else:
+            #     self._cnf.time_color = 6
 
     def restoreActiveTheme(self, calculate_transparency_function=None):
         self._active_colors = deepcopy(self._read_colors)
@@ -333,7 +354,6 @@ class PyRadioTheme():
         self._do_init_pairs(transparency=self._colors['transparency'])
         self._cnf.last_theme_s_transparency_setting = self._colors['transparency']
         self._read_colors = deepcopy(self._colors)
-        # logger.error('colors\n{}'.format(self._read_colors))
         return result
 
     def _load_default_theme(self, a_theme):
@@ -357,17 +377,23 @@ class PyRadioTheme():
             pass
 
     def _update_colors(self):
+        self._curses_colors = {}
         if self._cnf.use_themes:
             for k in self._colors['data'].keys():
                 curse_rgb = rgb_to_curses_rgb(self._colors['data'][k])
+                self._curses_colors[int(k) + self._cnf.start_colors_at] = (
+                    curse_rgb[0],
+                    curse_rgb[1],
+                    curse_rgb[2]
+                )
                 curses.init_color(
                     int(k) + self._cnf.start_colors_at,
                     curse_rgb[0],
                     curse_rgb[1],
                     curse_rgb[2],
                 )
-                # logger.error('pair {}, rgb: {}, curses_rgb: {}'.format(
-                #     k,
+                # logger.error('color {}, rgb: {}, curses_rgb: {}'.format(
+                #     k + self._cnf.start_colors_at,
                 #     self._colors['data'][k],
                 #     curse_rgb
                 #     ))

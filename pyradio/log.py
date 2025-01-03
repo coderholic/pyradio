@@ -32,6 +32,15 @@ logger = logging.getLogger(__name__)
 if platform.lower().startswith('win'):
     import ctypes
 
+TIME_FORMATS = (
+    '%H:%M:%S',
+    '%H:%M',
+    '%I:%M:%S %p',
+    '%I:%M %p',
+    '%I:%M:%S',
+    '%I:%M',
+)
+
 def fix_chars(s):
     out = [s]
     from_str = ('\r', '\n', r'\"', r"\'")
@@ -39,6 +48,178 @@ def fix_chars(s):
     for n in range(len(to_str)):
         out.append(out[-1].replace(from_str[n], to_str[n]))
     return out[-1].strip()
+
+
+class PyRadioTimer:
+    """
+    Timer class to manage and display the current time.
+
+    This class handles the timing functionality, updating the current time
+    at specified intervals. It provides thread-safe access to the current time
+    and allows for customization of the time format.
+
+    Time Formats:
+    ---------------
+    The following time formats are supported for display:
+
+    1. 24-Hour Format with Seconds:
+       - Format: %H:%M:%S
+       - Example Output: 14:30:15
+
+    2. 24-Hour Format without Seconds:
+       - Format: %H:%M
+       - Example Output: 14:30
+
+    3. 12-Hour Format with Seconds:
+       - Format: %I:%M:%S
+       - Example Output: 02:30:15
+
+    4. 12-Hour Format without Seconds:
+       - Format: %I:%M
+       - Example Output: 02:30
+
+    Attributes:
+    -----------
+    current_time : str
+        The current time as a formatted string.
+    _timer_thread : threading.Thread
+        The thread responsible for updating the current time.
+    lock : threading.Lock
+        A lock for thread-safe access to the current time.
+
+    Methods:
+    --------
+    start()
+        Starts the timer thread.
+
+    stop()
+        Stops the timer thread if it is running.
+
+    update_time()
+        Updates the current_time every specified interval.
+
+    get_current_time()
+        Returns the current time in a thread-safe manner.
+
+    is_active()
+        Checks if the timer thread is currently running.
+
+    Class Variables:
+    ----------------
+    SLEEP_INTERVAL : float
+        The duration (in seconds) to sleep between updates (default is 0.5 seconds).
+    """
+
+    def __init__(self, update_functions, exit_thread, time_format=0, sleep_interval=0.24):
+        self._exit = exit_thread
+        self.current_time = ""
+        self._timer_thread = None
+        self._time_format = TIME_FORMATS[time_format]
+        self.lock = threading.Lock()  # Lock for thread-safe access
+        self.function_lock = threading.Lock()  # Lock for thread-safe access
+        self.SLEEP_INTERVAL = sleep_interval  # Set custom sleep interval
+        self._update_functions = update_functions  # Store the update function
+
+    @property
+    def is_active(self):
+        """ Return True if the timer thread is active, otherwise False. """
+        return self._timer_thread is not None and self._timer_thread.is_alive()
+
+    @property
+    def update_functions(self):
+        return self._update_functions
+
+    @update_functions.setter
+    def update_functions(self, value):
+        if isinstance(value, tuple) and len(value) > 0:
+            if not self.is_active:
+                with self.function_lock:
+                    self._update_functions = value
+
+    @property
+    def time_format(self):
+        return TIME_FORMATS.index(self._time_format)
+
+    @time_format.setter
+    def time_format(self, value):
+        if value in range(0, len(TIME_FORMATS)):
+            if not self.is_active:
+                with self.lock:
+                    self._time_format = TIME_FORMATS[value]
+
+    def start(self):
+        """ Start the timer thread if it's not already running. """
+        if self._timer_thread is None or not self._timer_thread.is_alive():
+            self._timer_thread = threading.Thread(target=self.update_time)
+            self._show_time()
+            self._timer_thread.start()
+        else:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("Timer thread is already running.")
+
+    def stop(self):
+        """ Stop the timer thread if it is running. """
+        if self._timer_thread is not None and self._timer_thread.is_alive():
+            self._timer_thread.join()
+            self._timer_thread = None
+            self.current_time = None
+        else:
+            if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug("Timer thread is not running.")
+
+    def update_time(self):
+        """
+        Update current_time based on the specified interval.
+
+        The function checks for exit conditions and updates
+        the current time every 1 second.
+        The update occurs in increments of SLEEP_INTERVAL seconds to ensure
+        responsiveness to exit requests.
+        """
+        old_time = None
+        while True:
+            if self._exit():
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Timer threat asked to stop. Stopping...')
+                return
+
+
+            # Calculate how many iterations based on 1 second
+            iterations = int(1 / self.SLEEP_INTERVAL)
+
+            for _ in range(iterations):
+                if self._exit():
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Timer threat asked to stop. Stopping...')
+                    return
+                sleep(self.SLEEP_INTERVAL)  # Sleep for SLEEP_INTERVAL seconds
+
+            old_tme = self._show_time(old_time)
+
+    def _show_time(self, old_time=None):
+        with self.lock:  # Acquire lock before updating
+            now = datetime.datetime.now()
+            self.current_time = now.strftime(self._time_format)
+
+        if old_time:
+            if self.current_time == old_time:
+                # do not update the display
+                return
+
+        # Call _update_functions in a new thread without blocking
+        with self.function_lock:
+            #logger.error(f'{self.current_time = }')
+            for an_update_function in self._update_functions:
+                if self._exit():
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Timer threat asked to stop. Stopping...')
+                    return
+                threading.Thread(target=an_update_function, args=(self.current_time,)).start()
+
+    def get_current_time(self):
+        """ Safely return the current time. Returns an empty string if the timer is not running. """
+        with self.lock:  # Acquire lock before reading
+            return self.current_time if self._timer_thread and self._timer_thread.is_alive() else ""
 
 
 class Log():
@@ -91,6 +272,10 @@ class Log():
                 self._cnf, lambda: self._enable_notifications
                 )
         self._get_icon_path()
+        self._the_time = None
+        self._x_start = 1
+        self._stop_thread = False
+        self.timer = None
 
     def __del__(self):
         self._stop_desktop_notification_thread = True
@@ -132,14 +317,53 @@ class Log():
                 pass
         return first_print
 
+    def restart_timer(self, time_format=None, update_functions=None):
+        self.start_timer(time_format, update_functions)
+
+    def start_timer(self, time_format=None, update_functions=None):
+        if self.timer is not None:
+            self.stop_timer()
+
+        if self.timer is None:
+            self.timer = PyRadioTimer(
+                update_functions=(self.write_time, ),
+                exit_thread=lambda: self.asked_to_stop or self._stop_thread,
+                sleep_interval=0.24
+            )
+        if time_format is not None:
+            self.timer.time_format = time_format
+        if update_functions is not None:
+            self.timer.update_functions = update_functions
+        self._stop_thread = False
+        if logger.isEnabledFor(logging.DEBUG):
+            if self.timer.time_format == -1:
+                logger.debug('timer is disabled! Not starting!')
+            else:
+                logger.debug('timer\'s new time format = {} ({})'.format(self.timer.time_format, TIME_FORMATS[int(self.timer.time_format)]))
+                logger.debug('timer\'s new update functions = {}'.format(self.timer.update_functions))
+        self.timer.start()
+
+    def stop_timer(self):
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('timer is disabled! Stoping!')
+        self._stop_thread = True
+        if self.timer:
+            self.timer.stop()
+        self._the_time = None
+
+    def write_time(self, a_time):
+        self.write(p_time=a_time)
+
     def write(self,
               msg=None,
               suffix=None,
               counter=None,
+              p_time=None,
               help_msg=False,
               error_msg=False,
               notify_function=None):
         # logger.error('**** Log.write: msg = "{}"'.format(msg))
+        # logger.error(f'{p_time = }')
         if self.cursesScreen:
             with self.lock:
                 if msg:
@@ -194,22 +418,59 @@ class Log():
                     self.counter = None
                     self._player_stopped = 0
                     return
+                ''' display time '''
+                if p_time is not None:
+                    self._the_time = p_time
+                    self._x_start = len(self._the_time) + 3
+
+                if self._the_time is None:
+                    self._x_start = 1
+
+                if self._the_time:
+                    # self.cursesScreen.erase()
+                    try:
+                        # color pair: 6 or 9
+                        self.cursesScreen.addstr(
+                            0, 0,
+                            ' ' +self._the_time + ' ',
+                            curses.color_pair(self._cnf.time_color)
+                        )
+                    except:
+                        pass
+                if p_time is not None:
+                    self.cursesScreen.refresh()
+                    return
                 ''' update main message '''
                 # logger.error('*** msg = "{}"'.format(msg))
                 if self.msg:
-                    self.cursesScreen.erase()
+                    # if self._x_start == 1:
+                    #     self.cursesScreen.erase()
                     d_msg = ''
+                    if self._x_start == 1:
+                        self.cursesScreen.addstr(0, 0, ' ')
+                    else:
+                        self.cursesScreen.addstr(0, self._x_start-1, ' ')
                     try:
                         d_msg = fix_chars(self.msg.strip()[0: self.width])
-                        self.cursesScreen.addstr(0, 1, d_msg)
+                        ## logger.error('printing "{}" at {}'.format(d_msg, self._x_start))
+                        self.cursesScreen.addstr(0, self._x_start, d_msg)
                     except:
                         try:
-                            d_msg = fix_chars(self.msg.encode('utf-8', 'replace').strip()[0: self.width])
-                            self.cursesScreen.addstr(0, 1, d_msg)
+                            if self._the_time is None:
+                                d_msg = fix_chars(self.msg.encode('utf-8', 'replace').strip()[0: self.width])
+                            else:
+                                d_msg = fix_chars(self.msg.encode('utf-8', 'replace').strip()[0: self.width - len(self._the_time) - 3])
+                            logger.error('printing "{}" at {}'.format(d_msg, self._x_start))
+                            self.cursesScreen.addstr(0, self._x_start, d_msg)
                         except:
                             pass
                             # if logger.isEnabledFor(logging.ERROR):
                             #     logger.error('Error updating the Status Bar')
+                    try:
+                        self.cursesScreen.clrtoeol()
+                    except:
+                        logger.error('\n\n\nexcept\n\n\n')
+                        pass
 
                     if msg:
                         if msg.startswith('[Vol:') or msg.startswith('[Muted]'):
@@ -268,7 +529,8 @@ class Log():
                     self.cursesScreen.chgat(
                         0, self._active_width - len(d_msg) + 1,
                         len(d_msg) - 1,
-                        curses.color_pair(1))
+                        curses.color_pair(1)
+                    )
                     first_print = self._do_i_print_last_char(first_print)
                     self.cursesScreen.refresh()
                     self._active_width -= len(d_msg)
@@ -301,8 +563,18 @@ class Log():
                     self.counter = None
                     return
                 ''' display press ? '''
+                # logger.error(
+                #     '\n\n(help_msg: {} OR self.display_help_message: {}) AND can display help message: {} AND self.error_msg: {}\n\n'.format(
+                #         'yes' if help_msg else 'no',
+                #         'yes' if self.display_help_message else 'no',
+                #         'yes' if self.can_display_help_msg(msg) else 'no',
+                #         'no' if self.error_msg else 'yes'
+                #     )
+                # )
                 if (help_msg or self.display_help_message) and self.can_display_help_msg(msg):
+                    # logger.error('I am in')
                     if not self.error_msg:
+                        # logger.error('I display ?')
                         self.counter = None
                         suffix_string = ' Press ? for help'
                         try:
@@ -318,6 +590,7 @@ class Log():
                             if logger.isEnabledFor(logging.DEBUG):
                                 logger.debug('Press ? for help: yes')
                 else:
+                    ## logger.debug('Press ? for help: no')
                     if self._show_status_updates:
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('Press ? for help: no')

@@ -582,6 +582,7 @@ __"|{}|"
 kb2str(r'''{open_extra}       |*| Open previous playlist.
 {hist_top}                    |*| Open first opened playlist.
 {buffer} {open_buffer}        |*| Set player |b|uffering.
+{toggle_time}                 |*| Toggle |t|ime display.
 {last_playlist}               |*| Toggle |Open last playlist|.
 {change_player}               |*| Cahnge |m|edia player.
 {new_playlist}                |*| Create a |n|ew playlist.
@@ -599,6 +600,7 @@ Any other key exits current mode.
 kb2str(r'''{open_extra}       |*| Open previous playlist.
 {hist_top}                    |*| Open first opened playlist.
 {buffer} {open_buffer}        |*| Set player |b|uffering.
+{toggle_time}                 |*| Toggle |t|ime display.
 {last_playlist}               |*| Toggle |Open last playlist|.
 {change_player}               |*| Cahnge |m|edia player.
 {new_playlist}                |*| Create a |n|ew playlist.

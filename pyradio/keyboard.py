@@ -149,6 +149,7 @@ kbkey_orig['open_dirs']                = ( ord('o')               , 'Open dirs i
 kbkey_orig['change_player']            = ( ord('m')               , 'Cahnge media player')
 kbkey_orig['hist_top']                 = ( ord(']')               , 'Open first opened playlist')
 kbkey_orig['buffer']                   = ( ord('b')               , 'Toggle buffering')
+kbkey_orig['toggle_time']              = ( ord('t')               , 'Toggle displaying time')
 kbkey_orig['open_buffer']              = ( ord('B')               , 'Open buffering window')
 kbkey_orig['last_playlist']            = ( ord('l')               , 'Toggle Open last playlist')
 kbkey_orig['clear_reg']                = ( ord('c')               , 'Clear current register')
@@ -704,7 +705,7 @@ def get_unicode_and_cjk_char(win, char):
 
     try:
         buf = bytearray(bytes)
-    except TypeError:
+    except (ValueError, TypeError):
         return None
     out = _decode_string(buf)
     if out:

@@ -1335,12 +1335,13 @@ class Player():
                                         if d['event'] == 'metadata-update':
                                             # logger.info('{}\n\n'.format(d['event']))
                                             try:
+                                                self._request_mpv_info_data_counter = 0
                                                 if platform.startswith('win'):
                                                     win32file.WriteFile(sock, self.GET_TITLE)
                                                 else:
                                                     sock.sendall(self.GET_TITLE)
                                             except:
-                                                break
+                                                self._request_mpv_info_data_counter = 4
                                             ret = self._set_mpv_playback_is_on(stop, enable_crash_detection_function)
                                             if not ret:
                                                 break
@@ -1643,7 +1644,8 @@ class Player():
         if ret:
             # logger.error('\n\nIn _request_mpv_info_data')
             if platform.startswith('win'):
-                # win32file.WriteFile(sock, self.GET_TITLE)
+                if self._request_mpv_info_data_counter == 4:
+                    win32file.WriteFile(sock, self.GET_TITLE)
                 if 'audio_format' not in self._icy_data:
                     win32file.WriteFile(sock, self.GET_AUDIO_FORMAT)
                 if 'codec' not in self._icy_data:
@@ -1651,14 +1653,17 @@ class Player():
                 if 'codec-name' not in self._icy_data:
                     win32file.WriteFile(sock, self.GET_AUDIO_CODEC_NAME)
             else:
-                logger.error('>>> sending')
-                # sock.sendall(self.GET_TITLE)
+                if self._request_mpv_info_data_counter == 4:
+                    sock.sendall(self.GET_TITLE)
                 if 'audio_format' not in self._icy_data:
                     sock.sendall(self.GET_AUDIO_FORMAT)
                 if 'codec' not in self._icy_data:
                     sock.sendall(self.GET_AUDIO_CODEC)
                 if 'codec-name' not in self._icy_data:
                     sock.sendall(self.GET_AUDIO_CODEC_NAME)
+                self._request_mpv_info_data_counter += 1
+            if self._request_mpv_info_data_counter >= 4:
+                self._request_mpv_info_data_counter = 0
 
     def _get_mpv_metadata(self, *args):
         ''' Get MPV metadata
@@ -2017,6 +2022,7 @@ class Player():
             )
         else:
             if self.PLAYER_NAME == 'mpv':
+                self._request_mpv_info_data_counter = 0
                 self.process = subprocess.Popen(opts, shell=False,
                                                 stdout=subprocess.DEVNULL,
                                                 stdin=subprocess.DEVNULL,
@@ -2463,6 +2469,7 @@ class MpvPlayer(Player):
         self.config_files = self.all_config_files['mpv']
         self.recording_filename = ''
         # logger.error('\n\nMPV recording = {}\n\n'.format(self._recording))
+        self._request_mpv_info_data_counter = 0
 
     def save_volume(self):
         ''' Saving Volume in Windows does not work;

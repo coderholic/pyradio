@@ -57,6 +57,21 @@ recording_dir = default
 # for example: "/usr/bin/gio open", "mimeopen -n".
 resource_opener = auto
 
+# Show time
+# If this option is enabled (value > -1), the current time will be
+# displayed at the bottom left corner of the window.
+# Availabe values are:
+#       -1 : Do not display the time
+#        0 : Display 24h, with seconds
+#        1 : Display 24h, no seconds
+#        2 : Display 12h, with am/pm and seconds
+#        3 : Display 12h, no am/pm, with seconds
+#        4 : Display 12h, with am/pm, no seconds
+#        5 : Display 12h, no am/pm, no seconds
+#
+# Default value: -1
+show_time = -1
+
 # Desktop notifications
 # If this option is enabled, a Desktop notification will be displayed using the
 # notification daemon / service. If enabled but no notification is displayed,

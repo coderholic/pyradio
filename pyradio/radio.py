@@ -377,7 +377,7 @@ class PyRadio():
     _saved_colors = {}
 
     ''' It is False before running setupAndDrawScreen
-        fir the first time. Then it is True...
+        for the first time. Then it is True...
     '''
     _screen_ready = False
 
@@ -1141,7 +1141,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 self._start_remote_control_server()
 
         self.stdscr.nodelay(0)
-        self.setupAndDrawScreen(init_from_setup=True)
+        self.setupAndDrawScreen(init_from_function_setup=True)
         self._screen_ready = True
 
         ''' position playlist in window '''
@@ -1189,7 +1189,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.bodyWin.noutrefresh()
         # self.txtWin.noutrefresh()
 
-    def setupAndDrawScreen(self, init_from_setup=False):
+    def setupAndDrawScreen(self, init_from_function_setup=False):
         self._limited_height_mode = False
         self.maxY, self.maxX = self.stdscr.getmaxyx()
 
@@ -1244,7 +1244,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
         self.initFooter()
         self.log.setScreen(self.footerWin)
-        if init_from_setup:
+        if init_from_function_setup:
+            if int(self._cnf.active_show_time) >= 0:
+                self.log.start_timer(time_format=int(self._cnf.active_show_time), update_functions=(self.log.write_time, ))
             if self.player:
                 self.log.write(msg='Selected player: ' + self.player.PLAYER_NAME, help_msg=True)
         else:
@@ -2125,6 +2127,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
     def ctrl_c_handler(self, signum, frame, save_playlist=True):
         # ok
+        self.log.stop_timer()
         if self._cnf.titles_log.titles_handler:
             logger.critical('=== Logging stopped')
         # logger.error('signum = {}'.format(signum))
@@ -6490,7 +6493,23 @@ _____"|f|" to see the |free| keys you can use.
                 self.ws.operation_mode in (self.ws.NORMAL_MODE,
                 self.ws.PLAYLIST_MODE):
 
-            if char == kbkey['open_dirs'] or \
+            if char == kbkey['toggle_time'] or \
+                    check_localized(char, (kbkey['toggle_time'],)):
+                if self._cnf.active_show_time == '-1':
+                    self._cnf.active_show_time = self._cnf.show_time
+                    if self._cnf.active_show_time == '-1':
+                        self._cnf.active_show_time = '0'
+                    self.log.restart_timer(
+                        time_format=int(self._cnf.active_show_time),
+                        update_functions=(self.log.write_time, )
+                    )
+                else:
+                    self._cnf.active_show_time = '-1'
+                    self.log.stop_timer()
+                self._backslash_pressed = False
+                self._update_status_bar_right(status_suffix='')
+
+            elif char == kbkey['open_dirs'] or \
                     check_localized(char, (kbkey['open_dirs'],)):
                 ''' open dir window '''
                 self._backslash_pressed = False
@@ -7242,6 +7261,16 @@ _____"|f|" to see the |free| keys you can use.
                         self.log.write(msg=msg[0], help_msg=False, suffix=self._status_suffix)
                         self._print_config_save_error()
                     elif ret == 0:
+                        if self._config_win:
+                            ''' check if time has to be shown / restarted / stopped'''
+                            if self._config_win._old_show_timer != self._cnf.active_show_time:
+                                if int(self._cnf.active_show_time) == -1:
+                                    self.log.stop_timer()
+                                else:
+                                    self.log.restart_timer(
+                                        time_format=int(self._cnf.active_show_time),
+                                        update_functions=(self.log.write_time, )
+                                    )
                         if logger.isEnabledFor(logging.INFO):
                             logger.info('\nConfSaved    old rec dir: "{}"'.format(self._config_win._old_recording_dir))
                             logger.info('\nConfSaved    config options recording_dir : "{}"'.format(self._config_win._config_options['recording_dir'][1]))
@@ -9774,18 +9803,22 @@ _____"|f|" to see the |free| keys you can use.
         self.refreshBody()
 
     def _can_display_help_msg(self, msg):
+        # logger.error(f'{msg = }')
         ''' len("Press ? for help") = 16 '''
-        if (not self._limited_height_mode and \
-                not self._limited_width_mode) or \
+        # if (not self._limited_height_mode and \
+        #         not self._limited_width_mode) or \
+        #         msg is None:
+        if self._limited_height_mode or \
+                self._limited_width_mode or \
                 msg is None:
             ret = False
+            # logger.error('1 Display ? : False')
         else:
             if self.outerBodyWin:
                 ret = self.outerBodyMaxX - len(msg) - 16 > 10 if msg else True
             else:
                 ret = False
-        # if logger.isEnabledFor(logging.DEBUG):
-        #     logger.debug('Display "Press ? for help": {}'.format(ret))
+            # logger.error(f'2 Display ? : {ret}')
         return ret
 
     def _show_open_dir_window(self):
@@ -10724,8 +10757,10 @@ _____"|f|" to see the |free| keys you can use.
             return
         self._system_asked_to_terminate = True
         if logger.isEnabledFor(logging.INFO):
-            # logger.info('System asked me to terminate (signal: {})!!!'.format(list(handled_signals.keys())[list(handled_signals.values()).index(a_signal)]))
             logger.info('My terminal got closed... Terminating...')
+        self.log.stop_timer()
+        if self._remote_control_server is not None:
+            self._remote_control_server.close_server()
         self._force_exit = True
         self.stop_update_notification_thread = True
         self.player.stop_timeout_counter_thread = True
@@ -10778,6 +10813,9 @@ _____"|f|" to see the |free| keys you can use.
             self._system_asked_to_terminate = True
             if logger.isEnabledFor(logging.INFO):
                 logger.info('My console window got closed... Terminating...')
+            self.log.stop_timer()
+            if self._remote_control_server is not None:
+                self._remote_control_server.close_server()
             self._force_exit = True
             self.player.close_from_windows()
             self._cnf.save_config()
