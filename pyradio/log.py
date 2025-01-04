@@ -318,9 +318,11 @@ class Log():
         return first_print
 
     def restart_timer(self, time_format=None, update_functions=None):
+        logger.error(f'{time_format = }')
         self.start_timer(time_format, update_functions)
 
     def start_timer(self, time_format=None, update_functions=None):
+        logger.error(f'{time_format = }')
         if self.timer is not None:
             self.stop_timer()
 
@@ -366,6 +368,35 @@ class Log():
         # logger.error(f'{p_time = }')
         if self.cursesScreen:
             with self.lock:
+                ''' display time '''
+                if p_time is not None:
+                    self._the_time = p_time
+                    self._x_start = len(self._the_time) + 3
+
+                if self._the_time is None:
+                    self._x_start = 1
+
+                if self._the_time:
+                    # self.cursesScreen.erase()
+                    try:
+                        # color pair: 6 or 9
+                        self.cursesScreen.addstr(
+                            0, 0,
+                            ' ' +self._the_time + ' ',
+                            curses.color_pair(self._cnf.time_color)
+                        )
+                    except:
+                        pass
+                if self.asked_to_stop:
+                    self.asked_to_stop = False
+                    self.counter = None
+                    self._player_stopped = 0
+                    return
+                if p_time is not None:
+                    self.cursesScreen.refresh()
+                    return
+
+                ''' start normal execution '''
                 if msg:
                     if player_start_stop_token[1] in msg or \
                             player_start_stop_token[2] in msg:
@@ -417,28 +448,6 @@ class Log():
                     self.asked_to_stop = False
                     self.counter = None
                     self._player_stopped = 0
-                    return
-                ''' display time '''
-                if p_time is not None:
-                    self._the_time = p_time
-                    self._x_start = len(self._the_time) + 3
-
-                if self._the_time is None:
-                    self._x_start = 1
-
-                if self._the_time:
-                    # self.cursesScreen.erase()
-                    try:
-                        # color pair: 6 or 9
-                        self.cursesScreen.addstr(
-                            0, 0,
-                            ' ' +self._the_time + ' ',
-                            curses.color_pair(self._cnf.time_color)
-                        )
-                    except:
-                        pass
-                if p_time is not None:
-                    self.cursesScreen.refresh()
                     return
                 ''' update main message '''
                 # logger.error('*** msg = "{}"'.format(msg))

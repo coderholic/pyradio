@@ -81,7 +81,9 @@ class PyRadioConfigWindow():
                        'A Resource Opener is a program used to open files passed to it as arguments. PyRadio will use it to open either directories or HTML files.', '|',
                        'Default value is "auto", in which case, PyRadio will try to use xdg-open, gio, mimeopen, mimeo or handlr, in that order of detection.  If none if found, the requested file will simply not open.'
                        ])
-    _help_text.append(['If this option is enabled, the current time will be displayed at the bottom left corner of the window.', '|', 'Availabe values are:', ' -1: Do not display the time', '  0: 24h, with seconds', '  1: 24h, no seconds', '  2: 12h, with am/pm and seconds', '  3: 12h, no am/pm, with seconds', '  4: 12h, with am/pm, no seconds', '  5: 12h, no am/pm, no seconds', '|', 'Default value: -1'])
+    _help_text.append(None)
+    _help_text.append(['If this option is enabled, the current time will be displayed at the bottom left corner of the window at program startup.', '|', 'Adjust the time format in the next option to change how the current time is displayed.', '|', r'You can always hide it by pressing \t (default shortcut).', '|', 'Default value: False'])
+    _help_text.append(['This is the time format to be used when the clock is visible.', '|', 'Available values are:', '   0: 24h, with seconds', '   1: 24h, no seconds', '   2: 12h, with am/pm and seconds', '   3: 12h, no am/pm, with seconds', '   4: 12h, with am/pm, no seconds', '   5: 12h, no am/pm, no seconds', '|', 'Default value: 1'])
     _help_text.append(None)
     _help_text.append(['PyRadio will wait for this number of seconds to get a station/server message indicating that playback has actually started.', '|',
     'If this does not happen within this number of seconds after the connection is initiated, PyRadio will consider the station unreachable, and display the "Failed to connect to: station" message.', '|', 'Press "h"/Left or "l"/Right to change value.',
@@ -220,7 +222,8 @@ class PyRadioConfigWindow():
         self.refresh_config_win()
         self._old_use_transparency = self._config_options['use_transparency'][1]
         self._old_recording_dir = self._config_options['recording_dir'][1]
-        self._old_show_timer = self._config_options['show_time'][1]
+        self._old_enable_clock = self._config_options['enable_clock'][1]
+        self._old_time_format = self._config_options['time_format'][1]
 
         self._cnf.get_player_params_from_backup()
 
@@ -764,7 +767,7 @@ class PyRadioConfigWindow():
                 'enable_notifications',
                 'connection_timeout',
                 'calculated_color_factor',
-                'show_time',
+                'time_format',
             ) and char in (
                 curses.KEY_LEFT,
                 curses.KEY_RIGHT,
@@ -970,12 +973,12 @@ class PyRadioConfigWindow():
             self.refresh_selection()
             return -1, []
 
-        elif val[0] == 'show_time':
+        elif val[0] == 'time_format':
             if char in (curses.KEY_RIGHT, kbkey['l']) or \
                     check_localized(char, (kbkey['l'], )):
                 t = int(val[1][1]) + 1
                 if t >= len(TIME_FORMATS):
-                    t = -1
+                    t = 0
                 self._config_options[val[0]][1] = str(t)
                 self._win.addstr(
                     Y, 3 + len(val[1][0]),
@@ -986,7 +989,7 @@ class PyRadioConfigWindow():
             elif char in (curses.KEY_LEFT, kbkey['h']) or \
                     check_localized(char, (kbkey['h'], )):
                 t = int(val[1][1]) - 1
-                if t < -1:
+                if t < 0:
                     t = len(TIME_FORMATS) - 1
                 self._config_options[val[0]][1] = str(t)
                 self._win.addstr(
@@ -1055,6 +1058,7 @@ class PyRadioConfigWindow():
                     sel == 'force_http' or \
                     sel == 'remote_control_server_auto_start' or \
                     sel == 'use_station_icon' or \
+                    sel == 'enable_clock' or \
                     sel == 'remove_station_icons':
                 self._config_options[sel][1] = not self._config_options[sel][1]
                 # # if sel == 'open_last_playlist':

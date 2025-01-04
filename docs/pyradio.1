@@ -2,7 +2,7 @@
 .\" Copyright (C) 2018-2024 Spiros Georgaras <sng@hellug.gr>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH pyradio 1 "December 2024" pyradio
+.TH pyradio 1 "January 2025" pyradio
 
 .SH Name
 .PP
@@ -1180,6 +1180,37 @@ Pressing "\fI*\fR" in \fBMain Mode\fR will add the selected station to the \fBfa
 If the station is already there, it will either be updated if its name has been changed, for example, or will be ignored, to avoid creating duplicate entries.
 
 The \fBfavorites\fR playlist, residing in the configuration folder, is a normal playlist in any other respect, which can be subsequently opened, edited, deleted even, as any other playlist.
+
+
+.SH Displaying The Current Time
+The \fBClock\fR feature allows you to display the current time in the bottom left corner of the window. This can be helpful for keeping track of time while using the application.
+
+You can easily toggle the clock display by pressing "\fB\\t\fR".
+
+.IP \fBConfiguration\fR
+The configuration window has a group labeled \fBClock\fR, which presents the following options:
+
+.RS
+.TP
+.B Display on startup
+This option determines whether the clock is displayed when the application starts. Set it to \fITrue\fR to show the clock at startup, or leave it as \fIFalse\fR (the default) to hide it.
+
+.TP
+.B Time format
+You can choose how the time is displayed using the "\fITime format\fR" option. Here are the available formats:
+
+.TS
+center;
+l l.
+\fBValue   Format Description\fR
+\fI0\fR       24-hour format, with seconds
+\fI1\fR       24-hour format, no seconds
+\fI2\fR       12-hour format, with AM/PM and seconds
+\fI3\fR       12-hour format, no AM/PM, with seconds
+\fI4\fR       12-hour format, with AM/PM, no seconds
+\fI5\fR       12-hour format, no AM/PM, no seconds
+.TE
+.RE
 
 .SH Pyradio Themes
 .PP

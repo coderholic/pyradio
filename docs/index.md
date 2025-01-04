@@ -57,6 +57,8 @@ Command line internet radio player.
 * [Displaying Station Info](#displaying-station-info)
 * [Copying and pasting - Registers](#copying-and-pasting---registers)
 * [Favorites playlist](#favorites-playlist)
+* [Displaying the Current Time](#displaying-the-current-time)
+    * [Configuration](#configuration)
 * [PyRadio Themes](#pyradio-themes)
 * [Recording stations](#recording-stations)
 * [Mouse support](#mouse-support)
@@ -989,6 +991,30 @@ Pressing "*" (asterisk) in **Main Mode** will add the selected station to the **
 If the station is already there, it will either be updated if its name has been changed, for example, or will be ignored, to avoid creating duplicate entries.
 
 The **favorites** playlist, residing in the configuration folder, is a normal playlist in any other respect, which can be subsequently opened, edited, deleted even, as any other playlist.
+
+## Displaying the Current Time 
+
+The **Clock** feature allows you to display the current time in the bottom left corner of the window. This can be helpful for keeping track of time while using the application.
+
+You can easily toggle the clock display by pressing `"\t"` (the backslash followed by "*t*").
+
+### Configuration 
+
+The configuration window has a group labeled "**Clock**, which presents the following options:
+
+- The "*Display on startup*" option determines whether the clock is displayed when the application starts. Set it to `True` to show the clock at startup, or leave it as `False` (the default) to hide it.
+
+- You can choose how the time is displayed using the "*Time format*" option. Here are the available formats:
+
+| Value | Format Description                           |
+|-------|---------------------------------------------|
+| 0     | 24-hour format, with seconds                |
+| 1     | 24-hour format, no seconds                  |
+| 2     | 12-hour format, with AM/PM and seconds      |
+| 3     | 12-hour format, no AM/PM, with seconds      |
+| 4     | 12-hour format, with AM/PM, no seconds      |
+| 5     | 12-hour format, no AM/PM, no seconds        |
+
 
 ## PyRadio Themes
 

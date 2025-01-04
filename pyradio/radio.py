@@ -1245,8 +1245,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.initFooter()
         self.log.setScreen(self.footerWin)
         if init_from_function_setup:
-            if int(self._cnf.active_show_time) >= 0:
-                self.log.start_timer(time_format=int(self._cnf.active_show_time), update_functions=(self.log.write_time, ))
+            if int(self._cnf.enable_clock):
+                self.log.start_timer(time_format=int(self._cnf.time_format), update_functions=(self.log.write_time, ))
             if self.player:
                 self.log.write(msg='Selected player: ' + self.player.PLAYER_NAME, help_msg=True)
         else:
@@ -6495,16 +6495,13 @@ _____"|f|" to see the |free| keys you can use.
 
             if char == kbkey['toggle_time'] or \
                     check_localized(char, (kbkey['toggle_time'],)):
-                if self._cnf.active_show_time == '-1':
-                    self._cnf.active_show_time = self._cnf.show_time
-                    if self._cnf.active_show_time == '-1':
-                        self._cnf.active_show_time = '0'
+                self._cnf.active_enable_clock = not self._cnf.active_enable_clock
+                if self._cnf.active_enable_clock:
                     self.log.restart_timer(
-                        time_format=int(self._cnf.active_show_time),
+                        time_format=int(self._cnf.time_format),
                         update_functions=(self.log.write_time, )
                     )
                 else:
-                    self._cnf.active_show_time = '-1'
                     self.log.stop_timer()
                 self._backslash_pressed = False
                 self._update_status_bar_right(status_suffix='')
@@ -7261,21 +7258,27 @@ _____"|f|" to see the |free| keys you can use.
                         self.log.write(msg=msg[0], help_msg=False, suffix=self._status_suffix)
                         self._print_config_save_error()
                     elif ret == 0:
-                        if self._config_win:
-                            ''' check if time has to be shown / restarted / stopped'''
-                            if self._config_win._old_show_timer != self._cnf.active_show_time:
-                                if int(self._cnf.active_show_time) == -1:
-                                    self.log.stop_timer()
-                                else:
+                        ''' Config saved successfully '''
+
+                        ''' check if time has to be shown / restarted / stopped'''
+                        if self._cnf.active_enable_clock:
+                            if self._config_win:
+                                if self._config_win._old_time_format != self._cnf.time_format:
                                     self.log.restart_timer(
-                                        time_format=int(self._cnf.active_show_time),
+                                        time_format=int(self._cnf.time_format),
                                         update_functions=(self.log.write_time, )
                                     )
+                            else:
+                                self.log.restart_timer(
+                                    time_format=int(self._cnf.time_format),
+                                    update_functions=(self.log.write_time, )
+                                )
+                        else:
+                            self.log.stop_timer()
                         if logger.isEnabledFor(logging.INFO):
                             logger.info('\nConfSaved    old rec dir: "{}"'.format(self._config_win._old_recording_dir))
                             logger.info('\nConfSaved    config options recording_dir : "{}"'.format(self._config_win._config_options['recording_dir'][1]))
                             logger.info('\nConfSaved    saved config options recording_dir : "{}"'.format(self._config_win._saved_config_options['recording_dir'][1]))
-                        ''' Config saved successfully '''
 
                         ''' sync backup parameters '''
                         old_id = self._cnf.backup_player_params[1][0]

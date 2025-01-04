@@ -118,6 +118,10 @@ a:visited{color: SaddleBrown;}
 <li><a href="#displaying-station-info">Displaying Station Info</a></li>
 <li><a href="#copying-and-pasting---registers">Copying and pasting - Registers</a></li>
 <li><a href="#favorites-playlist">Favorites playlist</a></li>
+<li><a href="#displaying-the-current-time">Displaying the Current Time</a>
+<ul>
+<li><a href="#configuration">Configuration</a></li>
+</ul></li>
 <li><a href="#pyradio-themes">PyRadio Themes</a></li>
 <li><a href="#recording-stations">Recording stations</a></li>
 <li><a href="#mouse-support">Mouse support</a></li>
@@ -2018,6 +2022,49 @@ volume=50</pre>
 <p>Pressing “*” (asterisk) in <strong>Main Mode</strong> will add the selected station to the <strong>favorites</strong> playlist.</p>
 <p>If the station is already there, it will either be updated if its name has been changed, for example, or will be ignored, to avoid creating duplicate entries.</p>
 <p>The <strong>favorites</strong> playlist, residing in the configuration folder, is a normal playlist in any other respect, which can be subsequently opened, edited, deleted even, as any other playlist.</p>
+<h2 id="displaying-the-current-time">Displaying the Current Time <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>The <strong>Clock</strong> feature allows you to display the current time in the bottom left corner of the window. This can be helpful for keeping track of time while using the application.</p>
+<p>You can easily toggle the clock display by pressing "\t" (the backslash followed by “<em>t</em>”).</p>
+<h3 id="configuration">Configuration</h3>
+<p>The configuration window has a group labeled “<strong>Clock</strong>, which presents the following options:</p>
+<ul>
+<li><p>The “<em>Display on startup</em>” option determines whether the clock is displayed when the application starts. Set it to True to show the clock at startup, or leave it as False (the default) to hide it.</p></li>
+<li><p>You can choose how the time is displayed using the “<em>Time format</em>” option. Here are the available formats:</p></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Format Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>24-hour format, with seconds</td>
+</tr>
+<tr>
+<td>1</td>
+<td>24-hour format, no seconds</td>
+</tr>
+<tr>
+<td>2</td>
+<td>12-hour format, with AM/PM and seconds</td>
+</tr>
+<tr>
+<td>3</td>
+<td>12-hour format, no AM/PM, with seconds</td>
+</tr>
+<tr>
+<td>4</td>
+<td>12-hour format, with AM/PM, no seconds</td>
+</tr>
+<tr>
+<td>5</td>
+<td>12-hour format, no AM/PM, no seconds</td>
+</tr>
+</tbody>
+</table>
 <h2 id="pyradio-themes">PyRadio Themes <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>PyRadio</strong> supports <strong>CSS themes</strong>; it comes with a number of predefined ones and can use external programs that can provide automatically created and updated themes.</p>
 <p>To set a theme you just press “<strong>t</strong>” and</p>
