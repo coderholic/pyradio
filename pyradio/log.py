@@ -276,6 +276,7 @@ class Log():
         self._x_start = 1
         self._stop_thread = False
         self.timer = None
+        self._started_station_name = None
 
     def __del__(self):
         self._stop_desktop_notification_thread = True
@@ -837,7 +838,7 @@ class Log():
         return d_title, d_msg
 
     def _write_title_to_log(self, msg=None, force=False):
-        # logger.error('msg = "{}"'.format(msg))
+        # logger.error('\n\nmsg = "{}"'.format(msg))
         if msg is None:
             d_msg = None
         else:
@@ -852,26 +853,56 @@ class Log():
                 logger.critical('Error writing LIKED title...')
         else:
             if d_msg:
+                if d_msg.startswith('Initialization: '):
+                    self._started_station_name = d_msg[16:]
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Early station name (initialization): "{}"'.format(self._started_station_name))
+                if d_msg.startswith('Station: ') and ' - Opening connection' in d_msg:
+                    self._started_station_name = d_msg[9:].split(' - Opening connection')[0]
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Early station name (station): "{}"'.format(self._started_station_name))
+
                 if d_msg.startswith('Title: '):
-                    if logger.isEnabledFor(logging.CRITICAL):
+                    ''' print Early station name '''
+                    if self._started_station_name is not None:
                         try:
-                            if force or d_msg not in self._cnf._old_log_title:
-                                try:
-                                    logger.critical(d_msg.replace('Title: ', '    '))
-                                except:
-                                    logger.critical('Error writing title...')
-                                self._cnf._old_log_title = d_msg
+                            try:
+                                logger.critical('>>> Station: ' + self._started_station_name)
+                                self._started_station_name = None
+                            except:
+                                logger.critical('>>> Error writing station name...')
+                            # self._cnf._old_log_title = d_msg
                         except UnicodeDecodeError:
                             ''' try to handle it for python2 '''
                             try:
                                 if force or d_msg.decode('utf-8', 'replace') not in self._cnf._old_log_title.decode('utf-8', 'replace'):
                                     try:
-                                        logger.critical(d_msg.replace('Title: ', '    '))
+                                        logger.critical('>>> Station: ' + self._started_station_name.decode('utf-8', 'replace'))
+                                        self._started_station_name = None
                                     except:
-                                        logger.critical('Error writing title...')
+                                        logger.critical('>>> Error writing station name...')
                                     self._cnf._old_log_title = d_msg
                             except:
+                                logger.critical('>>> Error writing station name...')
+
+                    try:
+                        if force or d_msg not in self._cnf._old_log_title:
+                            try:
+                                logger.critical(d_msg.replace('Title: ', '    '))
+                            except:
                                 logger.critical('Error writing title...')
+                            self._cnf._old_log_title = d_msg
+                    except UnicodeDecodeError:
+                        ''' try to handle it for python2 '''
+                        try:
+                            if force or d_msg.decode('utf-8', 'replace') not in self._cnf._old_log_title.decode('utf-8', 'replace'):
+                                try:
+                                    logger.critical(d_msg.replace('Title: ', '    '))
+                                except:
+                                    logger.critical('Error writing title...')
+                                self._cnf._old_log_title = d_msg
+                        except:
+                            logger.critical('Error writing title...')
                     self._cnf._current_log_title = d_msg
                 elif d_msg.startswith('Playing: ') or \
                           d_msg.startswith('Buffering: '):
@@ -885,8 +916,9 @@ class Log():
                                 try:
                                     logger.critical(d_msg.replace(tok, '>>> Station: '))
                                 except:
-                                    logger.critical('Error writing station name...')
+                                    logger.critical('>>> Error writing station name...')
                                 self._cnf._old_log_station = d_msg
+                                self._started_station_name = None
                         except UnicodeDecodeError:
                             ''' try to handle it for python2 '''
                             try:
@@ -894,10 +926,11 @@ class Log():
                                     try:
                                         logger.critical(d_msg.replace(tok, '>>> Station: '))
                                     except:
-                                        logger.critical('Error writing station name...')
+                                        logger.critical('>>> Error writing station name...')
                                     self._cnf._old_log_station = d_msg
+                                    self._started_station_name = None
                             except:
-                                logger.critical('Error writing station name...')
+                                logger.critical('>>> Error writing station name...')
                     self._cnf._current_log_station = d_msg
 
     def write_start_log_station_and_title(self):

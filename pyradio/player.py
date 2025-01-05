@@ -945,7 +945,7 @@ class Player():
                         subsystemOut = subsystemOutRaw.decode('utf-8', 'replace')
                 if subsystemOut == '':
                     break
-                # logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
+                logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
                 with recording_lock:
                     tmp = self._is_accepted_input(subsystemOut)
                 if not tmp:
@@ -3119,6 +3119,24 @@ class MpPlayer(Player):
             ret_string = tmp[:tmp.find("';")]
         else:
             ret_string = title_string
+
+        if logger.isEnabledFor(logging.DEBUG):
+            ''' detect icon url in StreamUrl '''
+            if 'StreamUrl=' in title_string:
+                splitted = title_string.split(';')
+                logger.error(title_string.split(';'))
+                for i in (-1, -2):
+                    if 'StreamUrl=' in splitted[i]:
+                        icon_url = splitted[i].replace('StreamUrl=', '').replace("'", "")
+                        logger.error(f'{icon_url = }')
+                        if icon_url.endswith('.jpg') or icon_url.endswith('.png'):
+                            self._detected_icon_url = icon_url
+                            logger.error('found!!!')
+                            # logger.critical('    icon: {}'.format(self._detected_icon_url))
+                        break
+            else:
+                self._detected_icon_url = None
+
         if '"artist":"' in ret_string:
             ''' work on format:
                 ICY Info: START_SONG='{"artist":"Clelia Cafiero","title":"M. Mussorgsky-Quadri di un'esposizione"}';
