@@ -64,6 +64,8 @@ A theme by [CabalCrow](https://github.com/CabalCrow) based on [Everforest](https
 Three themes based on the [gruvbox](https://github.com/morhetz/gruvbox) theme.
 - **hyprland_amber_gold** and **hyprland_dracula** \
 Two themes by [mechatour](https://github.com/mechatour), from [hyprland_amber_gold](https://github.com/mechatour/hyprland_amber_gold) and [hyprland_dotfiles]([https://github.com/mechatour/hyprland_dotfiles).
+- **lambda_by_amski1** \
+A light theme by user [amski1](https://forum.maboxlinux.org/u/amski1).
 - **minima_by_ben_chile** \
 A theme by user [ben_chile](https://forum.maboxlinux.org/u/ben_chile) created on the [Mabox Linux](https://maboxlinux.org) Forum.
 - **pastel_based_by_sng** \

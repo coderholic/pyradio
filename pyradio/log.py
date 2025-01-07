@@ -828,6 +828,10 @@ class Log():
             d_title = 'Player Crash'
             d_msg = msg
             self._station_sent = False
+        elif 'Stream not found (error 404)' in msg:
+            d_title = 'Player Stopped'
+            d_msg = msg
+            self._station_sent = False
         elif msg.startswith('Failed to connect'):
             sp = msg.split(':')
             d_title = sp[0]

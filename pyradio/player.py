@@ -936,16 +936,28 @@ class Player():
             out = self.process.stdout
             while(True):
                 subsystemOutRaw = out.readline()
-                # logger.error('DE subsystemOut = "{0}"'.format(subsystemOutRaw))
+                # logger.error('raw input = "{0}"'.format(subsystemOutRaw))
                 self._chapter_time = datetime.now()
                 with recording_lock:
                     try:
                         subsystemOut = subsystemOutRaw.decode(self._station_encoding, 'replace')
                     except:
                         subsystemOut = subsystemOutRaw.decode('utf-8', 'replace')
-                if subsystemOut == '':
+                got_404 = False
+                if stop():
+                    rgeak
+                elif subsystemOut == '':
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('----==== player crached ====----')
                     break
-                logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
+                elif 'Name or service not known' in subsystemOut or \
+                        'cannot connect to ' in subsystemOut or \
+                        ('404' in subsystemOut and 'Not Available' in subsystemOut):
+                    got_404 = True
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('----==== playbak stopped, reason: "{}" ====----'.format(subsystemOut.strip()))
+                    break
+                logger.error('raw input = "{0}"'.format(subsystemOut.strip()))
                 with recording_lock:
                     tmp = self._is_accepted_input(subsystemOut)
                 if not tmp:
@@ -1145,31 +1157,20 @@ class Player():
             # return
 
         ''' crash detection '''
-        # logger.error('detect_if_player_exited = {0}, stop = {1}'.format(detect_if_player_exited(), stop()))
+        logger.error('detect_if_player_exited = {0}, stop = {1}'.format(detect_if_player_exited(), stop()))
 
         if not stop():
-            if not platform.startswith('win'):
-                if detect_if_player_exited():
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info('----==== player disappeared! ====----')
-                    stop_player(
-                        from_update_thread=True,
-                        player_disappeared=True
-                    )
-                else:
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info('Crash detection is off; waiting to timeout')
+            if detect_if_player_exited():
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('----==== player disappeared ====----')
+                stop_player(
+                    from_update_thread=True,
+                    player_disappeared=True,
+                    got_404=got_404
+                )
             else:
-                if detect_if_player_exited():
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info('----==== player disappeared! ====----')
-                    stop_player(
-                        from_update_thread=True,
-                        player_disappeared = True
-                    )
-                else:
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info('Crash detection is off; waiting to timeout')
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Crash detection is off; waiting to timeout')
         if (logger.isEnabledFor(logging.INFO)):
             logger.info('updateStatus thread stopped.')
         self._clear_empty_mkv()
@@ -1313,8 +1314,19 @@ class Player():
                             data = b''
                     self._chapter_time = datetime.now()
                     a_data = self._fix_returned_data(data)
-                    logger.error('DE Received: "{!r}"'.format(a_data))
-                    if a_data == b'' or stop():
+                    logger.error('raw input: "{!r}"'.format(a_data))
+                    got_404 = False
+                    if stop():
+                        break
+                    elif b'"file_error":"loading failed"' in a_data:
+                        got_404 = True
+                        logger.error('\n\ngot_404 = {}\n\n'.format(got_404))
+                        if logger.isEnabledFor(logging.INFO):
+                            logger.info('----==== playbak stopped, reason: {} ====----'.format(a_data))
+                        break
+                    elif a_data == b'':
+                        if logger.isEnabledFor(logging.INFO):
+                            logger.info('----==== MPV crashed ====----')
                         break
                     if a_data:
                         all_data = a_data.split(b'\n')
@@ -1385,10 +1397,11 @@ class Player():
             ''' haven't been asked to stop '''
             if detect_if_player_exited():
                 if logger.isEnabledFor(logging.INFO):
-                    logger.info('----==== MPV disappeared! ====----')
+                    logger.info('----==== MPV disappeared ====----')
                 stop_player(
                     from_update_thread=True,
-                    player_disappeared = True
+                    player_disappeared = True,
+                    got_404=got_404
                 )
             else:
                 if logger.isEnabledFor(logging.INFO):
@@ -1411,7 +1424,7 @@ class Player():
                     if not stop():
                         if detect_if_player_exited():
                             if logger.isEnabledFor(logging.INFO):
-                                logger.info('----==== VLC disappeared! ====----')
+                                logger.info('----==== VLC disappeared ====----')
                             try:
                                 stop_player(from_update_thread=True)
                             except:
@@ -1464,7 +1477,7 @@ class Player():
                     if do_crash_detection(detect_if_player_exited, stop):
                         break
                     continue
-                # logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
+                logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
                 if not self._is_accepted_input(subsystemOut):
                     continue
                 # logger.error('DE accepted inp = "{0}"'.format(subsystemOut))
@@ -1845,6 +1858,7 @@ class Player():
         except:
             pass
         self.detect_if_player_exited = True
+        logger.error('23 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
         if (not self.playback_is_on) and (logger.isEnabledFor(logging.INFO)):
             logger.info('*** _set_mpv_playback_is_on(): Start of playback detected ***')
         self.stop_timeout_counter_thread = True

@@ -73,14 +73,18 @@ class PyRadioConfigWindow():
     'If changed, playback must be restarted so that changes take effect.',
     '|', 'Default value: utf-8'])
     _help_text.append(['If this options is enabled, the mouse can be used to scroll the playlist, start, stop and mute the player, adjust its volume etc.', '|', 'Mouse support is highly terminal dependent, that\'s why it is disabled by default.', '|', 'Default value: False'])
-    _help_text.append(['If this options is enabled, a Desktop Notification will be displayed using the notification daemon / service.', '|', 'If enabled but no notification is displayed, please refer to', 'https://github.com/coderholic/pyradio/desktop-notification.md', '|', 'Valid values are:', '   -1: disabled ', '    0: enabled (no repetition) ', '    x: repeat every x seconds ', '|', 'Default value: -1'])
-    _help_text.append(['Notice: Not applicable on Windows!', '|',  'Online Radio Directory Services (like RadioBrowser) will usually provide an icon for the stations they advertise.', '|', 'PyRadio can use this icon (provided that one exists and is of JPG or PNG format) while displaying Desktop Notifications.', '|', 'Setting this option to True, will enable the behavior above.', '|', 'If this option is False, the default icon will be used.', '|', 'Default value: True'])
-    _help_text.append(['Notice: Not applicable on Windows!', '|', 'If the previous option is enabled, Stations Icons will be cached.', '|', 'If this option is set to True, all icons will be deleted at program exit.', '|', 'If set to False, the icons will be available for future use.', '|', 'Default value: True'])
     _help_text.append([ 'This is the folder where recorded files will be saved', '|', 'Tip: When you open the window "h" will display HTML help about this parameter (not in Line Editor).', '|', 'Default value: "pyradio-recordings" in home dir' ])
     _help_text.append(['This is a Linux (et al) only parameter. It has no effect on Windows or MacOS.', '|',
                        'A Resource Opener is a program used to open files passed to it as arguments. PyRadio will use it to open either directories or HTML files.', '|',
                        'Default value is "auto", in which case, PyRadio will try to use xdg-open, gio, mimeopen, mimeo or handlr, in that order of detection.  If none if found, the requested file will simply not open.'
                        ])
+
+    _help_text.append(None)
+    _help_text.append(['If this options is enabled, a Desktop Notification will be displayed using the notification daemon / service.', '|', 'If enabled but no notification is displayed, please refer to', 'https://github.com/coderholic/pyradio/desktop-notification.md', '|', 'Valid values are:', '   -1: disabled ', '    0: enabled (no repetition) ', '    x: repeat every x seconds ', '|', 'Default value: -1'])
+    _help_text.append(['Notice: Not applicable on Windows!', '|',  'Online Radio Directory Services (like RadioBrowser) will usually provide an icon for the stations they advertise.', '|', 'PyRadio can use this icon (provided that one exists and is of JPG or PNG format) while displaying Desktop Notifications.', '|', 'Setting this option to True, will enable the behavior above.', '|', 'If this option is False, the default icon will be used.', '|', 'Default value: True'])
+    _help_text.append(['Notice: Not applicable on Windows!', '|', 'If the previous option is enabled, Stations Icons will be cached.', '|', 'If this option is set to True, all icons will be deleted at program exit.', '|', 'If set to False, the icons will be available for future use.', '|', 'Default value: True'])
+
+
     _help_text.append(None)
     _help_text.append(['If this option is enabled, the current time will be displayed at the bottom left corner of the window at program startup.', '|', 'Adjust the time format in the next option to change how the current time is displayed.', '|', r'You can always hide it by pressing \t (default shortcut).', '|', 'Default value: False'])
     _help_text.append(['This is the time format to be used when the clock is visible.', '|', 'Available values are:', '   0: 24h, with seconds', '   1: 24h, no seconds', '   2: 12h, with am/pm and seconds', '   3: 12h, no am/pm, with seconds', '   4: 12h, with am/pm, no seconds', '   5: 12h, no am/pm, no seconds', '|', 'Default value: 1'])

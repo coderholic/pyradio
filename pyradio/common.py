@@ -57,7 +57,8 @@ THEME_ITEMS = (
     messages after playback is stopped """
 player_start_stop_token = ('Initialization: ',
                            ': Playback stopped',
-                           ': Player terminated abnormally!')
+                           ': Player terminated abnormally!',
+                           ': Stream not found (error 404)')
 
 def erase_curses_win(Y, X, beginY, beginX, char=' ', color=5):
     ''' empty a part of the screen
