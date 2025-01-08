@@ -945,7 +945,7 @@ class Player():
                         subsystemOut = subsystemOutRaw.decode('utf-8', 'replace')
                 got_404 = False
                 if stop():
-                    rgeak
+                    break
                 elif subsystemOut == '':
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('----==== player crached ====----')
