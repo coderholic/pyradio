@@ -3,6 +3,7 @@ import locale
 import logging
 import curses
 import curses.ascii
+import threading
 from os.path import basename
 from sys import exit
 from datetime import date, time, datetime, timedelta
@@ -38,10 +39,10 @@ python -m pip install --user dateutil
 import logging
 from sys import platform
 try:
-    from .cjkwrap import is_wide, cjklen, cjkljust, cjkslices
+    from .cjkwrap import is_wide, cjklen, cjkrjust, cjkcenter, cjkljust, cjkslices
     from .schedule import PyRadioTime
 except:
-    from cjkwrap import is_wide, cjklen, cjkljust, cjkslices
+    from cjkwrap import is_wide, cjklen, cjkrjust, cjkcenter, cjkljust, cjkslices
     from schedule import PyRadioTime
 # from .cjkwrap import is_wide, cjklen, cjkljust, cjkslices
 # from .schedule import PyRadioTime
@@ -1198,7 +1199,7 @@ class SimpleCursesCounter(SimpleCursesWidget):
         self._value = int(value)
         self._pad = pad
         if self._value < self._min:
-            self._value = self.min
+            self._value = self._min
         if self._value > self._max:
             self._value = self._max
         self._len = number_length
@@ -1238,7 +1239,7 @@ class SimpleCursesCounter(SimpleCursesWidget):
     @maximum.setter
     def maximum(self, val):
         self._max = val
-        max_len = len(srt(self._max))
+        max_len = len(str(self._max))
         if self._len < max_len:
             self._len = max_len
 
@@ -1265,7 +1266,7 @@ class SimpleCursesCounter(SimpleCursesWidget):
     @number_length.setter
     def number_length(self, val):
         self._len = val
-        max_len = len(srt(self._max))
+        max_len = len(str(self._max))
         if self._len < max_len:
             self._len = max_len
 
@@ -2246,7 +2247,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
 
     @max_height.setter
     def max_height(self, value):
-        self._maxY = val
+        self._maxY = value
         self._calculate_max_height_max_width()
         self._showed = False
 
@@ -2257,7 +2258,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
 
     @max_width.setter
     def max_width(self, value):
-        self._maxX = val
+        self._maxX = value
         self._calculate_max_height_max_width()
         self._showed = False
 
@@ -2792,6 +2793,12 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 4 - Edit item
                 5 - Delete item
         '''
+        # logger.error(f'{char = }')
+        # try:
+        #     logger.error('chr(char) = "{}"'.format(chr(char)))
+        # except:
+        #     pass
+        # logger.error('self._right_arrow_selects = {}'.format(self._right_arrow_selects))
         l_char = None
         if self._too_small:
             return 1
@@ -2887,8 +2894,9 @@ class SimpleCursesMenu(SimpleCursesWidget):
             return 0
 
         elif self._right_arrow_selects and char in (
-                kbkey['pause'], ord('\n'), ord('\r'), curses.KEY_ENTER
-                ) or check_localized(char, (kbkey['pause'], )):
+                kbkey['l'], kbkey['pause'], ord('\n'), ord('\r'),
+                curses.KEY_ENTER, curses.KEY_RIGHT
+                ) or check_localized(char, (kbkey['pause'], kbkey['l'])):
             self._toggle_active_item()
             if self._on_activate_callback_function:
                 self._on_activate_callback_function()
@@ -3096,7 +3104,6 @@ class SimpleCursesMenu(SimpleCursesWidget):
         return 1
 
 
-
 class SimpleCursesCheckBox(SimpleCursesWidget):
     '''A very simple checkbox curses widget '''
     _checked = False
@@ -3258,7 +3265,7 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
     def _get_metrics(self):
         ''' Calculate width and height based on caption '''
         self._height = 1
-        self._width = len(self._title) + 4
+        self._width = len(self._caption) + 4
 
     def keypress(self, char):
         ''' SimpleCursesCheckBox keypress '''
@@ -3325,7 +3332,7 @@ class SimpleCursesPushButton(SimpleCursesWidget):
 
     @property
     def constant_width(self):
-        return self.__constant_width
+        return self._constant_width
 
     @constant_width.setter
     def constant_width(self, value):
@@ -3561,7 +3568,6 @@ class SimpleCursesLineEdit():
     Python 2 supports ascii only
 
     '''
-    string = ''
     _string = ''
     _displayed_string = ''
 
@@ -4175,7 +4181,8 @@ class SimpleCursesLineEdit():
                             self._curs_pos = len(self._displayed_string)
                             self._disp_curs_pos = cjklen(self._displayed_string)
                             self._first = len(self.string) - len(self._displayed_string)
-                            if self._first < 0: self._first = 0
+                            if self._first < 0:
+                                self._first = 0
                     else:
                         self._curs_pos -= 1
                         curs = self._curs_pos
@@ -4842,8 +4849,7 @@ class SimpleCursesLineEdit():
                 self._mode_changed()
         return 1
 
-    @classmethod
-    def get_unicode_and_cjk_char(cls, win, char):
+    def get_unicode_and_cjk_char(self, win, char):
         logger.info(f'1---> {char = }')
         def get_check_next_byte():
             if win is None:
@@ -4881,7 +4887,7 @@ class SimpleCursesLineEdit():
         while 0 in bytes:
             bytes.remove(0)
         buf = bytearray(bytes)
-        out = cls._decode_string(buf)
+        out = self._decode_string(buf)
         if out:
             if is_wide(out) and not self._cjk:
                 self._cjk = True

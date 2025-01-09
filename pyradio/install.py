@@ -138,11 +138,12 @@ def find_pyradio_win_exe():
         an_exe = os.path.join(a_path, 'Scripts' , 'pyradio.exe')
         if os.path.exists(an_exe):
             exe[0] = an_exe
-    an_exe = os.path.join(site.getuserbase(), py_with_ver, 'Scripts' , 'pyradio.exe')
-    # print('an_exe: {}'.format(an_exe))
-    if os.path.exists(an_exe):
-        exe[1] = an_exe
-    # print('exe: {}'.format(exe))
+    if py_with_ver:
+        an_exe = os.path.join(site.getuserbase(), py_with_ver, 'Scripts' , 'pyradio.exe')
+        # print('an_exe: {}'.format(an_exe))
+        if os.path.exists(an_exe):
+            exe[1] = an_exe
+        # print('exe: {}'.format(exe))
     return exe
 
 def fix_pyradio_win_exe():

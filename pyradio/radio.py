@@ -446,6 +446,12 @@ class PyRadio():
 
     _keyboard_config_win = None
 
+    handled_signals = {
+        'SIGHUP': signal.SIGHUP,
+        'SIGTERM': signal.SIGTERM,
+        'SIGKIL': signal.SIGKILL,
+    }
+
     def ll(self, msg):
         logger.error('DE ==========')
         logger.error('DE ===> {}'.format(msg))
@@ -1165,6 +1171,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.run()
 
     def change_player(self, a_player):
+        new_player = None
         if a_player == self.player.PLAYER_NAME:
             pass
         else:
@@ -4524,16 +4531,12 @@ ____Using |fallback| theme.''')
         #logger.error('msg\n{}'.format(msg))
         if tail and not self._cnf.browsing_station_service:
             self._station_rename_from_info = True
-            self._messaging_win.set_a_message(
-                'M_STATION_INFO',
-                ('Station Info', msg)
-                )
         else:
             self._station_rename_from_info = False
-            self._messaging_win.set_a_message(
-                'M_STATION_INFO',
-                ('Station Info', msg)
-                )
+        self._messaging_win.set_a_message(
+            'M_STATION_INFO',
+            ('Station Info', msg)
+            )
         self._open_simple_message_by_key_and_mode(
                 self.ws.STATION_INFO_MODE,
                 'M_STATION_INFO'
@@ -7435,8 +7438,9 @@ _____"|f|" to see the |free| keys you can use.
 
                 elif ret == self.ws.LOCALIZED_CONFIG_MODE:
                     ''' keyboard localized window '''
-                    self.ws.operation_mode = self.ws.LOCALIZED_CONFIG_MODE
-                    self._localized_init_config()
+                    self._print_not_implemented_yet()
+                    # self.ws.operation_mode = self.ws.LOCALIZED_CONFIG_MODE
+                    # self._localized_init_config()
                     return
 
                 else:
@@ -9772,7 +9776,7 @@ _____"|f|" to see the |free| keys you can use.
             else:
                 self.detect_if_player_exited = True
                 logger.error('20 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
-                self.playSelection(got_404=got_404)
+                self.playSelection()
             self.refreshBody()
         self.player.recording_filename = ''
         self.player.muted = self.player.paused = False
@@ -10740,16 +10744,11 @@ _____"|f|" to see the |free| keys you can use.
             #         logger.debug('SetConsoleCtrlHandler: Signal SIGINT failed to register (with Exception)!!!')
 
         else:
-            handled_signals = {
-                'SIGHUP': signal.SIGHUP,
-                'SIGTERM': signal.SIGTERM,
-                'SIGKIL': signal.SIGKILL,
-            }
             self.def_signal_handlers = {}
             try:
-                for a_sig in handled_signals:
+                for a_sig in self.handled_signals:
                     self.def_signal_handlers[a_sig] = signal.signal(
-                        handled_signals[a_sig],
+                        self.handled_signals[a_sig],
                         self._linux_signal_handler
                     )
                     if logger.isEnabledFor(logging.DEBUG):
@@ -10803,10 +10802,10 @@ _____"|f|" to see the |free| keys you can use.
         self.player.close()
         self._cnf.save_config()
         self._cnf.remove_session_lock_file()
-        for a_sig in handled_signals:
+        for a_sig in self.handled_signals:
             try:
                 signal.signal(
-                    handled_signals[a_sig],
+                    self.handled_signals[a_sig],
                     self.def_signal_handlers[a_sig]
                 )
             except:

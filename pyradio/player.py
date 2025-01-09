@@ -310,6 +310,9 @@ class Player():
     GET_AUDIO_FORMAT = b'{ "command": ["get_property", "audio-out-params"], "request_id": 200 }\n'
     GET_AUDIO_CODEC = b'{ "command": ["get_property", "audio-codec"], "request_id": 300 }\n'
     GET_AUDIO_CODEC_NAME = b'{ "command": ["get_property", "audio-codec-name"], "request_id": 400 }\n'
+    GET_ERROR = b'{"command": ["get_property", "error"]}\n'
+    GET_ERROR = b'{"command": ["get_property", "http-header-fields"], "request_id": 500 }\n'
+    INPUT_COMMANDS = b'{"command": ["get_property", "user-data/mpv/ytdl/json-subprocess-result"], "request_id": 600 }\n'
 
     all_config_files = {}
 
@@ -696,9 +699,12 @@ class Player():
         ret = '|' + '\n'.join(a_list).replace('Encoding: |', 'Encoding: ').replace('URL: |', 'URL: ').replace('\n', '\n|')
         tail = ''
         if 'icy-name' in self._icy_data:
-            if a_station[0] != self._icy_data['icy-name'] and \
-                    self._icy_data['icy-name'] and \
-                    self._icy_data['icy-name'] != '(null)':
+            if self._cnf._online_browser is None and \
+            (
+                a_station[0] != self._icy_data['icy-name'] and \
+                self._icy_data['icy-name'] and \
+                self._icy_data['icy-name'] != '(null)'
+            ):
                 tail = '\n\nPress |r| to rename station to |Reported Name|, or'
         return ret + '\n\n|Highlighted values| are user specified.\nOther values are station provided (live) data.', tail
 
@@ -1319,11 +1325,12 @@ class Player():
                     if stop():
                         break
                     elif b'"file_error":"loading failed"' in a_data:
-                        got_404 = True
-                        logger.error('\n\ngot_404 = {}\n\n'.format(got_404))
-                        if logger.isEnabledFor(logging.INFO):
-                            logger.info('----==== playbak stopped, reason: {} ====----'.format(a_data))
-                        break
+                        self._request_mpv_error(sock)
+                        # got_404 = True
+                        # logger.error('\n\ngot_404 = {}\n\n'.format(got_404))
+                        # if logger.isEnabledFor(logging.INFO):
+                        #     logger.info('----==== playbak stopped, reason: {} ====----'.format(a_data))
+                        # break
                     elif a_data == b'':
                         if logger.isEnabledFor(logging.INFO):
                             logger.info('----==== MPV crashed ====----')
@@ -1646,6 +1653,16 @@ class Player():
             pass
         self._clear_empty_mkv()
 
+    def _request_mpv_error(self, sock):
+        try:
+            if platform.startswith('win'):
+                win32file.WriteFile(sock, self.GET_ERROR)
+            else:
+                # sock.sendall(self.GET_ERROR)
+                sock.sendall(self.INPUT_COMMANDS)
+        except BrokenPipeError:
+            pass
+
     def _request_mpv_info_data(self, sock):
         with self.status_update_lock:
             ret = len(self._icy_data) == 0
@@ -1656,27 +1673,41 @@ class Player():
         # if ret == 0 or force:
         if ret:
             # logger.error('\n\nIn _request_mpv_info_data')
+            no_get_title_exception = True
             if platform.startswith('win'):
                 if self._request_mpv_info_data_counter == 4:
-                    win32file.WriteFile(sock, self.GET_TITLE)
-                if 'audio_format' not in self._icy_data:
-                    win32file.WriteFile(sock, self.GET_AUDIO_FORMAT)
-                if 'codec' not in self._icy_data:
-                    win32file.WriteFile(sock, self.GET_AUDIO_CODEC)
-                if 'codec-name' not in self._icy_data:
-                    win32file.WriteFile(sock, self.GET_AUDIO_CODEC_NAME)
+                    try:
+                        win32file.WriteFile(sock, self.GET_TITLE)
+                    except BrokenPipeError:
+                        no_get_title_exception = False
+                try:
+                    if 'audio_format' not in self._icy_data:
+                        win32file.WriteFile(sock, self.GET_AUDIO_FORMAT)
+                    if 'codec' not in self._icy_data:
+                        win32file.WriteFile(sock, self.GET_AUDIO_CODEC)
+                    if 'codec-name' not in self._icy_data:
+                        win32file.WriteFile(sock, self.GET_AUDIO_CODEC_NAME)
+                except BrokenPipeError:
+                    pass
             else:
                 if self._request_mpv_info_data_counter == 4:
-                    sock.sendall(self.GET_TITLE)
-                if 'audio_format' not in self._icy_data:
-                    sock.sendall(self.GET_AUDIO_FORMAT)
-                if 'codec' not in self._icy_data:
-                    sock.sendall(self.GET_AUDIO_CODEC)
-                if 'codec-name' not in self._icy_data:
-                    sock.sendall(self.GET_AUDIO_CODEC_NAME)
+                    try:
+                        sock.sendall(self.GET_TITLE)
+                    except BrokenPipeError:
+                        no_get_title_exception = False
+                try:
+                    if 'audio_format' not in self._icy_data:
+                        sock.sendall(self.GET_AUDIO_FORMAT)
+                    if 'codec' not in self._icy_data:
+                        sock.sendall(self.GET_AUDIO_CODEC)
+                    if 'codec-name' not in self._icy_data:
+                        sock.sendall(self.GET_AUDIO_CODEC_NAME)
+                except BrokenPipeError:
+                    pass
+            if no_get_title_exception:
                 self._request_mpv_info_data_counter += 1
-            if self._request_mpv_info_data_counter >= 4:
-                self._request_mpv_info_data_counter = 0
+                if self._request_mpv_info_data_counter >= 4:
+                    self._request_mpv_info_data_counter = 0
 
     def _get_mpv_metadata(self, *args):
         ''' Get MPV metadata
@@ -2701,7 +2732,7 @@ class MpvPlayer(Player):
         self.stop_mpv_status_update_thread = True
         self._send_mpv_command('quit')
         if not platform.startswith('win'):
-            os.system('rm ' + self.mpvsocket + ' 2>/dev/null');
+            os.system('rm ' + self.mpvsocket + ' 2>/dev/null')
         self._icy_data = {}
         self.monitor = self.monitor_process = self.monitor_opts = None
         if self._chapters:

@@ -546,7 +546,7 @@ class PyRadioSimpleScheduleWindow():
             self._get_parent(parent)
             if self._showed:
                 self._move_widgets()
-        if self._widgets == None:
+        if self._widgets is None:
             self._add_widgets()
         with self.lock:
             try:

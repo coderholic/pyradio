@@ -38,13 +38,11 @@ def set_global_functions(global_functions):
 
 
 class PyRadioConfigWindow():
-
-    parent = None
     _win = None
 
     _title = 'PyRadio Configuration'
 
-    selection = __selection = 1
+    __selection = 1
 
     ''' Keep a copy of saved values for theme and transparency
         Work-around for 'T' auto save (trasnsparency), and
@@ -3612,7 +3610,7 @@ class PyRadioKeyboardConfig():
             return self._list[self._selection]
         return self._list[an_item_id]
 
-    def _rename_keyboard_json_file(file_path):
+    def _rename_keyboard_json_file(self, file_path):
         # Check if the file path ends with "keyboard.json"
         if not file_path.endswith("keyboard.json"):
             raise ValueError("The file path must end with 'keyboard.json'")

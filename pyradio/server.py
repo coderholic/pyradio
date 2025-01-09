@@ -33,7 +33,7 @@ class IPs():
         old_value = self._fetch_public_ip
         self._fetch_public_ip = value
         if old_value != self._fetch_public_ip:
-            self._IPs = self._get_all_ips()
+            self._get_all_ips()
 
     @property
     def IPs(self):
@@ -1929,12 +1929,13 @@ Content-Length: {}
 
     def close_server(self):
         # create socket
+        s = None
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         except socket.error as e:
-            s.close()
+            if s is not None:
+                s.close()
             return False, e
-
 
         with self.lock:
             try:

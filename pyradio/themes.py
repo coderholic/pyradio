@@ -716,7 +716,7 @@ class PyRadioThemeReadWrite():
                     self._temp_colors['transparency'] = int(names[name][0])
                 except (ValueError, TypeError):
                     self._temp_colors['transparency'] = 2
-                if not self._temp_colors['transparency'] in range(0,3):
+                if self._temp_colors['transparency'] not in range(0,3):
                     self._temp_colors['transparency'] = 2
                 # logger.error('\n\nset transparency: {}\n\n'.format(self._temp_colors['transparency']))
             elif name == 'Color Factor':
@@ -902,7 +902,7 @@ class PyRadioThemeSelector():
     parent = None
     _win = None
     _width = _height = X = Y = 0
-    selection = _selection = _start_pos = _items = 0
+    _selection = _start_pos = _items = 0
 
     _themes = []
     _title_ids = []

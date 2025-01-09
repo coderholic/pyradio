@@ -2374,7 +2374,7 @@ class RadioBrowserConfigWindow():
 
         elif char in (
             curses.KEY_EXIT, 27, kbkey['q']
-        ) or  check_localized(char, (kbkey['q],'])):
+        ) or  check_localized(char, (kbkey['q'], )):
             return -1
 
         elif (char in (kbkey['pause'], curses.KEY_ENTER, ord('\n'), ord('\r')) or \

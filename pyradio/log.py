@@ -204,7 +204,7 @@ class PyRadioTimer:
         if old_time:
             if self.current_time == old_time:
                 # do not update the display
-                return
+                return old_time
 
         # Call _update_functions in a new thread without blocking
         with self.function_lock:
@@ -213,8 +213,9 @@ class PyRadioTimer:
                 if self._exit():
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Timer threat asked to stop. Stopping...')
-                    return
+                    return old_time
                 threading.Thread(target=an_update_function, args=(self.current_time,)).start()
+                return self.current_time
 
     def get_current_time(self):
         """ Safely return the current time. Returns an empty string if the timer is not running. """

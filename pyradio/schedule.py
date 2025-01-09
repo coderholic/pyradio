@@ -501,13 +501,13 @@ class PyRadioScheduleItem():
 
     @item.setter
     def item(self, val):
-        if isinstance(item, str):
+        if isinstance(val, str):
             try:
-                self._item = json.loads(item)
+                self._item = json.loads(val)
             except:
                 raise ValueError('JSON string not supported')
-        elif isinstance(item, dict):
-            self._item = item
+        elif isinstance(val, dict):
+            self._item = val
 
         for n in self.default_item:
             if n not in self._item:
@@ -858,6 +858,9 @@ class PyRadioTime():
             except ValueError:
                 valid = False
 
+        hour = 0
+        minute = 0
+        seconds  = 0
         if valid:
             if is_12_format == self.PM_FORMAT:
                 ''' pm '''
@@ -927,6 +930,9 @@ class PyRadioTime():
             except ValueError:
                 valid = False
 
+        hour = 0
+        minute = 0
+        seconds = 0
         if valid:
             if is_12_format == PyRadioTime.PM_FORMAT:
                 ''' pm '''
@@ -969,9 +975,9 @@ class PyRadioTime():
 
     @classmethod
     def to_24_format(cls, a_time):
-        if a_time[-1] == self.NO_AM_PM_FORMAT:
+        if a_time[-1] == PyRadioTime.NO_AM_PM_FORMAT:
             return a_time
-        elif a_time[-1] == self.PM_FORMAT:
+        elif a_time[-1] == PyRadioTime.PM_FORMAT:
             ''' PM '''
             out = list(a_time)
             out[-1] = 0
@@ -1019,7 +1025,7 @@ class PyRadioTime():
         if t_date is None:
             a_date = datetime.now()
         else:
-            a_date = t_data
+            a_date = t_date
         b_date= a_date.replace(
             hour = a_time[0],
             minute = a_time[1],

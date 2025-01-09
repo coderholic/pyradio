@@ -104,8 +104,8 @@ class PyRadioStations():
     previous_station_path = ''
 
     ''' this is always on users config dir '''
-    stations_dir = ''
-    registers_dir = ''
+    # stations_dir = ''
+    # registers_dir = ''
 
     ''' True if playlist not in config dir '''
     foreign_file = False
@@ -2089,7 +2089,7 @@ class PyRadioConfig(PyRadioStations):
         if path.exists(user_config_file + '.restore'):
             try:
                 copyfile(user_config_file + '.restore', user_config_file)
-                remove(self.user_config_file + '.restore')
+                remove(user_config_file + '.restore')
             except:
                 pass
 

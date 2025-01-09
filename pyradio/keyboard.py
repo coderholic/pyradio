@@ -974,10 +974,11 @@ class LetterDisplay:
         self._parent.clear()
         self._parent.refresh()
 
-    def _create_win(self, parent):
+    def _create_win(self, parent=None):
         if self._win is not None:
             self._win.clear()
-        self._parent = parent
+        if parent is not None:
+            self._parent = parent
         # self._clear_parent(2)
         self.calculate_window_size()
         self._win = self._parent.subwin(self._height, self._width, self._start_line, 1)

@@ -38,7 +38,7 @@ purl = (
         https://sourceforge.net/projects/mpv-player-windows/files/latest/download
 '''
 zurl = [
-    'https://sourceforge.com/projects/mpv-player-windows/files/64bit/mpv-x86_64-20241229-git-83bb498.7z/download',
+    'https://sourceforge.com/projects/mpv-player-windows/files/64bit/mpv-x86_64-20250105-git-996e58a.7z/download',
     'https://sourceforge.net/projects/mplayerwin/files/MPlayer-MEncoder/r38151/mplayer-svn-38151-x86_64.7z/download'
 ]
 
@@ -150,7 +150,7 @@ def _is_player_in_path(a_player):
             break
     #print('in_payh: {}'.format(in_path))
     if in_path:
-        if not environ['USERPROFILE'] in a_path:
+        if environ['USERPROFILE'] not in a_path:
             return None
         if not exists(join(in_path, pl[a_player] + '.exe')):
             return None
@@ -169,7 +169,7 @@ def _get_output_folder(package, output_folder=None, do_not_exit=False):
             # create dir
             makedirs(output_folder, exist_ok=True)
             if not exists(output_folder):
-                print('Failed to create folder: "[magenta]{}[/magenta]"'.format(pyradio_dir))
+                print('Failed to create folder: "[magenta]{}[/magenta]"'.format(output_folder))
                 if do_not_exit:
                     return None
                 sys.exit(1)
