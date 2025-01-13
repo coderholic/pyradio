@@ -70,9 +70,9 @@ resource_opener = auto
 #        4 : Display 12h format, with AM/PM, no seconds
 #        5 : Display 12h format, no AM/PM, no seconds
 #
-# Default value: False (for enable_clock) / 0 (for time_format)
+# Default value: False (for enable_clock) / 1 (for time_format)
 enable_clock = False
-time_format = 0
+time_format = 1
 
 # Desktop notifications
 # If this option is enabled, a Desktop notification will be displayed using the

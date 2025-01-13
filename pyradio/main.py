@@ -19,7 +19,7 @@ from .install import PyRadioUpdate, PyRadioUpdateOnWindows, PyRadioCache, \
     is_pyradio_user_installed, version_string_to_list, get_github_tag
 from .cjkwrap import cjklen, cjkslices, fill
 from .log import Log
-from .common import StationsChanges
+from .common import StationsChanges, M_STRINGS
 from .schedule import PyRadioScheduleList
 from .install import get_a_linux_resource_opener
 from .html_help import is_graphical_environment_running
@@ -964,7 +964,7 @@ If nothing else works, try the following command:
                 # pyradio_config.remove_session_lock_file()
                 import subprocess
                 print('\n[bold red]Launching external player[/bold red]')
-                print('Station: "[cyan]{}[/cyan]"'.format(pyradio_config.EXTERNAL_PLAYER_OPTS[0]))
+                print(M_STRINGS['station_'] + '"[cyan]{}[/cyan]"'.format(pyradio_config.EXTERNAL_PLAYER_OPTS[0]))
                 print('Command: "[yellow]{}[/yellow]"'.format(' '.join(pyradio_config.EXTERNAL_PLAYER_OPTS[1:])))
                 process = subprocess.Popen(pyradio_config.EXTERNAL_PLAYER_OPTS[1:], stdout=None, stderr=None)
                 process.wait()

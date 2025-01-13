@@ -15,6 +15,7 @@ import socket
 from shutil import copyfile as shutil_copy_file
 import locale
 locale.setlocale(locale.LC_ALL, "")
+from .common import STATES, M_STRINGS
 
 try:
     import psutil
@@ -310,9 +311,7 @@ class Player():
     GET_AUDIO_FORMAT = b'{ "command": ["get_property", "audio-out-params"], "request_id": 200 }\n'
     GET_AUDIO_CODEC = b'{ "command": ["get_property", "audio-codec"], "request_id": 300 }\n'
     GET_AUDIO_CODEC_NAME = b'{ "command": ["get_property", "audio-codec-name"], "request_id": 400 }\n'
-    GET_ERROR = b'{"command": ["get_property", "error"]}\n'
-    GET_ERROR = b'{"command": ["get_property", "http-header-fields"], "request_id": 500 }\n'
-    INPUT_COMMANDS = b'{"command": ["get_property", "user-data/mpv/ytdl/json-subprocess-result"], "request_id": 600 }\n'
+    GET_ERROR = b'{"command": ["get_property", "user-data/mpv/ytdl/json-subprocess-result"], "request_id": 600 }\n'
 
     all_config_files = {}
 
@@ -556,6 +555,7 @@ class Player():
             return streamUrl
 
     def _on_connect(self):
+        logger.error('empty on_connect')
         pass
 
     def set_volume(self, vol):
@@ -930,14 +930,14 @@ class Player():
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug('updateStatus thread started.')
         #with lock:
-        #    self.oldUserInput['Title'] = 'Connecting to: "{}"'.format(self.name)
+        #    self.oldUserInput['Title'] = M_STRINGS['connecting_'] + self.name
         #    self.outputStream.write(msg=self.oldUserInput['Title'])
         ''' Force volume display even when icy title is not received '''
         with recording_lock:
             if self.buffering:
-                self.oldUserInput['Title'] = 'Buffering: ' + self.name
+                self.oldUserInput['Title'] = M_STRINGS['buffering_'] + self.name
             else:
-                self.oldUserInput['Title'] = 'Playing: ' + self.name
+                self.oldUserInput['Title'] = M_STRINGS['playing_'] + self.name
         try:
             out = self.process.stdout
             while(True):
@@ -949,7 +949,8 @@ class Player():
                         subsystemOut = subsystemOutRaw.decode(self._station_encoding, 'replace')
                     except:
                         subsystemOut = subsystemOutRaw.decode('utf-8', 'replace')
-                got_404 = False
+                http_error = False
+                # logger.error('\nchecking\n{}\n'.format(subsystemOut))
                 if stop():
                     break
                 elif subsystemOut == '':
@@ -959,11 +960,26 @@ class Player():
                 elif 'Name or service not known' in subsystemOut or \
                         'cannot connect to ' in subsystemOut or \
                         ('404' in subsystemOut and 'Not Available' in subsystemOut):
-                    got_404 = True
+                    http_error = 404
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('----==== playbak stopped, reason: "{}" ====----'.format(subsystemOut.strip()))
                     break
-                logger.error('raw input = "{0}"'.format(subsystemOut.strip()))
+                elif 'Server returned 503' in subsystemOut or \
+                        '503 All backends failed or unhealthy' in subsystemOut or \
+                        'HTTP 503 error' in subsystemOut:
+                    logger.error('got 503!')
+                    http_error = 503
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('----==== playbak stopped, reason: "{}" ====----'.format(subsystemOut.strip()))
+                    break
+                elif 'No stream found' in subsystemOut:
+                    logger.error('got 503!')
+                    http_error = 808
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('----==== playbak stopped, reason: "{}" ====----'.format(subsystemOut.strip()))
+                    break
+
+                # logger.error('raw input = "{0}"'.format(subsystemOut.strip()))
                 with recording_lock:
                     tmp = self._is_accepted_input(subsystemOut)
                 if not tmp:
@@ -1008,7 +1024,7 @@ class Player():
                                     string_to_show = self._format_volume_string(subsystemOut) + self._format_title_string(self.oldUserInput['Title'])
 
                                 if self_show_volume and self_oldUserInput_Title:
-                                    self.outputStream.write(msg=string_to_show, counter='')
+                                    self.outputStream.write(msg_id=STATES.VOLUME, msg=string_to_show, counter='')
                                     self.threadUpdateTitle()
                     elif self._is_in_playback_token(subsystemOut):
                         self.stop_timeout_counter_thread = True
@@ -1023,17 +1039,24 @@ class Player():
                         with recording_lock:
                             if (not self.playback_is_on) and (logger.isEnabledFor(logging.INFO)):
                                 logger.info('*** updateStatus(): Start of playback detected ***')
-                            #if self.outputStream.last_written_string.startswith('Connecting to'):
+                            #if self.outputStream.last_written_string.startswith(M_STRINGS['connecting_']):
                             if self.oldUserInput['Title'] == '':
                                 if self.buffering:
-                                    new_input = 'Buffering: ' + self.name
+                                    new_input = M_STRINGS['buffering_'] + self.name
+                                    msg_id=STATES.BUFFER
                                 else:
-                                    new_input = 'Playing: ' + self.name
+                                    new_input = M_STRINGS['playing_'] + self.name
+                                    msg_id=STATES.PLAY
                             else:
                                 new_input = self.oldUserInput['Title']
+                                logger.error(f'using msg_id=self.outputStream.current_msg_id: {self.outputStream.current_msg_id}')
+                                if self.buffering:
+                                    msg_id = STATES.BUFFER
+                                else:
+                                    msg_id = STATES.PLAY
                         if not self.playback_is_on:
                             on_connect()
-                        self.outputStream.write(msg=new_input, counter='')
+                        self.outputStream.write(msg_id=msg_id, msg=new_input, counter='')
                         with recording_lock:
                             self.playback_is_on = True
                             self.connecting = False
@@ -1050,9 +1073,13 @@ class Player():
                             with self.status_update_lock:
                                 self._icy_data['audio_format'] = subsystemOut.split('] ')[1].split(' (')[0]
                                 self.info_display_handler()
-                            if self.oldUserInput['Title'].startswith('Buffering: '):
+                            if self.oldUserInput['Title'].startswith(M_STRINGS['buffering_']):
                                 self.outputStream.write(
-                                        self.oldUserInput['Title'].replace('Buffering', 'Playing'),
+                                        msg_id=STATES.PLAY,
+                                        msg=self.oldUserInput['Title'].replace(
+                                            M_STRINGS['buffering_'],
+                                            M_STRINGS['playing_']
+                                            ),
                                         counter=''
                                         )
                         # logger.error('DE 3 {}'.format(self._icy_data))
@@ -1099,7 +1126,7 @@ class Player():
                                     #         self.buffering_change_function()
                                     if ok_to_display and self.playback_is_on:
                                         string_to_show = self.title_prefix + title
-                                        self.outputStream.write(msg=string_to_show, counter='')
+                                        self.outputStream.write(msg_id=STATES.TITLE, msg=string_to_show, counter='')
                                     else:
                                         if logger.isEnabledFor(logging.DEBUG):
                                             logger.debug('***** Title change inhibited: ok_to_display = {0}, playbabk_is_on = {1}'.format(ok_to_display, self.playback_is_on))
@@ -1110,17 +1137,19 @@ class Player():
                                 if ok_to_display and self.playback_is_on:
                                     # logger.error('\n\nhere - self.buffering: {}'.format(self.buffering))
                                     if self.buffering:
-                                        title = 'Buffering: ' + self.name
+                                        title = M_STRINGS['buffering_'] + self.name
+                                        msg_id = STATES.BUFFER
                                         # logger.error('buffering')
                                     else:
-                                        title = 'Playing: ' + self.name
+                                        title = M_STRINGS['playing_'] + self.name
+                                        msg_id = STATES.PLAY
                                         # logger.error('playing')
                                     self.oldUserInput['Title'] = title
                                     string_to_show = self.title_prefix + title
-                                    self.outputStream.write(msg=string_to_show, counter='')
+                                    self.outputStream.write(msg_id=msg_id, msg=string_to_show, counter='')
                     #else:
                     #    if self.oldUserInput['Title'] == '':
-                    #        self.oldUserInput['Title'] = 'Connecting to: "{}"'.format(self.name)
+                    #        self.oldUserInput['Title'] = M_STRINGS['connecting_'] + self.name
                     #        self.outputStream.write(msg=self.oldUserInput['Title'], counter='')
 
                     else:
@@ -1163,6 +1192,7 @@ class Player():
             # return
 
         ''' crash detection '''
+        logger.error(f'{http_error = }')
         logger.error('detect_if_player_exited = {0}, stop = {1}'.format(detect_if_player_exited(), stop()))
 
         if not stop():
@@ -1172,11 +1202,11 @@ class Player():
                 stop_player(
                     from_update_thread=True,
                     player_disappeared=True,
-                    got_404=got_404
+                    http_error=http_error
                 )
             else:
                 if logger.isEnabledFor(logging.INFO):
-                    logger.info('Crash detection is off; waiting to timeout')
+                    logger.info('\n\nCrash detection is off; waiting to timeout')
         if (logger.isEnabledFor(logging.INFO)):
             logger.info('updateStatus thread stopped.')
         self._clear_empty_mkv()
@@ -1190,10 +1220,10 @@ class Player():
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug('updateRecordingStatus thread started.')
         #with lock:
-        #    self.oldUserInput['Title'] = 'Connecting to: "{}"'.format(self.name)
+        #    self.oldUserInput['Title'] = M_STRINGS['connecting_'] + self.name
         #    self.outputStream.write(msg=self.oldUserInput['Title'])
         ''' Force volume display even when icy title is not received '''
-        # self.oldUserInput['Title'] = 'Playing: ' + self.name
+        # self.oldUserInput['Title'] = M_STRINGS['playing_'] + self.name
         try:
             out = self.monitor_process.stdout
             while(True):
@@ -1260,7 +1290,7 @@ class Player():
                                 string_to_show = self._format_volume_string(subsystemOut) + self._format_title_string(self.oldUserInput['Title'])
 
                                 if self.show_volume and self.oldUserInput['Title']:
-                                    self.outputStream.write(msg=string_to_show, counter='')
+                                    self.outputStream.write(msg_id=STATES.VOLUME, msg=string_to_show, counter='')
                                     self.threadUpdateTitle()
                             if stop():
                                 break
@@ -1321,13 +1351,46 @@ class Player():
                     self._chapter_time = datetime.now()
                     a_data = self._fix_returned_data(data)
                     logger.error('raw input: "{!r}"'.format(a_data))
-                    got_404 = False
+                    http_error = False
+                    if b'unrecognized file format' in a_data:
+                        http_error = 810
+                        if logger.isEnabledFor(logging.INFO):
+                            logger.info('----==== playbak stopped, reason: "{}" ====----'.format(a_data))
+                    if b'"request_id":600' in a_data:
+                        if b'"error":"success"' in a_data:
+                            logger.error('it is valid!')
+                            if logger.isEnabledFor(logging.INFO):
+                                logger.info('----==== playbak stopped, reason: "{}" ====----'.format(a_data))
+                            ''' try to parse it '''
+                            if b'Failed to establish a new connection' in a_data or \
+                                    b'Name or service not known' in a_data or \
+                                    (b'404' in a_data and (
+                                        b'Not Available' in a_data or \
+                                        b'Not Found' in a_data)
+                                     ):
+                                http_error = 404
+                                break
+                            elif b'403' in a_data and b'Forbidden' in a_data:
+                                http_error = 403
+                                break
+                            elif b'503' in a_data and \
+                                    (b'All backends failed or unhealthy' in a_data or \
+                                    b'Service unavailable' in a_data):
+                                http_error = 503
+                                break
+                            elif b'Connection refused' in a_data:
+                                http_error = 809
+                                break
+                            else:
+                                if logger.isEnabledFor(logging.INFO):
+                                    logger.info('----==== Message not handled ====----')
+
                     if stop():
                         break
                     elif b'"file_error":"loading failed"' in a_data:
                         self._request_mpv_error(sock)
-                        # got_404 = True
-                        # logger.error('\n\ngot_404 = {}\n\n'.format(got_404))
+                        # http_error = True
+                        # logger.error('\n\nhttp_error = {}\n\n'.format(http_error))
                         # if logger.isEnabledFor(logging.INFO):
                         #     logger.info('----==== playbak stopped, reason: {} ====----'.format(a_data))
                         # break
@@ -1378,9 +1441,13 @@ class Player():
                                                 break
                                             self._request_mpv_info_data(sock)
                                             self.info_display_handler()
-                                            if self.oldUserInput['Title'].startswith('Buffering: '):
+                                            if self.oldUserInput['Title'].startswith(M_STRINGS['buffering_']):
                                                 self.outputStream.write(
-                                                        self.oldUserInput['Title'].replace('Buffering', 'Playing'),
+                                                        msg_id=STATES.PLAY,
+                                                        msg=self.oldUserInput['Title'].replace(
+                                                            M_STRINGS['buffering_'],
+                                                            M_STRINGS['playing_']
+                                                        ),
                                                         counter=''
                                                         )
                                         elif (d['event'] == 'file-loaded' or \
@@ -1408,11 +1475,11 @@ class Player():
                 stop_player(
                     from_update_thread=True,
                     player_disappeared = True,
-                    got_404=got_404
+                    http_error=http_error
                 )
             else:
                 if logger.isEnabledFor(logging.INFO):
-                    logger.info('Crash detection is off; waiting to timeout')
+                    logger.info('\n\nCrash detection is off; waiting to timeout')
         if (logger.isEnabledFor(logging.INFO)):
             logger.info('MPV updateStatus thread stopped.')
         self._clear_empty_mkv()
@@ -1439,7 +1506,7 @@ class Player():
                             return True
                         else:
                             if logger.isEnabledFor(logging.INFO):
-                                logger.info('Crash detection is off; waiting to timeout')
+                                logger.info('\n\nCrash detection is off; waiting to timeout')
             return False
         has_error = False
         if (logger.isEnabledFor(logging.DEBUG)):
@@ -1454,12 +1521,12 @@ class Player():
         on_connect = args[7]
         ''' Force volume display even when icy title is not received '''
         if self.buffering:
-            self.oldUserInput['Title'] = 'Buffering: ' + self.name
+            self.oldUserInput['Title'] = M_STRINGS['buffering_'] + self.name
         else:
-            self.oldUserInput['Title'] = 'Playing: ' + self.name
+            self.oldUserInput['Title'] = M_STRINGS['playing_'] + self.name
         # logger.error('DE ==== {0}\n{1}\n{2}'.format(fn, enc, stop))
         #with lock:
-        #    self.oldUserInput['Title'] = 'Connecting to: "{}"'.format(self.name)
+        #    self.oldUserInput['Title'] = M_STRINGS['connecting_'] + self.name
         #    self.outputStream.write(msg=self.oldUserInput['Title'])
 
         go_on = False
@@ -1506,7 +1573,7 @@ class Player():
                             string_to_show = self._format_volume_string(subsystemOut) + self._format_title_string(self.oldUserInput['Title'])
 
                             if self.show_volume and self.oldUserInput['Title']:
-                                self.outputStream.write(msg=string_to_show, counter='')
+                                self.outputStream.write(msg_id=STATES.VOLUME, msg=string_to_show, counter='')
                                 self.threadUpdateTitle()
                     elif self._is_in_playback_token(subsystemOut):
                         # logger.error('DE \n\ntoken = "' + subsystemOut + '"\n\n')
@@ -1523,15 +1590,21 @@ class Player():
                             if logger.isEnabledFor(logging.INFO):
                                 logger.info('*** updateWinVLCStatus(): Start of playback detected ***')
                             on_connect()
-                        #if self.outputStream.last_written_string.startswith('Connecting to'):
+                        #if self.outputStream.last_written_string.startswith(M_STRINGS['connecting_']):
                         if self.oldUserInput['Title'] == '':
                             if self.buffering:
-                                new_input = 'Buffering: ' + self.name
+                                new_input = M_STRINGS['buffering_'] + self.name
+                                msg_id = STATES.BUFFER
                             else:
-                                new_input = 'Playing: ' + self.name
+                                new_input = M_STRINGS['playing_'] + self.name
+                                msg_id = STATES.PLAY
                         else:
                             new_input = self.oldUserInput['Title']
-                        self.outputStream.write(msg=new_input, counter='')
+                            if self.buffering:
+                                msg_id = STATES.BUFFER
+                            else:
+                                msg_id = STATES.PLAY
+                        self.outputStream.write(msg_id=msg_id, msg=new_input, counter='')
                         self.playback_is_on = True
                         self.connecting = False
                         self._stop_delay_thread()
@@ -1544,9 +1617,13 @@ class Player():
                                 with self.status_update_lock:
                                     self._icy_data['audio_format'] = subsystemOut.split('] ')[1].split(' (')[0]
                                     self.info_display_handler()
-                            if self.oldUserInput['Title'].startswith('Buffering: '):
+                            if self.oldUserInput['Title'].startswith(M_STRINGS['buffering_']):
                                 self.outputStream.write(
-                                        self.oldUserInput['Title'].replace('Buffering', 'Playing'),
+                                        msg_id=STATES.BUFFER,
+                                        msg=self.oldUserInput['Title'].replace(
+                                            M_STRINGS['buffering_'],
+                                            M_STRINGS['playing_']
+                                        ),
                                         counter=''
                                         )
                         # logger.error('DE 3 {}'.format(self._icy_data))
@@ -1586,22 +1663,22 @@ class Player():
                                     ok_to_display = True
                                 if ok_to_display and self.playback_is_on:
                                     string_to_show = self.title_prefix + title
-                                    self.outputStream.write(msg=string_to_show, counter='')
+                                    self.outputStream.write(msg_id=STATES.TITLE, msg=string_to_show, counter='')
                             else:
                                 ok_to_display = True
                                 if (logger.isEnabledFor(logging.INFO)):
                                     logger.info('Icy-Title is NOT valid')
                                 if ok_to_display and self.playback_is_on:
                                     if self.buffering:
-                                        title = 'Buffering: ' + self.name
+                                        title = M_STRINGS['buffering_'] + self.name
                                     else:
-                                        title = 'Playing: ' + self.name
+                                        title = M_STRINGS['playing_'] + self.name
                                     self.oldUserInput['Title'] = title
                                     string_to_show = self.title_prefix + title
-                                    self.outputStream.write(msg=string_to_show, counter='')
+                                    self.outputStream.write(msg_id=STATES.TITLE, msg=string_to_show, counter='')
                     #else:
                     #    if self.oldUserInput['Title'] == '':
-                    #        self.oldUserInput['Title'] = 'Connecting to: "{}"'.format(self.name)
+                    #        self.oldUserInput['Title'] = M_STRINGS['connecting_'] + self.name
                     #        self.outputStream.write(msg=self.oldUserInput['Title'], counter='')
 
                     else:
@@ -1659,7 +1736,7 @@ class Player():
                 win32file.WriteFile(sock, self.GET_ERROR)
             else:
                 # sock.sendall(self.GET_ERROR)
-                sock.sendall(self.INPUT_COMMANDS)
+                sock.sendall(self.GET_ERROR)
         except BrokenPipeError:
             pass
 
@@ -1804,7 +1881,7 @@ class Player():
                     #logger.critical(string_to_show)
                     if stop():
                         return False
-                    self.outputStream.write(msg=string_to_show, counter='')
+                    self.outputStream.write(msg_id=STATES.TITLE, msg=string_to_show, counter='')
                 if not self.playback_is_on:
                     if stop():
                         return False
@@ -1815,11 +1892,11 @@ class Player():
                 self.buffering = False
                 with self.buffering_lock:
                     self.buffering_change_function()
-                title = 'Playing: ' + self.name
+                title = M_STRINGS['playing_'] + self.name
                 string_to_show = self.title_prefix + title
                 if stop():
                     return False
-                self.outputStream.write(msg=string_to_show, counter='')
+                self.outputStream.write(msg_id=STATES.PLAY, msg=string_to_show, counter='')
                 self.oldUserInput['Title'] = title
 
         # logger.info('DE a_data {}'.format(a_data))
@@ -1900,10 +1977,12 @@ class Player():
         self.stations_history_add_function()
         # logger.info('self.buffering = {}'.format(self.buffering))
         if self.buffering:
-            new_input = 'Buffering: ' + self.name
+            new_input = M_STRINGS['buffering_'] + self.name
+            msg_id = STATES.BUFFER
         else:
-            new_input = 'Playing: ' + self.name
-        self.outputStream.write(msg=new_input, counter='')
+            new_input = M_STRINGS['playing_'] + self.name
+            msg_id = STATES.PLAY
+        self.outputStream.write(msg_id=msg_id, msg=new_input, counter='')
         with self.buffering_lock:
             self.buffering_change_function()
         if self.oldUserInput['Title'] == '':
@@ -1933,9 +2012,9 @@ class Player():
     def updateTitle(self, *arg, **karg):
         self._stop_delay_thread()
         if arg[1]:
-            arg[0].write(msg=arg[1])
+            arg[0].write(msg_id=STATES.TITLE, msg=arg[1])
         else:
-            arg[0].write(msg=self.title_prefix + self._format_title_string(self.oldUserInput['Title']))
+            arg[0].write(msg_id=STATES.TITLE, msg=self.title_prefix + self._format_title_string(self.oldUserInput['Title']))
 
     def _is_icy_entry(self, a_string):
         for a_token in self.icy_tokens:
@@ -1994,7 +2073,7 @@ class Player():
             self.connecting = False
             self.playback_is_on = True
             the_title = self.oldUserInput['Title']
-        self.outputStream.write(msg=the_title, counter='')
+        self.outputStream.write(msg_id=STATES.TITLE, msg=the_title, counter='')
         # self.threadUpdateTitle()
         self.monitor_update_thread.start()
 
@@ -2022,8 +2101,7 @@ class Player():
         self.title_prefix = ''
         self.playback_is_on = False
         self.delay_thread = None
-        # self.outputStream.write(msg='Station: "{}" - Opening connection...'.format(name), counter='')
-        self.outputStream.write(msg='Station: ' + name + ' - Opening connection...', counter='')
+        self.outputStream.write(msg_id=STATES.CONNECT, msg=M_STRINGS['station_'] + name + ' - Opening connection...', counter='')
         if logger.isEnabledFor(logging.INFO):
             logger.info('Selected Station: ' + name)
         if encoding:
@@ -2361,9 +2439,9 @@ class Player():
             self.show_volume = True
         # logger.info('\n\nself.paused = {}\n\n'.format(self.paused))
         if self.oldUserInput['Title'] == '':
-            self.outputStream.write(msg=self.title_prefix + self._format_title_string(self.oldUserInput['Input']), counter='')
+            self.outputStream.write(msg_id=STATES.TITLE, msg=self.title_prefix + self._format_title_string(self.oldUserInput['Input']), counter='')
         else:
-            self.outputStream.write(msg=self.title_prefix + self._format_title_string(self.oldUserInput['Title']), counter='')
+            self.outputStream.write(msg_id=STATES.TITLE, msg=self.title_prefix + self._format_title_string(self.oldUserInput['Title']), counter='')
 
     def toggleMute(self):
         ''' mute / unmute player '''
@@ -2385,9 +2463,9 @@ class Player():
                 self.show_volume = True
             # logger.info('\n\nself.muted = {}\n\n'.format(self.muted))
             if self.oldUserInput['Title'] == '':
-                self.outputStream.write(msg=self.title_prefix + self._format_title_string(self.oldUserInput['Input']), counter='')
+                self.outputStream.write(msg_id=STATES.TITLE, msg=self.title_prefix + self._format_title_string(self.oldUserInput['Input']), counter='')
             else:
-                self.outputStream.write(msg=self.title_prefix + self._format_title_string(self.oldUserInput['Title']), counter='')
+                self.outputStream.write(msg_id=STATES.TITLE, msg=self.title_prefix + self._format_title_string(self.oldUserInput['Title']), counter='')
         else:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Cannot toggle mute, player paused!')
@@ -2841,12 +2919,24 @@ class MpvPlayer(Player):
         if platform.startswith('win'):
             try:
                 data = win32file.ReadFile(sock, 64*1024)
-            except pywintypes.error:
+                # do not "specify sock.error as e" for except here
+                # it will crash if random playback is on
+                # use "except:" instead
+                #
+                # old command:
+                # except pywintypes.error:
+            except:
                 data = b''
         else:
             try:
                 data = sock.recvmsg(4096)
-            except sock.error as e:
+                # do not "specify sock.error as e" for except here
+                # it will crash if random playback is on
+                # use "except:" instead
+                #
+                # old command:
+                # except sock.error as e:
+            except:
                 data = ''
         # logger.error('DE data = {}'.format(data))
             #sock.colse()
@@ -2928,7 +3018,7 @@ class MpvPlayer(Player):
         else:
             info_string = self._format_title_string(self.oldUserInput['Input'])
         string_to_show = self._format_volume_string('Volume: ' + str(self.volume) + '%') + info_string
-        self.outputStream.write(msg=string_to_show, counter='')
+        self.outputStream.write(msg_id=STATES.VOLUME, msg=string_to_show, counter='')
         self.threadUpdateTitle()
 
 class MpPlayer(Player):
@@ -3736,7 +3826,7 @@ class VlcPlayer(Player):
         if pvol > 0:
             avol = '[Vol: {}%] '.format(pvol)
             if self.show_volume and self.oldUserInput['Title']:
-                self.outputStream.write(msg=avol + self.oldUserInput['Title'], counter='')
+                self.outputStream.write(msg_id=STATES.VOLUME, msg=avol + self.oldUserInput['Title'], counter='')
                 self.threadUpdateTitle()
 
     def _win_get_volume(self):

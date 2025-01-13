@@ -21,6 +21,7 @@ from .cjkwrap import cjkslices
 from .xdg import CheckDir
 from .html_help import HtmlHelp
 from .keyboard import kbkey, kb2str, kb2chr, check_localized
+from .common import M_STRINGS
 
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
@@ -2291,7 +2292,7 @@ class PyRadioBuffering():
         if self._global_functions is None:
             self._global_functions = {}
         self.recording = lambda: self._player.recording
-        self._title = ' ' + self._player.PLAYER_NAME + ' Buffering '
+        self._title = ' ' + self._player.PLAYER_NAME + ' ' + M_STRINGS['buffering_'].replace(':', '')
         if self._player.PLAYER_NAME == 'mplayer':
             self._text = 'Buffer size in KBytes: '
             self._step = 250

@@ -23,6 +23,21 @@ def BACKGROUND():
 CAPTION = 2
 BORDER = 3
 
+M_STRINGS = {
+	'init_': 'Initialization: ',
+	'connecting_': 'Connecting to: ',
+	'conn-fail_': 'Failed to connect to: ',
+	'playing_': 'Playing: ',
+	'buffering_': 'Buffering: ',
+	'station_': 'Station: ',
+	'selected_player_': 'Selected player: ',
+	'down-icon': 'Downloading icon...',
+	'player-acivated_': ': Player activated!!!',
+	'hist-empty': 'History is empty!!!',
+	'hist-first': 'Already at first item!!!',
+	'hist-last': 'Already at last item!!!',
+}
+
 """
 Format of theme configuration
     Name, color_pair, foreground, background
@@ -52,13 +67,6 @@ THEME_ITEMS = (
     ('Edit Cursor', 8, 0, 0)
 )
 
-""" Messages to display when player starts / stops
-    Used in log to stop runaway threads from printing
-    messages after playback is stopped """
-player_start_stop_token = ('Initialization: ',
-                           ': Playback stopped',
-                           ': Player terminated abnormally!',
-                           ': Stream not found (error 404)')
 
 def erase_curses_win(Y, X, beginY, beginX, char=' ', color=5):
     ''' empty a part of the screen
@@ -97,6 +105,40 @@ def curses_rgb_to_hex(rgb):
 
 def rgb_to_curses_rgb(rgb):
     return tuple(int(y *1000 / 255) for y in rgb)
+
+""" Messages to display when player starts / stops
+    Used in log to stop runaway threads from printing
+    messages after playback is stopped """
+player_start_stop_token = {
+    0:      M_STRINGS['init_'],
+    1:      ': Playback stopped',
+    2:      ': Player terminated abnormally!',
+    3:      'Failed to connecto to: ',
+    403:    ': Terminated - Server returned "Forbidden" (error 403)',
+    404:    ': Terminated - Stream not found (error 404)',
+    503:    ': Terminated - Service not available (error 503)',
+    808:    ': Terminated - No stream found',
+    809:    ': Terminated - Connection refused',
+    810:    ': Terminated - Unrecognized file format',
+}
+
+class STATES():
+    ANY = -1
+    RESET = 0
+    INIT = 1
+    CONNECT = 2
+    BUFFER = 4
+    BUFF_MSG = 5
+    PLAY = 10
+    TITLE = 11
+
+    CONNECT_ERROR = 100
+    VOLUME = 101
+
+    ERROR_NO_PLAYER = 200
+    ERROR_DEPENDENCY = 201
+    ERROR_CONNECT = 202
+    ERROR_START = 203
 
 
 class StationsChanges():

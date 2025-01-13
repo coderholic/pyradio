@@ -12,7 +12,7 @@ import datetime
 import logging
 import threading
 import subprocess
-from .common import player_start_stop_token
+from .common import player_start_stop_token, STATES, M_STRINGS
 from .cjkwrap import cjklen
 
 locale.setlocale(locale.LC_ALL, "")
@@ -180,7 +180,7 @@ class PyRadioTimer:
         while True:
             if self._exit():
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Timer threat asked to stop. Stopping...')
+                    logger.debug('Timer thread asked to stop. Stopping...')
                 return
 
 
@@ -190,11 +190,11 @@ class PyRadioTimer:
             for _ in range(iterations):
                 if self._exit():
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Timer threat asked to stop. Stopping...')
+                        logger.debug('Timer thread asked to stop. Stopping...')
                     return
                 sleep(self.SLEEP_INTERVAL)  # Sleep for SLEEP_INTERVAL seconds
 
-            old_tme = self._show_time(old_time)
+            old_time = self._show_time(old_time)
 
     def _show_time(self, old_time=None):
         with self.lock:  # Acquire lock before updating
@@ -212,7 +212,7 @@ class PyRadioTimer:
             for an_update_function in self._update_functions:
                 if self._exit():
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Timer threat asked to stop. Stopping...')
+                        logger.debug('Timer thread asked to stop. Stopping...')
                     return old_time
                 threading.Thread(target=an_update_function, args=(self.current_time,)).start()
                 return self.current_time
@@ -241,7 +241,7 @@ class Log():
 
     lock = threading.Lock()
 
-    _player_stopped = 0
+    _player_stopped = True
 
     _show_status_updates = _station_sent = False
 
@@ -262,7 +262,15 @@ class Log():
 
     can_display_help_msg = None
 
-    def __init__(self, config, get_web_song_title):
+    def __init__(self,
+                 config,
+                 current_player_counter_id,
+                 active_player_counter_id,
+                 get_web_song_title
+                 ):
+        self.current_msg_id = STATES.RESET
+        self._current_player_counter_id = current_player_counter_id
+        self._active_player_counter_id = active_player_counter_id
         self._get_web_song_title = get_web_song_title
         self._muted = self._paused = False
         self._cnf = config
@@ -308,7 +316,8 @@ class Log():
 
         ''' Redisplay the last message '''
         if self.msg:
-            self.write(self.msg)
+            logger.error(f'redisplaying "{self.msg}" with msg_id = {self.current_msg_id}')
+            self.write(msg_id=self.current_msg_id, msg=self.msg)
 
     def _do_i_print_last_char(self, first_print):
         if first_print:
@@ -349,16 +358,17 @@ class Log():
 
     def stop_timer(self):
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('timer is disabled! Stoping!')
+            logger.debug('timer is getting disabled!')
         self._stop_thread = True
         if self.timer:
             self.timer.stop()
         self._the_time = None
 
     def write_time(self, a_time):
-        self.write(p_time=a_time)
+        self.write(-1, p_time=a_time)
 
     def write(self,
+              msg_id,
               msg=None,
               suffix=None,
               counter=None,
@@ -366,10 +376,59 @@ class Log():
               help_msg=False,
               error_msg=False,
               notify_function=None):
-        # logger.error('**** Log.write: msg = "{}"'.format(msg))
-        # logger.error(f'{p_time = }')
+        with self.lock:
+            current_player_counter_id = self._current_player_counter_id()
+            active_player_counter_id = self._active_player_counter_id()
+        if msg:
+            logger.error('****** self.current_msg_id = {}: "{}" with msg_id = {}'.format(self.current_msg_id, msg, msg_id))
+        logger.error(f'{suffix = }, {counter = }, {p_time = } with {msg_id = }')
+        logger.error(
+            'self._current_player_counter_id() = {}, self._current_player_counter_id() = {}'.format(
+                current_player_counter_id, current_player_counter_id
+            )
+        )
         if self.cursesScreen:
+            if msg_id == STATES.RESET:
+                self.current_msg_id = msg_id
+            if msg_id < self.current_msg_id and msg_id > STATES.ANY:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f'refusing to print message with id {msg_id}, currently at {self.current_msg_id}')
+                return
+            if msg_id > STATES.ANY and msg_id < STATES.CONNECT_ERROR:
+                self.current_msg_id = msg_id
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f'setting {self.current_msg_id = }')
+            elif msg_id == STATES.CONNECT_ERROR or msg_id >= 100:
+                self.current_msg_id = STATES.RESET
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f'resetting {self.current_msg_id = } due to STATES.CONNECT_ERROR')
+
+            ''' get player state '''
+            if msg_id in (STATES.PLAY, STATES.TITLE):
+                self._player_stopped = False
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('player in playback!')
+            if msg_id in (STATES.RESET, STATES.CONNECT, STATES.CONNECT_ERROR, STATES.BUFFER, STATES.BUFF_MSG):
+                self._player_stopped = True
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('player is stopped!')
+
             with self.lock:
+                # logger.error(f'{suffix =  }')
+                # logger.error(f'{counter =  }')
+                if current_player_counter_id != active_player_counter_id:
+                    if suffix != '' or suffix is not None or p_time is not None:
+                        if self.program_restart:
+                            self.program_restart = False
+                        else:
+                            msg = None
+                        counter = None
+                    else:
+                        if p_time is None:
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug(f'refusing to print message from previous player id')
+                        return
+
                 ''' display time '''
                 if p_time is not None:
                     self._the_time = p_time
@@ -392,7 +451,7 @@ class Log():
                 if self.asked_to_stop:
                     self.asked_to_stop = False
                     self.counter = None
-                    self._player_stopped = 0
+                    self._player_stopped = True
                     return
                 if p_time is not None:
                     self.cursesScreen.refresh()
@@ -400,24 +459,21 @@ class Log():
 
                 ''' start normal execution '''
                 if msg:
-                    if player_start_stop_token[1] in msg or \
-                            player_start_stop_token[2] in msg:
-                        self._player_stopped += 1
-                    elif msg.startswith(player_start_stop_token[0]):
-                        self._player_stopped = 0
-                if msg and self._player_stopped > 1:
+                    logger.error('msg\n{}'.format(msg))
+                if msg and self._player_stopped:
                     ''' Refuse to print anything if "Playback stopped"
                         was the last message printed
                     '''
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Refusing to show message; player is stopped: "{}"'.format(msg))
+                    do_empty_msg = True
+                    if msg_id not in (STATES.RESET, STATES.CONNECT, STATES.CONNECT_ERROR):
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Refusing to show message; player is stopped: "{}"'.format(msg))
+                        msg = None
                     # return
-                elif self._player_stopped == 1:
-                    self._player_stopped = 2
                 if self.asked_to_stop:
                     self.asked_to_stop = False
                     self.counter = None
-                    self._player_stopped = 0
+                    self._player_stopped = True
                     return
                 #if logger.isEnabledFor(logging.DEBUG):
                 #    logger.debug('before ----------------------------')
@@ -449,7 +505,7 @@ class Log():
                 if self.asked_to_stop:
                     self.asked_to_stop = False
                     self.counter = None
-                    self._player_stopped = 0
+                    self._player_stopped = True
                     return
                 ''' update main message '''
                 # logger.error('*** msg = "{}"'.format(msg))
@@ -475,12 +531,13 @@ class Log():
                             self.cursesScreen.addstr(0, self._x_start, d_msg)
                         except:
                             pass
+                            logger.error('\n\n\n1 except\n\n\n')
                             # if logger.isEnabledFor(logging.ERROR):
                             #     logger.error('Error updating the Status Bar')
                     try:
                         self.cursesScreen.clrtoeol()
                     except:
-                        logger.error('\n\n\nexcept\n\n\n')
+                        logger.error('\n\n\n2 except\n\n\n')
                         pass
 
                     if msg:
@@ -500,9 +557,9 @@ class Log():
                                 self._station_that_is_playing_now = ''
                             else:
                                 self._song_title = ''
-                                if msg.startswith('Playing: '):
+                                if msg.startswith(M_STRINGS['playing_']):
                                     self._station_that_is_playing_now = msg[9:]
-                                elif msg.startswith('Buffering: '):
+                                elif msg.startswith(M_STRINGS['buffering_']):
                                     self._station_that_is_playing_now = msg[11:]
 
                     if self._add_chapter_function is not None and msg:
@@ -526,7 +583,7 @@ class Log():
                 if self.asked_to_stop:
                     self.asked_to_stop = False
                     self.counter = None
-                    self._player_stopped = 0
+                    self._player_stopped = True
                     return
                 ''' display suffix '''
                 if self.suffix:
@@ -609,7 +666,7 @@ class Log():
                 if self.asked_to_stop:
                     self.asked_to_stop = False
                     self.counter = None
-                    self._player_stopped = 0
+                    self._player_stopped = True
                     return
                 self.cursesScreen.refresh()
                 # logger.error('DE _player_stopped = {}'.format(self._player_stopped))
@@ -627,14 +684,14 @@ class Log():
             if server:
                 ''' remote control server running '''
                 title = None
-                # if msg.startswith('Playing: ') or \
-                #         msg.startswith('Connecting to: ') or \
-                #         msg.startswith('Initialization: ') or \
+                # if msg.startswith(M_STRINGS['playing_']) or \
+                #         msg.startswith(M_STRINGS['connecting_']) or \
+                #         msg.startswith(M_STRINGS['init_']) or \
                 #         'abnormal' in msg:
                 #    title = msg
-                if msg.startswith('Playing: ') or \
-                        msg.startswith('Buffering: ') or \
-                        msg.startswith('Connecting to: ') or \
+                if msg.startswith(M_STRINGS['playing_']) or \
+                        msg.startswith(M_STRINGS['buffering_']) or \
+                        msg.startswith(M_STRINGS['connecting_']) or \
                         'abnormal' in msg or \
                         msg.startswith('Failed to'):
                     title = msg
@@ -649,7 +706,7 @@ class Log():
                         if self._song_title:
                             title = self._song_title
                 if title:
-                    title = title.replace('Initialization', 'Connecting to')
+                    title = title.replace('Initialization', M_STRINGS['connecting_'])
                     server.send_song_title(title)
                     if old_song_title:
                         with self._song_title_lock:
@@ -691,8 +748,8 @@ class Log():
             if msg.startswith('mpv: ') or \
                     msg.startswith('mplayer: ') or \
                     msg.startswith('vlc: ') or \
-                    msg.startswith('Station: ') or \
-                    msg.startswith('Init'):
+                    msg.startswith(M_STRINGS['station_']) or \
+                    msg.startswith(M_STRINGS['init_']):
                 self._cnf._current_notification_message = ''
                 self._station_sent = False
                 self._stop_desktop_notification_thread = True
@@ -805,12 +862,12 @@ class Log():
                 self._desktop_notification_message = d_msg
                 return None, None
             self._last[1] = d_msg
-        elif msg.startswith('Playing: ') or \
-                msg.startswith('Buffering: '):
+        elif msg.startswith(M_STRINGS['playing_']) or \
+                msg.startswith(M_STRINGS['buffering_']):
             if self._station_sent:
                 return None, None
             d_title = 'Station'
-            d_msg = msg.replace('Playing: ', '').replace('Buffering: ', '')
+            d_msg = msg.replace(M_STRINGS['playing_'], '').replace(M_STRINGS['buffering_'], '')
             # if self._last[1]:
             #     ''' already shown song title '''
             #     logger.error('already shown song title: "{0}" - {1}'.format(d_msg, self._last))
@@ -858,11 +915,11 @@ class Log():
                 logger.critical('Error writing LIKED title...')
         else:
             if d_msg:
-                if d_msg.startswith('Initialization: '):
+                if d_msg.startswith(M_STRINGS['init_']):
                     self._started_station_name = d_msg[16:]
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Early station name (initialization): "{}"'.format(self._started_station_name))
-                if d_msg.startswith('Station: ') and ' - Opening connection' in d_msg:
+                if d_msg.startswith(M_STRINGS['station_']) and ' - Opening connection' in d_msg:
                     self._started_station_name = d_msg[9:].split(' - Opening connection')[0]
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Early station name (station): "{}"'.format(self._started_station_name))
@@ -909,13 +966,13 @@ class Log():
                         except:
                             logger.critical('Error writing title...')
                     self._cnf._current_log_title = d_msg
-                elif d_msg.startswith('Playing: ') or \
-                          d_msg.startswith('Buffering: '):
-                    if d_msg[0] == 'P':
-                        tok = 'Playing: '
+                elif d_msg.startswith(M_STRINGS['playing_']) or \
+                          d_msg.startswith(M_STRINGS['buffering_']):
+                    if d_msg[0] == M_STRINGS['playing_'][0]:
+                        tok = M_STRINGS['playing_']
                     else:
-                        tok = 'Buffering: '
-                    if logger.isEnabledFor(logging.CRITICAL) and tok == 'Playing: ':
+                        tok = M_STRINGS['buffering_']
+                    if logger.isEnabledFor(logging.CRITICAL) and tok == M_STRINGS['playing_']:
                         try:
                             if force or d_msg not in self._cnf._old_log_station:
                                 try:
@@ -980,10 +1037,10 @@ class Log():
         do_not_update = (
             ': Playback stopped',
             'Selected ',
-            'Failed to connect to: ',
-            'Connecting to: ',
-            'Initialization: ',
-            'Station: ',
+            M_STRINGS['conn-fail_'],
+            M_STRINGS['connecting_'],
+            M_STRINGS['init_'],
+            M_STRINGS['station_'],
             'abnormally',
         )
         token_id = 1
