@@ -5,7 +5,7 @@
 # Ben Dowling - 2009 - 2010
 # Kirill Klenov - 2012
 # Peter Stevenson (2E0PGS) - 2018
-# Spiros Georgaras - 2018, 2024
+# Spiros Georgaras - 2018, 2025
 
 import locale
 import curses
@@ -478,17 +478,17 @@ class PyRadio():
                  force_update='',
                  record=False):
         '''
-            _current_player_counter_id:   the player counter id used by log.write to display messages
-            _active_player_counter_id:    the new player counter id starting now
+            _current_player_id:   the player counter id used by log.write to display messages
+            _active_player_id:    the new player counter id starting now
                                           updating when player_start_stop_token[0] is sent to
                                           log.write ("Initianlization: {}")
 
-            in log.write, if _current_player_counter_id != _active_player_counter_id
+            in log.write, if _current_player_id != _active_player_id
                     do not display any message
         '''
-        self._current_player_counter_id = 0
-        self._next_current_player_counter_id = 1
-        self._active_player_counter_id = 0
+        self._current_player_id = 0
+        self._next_current_player_id = 1
+        self._active_player_id = 0
 
         # self.program_restart = False
         self._do_launch_external_palyer = external_player
@@ -888,7 +888,7 @@ class PyRadio():
             # logger.error('self.log.song_title: {}'.format(self.log.song_title))
             # logger.error('============================')
             if self.stations[self.playing][0] not in self.log.song_title:
-                out.append('    Title: "{}"'.format(fix_chars(self.log.song_title)))
+                out.append('    ' + M_STRINGS['title_'] + '"{}"'.format(fix_chars(self.log.song_title)))
         else:
             out.append('  Status: Idle')
         out.append('  Selection (id={0}): "{1}"'.format(self.selection+1, self.stations[self.selection][0]))
@@ -1028,7 +1028,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     title = M_STRINGS['playing_'] + title
             if not title:
                 if not self.player.isPlaying():
-                    title =  'Player is stopped!'
+                    title =  M_STRINGS['player-stopped']
                 else:
                     title = 'No Title'
             # return title
@@ -1117,8 +1117,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
         self.log = Log(
             self._cnf,
-            lambda: self._current_player_counter_id,
-            lambda: self._active_player_counter_id,
+            lambda: self._current_player_id,
+            lambda: self._active_player_id,
             lambda: self._remote_control_server
         )
         self.log.program_restart = self.program_restart
@@ -1345,7 +1345,10 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.headWin.addstr(0, 0, info, curses.color_pair(4))
             if self._cnf.locked:
                 self.headWin.addstr('[', curses.color_pair(4))
-                self.headWin.addstr('Session Locked', curses.color_pair(4))
+                self.headWin.addstr(
+                    M_STRINGS['session-locked'].replace(' (', '').replace(')', ''),
+                    curses.color_pair(4)
+                )
                 self.headWin.addstr('] ', curses.color_pair(4))
             elif self._cnf.headless:
                 self.headWin.addstr('[', curses.color_pair(4))
@@ -2120,7 +2123,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 except KeyboardInterrupt:
                     # ok
                     self.detect_if_player_exited = False
-                    logger.error('1 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
                     self.player.stop_mpv_status_update_thread = True
                     self.player.stop_win_vlc_status_update_thread = True
                     if logger.isEnabledFor(logging.INFO):
@@ -2177,15 +2179,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.player.stop_win_vlc_status_update_thread = True
         if self.player:
             # ok
-            logger.error('2 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
             self.detect_if_player_exited = False
-            logger.error('\n1 show_message=False\n')
             self.stopPlayer(
                 show_message=False,
                 reset_playing=False
             )
         self._cls_update_stations = None
-        logger.error('2 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
         self.detect_if_player_exited = False
         if self._cnf.dirty_playlist and save_playlist:
             ''' Try to auto save playlist on exit
@@ -2337,7 +2336,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         if self.player.isPlaying():
             # ok
             self.detect_if_player_exited = False
-            logger.error('4 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
             if msg and logger.isEnabledFor(logging.INFO):
                 logger.info(msg)
             self.stopPlayer()
@@ -2420,7 +2418,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             except:
                 enc = ''
         ''' start player '''
-        self._active_player_counter_id = self._current_player_counter_id
+        self._active_player_id = self._current_player_id
         self.log.write(msg_id=STATES.RESET, msg=player_start_stop_token[0] + self._last_played_station[0])
         self.detect_if_player_exited = True
         logger.error('DE \n\nself.detect_if_player_exited = {}\n\n'.format(self.detect_if_player_exited))
@@ -2429,7 +2427,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         try:
             self.player.play(name=self._last_played_station[0],
                              streamUrl=stream_url,
-                             stop_player=self.stopPlayerFromKeyboard,
+                             stop_player=self.stopPlayerOnConnectionFailed,
                              detect_if_player_exited=lambda: self.detect_if_player_exited,
                              enable_crash_detection_function=self._enable_player_crash_detection,
                              encoding=self.get_active_encoding(enc)
@@ -2453,7 +2451,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         # if logger.isEnabledFor(logging.INFO):
         #     logger.info('Enabling crash detection')
         self.detect_if_player_exited = True
-        logger.error('5 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
 
     def _click_station(self):
         if self._cnf._online_browser:
@@ -2477,7 +2474,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             if n <= lim:
                 if stop():
                     return
-                self.log.write(msg_id=STATES.CONNECT, msg=M_SRTINGS['connecting'] + station_name)
+                self.log.write(msg_id=STATES.CONNECT, msg=M_STRINGS['connecting_'] + station_name)
                 self.log.write(msg_id=STATES.ANY, counter='{}'.format(n))
             else:
                 if stop():
@@ -2488,11 +2485,10 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.connectionFailed()
 
     def connectionFailed(self):
-        logger.error('\n\nconnectionFailed started\n\n')
+        logger.error('connectionFailed called')
         # ok
         self.buffering = self.player.playback_is_on = False
         self.detect_if_player_exited = False
-        logger.error('6 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
         if self.ws.operation_mode in (self.ws.STATION_INFO_MODE,
                 self.ws.STATION_DATABASE_INFO_MODE,
                 self.ws.STATION_INFO_ERROR_MODE):
@@ -2511,7 +2507,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         if logger.isEnabledFor(logging.INFO):
             logger.info('*** Start of playback NOT detected!!! ***')
         self.player.stop_mpv_status_update_thread = True
-        self.log.write(msg_id=STATES.CONNECT_ERROR, msg=M_STRINGS['conn-fail_'] + self._last_played_station[0])
+        self.log.write(msg_id=STATES.CONNECT_ERROR, msg=self.player.PLAYER_NAME  + ': ' + M_STRINGS['error-1001'])
         self.player.connecting = False
         if self._random_requested and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -2520,9 +2516,10 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.play_random()
         with self._buffering_lock:
             self._show_recording_status_in_header()
-        logger.error('\n\nconnectionFailed ended\n\n')
+        if self._remote_control_server:
+            self._remote_control_server.send_song_title(self.player.PLAYER_NAME  + ': ' + M_STRINGS['error-1001'])
 
-    def stopPlayerFromKeyboard(
+    def stopPlayerOnConnectionFailed(
         self,
         from_update_thread=False,
         player_disappeared=False,
@@ -2533,15 +2530,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             for the status update thread.
         '''
         am_i_playing_random = self._random_requested
-        logger.error('\n\n\n\nstopPlayerFromKeyboard()!!!!!')
-        logger.error(f'{self._random_requested = }')
-        logger.error(f'{http_error = }')
+        logger.error('stopPlayerOnConnectionFailed called with http_error = {}'.format(http_error))
         self.player.stop_mpv_status_update_thread = True
         self.player.stop_update_notification_thread = True
         self.player.stop_win_vlc_status_update_thread = True
         if from_update_thread:
             self.detect_if_player_exited = True
-            logger.error('7 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
             self.player.stop_timeout_counter_thread = True
         with self.log.lock:
             self.log.counter = None
@@ -2555,12 +2549,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         #         pass
         #         # this one breaks the layout
         #         # self._redisplay_stations_and_playlists()
-        logger.error(f'{self._random_requested = }')
-        logger.error('stopPlayerFromKeyboard()!!!!! ended\n\n\n\n')
         if am_i_playing_random != self._random_requested:
             if am_i_playing_random:
                 self._random_requested = am_i_playing_random
-                logger.error('\n\nrestarting random play\n\n')
                 self.play_random()
 
     def stopPlayer(self,
@@ -2569,16 +2560,15 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                    reset_playing=True,
                    from_connectionFailed_function=False,
                    http_error=False):
-        logger.error(f'{show_message = }')
-        logger.error(f'{from_update_thread = }')
-        logger.error(f'{reset_playing = }')
-        logger.error(f'{http_error = }')
+        # logger.error(f'{show_message = }')
+        # logger.error(f'{from_update_thread = }')
+        # logger.error(f'{reset_playing = }')
+        # logger.error(f'{http_error = }')
         ''' stop player
             it is ready for any mode
         '''
         if from_update_thread:
             self.detect_if_player_exited = True
-            logger.error('8 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
         try:
             self.player.close()
         except:
@@ -2602,18 +2592,18 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             if show_message:
                 self._show_player_is_stopped(from_update_thread, http_error)
             elif not from_connectionFailed_function:
-                self._current_player_counter_id = self._next_current_player_counter_id
-                logger.error(f'increasing {self._current_player_counter_id = }')
-                self._prepare_next_current_player_counter_id()
+                self._current_player_id = self._next_current_player_id
+                logger.error(f'increasing {self._current_player_id = }')
+                self._prepare_next_current_player_id()
 
             # with self._buffering_lock:
             #     self._show_recording_status_in_header()
 
-    def _prepare_next_current_player_counter_id(self):
-        if self._current_player_counter_id > 65000:
-            self._next_current_player_counter_id = 0
+    def _prepare_next_current_player_id(self):
+        if self._current_player_id > 65000:
+            self._next_current_player_id = 0
         else:
-            self._next_current_player_counter_id = self._current_player_counter_id + 1
+            self._next_current_player_id = self._current_player_id + 1
 
     def _show_buffer_set(self):
         self._buffering_win.show(parent=self.bodyWin)
@@ -2622,18 +2612,19 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         logger.error(f'{from_update_thread = }')
         logger.error(f'{http_error = }')
         if from_update_thread:
-            msg_key = http_error if http_error else 2
+            msg_key = http_error if http_error else 1000
+            state = STATES.CONNECT_ERROR
         else:
             msg_key = 1
+            state = STATES.STOPPED
         self.log.write(
-            msg_id=STATES.CONNECT_ERROR,
-            msg=self.player.PLAYER_NAME
-            + player_start_stop_token[msg_key],
+            msg_id=state,
+            msg=self.player.PLAYER_NAME + ': ' + player_start_stop_token[msg_key],
             help_msg=True, suffix=self._status_suffix, counter=''
         )
-        self._current_player_counter_id = self._next_current_player_counter_id
-        logger.error(f'increasing {self._current_player_counter_id = }')
-        self._prepare_next_current_player_counter_id()
+        self._current_player_id = self._next_current_player_id
+        logger.error(f'increasing {self._current_player_id = }')
+        self._prepare_next_current_player_id()
 
     def _download_station_image(self, url, station_name, stop):
         threading.Thread(
@@ -3651,7 +3642,6 @@ ____Using |fallback| theme.''')
             ''' The playlist is empty '''
             # ok
             self.detect_if_player_exited = False
-            logger.error('9 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
             if self.player.isPlaying():
                 self.stopPlayer()
             self.playing, self.selection, self.stations, \
@@ -3664,7 +3654,6 @@ ____Using |fallback| theme.''')
             if cur_mode == self.ws.REMOVE_STATION_MODE:
                 # ok
                 self.detect_if_player_exited = False
-                logger.error('10 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
                 ''' Remove selected station '''
                 if self.player.isPlaying():
                     if self.selection == self.playing:
@@ -3714,7 +3703,6 @@ ____Using |fallback| theme.''')
             if need_to_scan_playlist:
                 # ok
                 self.detect_if_player_exited = False
-                logger.error('11 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Scanning playlist for stations...')
                 # logger.error('DE \n\n{}\n\n'.format(self.active_stations))
@@ -5274,7 +5262,6 @@ ____Using |fallback| theme.''')
                             or a_button & curses.BUTTON1_TRIPLE_CLICKED:
                         # ok
                         self.detect_if_player_exited = False
-                        logger.error('12 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
                         if logger.isEnabledFor(logging.DEBUG):
                             if a_button & curses.BUTTON1_DOUBLE_CLICKED:
                                 logger.debug('Mouse button 1 double click on line {0} with start pos {1}, selection {2} and playing = {3}'.format(my, self.startPos, self.selection, self.playing))
@@ -5940,9 +5927,9 @@ ____Using |fallback| theme.''')
                     self._show_delayed_notification('___Title already tagged as liked___')
         else:
             if text:
-                return 'Player is stopped!'
+                return M_STRINGS['player-stopped']
             elif html:
-                return '<div class="alert alert-danger">Player is <b>stopped!</b></div>'
+                return M_STRINGS['html-player-stopped']
             else:
                 self._show_delayed_notification('___Error: Player not in playback___', delay=1.2)
 
@@ -7002,7 +6989,6 @@ _____"|f|" to see the |free| keys you can use.
                         player_index = i
                         break
                 self.detect_if_player_exited = True
-                logger.error('13 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
                 self.player = player.available_players[player_index](
                     self._cnf,
                     self.log,
@@ -7026,7 +7012,7 @@ _____"|f|" to see the |free| keys you can use.
                         platform.startswith('win')):
                     self.player.recording = to_record
                 self.log.display_help_message = False
-                self.log.write(msg_id=STATES.RESET, msg=ret + M_STRINGS['player-acivated_'], help_msg=False, suffix='')
+                self.log.write(msg_id=STATES.PLAYER_ACTIVATED, msg=ret + M_STRINGS['player-acivated_'], help_msg=False, suffix='')
                 self.player.volume = -1
                 if to_play > -1:
                     if to_play != self.selections:
@@ -7328,7 +7314,6 @@ _____"|f|" to see the |free| keys you can use.
                     self.refreshBody()
                 if ret == 0:
                     self.detect_if_player_exited = False
-                    logger.error('14 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
                     self._cnf.backup_player_params[0] = self._cnf.params[self._cnf.PLAYER_NAME][:]
                     ret = self._cnf.save_config()
                     if ret == -1:
@@ -8456,7 +8441,6 @@ _____"|f|" to see the |free| keys you can use.
                 return
             # ok
             self.detect_if_player_exited = False
-            logger.error('15 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
             self._cnf.PROGRAM_UPDATE = True
             self.ws.close_window()
             ''' exit program '''
@@ -8660,7 +8644,6 @@ _____"|f|" to see the |free| keys you can use.
             ''' exit due to scan error '''
             # ok
             self.detect_if_player_exited = False
-            logger.error('16 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
             self.stopPlayer()
             return -1
 
@@ -8683,7 +8666,6 @@ _____"|f|" to see the |free| keys you can use.
                 ''' exit program '''
                 # ok
                 self.detect_if_player_exited = False
-                logger.error('17 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
                 if self.player:
                     self.stopPlayer()
                 self.ctrl_c_handler(0, 0)
@@ -8693,7 +8675,6 @@ _____"|f|" to see the |free| keys you can use.
                 ''' exit program '''
                 # ok
                 self.detect_if_player_exited = False
-                logger.error('18 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
                 if self.player:
                     self.stopPlayer()
                 self.ctrl_c_handler(0, 0, False)
@@ -9080,8 +9061,6 @@ _____"|f|" to see the |free| keys you can use.
                         if self.player:
                             # ok
                             self.detect_if_player_exited = False
-                            logger.error('19 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
-                            logger.error('\n3 show_message=False\n')
                             self.stopPlayer(
                                 show_message=False,
                                 reset_playing=False
@@ -9839,7 +9818,6 @@ _____"|f|" to see the |free| keys you can use.
                 self.stopPlayer(show_message=True)
             else:
                 self.detect_if_player_exited = True
-                logger.error('20 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
                 self.playSelection()
             self.refreshBody()
         self.player.recording_filename = ''
@@ -9897,8 +9875,12 @@ _____"|f|" to see the |free| keys you can use.
         self.refreshBody()
 
     def _can_display_help_msg(self, msg):
+        if msg:
+            if ' (' + M_STRINGS['error-str'] + ' ' in msg:
+                return False
         # logger.error(f'{msg = }')
         ''' len("Press ? for help") = 16 '''
+        out_msg_len = cjklen(M_STRINGS['press-?'])
         # if (not self._limited_height_mode and \
         #         not self._limited_width_mode) or \
         #         msg is None:
@@ -9909,7 +9891,7 @@ _____"|f|" to see the |free| keys you can use.
             # logger.error('1 Display ? : False')
         else:
             if self.outerBodyWin:
-                ret = self.outerBodyMaxX - len(msg) - 16 > 10 if msg else True
+                ret = self.outerBodyMaxX - cjklen(msg) - out_msg_len > 10 if msg else True
             else:
                 ret = False
             # logger.error(f'2 Display ? : {ret}')
@@ -10832,15 +10814,12 @@ _____"|f|" to see the |free| keys you can use.
             search_cls[n] = None
         self._cls_update_stations = None
         self.detect_if_player_exited = False
-        logger.error('21 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
         self.log._stop_desktop_notification_thread = True
         self.player.stop_update_notification_thread = True
         self.player.stop_win_vlc_status_update_thread = True
         if self.player:
             # ok
             self.detect_if_player_exited = False
-            logger.error('22 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
-            logger.error('\n4 show_message=False\n')
             self.stopPlayer(
                 show_message=False,
                 reset_playing=False

@@ -1270,6 +1270,16 @@ class PyRadioStations():
 class PyRadioConfig(PyRadioStations):
     ''' PyRadio Config Class '''
 
+    ''' if degub is on, this will tell the logger to
+            0:  not log input from the player
+            1:  input accepted input from the player
+            2:  input raw input from the player
+
+        It applies to the updateStatus, updateMPVStatus and
+            updateWinVLCStatus functions
+    '''
+    debug_log_player_input = 0
+
     localize = None
     _old_localize = None
 

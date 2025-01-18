@@ -264,13 +264,13 @@ class Log():
 
     def __init__(self,
                  config,
-                 current_player_counter_id,
-                 active_player_counter_id,
+                 current_player_id,
+                 active_player_id,
                  get_web_song_title
                  ):
-        self.current_msg_id = STATES.RESET
-        self._current_player_counter_id = current_player_counter_id
-        self._active_player_counter_id = active_player_counter_id
+        self._current_msg_id = STATES.RESET
+        self._current_player_id = current_player_id
+        self._active_player_id = active_player_id
         self._get_web_song_title = get_web_song_title
         self._muted = self._paused = False
         self._cnf = config
@@ -290,6 +290,11 @@ class Log():
     def __del__(self):
         self._stop_desktop_notification_thread = True
         self._restore_startup_window_title()
+
+    @property
+    def current_msg_id(self):
+        with self.lock:
+            return self._current_msg_id
 
     @property
     def song_title(self):
@@ -316,8 +321,8 @@ class Log():
 
         ''' Redisplay the last message '''
         if self.msg:
-            logger.error(f'redisplaying "{self.msg}" with msg_id = {self.current_msg_id}')
-            self.write(msg_id=self.current_msg_id, msg=self.msg)
+            logger.error(f'redisplaying "{self.msg}" with msg_id = {self._current_msg_id}')
+            self.write(msg_id=self._current_msg_id, msg=self.msg)
 
     def _do_i_print_last_char(self, first_print):
         if first_print:
@@ -377,46 +382,55 @@ class Log():
               error_msg=False,
               notify_function=None):
         with self.lock:
-            current_player_counter_id = self._current_player_counter_id()
-            active_player_counter_id = self._active_player_counter_id()
-        if msg:
-            logger.error('****** self.current_msg_id = {}: "{}" with msg_id = {}'.format(self.current_msg_id, msg, msg_id))
+            current_player_id = self._current_player_id()
+            active_player_id = self._active_player_id()
+
+            if msg:
+                logger.error('****** self._current_msg_id = {}: "{}" with msg_id = {}'.format(self._current_msg_id, msg, msg_id))
         logger.error(f'{suffix = }, {counter = }, {p_time = } with {msg_id = }')
         logger.error(
-            'self._current_player_counter_id() = {}, self._current_player_counter_id() = {}'.format(
-                current_player_counter_id, current_player_counter_id
+            'self._current_player_id() = {}, self._current_player_id() = {}'.format(
+                current_player_id, current_player_id
             )
         )
         if self.cursesScreen:
             if msg_id == STATES.RESET:
-                self.current_msg_id = msg_id
-            if msg_id < self.current_msg_id and msg_id > STATES.ANY:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug(f'refusing to print message with id {msg_id}, currently at {self.current_msg_id}')
-                return
+                with self.lock:
+                    self._current_msg_id = msg_id
+            with self.lock:
+                if msg_id < self._current_msg_id and msg_id > STATES.ANY:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug(f'refusing to print message with id {msg_id}, currently at {self._current_msg_id}')
+                    return
             if msg_id > STATES.ANY and msg_id < STATES.CONNECT_ERROR:
-                self.current_msg_id = msg_id
+                with self.lock:
+                    if msg_id in (STATES.PLAYER_ACTIVATED, STATES.STOPPED):
+                        self._current_msg_id = STATES.RESET
+                        self.msg = msg
+                    else:
+                        self._current_msg_id = msg_id
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug(f'setting {self.current_msg_id = }')
+                    logger.debug(f'setting {self._current_msg_id = }')
             elif msg_id == STATES.CONNECT_ERROR or msg_id >= 100:
-                self.current_msg_id = STATES.RESET
+                with self.lock:
+                    self._current_msg_id = STATES.RESET
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug(f'resetting {self.current_msg_id = } due to STATES.CONNECT_ERROR')
+                    logger.debug(f'resetting {self._current_msg_id = } due to STATES.CONNECT_ERROR')
 
             ''' get player state '''
             if msg_id in (STATES.PLAY, STATES.TITLE):
                 self._player_stopped = False
                 if logger.isEnabledFor(logging.INFO):
-                    logger.info('player in playback!')
+                    logger.info('player in playback! (based on messages printed in the Status Line')
             if msg_id in (STATES.RESET, STATES.CONNECT, STATES.CONNECT_ERROR, STATES.BUFFER, STATES.BUFF_MSG):
                 self._player_stopped = True
                 if logger.isEnabledFor(logging.INFO):
-                    logger.info('player is stopped!')
+                    logger.info('player is stopped! (based on messages printed in the Status Line)')
 
             with self.lock:
                 # logger.error(f'{suffix =  }')
                 # logger.error(f'{counter =  }')
-                if current_player_counter_id != active_player_counter_id:
+                if current_player_id != active_player_id:
                     if suffix != '' or suffix is not None or p_time is not None:
                         if self.program_restart:
                             self.program_restart = False
@@ -465,7 +479,7 @@ class Log():
                         was the last message printed
                     '''
                     do_empty_msg = True
-                    if msg_id not in (STATES.RESET, STATES.CONNECT, STATES.CONNECT_ERROR):
+                    if msg_id not in (STATES.RESET, STATES.CONNECT, STATES.CONNECT_ERROR, STATES.PLAYER_ACTIVATED):
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('Refusing to show message; player is stopped: "{}"'.format(msg))
                         msg = None
@@ -508,8 +522,8 @@ class Log():
                     self._player_stopped = True
                     return
                 ''' update main message '''
-                # logger.error('*** msg = "{}"'.format(msg))
-                if self.msg:
+                # logger.error('*** self.msg = "{}"'.format(self.msg))
+                if self.msg is not None and self.msg != '':
                     # if self._x_start == 1:
                     #     self.cursesScreen.erase()
                     d_msg = ''
@@ -519,9 +533,13 @@ class Log():
                         self.cursesScreen.addstr(0, self._x_start-1, ' ')
                     try:
                         d_msg = fix_chars(self.msg.strip()[0: self.width])
-                        ## logger.error('printing "{}" at {}'.format(d_msg, self._x_start))
-                        self.cursesScreen.addstr(0, self._x_start, d_msg)
-                    except:
+                        logger.error('printing "{}" at x = {}'.format(d_msg, self._x_start))
+                        dd_msg = d_msg.strip()[:self.width -2]
+                        while cjklen(dd_msg) > self.width -2:
+                            dd_msg = dd_msg[:-1]
+                        self.cursesScreen.addstr(0, self._x_start, dd_msg)
+                    except Exception as e:
+                        logger.error(e)
                         try:
                             if self._the_time is None:
                                 d_msg = fix_chars(self.msg.encode('utf-8', 'replace').strip()[0: self.width])
@@ -531,7 +549,7 @@ class Log():
                             self.cursesScreen.addstr(0, self._x_start, d_msg)
                         except:
                             pass
-                            logger.error('\n\n\n1 except\n\n\n')
+                            # logger.error('\n\n\n1 except\n{}\n\n\n'.format(msg))
                             # if logger.isEnabledFor(logging.ERROR):
                             #     logger.error('Error updating the Status Bar')
                     try:
@@ -541,19 +559,22 @@ class Log():
                         pass
 
                     if msg:
-                        if msg.startswith('[Vol:') or msg.startswith('[Muted]'):
+                        if msg.startswith('[Vol:') or msg.startswith(M_STRINGS['muted']):
                             msg = msg.split('] ')[-1]
                     with self._song_title_lock:
                         if msg:
-                            if msg.startswith('Title: '):
-                                self._song_title = msg.replace('Title: ', '')
-                            elif 'Title: ' in msg:
-                                x = msg.index('Title: ')
-                                self._song_title = msg[x+7:]
+                            if msg.startswith(M_STRINGS['title_']):
+                                self._song_title = msg.replace(M_STRINGS['title_'], '')
+                            elif M_STRINGS['title_'] in msg:
+                                x = msg.index(M_STRINGS['title_'])
+                                self._song_title = msg[x+len(M_STRINGS['title_']):]
+                            elif M_STRINGS['error-str'] in msg:
+                                self._song_title = msg
+                                self._station_that_is_playing_now = ''
                             elif msg.startswith('mpv: ') or \
                                 msg.startswith('mplayer: ') or \
                                 msg.startswith('vlc: '):
-                                self._song_title = 'Player is stopped!'
+                                self._song_title = M_STRINGS['player-stopped']
                                 self._station_that_is_playing_now = ''
                             else:
                                 self._song_title = ''
@@ -563,11 +584,14 @@ class Log():
                                     self._station_that_is_playing_now = msg[11:]
 
                     if self._add_chapter_function is not None and msg:
-                        if msg.startswith('Title: '):
-                            self._add_chapter_function(msg.replace('Title: ', ''))
+                        if msg.startswith(M_STRINGS['title_']):
+                            self._add_chapter_function(msg.replace(M_STRINGS['title_'], ''))
                     if msg:
                         msg = fix_chars(msg)
-                    self.set_win_title(d_msg if d_msg else msg)
+                    if msg_id in (STATES.PLAY, STATES.TITLE):
+                        self.set_win_title(d_msg if d_msg else msg)
+                    elif msg_id not in (STATES.ANY, STATES.VOLUME, STATES.BUFF_MSG):
+                        self.set_win_title()
                     self._write_title_to_log(msg if msg else 'No')
                     self._show_notification(msg)
                     self._set_web_title(msg)
@@ -590,18 +614,18 @@ class Log():
                     d_msg = ' [' + self.suffix + ']'
                     try:
                         self.cursesScreen.addstr(
-                            0, self._active_width - len(d_msg),
+                            0, self._active_width - cjklen(d_msg),
                             d_msg + ' ')
                     except:
                         pass
                     self.cursesScreen.chgat(
-                        0, self._active_width - len(d_msg) + 1,
-                        len(d_msg) - 1,
+                        0, self._active_width - cjklen(d_msg) + 1,
+                        cjklen(d_msg) - 1,
                         curses.color_pair(1)
                     )
                     first_print = self._do_i_print_last_char(first_print)
                     self.cursesScreen.refresh()
-                    self._active_width -= len(d_msg)
+                    self._active_width -= cjklen(d_msg)
                 if self._show_status_updates:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Suffix: {}'.format(self.suffix))
@@ -644,11 +668,11 @@ class Log():
                     if not self.error_msg:
                         # logger.error('I display ?')
                         self.counter = None
-                        suffix_string = ' Press ? for help'
+                        suffix_string = M_STRINGS['press-?']
                         try:
                             self.cursesScreen.addstr(
                                 0,
-                                self._active_width - len(suffix_string),
+                                self._active_width - cjklen(suffix_string),
                                 suffix_string)
                         except:
                             pass
@@ -698,15 +722,17 @@ class Log():
                     with self._song_title_lock:
                         old_song_title = self._song_title
                         self._song_title = title
-                elif 'Title: ' in msg:
-                    x = msg.index('Title: ')
+                elif M_STRINGS['title_'] in msg:
+                    x = msg.index(M_STRINGS['title_'])
                     title = msg[x+7:]
                 else:
                     with self._song_title_lock:
                         if self._song_title:
                             title = self._song_title
                 if title:
-                    title = title.replace('Initialization', M_STRINGS['connecting_'])
+                    title = title.replace(M_STRINGS['init_'], M_STRINGS['connecting_'])
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Sending Web Title: "{}"'.format(title))
                     server.send_song_title(title)
                     if old_song_title:
                         with self._song_title_lock:
@@ -757,7 +783,7 @@ class Log():
                 self._last = ['', '']
                 return
 
-            if msg.startswith('[Muted] '):
+            if msg.startswith(M_STRINGS['muted']):
                 self._cnf._current_notification_message = ''
                 self._station_sent = True
                 self._stop_desktop_notification_thread = True
@@ -852,8 +878,8 @@ class Log():
                                 self._repeat_notification.reset_timer()
 
     def _get_desktop_notification_data(self, msg):
-        if msg.startswith('Title: '):
-            d_msg = msg.replace('Title: ', '')
+        if msg.startswith(M_STRINGS['title_']):
+            d_msg = msg.replace(M_STRINGS['title_'], '')
             d_title = 'Now playing'
             if self._last[1] == d_msg:
                 ''' already shown this title '''
@@ -878,9 +904,9 @@ class Log():
                     logger.debug('already shown station name: "{0}" - {1}'.format(d_msg, self._last))
                 return None, None
             self._last[0] = d_msg
-        elif msg.startswith('[Muted] '):
+        elif msg.startswith(M_STRINGS['muted']):
             d_title = 'Player muted!'
-            d_msg = msg.replace('[Muted] ', '')
+            d_msg = msg.replace(M_STRINGS['muted'], '')
             self._station_sent = False
         elif 'abnormally' in msg:
             d_title = 'Player Crash'
@@ -904,27 +930,27 @@ class Log():
         if msg is None:
             d_msg = None
         else:
-            d_msg = msg.replace('[Muted] ', '')
+            d_msg = msg.replace(M_STRINGS['muted'], '')
         if msg == 'No':
             return
         if d_msg is None and self._cnf._current_log_title:
             try:
-                logger.critical(self._cnf._current_log_title.replace('Title: ', '    ') + ' (LIKED)')
+                logger.critical(self._cnf._current_log_title.replace(M_STRINGS['title_'], '    ') + ' (LIKED)')
                 self._cnf._last_liked_title = self._cnf._current_log_title
             except:
                 logger.critical('Error writing LIKED title...')
         else:
             if d_msg:
                 if d_msg.startswith(M_STRINGS['init_']):
-                    self._started_station_name = d_msg[16:]
+                    self._started_station_name = d_msg[len(M_STRINGS['init_']):]
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Early station name (initialization): "{}"'.format(self._started_station_name))
-                if d_msg.startswith(M_STRINGS['station_']) and ' - Opening connection' in d_msg:
-                    self._started_station_name = d_msg[9:].split(' - Opening connection')[0]
+                if d_msg.startswith(M_STRINGS['station_']) and M_STRINGS['station-open'] in d_msg:
+                    self._started_station_name = d_msg[len(M_STRINGS['station_']):].split(M_STRINGS['station-open'])[0]
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Early station name (station): "{}"'.format(self._started_station_name))
 
-                if d_msg.startswith('Title: '):
+                if d_msg.startswith(M_STRINGS['title_']):
                     ''' print Early station name '''
                     if self._started_station_name is not None:
                         try:
@@ -950,7 +976,7 @@ class Log():
                     try:
                         if force or d_msg not in self._cnf._old_log_title:
                             try:
-                                logger.critical(d_msg.replace('Title: ', '    '))
+                                logger.critical(d_msg.replace(M_STRINGS['title_'], '    '))
                             except:
                                 logger.critical('Error writing title...')
                             self._cnf._old_log_title = d_msg
@@ -959,7 +985,7 @@ class Log():
                         try:
                             if force or d_msg.decode('utf-8', 'replace') not in self._cnf._old_log_title.decode('utf-8', 'replace'):
                                 try:
-                                    logger.critical(d_msg.replace('Title: ', '    '))
+                                    logger.critical(d_msg.replace(M_STRINGS['title_'], '    '))
                                 except:
                                     logger.critical('Error writing title...')
                                 self._cnf._old_log_title = d_msg
@@ -1023,26 +1049,26 @@ class Log():
 
     @staticmethod
     def set_win_title(msg=None):
-        default = 'Your Internet Radio Player'
-        just_return = (
-            'Config saved',
-            'Online service Config',
-            'Error saving config',
-            'Already at',
-            'History is empty',
-            'Operation not supported',
-            'Please wait for the player to settle',
-            'Volume: ',
-        )
-        do_not_update = (
-            ': Playback stopped',
-            'Selected ',
-            M_STRINGS['conn-fail_'],
-            M_STRINGS['connecting_'],
-            M_STRINGS['init_'],
-            M_STRINGS['station_'],
-            'abnormally',
-        )
+        default = M_STRINGS['win-title']
+        # just_return = (
+        #     'Config saved',
+        #     'Online service Config',
+        #     'Error saving config',
+        #     'Already at',
+        #     'History is empty',
+        #     'Operation not supported',
+        #     'Please wait for the player to settle',
+        #     'Volume: ',
+        # )
+        # do_not_update = (
+        #     ': Playback stopped',
+        #     'Selected ',
+        #     M_STRINGS['error-1001'],
+        #     M_STRINGS['connecting_'],
+        #     M_STRINGS['init_'],
+        #     M_STRINGS['station_'],
+        #     'abnormally',
+        # )
         token_id = 1
         tokens = ('PyRadio: ', 'PyRadio - ')
         # if logger.isEnabledFor(logging.DEBUG):
@@ -1059,23 +1085,23 @@ class Log():
             if msg.startswith('['):
                 return
             d_msg = msg
-            if d_msg.endswith(' (Session Locked)'):
+            if d_msg.endswith(M_STRINGS['session-locked']):
                 token_id = 0
                 Log.locked = True
                 d_msg = default
             else:
-                # no update
-                for a_return_token in just_return:
-                    if a_return_token in msg:
-                        return
-                # if stopped...
-                for a_stop_token in do_not_update:
-                    if a_stop_token in msg:
-                        # if logger.isEnabledFor(logging.DEBUG):
-                        #     logger.debug('set_win_title(): d_msg = default')
-                        d_msg = default
-                        token_id = 0
-                        break
+                # # no update
+                # for a_return_token in just_return:
+                #     if a_return_token in msg:
+                #         return
+                # # # if stopped...
+                # # for a_stop_token in do_not_update:
+                # #     if a_stop_token in msg:
+                # #         # if logger.isEnabledFor(logging.DEBUG):
+                # #         #     logger.debug('set_win_title(): d_msg = default')
+                # #         d_msg = default
+                # #         token_id = 0
+                # #         break
 
                 if Log.old_window_title == d_msg:
                     # if logger.isEnabledFor(logging.DEBUG):
@@ -1087,7 +1113,7 @@ class Log():
                 #     logger.debug('set_win_title(): d_msg = "' + d_msg + '"')
 
         if token_id == 0 and Log.locked:
-            d_msg += ' (Session Locked)'
+            d_msg += M_STRINGS['session-locked']
 
         if platform.lower().startswith('win'):
             ctypes.windll.kernel32.SetConsoleTitleW(tokens[token_id] + d_msg)

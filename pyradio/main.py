@@ -266,6 +266,8 @@ If nothing else works, try the following command:
                         help='Print PyRadio config.')
     parser.add_argument('-d', '--debug', action='store_true',
                         help='Start PyRadio in debug mode.')
+    parser.add_argument('--d-player-input',
+                        help='When -d is used, this option will not log player input (value = 0), log accepted input (value = 1) or raw input (value = 2).')
     parser.add_argument('-ul', '--unlock', action='store_true',
                         help="Remove sessions' lock file.")
     parser.add_argument('-us', '--update-stations', action='store_true',
@@ -931,7 +933,7 @@ If nothing else works, try the following command:
         ''' set window title '''
         try:
             if pyradio_config.locked:
-                win_title = ' (Session Locked)'
+                win_title = M_STRINGS['session-locked']
             else:
                 win_title = None
             Log.set_win_title(win_title)
@@ -941,6 +943,14 @@ If nothing else works, try the following command:
         if platform.startswith('win') and not args.record:
             from .win import find_and_remove_recording_data
             find_and_remove_recording_data(pyradio_config.recording_dir)
+
+        if args.d_player_input:
+            try:
+                p_i = int(args.d_player_input)
+                if p_i in range(0, 3):
+                    pyradio_config.debug_log_player_input = p_i
+            except (ValueError, TypeError):
+                pyradio_config.debug_log_player_input = 1
 
         while True:
             ''' curses wrapper '''
@@ -1165,7 +1175,7 @@ def get_format_string(stations):
             len0 = cjklen(n[0])
         if cjklen(n[1]) > len1:
             len1 = cjklen(n[1])
-    num = cjklen(str(cjklen(stations)))
+    num = len(str(len(stations)))
     # format_string = '{0:>' + str(num) + '.' + str(num) + 's}. ' + '{1:' + str(len0) + '.' + str(len0) + 's} | {2:' + str(len1) + '.' + str(len1) + 's} | {3}'
     format_string = '{0:>' + str(num) + '.' + str(num) + 's}. ' + '{1} | {2:' + str(len1) + '.' + str(len1) + 's} | {3}'
     header_format_string = '{0:' + str(len0+num+2) + '.' + str(len0+num+2) + 's} | {1:' + str(len1) + '.' + str(len1) + 's} | {2}'

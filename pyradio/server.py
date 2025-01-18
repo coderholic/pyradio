@@ -7,6 +7,7 @@ from os.path import basename, exists
 from sys import platform
 from time import sleep
 import requests
+from .common import M_STRINGS
 
 locale.setlocale(locale.LC_ALL, "")
 
@@ -402,7 +403,7 @@ div[id^='a_']:hover { underline: none;}
         // console.log("event.data:", event.data);
         js_set_title("#song_title", event.data);
         error_count = 0;
-        if ( event.data.includes("Player is stopped!") || event.data.includes("Connecting to: ") || event.data.includes("Failed to connect to: ") || event.data.includes("Player terminated abnormally") ){
+        if ( event.data.includes("Player is stopped!") || event.data.includes("Connecting to: ") || event.data.includes(" (error ") ){
             js_disable_buttons_on_stopped(true);
         } else {
             js_disable_buttons_on_stopped(false);
@@ -916,7 +917,7 @@ Restricted Commands (Main mode only)
         '/volumeup': 'Volume increased!',
         '/volumedown': 'Volume decreased!',
         '/start': 'Playback started!',
-        '/stop': 'Playback stopped!',
+        '/stop': M_STRINGS['plb-stopped'],
         '/stations' : 'Listing stations!',
         '/next': 'Playing next station',
         '/histnext': 'Playing next station from history',
@@ -1780,7 +1781,14 @@ Restricted Commands (Main mode only)
     def send_song_title(self, msg=None):
         if not msg:
             return
-        f_msg = 'retry: 150\nevent: /html/title\ndata: <b>' + msg + '</b>\n\n'
+        if msg.startswith('mpv: ') or \
+                msg.startswith('mplayer: ') or \
+                msg.startswith('vlc: '):
+            sp = msg.split(': ')
+            d_msg = ''.join(sp[1:])
+        else:
+            d_msg = msg
+        f_msg = 'retry: 150\nevent: /html/title\ndata: <b>' + d_msg + '</b>\n\n'
         b_msg = f_msg.encode('utf-8')
         txt = '''HTTP/1.1 200 OK
 Content-Type: text/event-stream; charset=UTF-8

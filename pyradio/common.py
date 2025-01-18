@@ -24,19 +24,83 @@ CAPTION = 2
 BORDER = 3
 
 M_STRINGS = {
+	'session-locked': ' (Session Locked)',
+	'session-locked-title': 'Session Locked',
+	'win-title': 'Your Internet Radio Player',
 	'init_': 'Initialization: ',
 	'connecting_': 'Connecting to: ',
-	'conn-fail_': 'Failed to connect to: ',
 	'playing_': 'Playing: ',
 	'buffering_': 'Buffering: ',
 	'station_': 'Station: ',
+	'station-open': ' - Opening connection...',
 	'selected_player_': 'Selected player: ',
 	'down-icon': 'Downloading icon...',
 	'player-acivated_': ': Player activated!!!',
 	'hist-empty': 'History is empty!!!',
 	'hist-first': 'Already at first item!!!',
 	'hist-last': 'Already at last item!!!',
+    'muted': '[Muted] ',
+    'title_': 'Title: ',
+    'player-stopped': 'Player is stopped!',
+    'plb-stopped': 'Playback stopped',
+    'html-player-stopped': '<div class="alert alert-danger">Player is <b>stopped!</b></div>',
+	'press-?': ' Press ? for help',
+	'error-str': 'error',
+    'error-403': 'Server returned "Forbidden" (error 403)',
+    'error-404': 'Station does not exist (error 404)',
+    'error-503': 'Service not available (error 503)',
+    'error-1000': 'Player terminated abnormally! (error 1000)',
+    'error-1001': 'Connection failed (error 1001)',
+    'error-1002': 'No stream found (error 1002)',
+    'error-1003': 'Connection refused (error 1003)',
+    'error-1004': 'Unrecognized file format (error 1004)',
+    'error-1005': 'DNS Resolution failure (error 1005)',
+    'error-1006': 'Server is unreachable (error 1006)',
+    'error-1007': 'Permission denied (error 1007)',
+    'error-1008': 'Unrecognized file format (error 1008)',
 }
+
+""" Messages to display when player starts / stops
+    Used in log to stop runaway threads from printing
+    messages after playback is stopped """
+player_start_stop_token = {
+    0:       M_STRINGS['init_'],
+    1:       M_STRINGS['plb-stopped'],
+    3:       M_STRINGS['player-acivated_'],
+    403:     M_STRINGS['error-403'],
+    404:     M_STRINGS['error-404'],
+    503:     M_STRINGS['error-503'],
+    1000:    M_STRINGS['error-1000'],
+    1001:    M_STRINGS['error-1001'],
+    1002:    M_STRINGS['error-1002'],
+    1003:    M_STRINGS['error-1003'],
+    1004:    M_STRINGS['error-1004'],
+    1005:    M_STRINGS['error-1005'],
+    1006:    M_STRINGS['error-1006'],
+    1007:    M_STRINGS['error-1007'],
+    1008:    M_STRINGS['error-1008'],
+}
+
+class STATES():
+    ANY = -1
+    RESET = 0
+    INIT = 1
+    CONNECT = 2
+    BUFFER = 4
+    BUFF_MSG = 5
+    PLAY = 10
+    TITLE = 11
+    STOPPED = 12
+    # Do not move it!
+    PLAYER_ACTIVATED = 13
+
+    CONNECT_ERROR = 100
+    VOLUME = 101
+
+    ERROR_NO_PLAYER = 200
+    ERROR_DEPENDENCY = 201
+    ERROR_CONNECT = 202
+    ERROR_START = 203
 
 """
 Format of theme configuration
@@ -105,40 +169,6 @@ def curses_rgb_to_hex(rgb):
 
 def rgb_to_curses_rgb(rgb):
     return tuple(int(y *1000 / 255) for y in rgb)
-
-""" Messages to display when player starts / stops
-    Used in log to stop runaway threads from printing
-    messages after playback is stopped """
-player_start_stop_token = {
-    0:      M_STRINGS['init_'],
-    1:      ': Playback stopped',
-    2:      ': Player terminated abnormally!',
-    3:      'Failed to connecto to: ',
-    403:    ': Terminated - Server returned "Forbidden" (error 403)',
-    404:    ': Terminated - Stream not found (error 404)',
-    503:    ': Terminated - Service not available (error 503)',
-    808:    ': Terminated - No stream found',
-    809:    ': Terminated - Connection refused',
-    810:    ': Terminated - Unrecognized file format',
-}
-
-class STATES():
-    ANY = -1
-    RESET = 0
-    INIT = 1
-    CONNECT = 2
-    BUFFER = 4
-    BUFF_MSG = 5
-    PLAY = 10
-    TITLE = 11
-
-    CONNECT_ERROR = 100
-    VOLUME = 101
-
-    ERROR_NO_PLAYER = 200
-    ERROR_DEPENDENCY = 201
-    ERROR_CONNECT = 202
-    ERROR_START = 203
 
 
 class StationsChanges():

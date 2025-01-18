@@ -17,7 +17,7 @@ from shutil import which
 ''' This is PyRadio version this
     install.py was released for
 '''
-PyRadioInstallPyReleaseVersion = '0.9.3.11.3'
+PyRadioInstallPyReleaseVersion = '0.9.3.11.4'
 
 locale.setlocale(locale.LC_ALL, "")
 
@@ -176,11 +176,11 @@ def is_pyradio_user_installed():
 def isRunning():
     count = 1
     ctypes.windll.kernel32.SetConsoleTitleW('PyRadio Installation')
-    while WindowExists('PyRadio: Your Internet Radio Player') or \
-            WindowExists('PyRadio: Your Internet Radio Player (Session Locked)'):
+    while WindowExists('PyRadio: ' + M_STRINGS['win-title']) or \
+            WindowExists('PyRadio: ' + M_STRINGS['win-title'] + M_STRINGS['session-locked']):
         sleep(1)
         if count > 2:
-            print('[bold magebta]PyRadio[/bold magebta] is still running. Please terminate it to continue ... ')
+            print('[bold magenta]PyRadio[/bold magenta] is still running. Please terminate it to continue ... ')
         count += 1
     print('')
 

@@ -191,6 +191,24 @@ a:visited{color: SaddleBrown;}
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
 
+2025-01-18 s-n-g
+    * version 0.9.3.11.4 - 0.9.3.12-beta4
+    * adding a clock displayed at the beginning of the Status Line
+    * adding a new system theme: lambda_by_amski1
+    * all players will try to catch (and display) HTTP errors (403, 404, 
+      503, etc) and player errors through Crash detection
+    * rearranging options in the Config Window
+    * the remove control server will be cleanly terminated when the terminal closes
+    * titles log: fixing a bug that would disallow writing the station name to the log
+    * when the External Player is used, pyradio will not exit; it will reload the tui
+      and continue from where it left off
+    * keep working on keyboard.py
+    * started working on localized shortcuts
+    * updating mpv player link on Windows
+    * fixing issues reported by pylint
+    * removing more python 2 code
+    * updating docs
+
 2024-12-05 s-n-g
     * version 0.9.3.11.3 - 0.9.3.12-beta3
     * fixing a crash when opening RadioBrowser Config
@@ -1338,14 +1356,15 @@ a:visited{color: SaddleBrown;}
 Furthermore, please refrain from using any third-party packaging methods, such as <strong>Snap</strong> or <strong>AppImage</strong>. I am not affiliated with these services or projects, and I cannot guarantee the functionality or version of <strong>PyRadio</strong> provided through them. Additionally, I am unable to offer support for any issues related to these packaging methods.</p>
 <h2 id="command-line-options">Command line options <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre># pyradio -h
+
 Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-x] [-u PLAYER]
-               [-l] [-lt] [-sds] [-sd] [-od] [-pc] [-d] [-ul] [-us] [-U] [-R]
-               [-V] [-ls] [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes]
-               [--no-themes] [--write-theme IN_THEME OUT_THEME,]
-               [--terminal TERMINAL] [--terminal-param TERMINAL_PARAM] [-oc]
-               [-sc] [-cc] [-gc] [-r] [-or] [-lr] [-mkv MKV_FILE]
-               [-scv PNG_FILE] [-srt] [-ach] [--headless IP_AND_PORT]
-               [--address] [-fd]
+               [-l] [-lt] [-sds] [-sd] [-od] [-pc] [-d]
+               [--d-player-input D_PLAYER_INPUT] [-ul] [-us] [-U] [-R] [-V] [-ls]
+               [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes] [--no-themes]
+               [--write-theme IN_THEME OUT_THEME,] [--terminal TERMINAL]
+               [--terminal-param TERMINAL_PARAM] [-oc] [-sc] [-cc] [-gc] [-r]
+               [-or] [-lr] [-mkv MKV_FILE] [-scv PNG_FILE] [-srt] [-ach]
+               [--headless IP_AND_PORT] [--address] [-fd]
 
 Curses based Internet Radio Player
 
@@ -1375,6 +1394,10 @@ General options:
                         manager.
   -pc, --print-config   Print PyRadio config.
   -d, --debug           Start PyRadio in debug mode.
+  --d-player-input D_PLAYER_INPUT
+                        When -d is used, this option will not log player input
+                        (value = 0), log accepted input (value = 1) or raw
+                        input (value = 2).
   -ul, --unlock         Remove sessions&#39; lock file.
   -us, --update-stations
                         Update &quot;stations.csv&quot; (if needed).
@@ -2024,7 +2047,7 @@ volume=50</pre>
 <p>The <strong>favorites</strong> playlist, residing in the configuration folder, is a normal playlist in any other respect, which can be subsequently opened, edited, deleted even, as any other playlist.</p>
 <h2 id="displaying-the-current-time">Displaying the Current Time <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>The <strong>Clock</strong> feature allows you to display the current time in the bottom left corner of the window. This can be helpful for keeping track of time while using the application.</p>
-<p>You can easily toggle the clock display by pressing "\t" (the backslash followed by “<em>t</em>”).</p>
+<p>You can easily toggle the clock display by pressing "\t".</p>
 <h3 id="configuration">Configuration</h3>
 <p>The configuration window has a group labeled “<strong>Clock</strong>, which presents the following options:</p>
 <ul>
@@ -2045,7 +2068,7 @@ volume=50</pre>
 </tr>
 <tr>
 <td>1</td>
-<td>24-hour format, no seconds</td>
+<td>24-hour format, no seconds (<strong>default</strong>)</td>
 </tr>
 <tr>
 <td>2</td>
@@ -2065,6 +2088,7 @@ volume=50</pre>
 </tr>
 </tbody>
 </table>
+<p>By default, the <strong>Clock</strong> is turned off, with the default format set to “<em>HH:MM</em>” (value <strong>1</strong>). Enabling the clock will introduce a few additional threads, which may make <strong>PyRadio</strong> slightly heavier than usual.</p>
 <h2 id="pyradio-themes">PyRadio Themes <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>PyRadio</strong> supports <strong>CSS themes</strong>; it comes with a number of predefined ones and can use external programs that can provide automatically created and updated themes.</p>
 <p>To set a theme you just press “<strong>t</strong>” and</p>

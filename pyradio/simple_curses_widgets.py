@@ -3200,7 +3200,7 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
         if self._win:
             del self._win
         self._width = None
-        self._width = len(self._caption) + 4
+        self._width = cjklen(self._caption) + 4
         self._win = curses.newwin(1, self._width, self._Y, self._X)
 
     def move(self, new_Y=None, new_X=None):

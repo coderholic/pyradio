@@ -1,3 +1,21 @@
+2025-01-18 s-n-g
+    * version 0.9.3.11.4 - 0.9.3.12-beta4
+    * adding a clock displayed at the beginning of the Status Line
+    * adding a new system theme: lambda_by_amski1
+    * all players will try to catch (and display) HTTP errors (403, 404, 
+      503, etc) and player errors through Crash detection
+    * rearranging options in the Config Window
+    * the remove control server will be cleanly terminated when the terminal closes
+    * titles log: fixing a bug that would disallow writing the station name to the log
+    * when the External Player is used, pyradio will not exit; it will reload the tui
+      and continue from where it left off
+    * keep working on keyboard.py
+    * started working on localized shortcuts
+    * updating mpv player link on Windows
+    * fixing issues reported by pylint
+    * removing more python 2 code
+    * updating docs
+
 2024-12-05 s-n-g
     * version 0.9.3.11.3 - 0.9.3.12-beta3
     * fixing a crash when opening RadioBrowser Config

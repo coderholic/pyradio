@@ -131,14 +131,15 @@ Furthermore, please refrain from using any third-party packaging methods, such a
 
 ```
 # pyradio -h
+
 Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-x] [-u PLAYER]
-               [-l] [-lt] [-sds] [-sd] [-od] [-pc] [-d] [-ul] [-us] [-U] [-R]
-               [-V] [-ls] [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes]
-               [--no-themes] [--write-theme IN_THEME OUT_THEME,]
-               [--terminal TERMINAL] [--terminal-param TERMINAL_PARAM] [-oc]
-               [-sc] [-cc] [-gc] [-r] [-or] [-lr] [-mkv MKV_FILE]
-               [-scv PNG_FILE] [-srt] [-ach] [--headless IP_AND_PORT]
-               [--address] [-fd]
+               [-l] [-lt] [-sds] [-sd] [-od] [-pc] [-d]
+               [--d-player-input D_PLAYER_INPUT] [-ul] [-us] [-U] [-R] [-V] [-ls]
+               [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes] [--no-themes]
+               [--write-theme IN_THEME OUT_THEME,] [--terminal TERMINAL]
+               [--terminal-param TERMINAL_PARAM] [-oc] [-sc] [-cc] [-gc] [-r]
+               [-or] [-lr] [-mkv MKV_FILE] [-scv PNG_FILE] [-srt] [-ach]
+               [--headless IP_AND_PORT] [--address] [-fd]
 
 Curses based Internet Radio Player
 
@@ -168,6 +169,10 @@ General options:
                         manager.
   -pc, --print-config   Print PyRadio config.
   -d, --debug           Start PyRadio in debug mode.
+  --d-player-input D_PLAYER_INPUT
+                        When -d is used, this option will not log player input
+                        (value = 0), log accepted input (value = 1) or raw
+                        input (value = 2).
   -ul, --unlock         Remove sessions' lock file.
   -us, --update-stations
                         Update "stations.csv" (if needed).
@@ -996,7 +1001,7 @@ The **favorites** playlist, residing in the configuration folder, is a normal pl
 
 The **Clock** feature allows you to display the current time in the bottom left corner of the window. This can be helpful for keeping track of time while using the application.
 
-You can easily toggle the clock display by pressing `"\t"` (the backslash followed by "*t*").
+You can easily toggle the clock display by pressing `"\t"`.
 
 ### Configuration 
 
@@ -1006,15 +1011,16 @@ The configuration window has a group labeled "**Clock**, which presents the foll
 
 - You can choose how the time is displayed using the "*Time format*" option. Here are the available formats:
 
-| Value | Format Description                           |
+| Value | Format Description                          |
 |-------|---------------------------------------------|
 | 0     | 24-hour format, with seconds                |
-| 1     | 24-hour format, no seconds                  |
+| 1     | 24-hour format, no seconds (**default**)    |
 | 2     | 12-hour format, with AM/PM and seconds      |
 | 3     | 12-hour format, no AM/PM, with seconds      |
 | 4     | 12-hour format, with AM/PM, no seconds      |
 | 5     | 12-hour format, no AM/PM, no seconds        |
 
+By default, the **Clock** is turned off, with the default format set to "*HH:MM*" (value **1**). Enabling the clock will introduce a few additional threads, which may make **PyRadio** slightly heavier than usual.
 
 ## PyRadio Themes
 

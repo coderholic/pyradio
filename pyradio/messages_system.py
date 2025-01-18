@@ -8,6 +8,7 @@ from curses.ascii import ACK as KEY_ACK, STX as KEY_STX
 from sys import platform
 from .window_stack import Window_Stack_Constants
 from .keyboard import kbkey, kb2str, kb2strL, check_localized
+from .common import M_STRINGS
 
 locale.setlocale(locale.LC_ALL, "")
 
@@ -105,14 +106,14 @@ __You can use the following keys to navigate: |{j}| (|Up|), |{k}| (|Down|),
 |PgUp| (|^B|), |PgDn| (|^F|) to scroll up/down.
 __You can also use |Home| (|{g}|) / |End| (|{G}|) to scroll to the top / bottom.
 
-__ You will have noticed an |upward arrow| at the top right corner of
+__You will have noticed an |upward arrow| at the top right corner of
 this window; it indicates that the text is |scrollable| and the keys
 mentioned above are |valid|; if the arrow is not there, the text is
 not scrollable and pressing any key will |close the window|.
 
 !Gerneral Notes
 |Note 1:| |Home| (and |{g}|) and |End| (and |{G}|) may be used to move to the first
-___and last item or field, respectively. In several of these windows
+____and last item or field, respectively. In several of these windows
 ____(excluding the main window), |0| and |^| can be used to go to the
 ____first item or field, and |$| can be used to go to the last one.
 
@@ -1010,7 +1011,7 @@ Global functions work when preceded with a "|\|".
 '''
 )),
 
-    'M_SESSION_LOCKED': ('Session Locked',
+    'M_SESSION_LOCKED': (M_STRINGS['session-locked-title'],
 '''
 This session is |locked| by another |PyRadio instance|.
 

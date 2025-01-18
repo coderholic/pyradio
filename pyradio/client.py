@@ -6,6 +6,7 @@ import re
 from sys import platform
 from rich import print
 import requests
+from .common import STATES, M_STRINGS
 
 def format_list(a_string):
     print(a_string.replace(
@@ -105,7 +106,7 @@ class PyRadioClient():
                     out = self._last_reply.splitlines()
                     out.insert(1, '  Server: ' + self._host + ':' + self._port)
                     self._last_reply = '\n'.join(out) + '\n'
-                if 'Title: ' in self._last_reply:
+                if M_STRINGS['title_'] in self._last_reply:
                     self._last_reply = re.sub(r'Title: "([^"]*)"', r'Title: "[red3]\1[/red3]"', self._last_reply)
                 self._last_reply = self._last_reply.replace(r'PyRadio', r'[magenta]PyRadio[/magenta]')
                 self._last_reply = self._last_reply.replace(r'headless', r'[blue]headless[/blue]')

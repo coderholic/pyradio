@@ -51,6 +51,10 @@ manager.
 Print PyRadio sonfig.
 .IP\ \fB-d\fR,\ \fB--debug\fR
 Start PyRadio in debug mode.
+.IP\ \fB--d-player-input\ \fID_PLAYER_INPUT\fR
+When \fB-d\fR is used, this option will not log player input (value 
+= \fI0\fR), log accepted input (value = \fI1\fR) or raw input
+(value = \fI2\fR).
 .IP\ \fB-ul\fR,\ \fB--unlock\fR
 Remove sessions' lock file.
 .IP\ \fB-us\fR,\ \fB--update\fR\fB-stations\fR
@@ -1185,6 +1189,8 @@ The \fBfavorites\fR playlist, residing in the configuration folder, is a normal 
 .SH Displaying The Current Time
 The \fBClock\fR feature allows you to display the current time in the bottom left corner of the window. This can be helpful for keeping track of time while using the application.
 
+By default, the \fBClock\fR is turned off, with the default format set to \fIHH:MM\fR (value \fI1\fR). Enabling the clock will introduce a few additional threads, which may make \fBpyradio\fR slightly heavier than usual.
+
 You can easily toggle the clock display by pressing "\fB\\t\fR".
 
 .IP \fBConfiguration\fR
@@ -1204,7 +1210,7 @@ center;
 l l.
 \fBValue   Format Description\fR
 \fI0\fR       24-hour format, with seconds
-\fI1\fR       24-hour format, no seconds
+\fI1\fR       24-hour format, no seconds (\fIdefault\fR)
 \fI2\fR       12-hour format, with AM/PM and seconds
 \fI3\fR       12-hour format, no AM/PM, with seconds
 \fI4\fR       12-hour format, with AM/PM, no seconds

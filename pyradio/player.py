@@ -15,7 +15,11 @@ import socket
 from shutil import copyfile as shutil_copy_file
 import locale
 locale.setlocale(locale.LC_ALL, "")
-from .common import STATES, M_STRINGS
+# this is for windows...
+try:
+    from .common import STATES, M_STRINGS
+except ImportError:
+    pass
 
 try:
     import psutil
@@ -311,7 +315,7 @@ class Player():
     GET_AUDIO_FORMAT = b'{ "command": ["get_property", "audio-out-params"], "request_id": 200 }\n'
     GET_AUDIO_CODEC = b'{ "command": ["get_property", "audio-codec"], "request_id": 300 }\n'
     GET_AUDIO_CODEC_NAME = b'{ "command": ["get_property", "audio-codec-name"], "request_id": 400 }\n'
-    GET_ERROR = b'{"command": ["get_property", "user-data/mpv/ytdl/json-subprocess-result"], "request_id": 600 }\n'
+    GET_ERROR = b'{"command": ["get_property", "user-data/mpv/ytdl/json-subprocess-result"], "request_id": 700 }\n'
 
     all_config_files = {}
 
@@ -926,6 +930,7 @@ class Player():
         enable_crash_detection_function = args[4]
         recording_lock = args[5]
         on_connect = args[6]
+        log_player_input = args[7]
         has_error = False
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug('updateStatus thread started.')
@@ -941,52 +946,67 @@ class Player():
         try:
             out = self.process.stdout
             while(True):
+                http_error=False
                 subsystemOutRaw = out.readline()
-                # logger.error('raw input = "{0}"'.format(subsystemOutRaw))
-                self._chapter_time = datetime.now()
                 with recording_lock:
                     try:
                         subsystemOut = subsystemOutRaw.decode(self._station_encoding, 'replace')
                     except:
                         subsystemOut = subsystemOutRaw.decode('utf-8', 'replace')
-                http_error = False
+                with recording_lock:
+                    is_accepted = self._is_accepted_input(subsystemOut)
+                if logger.isEnabledFor(logging.DEBUG) and \
+                        log_player_input() == 2:
+                    logger.debug(
+                        'PLAYER RAW: {} "{}"'.format(
+                            ' . ' if is_accepted else 'xXx',
+                            subsystemOut.strip()
+                        )
+                    )
+                self._chapter_time = datetime.now()
                 # logger.error('\nchecking\n{}\n'.format(subsystemOut))
                 if stop():
                     break
                 elif subsystemOut == '':
                     if logger.isEnabledFor(logging.INFO):
-                        logger.info('----==== player crached ====----')
+                        logger.info('----==== {} got empty input ====----'.format(self.PLAYER_NAME))
                     break
-                elif 'Name or service not known' in subsystemOut or \
-                        'cannot connect to ' in subsystemOut or \
-                        ('404' in subsystemOut and 'Not Available' in subsystemOut):
+                elif not is_accepted:
+                    continue
+                elif '404' in subsystemOut and 'Not Available' in subsystemOut:
                     http_error = 404
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info('----==== playbak stopped, reason: "{}" ====----'.format(subsystemOut.strip()))
-                    break
+                elif 'Name or service not known' in subsystemOut or \
+                        "Couldn't resolve name for AF_INET:" in subsystemOut:
+                        # ("Couldn't resolve name for AF_INET:" in subsystemOut and \
+                        # "Couldn't resolve name for AF_INET6:" in subsystemOut):
+                    http_error = 1005
+                elif 'cannot connect to ' in subsystemOut:
+                    http_error = 1006
                 elif 'Server returned 503' in subsystemOut or \
                         '503 All backends failed or unhealthy' in subsystemOut or \
                         'HTTP 503 error' in subsystemOut:
-                    logger.error('got 503!')
                     http_error = 503
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info('----==== playbak stopped, reason: "{}" ====----'.format(subsystemOut.strip()))
-                    break
+                elif 'debug: dead input' in subsystemOut or \
+                        'Failed to open http' in subsystemOut or \
+                        'debug: nothing to play' in subsystemOut:
+                    http_error = 1001
                 elif 'No stream found' in subsystemOut:
-                    logger.error('got 503!')
-                    http_error = 808
+                    http_error = 1002
+                elif 'Cannot find codec for audio format' in subsystemOut or \
+                        'Audio: no sound' in subsystemOut:
+                    http_error = 1008
+
+                if http_error:
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('----==== playbak stopped, reason: "{}" ====----'.format(subsystemOut.strip()))
                     break
 
-                # logger.error('raw input = "{0}"'.format(subsystemOut.strip()))
-                with recording_lock:
-                    tmp = self._is_accepted_input(subsystemOut)
-                if not tmp:
-                    continue
                 subsystemOut = subsystemOut.strip()
                 subsystemOut = subsystemOut.replace('\r', '').replace('\n', '')
                 # logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
+                if logger.isEnabledFor(logging.DEBUG) and \
+                        log_player_input() == 1:
+                    logger.debug('PLAYER: "{}"'.format(subsystemOut))
 
                 with recording_lock:
                     tmp = self.oldUserInput['Input']
@@ -1192,9 +1212,6 @@ class Player():
             # return
 
         ''' crash detection '''
-        logger.error(f'{http_error = }')
-        logger.error('detect_if_player_exited = {0}, stop = {1}'.format(detect_if_player_exited(), stop()))
-
         if not stop():
             if detect_if_player_exited():
                 if logger.isEnabledFor(logging.INFO):
@@ -1206,16 +1223,16 @@ class Player():
                 )
             else:
                 if logger.isEnabledFor(logging.INFO):
-                    logger.info('\n\nCrash detection is off; waiting to timeout')
+                    logger.info('Crash detection is off; waiting to timeout')
         if (logger.isEnabledFor(logging.INFO)):
             logger.info('updateStatus thread stopped.')
         self._clear_empty_mkv()
-
 
     def updateRecordingStatus(self, *args):
         stop = args[0]
         process = args[1]
         recording_lock = args[2]
+        log_player_input = args[3]
         has_error = False
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug('updateRecordingStatus thread started.')
@@ -1235,27 +1252,33 @@ class Player():
                         subsystemOut = subsystemOutRaw.decode('utf-8', 'replace')
                 if subsystemOut == '':
                     break
-                # logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
+                subsystemOut = subsystemOut.strip()
+                subsystemOut = subsystemOut.replace('\r', '').replace('\n', '')
+                if logger.isEnabledFor(logging.DEBUG) and \
+                        log_player_input == 1:
+                    logger.debug('RECORDER: "{0}"'.format(subsystemOut.strip()))
                 if stop():
                     break
                 with recording_lock:
-                    tmp = self._is_accepted_input(subsystemOut)
-                if not tmp:
+                    is_accepted = self._is_accepted_input(subsystemOut)
+                if logger.isEnabledFor(logging.DEBUG) and \
+                        log_player_input == 2:
+                    logger.debug(
+                        'RECORDER RAW: {} "{}"'.format(
+                            ' . ' if is_accepted else 'xXx',
+                            subsystemOut.strip()
+                        )
+                    )
+                if not is_accepted:
                     if stop():
                         break
                     continue
-                subsystemOut = subsystemOut.strip()
-                subsystemOut = subsystemOut.replace('\r', '').replace('\n', '')
-                # logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
 
                 if stop():
                     break
                 with recording_lock:
                     tmp = self.oldUserInput['Input']
                 if tmp != subsystemOut:
-                    if (logger.isEnabledFor(logging.DEBUG)):
-                        logger.debug('Monitor User input: {}'.format(subsystemOut))
-
                     if stop():
                         break
                     with recording_lock:
@@ -1308,6 +1331,7 @@ class Player():
         stop_player = args[2]
         detect_if_player_exited = args[3]
         enable_crash_detection_function = args[4]
+        log_player_input = args[5]
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug('MPV updateStatus thread started.')
 
@@ -1350,53 +1374,69 @@ class Player():
                             data = b''
                     self._chapter_time = datetime.now()
                     a_data = self._fix_returned_data(data)
-                    logger.error('raw input: "{!r}"'.format(a_data))
+                    if logger.isEnabledFor(logging.DEBUG) and \
+                            log_player_input() > 0:
+                        logger.debug('PLAYER: "{!r}"'.format(a_data))
                     http_error = False
                     if b'unrecognized file format' in a_data:
-                        http_error = 810
+                        http_error = 1004
                         if logger.isEnabledFor(logging.INFO):
                             logger.info('----==== playbak stopped, reason: "{}" ====----'.format(a_data))
-                    if b'"request_id":600' in a_data:
+                    if b'"file_error":"unrecognized file format"' in a_data:
+                        http_error = 1008
+                        break
+                    if b'"request_id":700' in a_data:
                         if b'"error":"success"' in a_data:
-                            logger.error('it is valid!')
+                            # logger.error('it is valid!')
                             if logger.isEnabledFor(logging.INFO):
                                 logger.info('----==== playbak stopped, reason: "{}" ====----'.format(a_data))
                             ''' try to parse it '''
-                            if b'Failed to establish a new connection' in a_data or \
-                                    b'Name or service not known' in a_data or \
-                                    (b'404' in a_data and (
-                                        b'Not Available' in a_data or \
-                                        b'Not Found' in a_data)
-                                     ):
+                            if b'HTTP Error 404' in a_data or \
+                                    b'HTTPError 404' in a_data or \
+                                    b'Not Found' in a_data:
                                 http_error = 404
                                 break
-                            elif b'403' in a_data and b'Forbidden' in a_data:
+                            elif b'HTTP Error 403' in a_data or \
+                                    b'HTTPError 403' in a_data or \
+                                    b'Forbidden' in a_data:
                                 http_error = 403
                                 break
-                            elif b'503' in a_data and \
-                                    (b'All backends failed or unhealthy' in a_data or \
-                                    b'Service unavailable' in a_data):
+                            elif b'HTTP Error 503' in a_data or \
+                                    b'HTTPError 503' in a_data or \
+                                    b'All backends failed or unhealthy' in a_data:
                                 http_error = 503
                                 break
-                            elif b'Connection refused' in a_data:
-                                http_error = 809
+                            elif b'[Errno 110]' in a_data:
+                                http_error = 1001
+                                break
+                            elif b'[Errno 104]' in a_data or \
+                                    b'[Errno 111]' in a_data:
+                                http_error = 1003
+                                break
+                            elif b'[Errno -2]' in a_data or \
+                                    b'[Errno -3]' in a_data:
+                                http_error = 1005
+                                break
+                            elif b'[Errno 101]' in a_data or \
+                                    b'[Errno 113]' in a_data:
+                                http_error = 1006
+                                break
+                            elif b'[Errno 13]' in a_data:
+                                http_error = 1007
                                 break
                             else:
                                 if logger.isEnabledFor(logging.INFO):
-                                    logger.info('----==== Message not handled ====----')
+                                    logger.info('----==== HTTP Error Message not handled ====----')
+                                http_error = 1001
+                                break
 
                     if stop():
                         break
                     elif b'"file_error":"loading failed"' in a_data:
                         self._request_mpv_error(sock)
-                        # http_error = True
-                        # logger.error('\n\nhttp_error = {}\n\n'.format(http_error))
-                        # if logger.isEnabledFor(logging.INFO):
-                        #     logger.info('----==== playbak stopped, reason: {} ====----'.format(a_data))
-                        # break
                     elif a_data == b'':
                         if logger.isEnabledFor(logging.INFO):
-                            logger.info('----==== MPV crashed ====----')
+                            logger.info('----==== MPV got empty input ====----')
                         break
                     if a_data:
                         all_data = a_data.split(b'\n')
@@ -1479,7 +1519,7 @@ class Player():
                 )
             else:
                 if logger.isEnabledFor(logging.INFO):
-                    logger.info('\n\nCrash detection is off; waiting to timeout')
+                    logger.info('Crash detection is off; waiting to timeout')
         if (logger.isEnabledFor(logging.INFO)):
             logger.info('MPV updateStatus thread stopped.')
         self._clear_empty_mkv()
@@ -1506,7 +1546,7 @@ class Player():
                             return True
                         else:
                             if logger.isEnabledFor(logging.INFO):
-                                logger.info('\n\nCrash detection is off; waiting to timeout')
+                                logger.info('Crash detection is off; waiting to timeout')
             return False
         has_error = False
         if (logger.isEnabledFor(logging.DEBUG)):
@@ -1519,6 +1559,7 @@ class Player():
         detect_if_player_exited = args[5]
         enable_crash_detection_function = args[6]
         on_connect = args[7]
+        log_player_input = args[8]
         ''' Force volume display even when icy title is not received '''
         if self.buffering:
             self.oldUserInput['Title'] = M_STRINGS['buffering_'] + self.name
@@ -1551,10 +1592,20 @@ class Player():
                     if do_crash_detection(detect_if_player_exited, stop):
                         break
                     continue
-                logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
-                if not self._is_accepted_input(subsystemOut):
+                if logger.isEnabledFor(logging.DEBUG) and \
+                        log_player_input == 1:
+                    logger.debug('PLAYER: "{0}"'.format(subsystemOut.strip()))
+                is_accepted = self._is_accepted_input(subsystemOut)
+                if logger.isEnabledFor(logging.DEBUG) and \
+                        log_player_input == 2:
+                    logger.debug(
+                        'PLAYER RAW: {} "{}"'.format(
+                            ' . ' if is_accepted else 'xXx',
+                            subsystemOut.strip()
+                        )
+                    )
+                if not is_accepted:
                     continue
-                # logger.error('DE accepted inp = "{0}"'.format(subsystemOut))
                 if self.oldUserInput['Input'] != subsystemOut:
                     if stop():
                         break
@@ -1849,14 +1900,14 @@ class Player():
                         artist = None
                     if artist:
                         try:
-                            self.oldUserInput['Title'] = 'Title: ' + artist.decode(self._station_encoding, 'replace') + ' - ' + title.decode(self._station_encoding, 'replace')
+                            self.oldUserInput['Title'] = M_STRINGS['title_'] + artist.decode(self._station_encoding, 'replace') + ' - ' + title.decode(self._station_encoding, 'replace')
                         except:
-                            self.oldUserInput['Title'] = 'Title: ' + artist.decode('utf-8', 'replace') + ' - ' + title.decode('utf-8', 'replace')
+                            self.oldUserInput['Title'] = M_STRINGS['title_'] + artist.decode('utf-8', 'replace') + ' - ' + title.decode('utf-8', 'replace')
                     else:
                         try:
-                            self.oldUserInput['Title'] = 'Title: ' + title.decode(self._station_encoding, 'replace')
+                            self.oldUserInput['Title'] = M_STRINGS['title_'] + title.decode(self._station_encoding, 'replace')
                         except:
-                            self.oldUserInput['Title'] = 'Title: ' + title.decode('utf-8', 'replace')
+                            self.oldUserInput['Title'] = M_STRINGS['title_'] + title.decode('utf-8', 'replace')
                     if b'"album":' in a_data:
                         try:
                             album = a_data.split(b'"album":"')[1].split(b'"}')[0].split(b'","')[0]
@@ -1966,7 +2017,6 @@ class Player():
         except:
             pass
         self.detect_if_player_exited = True
-        logger.error('23 self.detect_if_player_exited = {}'.format(self.detect_if_player_exited))
         if (not self.playback_is_on) and (logger.isEnabledFor(logging.INFO)):
             logger.info('*** _set_mpv_playback_is_on(): Start of playback detected ***')
         self.stop_timeout_counter_thread = True
@@ -2061,7 +2111,8 @@ class Player():
             args=(
                 lambda: self.stop_mpv_status_update_thread,
                 self.monitor_process,
-                self._recording_lock
+                self._recording_lock,
+                lambda: self._cnf.debug_log_player_input
             )
         )
         ''' make sure the counter is stopped
@@ -2101,7 +2152,7 @@ class Player():
         self.title_prefix = ''
         self.playback_is_on = False
         self.delay_thread = None
-        self.outputStream.write(msg_id=STATES.CONNECT, msg=M_STRINGS['station_'] + name + ' - Opening connection...', counter='')
+        self.outputStream.write(msg_id=STATES.CONNECT, msg=M_STRINGS['station_'] + name + M_STRINGS['station-open'], counter='')
         if logger.isEnabledFor(logging.INFO):
             logger.info('Selected Station: ' + name)
         if encoding:
@@ -2140,7 +2191,8 @@ class Player():
                     stop_player,
                     detect_if_player_exited,
                     enable_crash_detection_function,
-                    self._on_connect
+                    self._on_connect,
+                    lambda: self._cnf.debug_log_player_input
                 )
             )
         else:
@@ -2156,7 +2208,8 @@ class Player():
                           self.process,
                           stop_player,
                           detect_if_player_exited,
-                          enable_crash_detection_function
+                          enable_crash_detection_function,
+                          lambda: self._cnf.debug_log_player_input
                     )
                 )
             else:
@@ -2175,7 +2228,8 @@ class Player():
                         detect_if_player_exited,
                         enable_crash_detection_function,
                         self._recording_lock,
-                        self._on_connect
+                        self._on_connect,
+                        lambda: self._cnf.debug_log_player_input
                     )
                 )
         self.update_thread.start()
@@ -2456,7 +2510,7 @@ class Player():
                 self._mute()
             if self.muted:
                 self._stop_delay_thread()
-                self.title_prefix = '[Muted] '
+                self.title_prefix = M_STRINGS['muted']
                 self.show_volume = False
             else:
                 self.title_prefix = ''
