@@ -1662,32 +1662,30 @@ All one has to do is enable mouse support in the "\fIConfig Window\fR" (mouse su
 
 Then, the mouse can be used as follows:
 
-.RS 5
+.ce
+.TS
+allbox;
+l l.
+\fBAction\fP	\fBFunction\fP
+\fBClick\fP	Change selection
+\fBDouble-click\fP	Start / stop the player
+\fBMiddle-click\fP	Toggle player muting (does not work with all terminals)
+\fBWheel\fP	Scroll up / down
+\fBShift-Wheel\fP	Adjust volume (does not work with all terminals)
+.TE
+.ce 0
 
-.IP \fBClick
-Change selection
+.IP \fBNote:
+The \fBWheel\fR can be configured to adjust the player's volume instead of its default scrolling function through the \fIReverse wheel\fR configuration option. Then, \fBShift-Wheel\fR will scroll through the playlist. This is useful if \fBShift-Wheel\fR does not work, or one is accustomed to using the wheel for volume control.
 
-.IP \fBDouble\ click
-Start / stop the player
-
-.IP \fBMiddle\ click
-Toggle player muting (does not work with all terminals)
-
-.IP \fBWheel
-Scroll up / down
-
-.IP \fBShift-Wheel
-Adjust volume (does not work with all terminals)
-
-.RE
 
 .SH Title logging
 
-Version \fB0.8.9.17\fR adds to \fBpyradio\fR the ability to log the titles displayed at the bottom of its window, in a log file, for refference.
+Version \fB0.8.9.17\fR adds to \fBpyradio\fR the ability to log the titles displayed at the bottom of its window, in a log file, for reference.
 
-The logger, which works independantly from the "\fIdegub\fR" function, is actually a \fIRotating File Handler\fR (\fIhttps://docs.python.org/3/library/logging.handlers.html#logging.handlers.RotatingFileHandler\fR), configured to write up to 5 files of around 50KB each (parameters \fBmaxBytes=50000\fR and \fBbackupCount=5\fR).
+The logger, which works independantly from the "\debug\fR" function, is actually a \fIRotating File Handler\fR (\fIhttps://docs.python.org/3/library/logging.handlers.html#logging.handlers.RotatingFileHandler\fR), configured to write up to 5 files of around 50KB each (parameters \fBmaxBytes=50000\fR and \fBbackupCount=5\fR).
 
-The way this works, according to the documenataion, is that one "can use the \fBmaxBytes\fR and \fBbackupCount\fR values to allow the file to rollover at a predetermined size. When the size is about to be exceeded, the file is closed and a new file is silently opened for output. Rollover occurs whenever the current log file is nearly \fBmaxBytes\fR in length… When \fBbackupCount\fR is non-zero, the system will save old log files by appending the extensions ‘.1’, ‘.2’ etc., to the filename. For example, with a backupCount of 5 and a base file name of \fBapp.log\fR, you would get \fIapp.log\fR, \fIapp.log.1\fR, \fIapp.log.2\fR, up to \fIapp.log.5\fR. The file being written to is always \fBapp.log\fR. When this file is filled, it is closed and renamed to \fIapp.log.1\fR, and if files \fIapp.log.1\fR, \fIapp.log.2\fR, etc. exist, then they are renamed to \fIapp.log.2\fR, \fIapp.log.3\fR etc. respectively.
+The way this works, according to the documentation, is that one "can use the \fBmaxBytes\fR and \fBbackupCount\fR values to allow the file to rollover at a predetermined size. When the size is about to be exceeded, the file is closed and a new file is silently opened for output. Rollover occurs whenever the current log file is nearly \fBmaxBytes\fR in length… When \fBbackupCount\fR is non-zero, the system will save old log files by appending the extensions ‘.1’, ‘.2’ etc., to the filename. For example, with a backupCount of 5 and a base file name of \fBapp.log\fR, you would get \fIapp.log\fR, \fIapp.log.1\fR, \fIapp.log.2\fR, up to \fIapp.log.5\fR. The file being written to is always \fBapp.log\fR. When this file is filled, it is closed and renamed to \fIapp.log.1\fR, and if files \fIapp.log.1\fR, \fIapp.log.2\fR, etc. exist, then they are renamed to \fIapp.log.2\fR, \fIapp.log.3\fR etc. respectively.
 
 The function can be enabled:
 
@@ -1717,7 +1715,7 @@ Apr 18 (Mon) 13:16 |     Gillian Hills - Un Petit Baiser
 
 \fBTagging a title\fR
 
-An extra functionality is made possible because of "\fItitles's logging\fR": tagging a title (something like liking a song).
+An extra functionality is made possible because of "\fItitles' logging\fR": tagging a title (something like liking a song).
 
 The idea is that the user plays a station and hears a song he likes and want to look it up later. With this functionality, he can tag the song (make a note in the log file), so he can refer to it at a later time.
 

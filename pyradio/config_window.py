@@ -70,7 +70,6 @@ class PyRadioConfigWindow():
     _help_text.append(['This is the encoding used by default when reading data provided by a station such as song title, etc. If reading said data ends up in an error, "utf-8" will be used instead.', '|',
     'If changed, playback must be restarted so that changes take effect.',
     '|', 'Default value: utf-8'])
-    _help_text.append(['If this options is enabled, the mouse can be used to scroll the playlist, start, stop and mute the player, adjust its volume etc.', '|', 'Mouse support is highly terminal dependent, that\'s why it is disabled by default.', '|', 'Default value: False'])
     _help_text.append([ 'This is the folder where recorded files will be saved', '|', 'Tip: When you open the window "h" will display HTML help about this parameter (not in Line Editor).', '|', 'Default value: "pyradio-recordings" in home dir' ])
     _help_text.append(['This is a Linux (et al) only parameter. It has no effect on Windows or MacOS.', '|',
                        'Default value is "auto", in which case, PyRadio will try to use xdg-open, gio, mimeopen, mimeo or handlr, in that order of detection.  If none if found, the requested file will simply not open.'
@@ -102,6 +101,9 @@ class PyRadioConfigWindow():
     _help_text.append(['This option, when enabled, will make all themes behave as if their transparency setting was set to 2 (Obey config setting), in which case the windows\'s transparency will depend entirely on the value of the "Use transparency" setting (the option above this one).', '|', 'Default value: False'])
     _help_text.append(['Pyradio can calculate and use an alternative color for secondary windows.', '|', 'This option will determine if this color will be used (value > 0) or not (value = 0), provided that the theme used does not already provide it.', '|', 'The value of this option is actually the factor to darken or lighten the main (stations) background color.', '|', 'Valid Values: 0-0.2', 'Default value: 0'])
     _help_text.append(['The console theme is the one used when PyRadio is executed either from the Linux Virtual Console or the terminal used does not support color changes.', '|', 'This change will take effect after PyRadio is restarted.', '|', 'Default value: dark'])
+    _help_text.append(None)
+    _help_text.append(['If this options is enabled, the mouse can be used to scroll the playlist, start, stop and mute the player, adjust its volume etc.', '|', 'Mouse support is highly terminal dependent, that\'s why it is disabled by default.', '|', 'Default value: False'])
+    _help_text.append(['When mouse support is enabled, the Wheel normally scrolls up and down within the playlist, moving the selection, while Shift-Wheel adjusts the volume.', '|', 'However, if this option is enabled, the functionality will be reversed: the Wheel will adjust the volume instead, and Shift-Wheel will be used to scroll through the playlist.', '|', 'Default value: False'])
     _help_text.append(None)
     _help_text.append(['This is the IP for the Remote Control Server.', '|', 'Available options:', '- localhost : PyRadio will be accessible from within the current system only.', '- lan : PyRadio will be accessible from any computer in the local network.', '- IP : In case the system has more than one interfaces.', '|', 'Use "Space", "Enter", "l/Right" to change the value.','|', 'Default value: localhost'])
     _help_text.append(
@@ -1055,6 +1057,7 @@ class PyRadioConfigWindow():
                     sel == 'remote_control_server_auto_start' or \
                     sel == 'use_station_icon' or \
                     sel == 'enable_clock' or \
+                    sel == 'wheel_adjusts_volume' or \
                     sel == 'remove_station_icons':
                 self._config_options[sel][1] = not self._config_options[sel][1]
                 # # if sel == 'open_last_playlist':

@@ -1985,6 +1985,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 elif self._cnf.headless:
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('(detectUpdateThread): session is headless. Not starting!!!')
+                elif self._cnf.check_playlist:
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('(detectUpdateThread): check playlist mode is on. Not starting!!!')
                 else:
                     distro_package_found = False
                     if self._cnf.distro != 'None' and not platform.startswith('win'):
@@ -2008,6 +2011,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 self._update_stations_thread = None
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('(detectUpdateStationsThread): not starting; session is headless!!!')
+            elif self._cnf.check_playlist:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('(detectUpdateStationsThread): check playlist mode is on. Not starting!!!')
             elif not self._cnf.user_csv_found:
                 self._update_stations_thread = None
                 self._cls_update_stations.stations_csv_needs_sync(print_messages=False)
@@ -2075,6 +2081,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 self._watch_theme(self._cnf.theme_path)
             self._global_letter = None
             remaining_keys = 0
+            if self._cnf.check_playlist:
+                for i in range(10):
+                    self.setStation(i)
+                    self.refreshBody()
+                    sleep(1)
+                return
             while True:
                 try:
                     if self._do_launch_external_palyer:
@@ -5152,7 +5164,10 @@ ____Using |fallback| theme.''')
         if a_button == -1:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Mouse event: assuming scroll down')
-            self._page_down()
+            if self._cnf.wheel_adjusts_volume:
+                self._volume_down()
+            else:
+                self._page_down()
             return
 
         stop_here = self._handle_middle_mouse(a_button)
@@ -5197,14 +5212,24 @@ ____Using |fallback| theme.''')
         if shift_only(a_button):
             ''' looking for wheel '''
             if a_button ^ curses.BUTTON_SHIFT not in self.buttons:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Mouse event: assuming volume down')
-                self._volume_down()
+                if self._cnf.wheel_adjusts_volume:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Mouse event: assuming page down')
+                    self._page_down()
+                else:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Mouse event: assuming volume down')
+                    self._volume_down()
                 return True
             elif a_button & curses.BUTTON4_PRESSED:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Mouse event: volume up')
-                self._volume_up()
+                if self._cnf.wheel_adjusts_volume:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Mouse event: page up')
+                    self._page_up()
+                else:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Mouse event: volume up')
+                    self._volume_up()
                 return True
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Mouse event: not applicable')
@@ -5234,14 +5259,22 @@ ____Using |fallback| theme.''')
             if a_button not in self.buttons:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Mouse event on main window: page down')
-                self._page_down()
-                return True, True
+                if self._cnf.wheel_adjusts_volume:
+                    self._volume_down()
+                    return True, False
+                else:
+                    self._page_down()
+                    return True, True
 
             if a_button & curses.BUTTON4_PRESSED:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Mouse event on main window: page up')
-                self._page_up()
-                return True, True
+                if self._cnf.wheel_adjusts_volume:
+                    self._volume_up()
+                    return True, False
+                else:
+                    self._page_up()
+                    return True, True
 
             ''' looging for BUTTON 1 events '''
             do_update = True

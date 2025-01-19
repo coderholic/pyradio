@@ -191,6 +191,9 @@ a:visited{color: SaddleBrown;}
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
 
+2025-01-XX s-n-g
+    * config option added to invert the mouse wheel action (#272)
+
 2025-01-18 s-n-g
     * version 0.9.3.11.4 - 0.9.3.12-beta4
     * adding a clock displayed at the beginning of the Status Line
@@ -198,7 +201,7 @@ a:visited{color: SaddleBrown;}
     * all players will try to catch (and display) HTTP errors (403, 404, 
       503, etc) and player errors through Crash detection
     * rearranging options in the Config Window
-    * the remove control server will be cleanly terminated when the terminal closes
+    * the remote control server will be cleanly terminated when the terminal closes
     * titles log: fixing a bug that would disallow writing the station name to the log
     * when the External Player is used, pyradio will not exit; it will reload the tui
       and continue from where it left off
@@ -2116,8 +2119,8 @@ volume=50</pre>
 <p>Then, the mouse can be used as follows:</p>
 <table>
 <colgroup>
-<col style="width: 26%" />
-<col style="width: 73%" />
+<col style="width: 23%" />
+<col style="width: 76%" />
 </colgroup>
 <thead>
 <tr>
@@ -2140,7 +2143,7 @@ volume=50</pre>
 </tr>
 <tr>
 <td><strong>Wheel</strong></td>
-<td>Scroll up / down</td>
+<td>Scroll up / down or adjust volume</td>
 </tr>
 <tr>
 <td><strong>Shift-Wheel</strong></td>
@@ -2148,6 +2151,7 @@ volume=50</pre>
 </tr>
 </tbody>
 </table>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The <strong>Wheel</strong> can be configured to adjust the player’s volume instead of its default scrolling function through the “<em>Adjust volume</em>” configuration option. Then, <strong>BShift-Wheel</strong> will scroll through the playlist. This is useful if <strong>Shift-Wheel</strong> does not work, or one is accustomed to using the wheel for volume control.</p>
 <h2 id="title-logging">Title logging <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>Version <strong>0.8.9.17</strong> adds to <strong>PyRadio</strong> the ability to log the titles displayed at the bottom of its window, in a log file, for reference.</p>
 <p>The logger, which is a special kind of <em>debug logger</em>, but works independently from the “<em>debug</em>” function, is actually a <a target="_blank" href="https://docs.python.org/3/library/logging.handlers.html#logging.handlers.RotatingFileHandler">Rotating File Handler</a>, configured to write up to 5 files of around 50KB each (parameters <strong>maxBytes=50000</strong> and <strong>backupCount=5</strong>).</p>

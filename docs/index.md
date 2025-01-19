@@ -1070,13 +1070,15 @@ All one has to do is enable mouse support in the "*Config Window*" (mouse suppor
 
 Then, the mouse can be used as follows:
 
-| Action       | Result                                                     |
-|----------------------|------------------------------------------------------------|
+| Action           | Result                                                     |
+|------------------|------------------------------------------------------------|
 | **Click**        | Change selection                                           |
 | **Double click** | Start / stop the player                                    |
 | **Middle click** | Toggle player muting<br>(does not work with all terminals) |
-| **Wheel**        | Scroll up / down                                           |
+| **Wheel**        | Scroll up / down or adjust volume                          |
 | **Shift-Wheel**  | Adjust volume<br>(does not work with all terminals)        |
+
+**Note:** The **Wheel** can be configured to adjust the player's volume instead of its default scrolling function through the "*Adjust volume*" configuration option. Then, **BShift-Wheel** will scroll through the playlist. This is useful if **Shift-Wheel** does not work, or one is accustomed to using the wheel for volume control.
 
 ## Title logging
 

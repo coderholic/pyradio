@@ -27,13 +27,24 @@ default_playlist = stations
 # Default value: False
 default_station = False
 
-# Enable mouse
+
+# Mouse support
 # If this options is enabled, the mouse can be used to scroll the playlist,
 # start playback, etc. Mouse integration is highly terminal dependent, that's
 # why it is disabled by default.
 #
 # Default value: False
 enable_mouse = False
+
+# When mouse support is enabled, the Wheel normally scrolls up and down within 
+# the playlist, moving the selection, while Shift-Wheel adjusts the volume. 
+# If this option is enabled, the functionality will be reversed: the Wheel will 
+# adjust the volume instead, and Shift-Wheel will be used to scroll through the 
+# playlist.
+#
+# Default value: False
+wheel_adjusts_volume = False
+
 
 # Recordings directory
 # This is the firectory where recorded files will be saved

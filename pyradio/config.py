@@ -1270,6 +1270,9 @@ class PyRadioStations():
 class PyRadioConfig(PyRadioStations):
     ''' PyRadio Config Class '''
 
+    check_playlist = False
+    # check_playlist = True
+
     ''' if degub is on, this will tell the logger to
             0:  not log input from the player
             1:  input accepted input from the player
@@ -1327,7 +1330,6 @@ class PyRadioConfig(PyRadioStations):
     opts['default_playlist'] = ['Def. playlist: ', 'stations']
     opts['default_station'] = ['Def. station: ', 'False']
     opts['default_encoding'] = ['Def. encoding: ', 'utf-8']
-    opts['enable_mouse'] = ['Enable mouse support: ', False]
     opts['recording_dir'] = ['Recordings dir: ', '']
     opts['resource_opener'] = ['Resource Opener: ', 'auto']
     opts['playlist_manngement_title'] = ['Playlist Management Options', '']
@@ -1350,6 +1352,9 @@ class PyRadioConfig(PyRadioStations):
     opts['force_transparency'] = ['  Force transparency: ', False]
     opts['calculated_color_factor'] = ['Calculated color: ', '0']
     opts['console_theme'] = ['Console theme: ', 'dark']
+    opts['mouse_options'] = ['Mouse Support', '']
+    opts['enable_mouse'] = ['Enable mouse support: ', False]
+    opts['wheel_adjusts_volume'] = ['    Reverse wheel: ', False]
     opts['remote'] = ['Remote Control Server', '']
     opts['remote_control_server_ip'] = ['Server IP: ', 'localhost']
     opts['remote_control_server_port'] = ['Server Port: ', '9998']
@@ -1519,6 +1524,10 @@ class PyRadioConfig(PyRadioStations):
         self.opts['enable_clock'][1] = val
         if old_val != val:
             self.dirty_config = True
+
+    @property
+    def wheel_adjusts_volume(self):
+        return self.opts['wheel_adjusts_volume'][1]
 
     @property
     def time_format(self):
@@ -2295,6 +2304,11 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['enable_mouse'][1] = False
                 else:
                     self.opts['enable_mouse'][1] = True
+            elif sp[0] == 'wheel_adjusts_volume':
+                if sp[1].lower() == 'false':
+                    self.opts['wheel_adjusts_volume'][1] = False
+                else:
+                    self.opts['wheel_adjusts_volume'][1] = True
             elif sp[0] == 'enable_notifications':
                 self.opts['enable_notifications'][1] = sp[1]
                 if sp[1] not in ('0', '-1'):
@@ -2453,6 +2467,14 @@ class PyRadioConfig(PyRadioStations):
 
         self.opts['dirty_config'][1] = False
         self.saved_params = deepcopy(self.params)
+
+        if self.check_playlist:
+            self._headless = None
+            self._distro = 'Check Playlist Mode'
+            self.opts['enable_notifications'][1] = '-1'
+            self.opts['remote_control_server_auto_start'][1] = False
+            self.opts['enable_clock'][1] = False
+            self.opts['auto_update_theme'][1] = False
 
         if self.headless:
             self.opts['remote_control_server_ip'][1], self.opts['remote_control_server_port'][1] = to_ip_port(self._headless)
@@ -2800,6 +2822,12 @@ class PyRadioConfig(PyRadioStations):
                  0: Config saved successfully
                  1: Config not saved (not modified)
                  TODO: 2: Config not saved (session locked) '''
+        if self.check_playlist:
+            if not from_command_line and \
+                    logger.isEnabledFor(logging.INFO):
+                logger.info('Config not saved (checking playlist mode activated)')
+            return 1
+
         if self.locked:
             if not from_command_line and \
                     logger.isEnabledFor(logging.INFO):

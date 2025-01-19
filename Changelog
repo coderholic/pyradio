@@ -1,3 +1,6 @@
+2025-01-XX s-n-g
+    * config option added to invert the mouse wheel action (#272)
+
 2025-01-18 s-n-g
     * version 0.9.3.11.4 - 0.9.3.12-beta4
     * adding a clock displayed at the beginning of the Status Line
@@ -5,7 +8,7 @@
     * all players will try to catch (and display) HTTP errors (403, 404, 
       503, etc) and player errors through Crash detection
     * rearranging options in the Config Window
-    * the remove control server will be cleanly terminated when the terminal closes
+    * the remote control server will be cleanly terminated when the terminal closes
     * titles log: fixing a bug that would disallow writing the station name to the log
     * when the External Player is used, pyradio will not exit; it will reload the tui
       and continue from where it left off
