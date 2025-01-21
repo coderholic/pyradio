@@ -134,12 +134,12 @@ Furthermore, please refrain from using any third-party packaging methods, such a
 
 Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-x] [-u PLAYER]
                [-l] [-lt] [-sds] [-sd] [-od] [-pc] [-d]
-               [--d-player-input D_PLAYER_INPUT] [-ul] [-us] [-U] [-R] [-V] [-ls]
-               [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes] [--no-themes]
-               [--write-theme IN_THEME OUT_THEME,] [--terminal TERMINAL]
-               [--terminal-param TERMINAL_PARAM] [-oc] [-sc] [-cc] [-gc] [-r]
-               [-or] [-lr] [-mkv MKV_FILE] [-scv PNG_FILE] [-srt] [-ach]
-               [--headless IP_AND_PORT] [--address] [-fd]
+               [--d-player-input D_PLAYER_INPUT] [-ul] [-us] [-U] [-R] [-V]
+               [-ls] [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes]
+               [--no-themes] [--write-theme IN_THEME OUT_THEME,]
+               [--terminal TERMINAL] [--terminal-param ...] [-oc] [-sc] [-cc]
+               [-gc] [-r] [-or] [-lr] [-mkv MKV_FILE] [-scv PNG_FILE] [-srt]
+               [-ach] [--headless IP_AND_PORT] [--address] [-fd]
 
 Curses based Internet Radio Player
 
@@ -201,11 +201,10 @@ Terminal selection:
   --terminal TERMINAL   Use this terminal for Desktop file instead of the
                         auto-detected one. Use "none" to reset to the default
                         terminal or "auto" to reset to the auto-detected one.
-  --terminal-param TERMINAL_PARAM
-                        Use this as PyRadio parameter in the Desktop File.
-                        Please replace hyphens with underscores when passing
-                        the parameter, for example: --terminal-param "_p 3 _t
-                        light" (which will result to "pyradio -p 3 -t light").
+  --terminal-param ...  Use this as PyRadio parameter in the Desktop File.
+                        Please make sure the parameters are at the end of the
+                        command line. For example: pyradio --terminal kitty
+                        --terminal-param "-p3 -t light".
 
 Cache:
   -oc, --open-cache     Open the Cache folder.
@@ -398,7 +397,7 @@ These modes are specifically designed to be used with tiling window managers, tr
 
 The *package* configuration file contains the program's **default** parameters. These are the player to use, the playlist to load etc.
 
-It is heavily commented (as you can see [here](pyradio/config)), so that it can be used as a template in order to manual create the *user* configuration file.
+It is heavily commented (as you can see [here](..//pyradio/config)), so that it can be used as a template in order to manual create the *user* configuration file.
 
 One can also get the configuration file with the **active parameter values** (i.e. after changed by the *user* config file), by executing the command:
 
@@ -1184,9 +1183,9 @@ To restore the original functionality (specifying no terminal):
 
 If a **PyRadio** parameter has to be present in the Desktop File, use the **--terminal-param** command line option:
 
-    pyradio --terminal none --terminal-param "_p 2"
+    pyradio --terminal none --terminal-param "-p 3"
 
-This command will use no specific terminal and will pass the "**-p 2**" (play station No 2 automatically) parameter to **PyRadio**. To pass such a parameter, substitute all hyphens with underscores.
+This command will use no specific terminal and will pass the "**-p 3**" (play station No 3 automatically) parameter to **PyRadio**. Just make sure that the parameter is at the end of the command line.
 
 ## Session Locking
 

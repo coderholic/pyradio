@@ -5,7 +5,7 @@ import curses
 import logging
 import logging.handlers
 import shutil
-from argparse import ArgumentParser, SUPPRESS as SUPPRESS
+from argparse import ArgumentParser, SUPPRESS as SUPPRESS, REMAINDER
 from os import path, getenv, environ, remove, chmod, makedirs, rmdir
 from sys import platform
 from contextlib import contextmanager
@@ -315,8 +315,7 @@ If nothing else works, try the following command:
             not system().lower().startswith('win'):
         term_group = parser.add_argument_group('• Terminal selection')
         term_group.add_argument('--terminal', help='Use this terminal for Desktop file instead of the auto-detected one. Use "none" to reset to the default terminal or "auto" to reset to the auto-detected one.')
-        term_group.add_argument('--terminal-param', help='Use this as PyRadio parameter in the Desktop File. Please replace hyphens with underscores when passing the parameter, for example: --terminal-param "_p 3 _t light" (which will result to "pyradio -p 3 -t light").')
-
+        term_group.add_argument('--terminal-param', nargs=REMAINDER, help='Use this as PyRadio parameter in the Desktop File. Please make sure the parameters are at the end of the command line. For example: pyradio --terminal kitty --terminal-param "-p3 -t light".')
 
     if HAS_PIPX:
         cache_group = parser.add_argument_group('• Cache')
@@ -405,26 +404,33 @@ If nothing else works, try the following command:
                 script = None
                 # script = '/home/spiros/projects/my-gits/pyradio/devel/fix_pyradio_desktop_file'
                 if script is None:
+                    package_file = path.join(path.dirname(__file__), 'scripts', 'fix_pyradio_desktop_file')
+                    script = path.join(pyradio_config.cache_dir, 'fix_pyradio_desktop_file')
                     try:
-                        from urllib.request import urlretrieve
-                    except:
-                        from urllib import urlretrieve
-                    try:
-                        r = urlretrieve('https://raw.githubusercontent.com/coderholic/pyradio/master/devel/fix_pyradio_desktop_file')
-                    except:
-                        print('Cannot contact github...')
+                        shutil.copy(package_file, script)
+                    except Exception as e:
+                        print('Error copying file: "{}"'.format(e))
                         sys.exit(1)
-                    if int(r[1]['content-length']) < 1000:
-                        print('Cannot contact github...')
-                        sys.exit(1)
-                    script = r[0]
+                    # try:
+                    #     from urllib.request import urlretrieve
+                    # except:
+                    #     from urllib import urlretrieve
+                    # try:
+                    #     r = urlretrieve('https://raw.githubusercontent.com/coderholic/pyradio/master/devel/fix_pyradio_desktop_file')
+                    # except:
+                    #     print('Cannot contact github...')
+                    #     sys.exit(1)
+                    # if int(r[1]['content-length']) < 1000:
+                    #     print('Cannot contact github...')
+                    #     sys.exit(1)
+                    # script = r[0]
+                # script = '/home/spiros/projects/my-gits/pyradio/devel/fix_pyradio_desktop_file'
                 chmod(script , 0o766)
                 if args.terminal_param:
-                    command = 'bash -c "' + script + ' -t ' + args.terminal + " -p '-" + args.terminal_param + "'" + '"'
-                    command = 'bash -c "' + script + ' -t ' + args.terminal + " -p '" + args.terminal_param.replace('\\', '') + "'" + '"'
-                    subprocess.call(command, shell=True)
+                    command = 'bash -c "' + script + ' -t ' + args.terminal + " -p '" + ' '.join(args.terminal_param) + "'" + '"'
                 else:
-                    subprocess.call('bash -c "' + script + ' -t ' + args.terminal + '"', shell=True)
+                    command = 'bash -c "' + script + ' -t ' + args.terminal + '"'
+                subprocess.call(command, shell=True)
                 if r is not None:
                     remove(r[0])
                 sys.exit()

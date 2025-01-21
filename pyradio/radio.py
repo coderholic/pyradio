@@ -2221,6 +2221,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         If that causes problems, uncomment lines
         '''
         while self._remote_control_server is not None:
+            logger.error('\n\nclose_server\n\n')
             ret, _ = self._remote_control_server.close_server()
             if ret:
                 self._remote_control_server = None
@@ -10864,7 +10865,9 @@ _____"|f|" to see the |free| keys you can use.
             logger.info('My terminal got closed... Terminating...')
         self.log.stop_timer()
         if self._remote_control_server is not None:
+            logger.error('\n\nclose_server\n\n')
             self._remote_control_server.close_server()
+            self._remote_control_server = None
         self._force_exit = True
         self.stop_update_notification_thread = True
         self.player.stop_timeout_counter_thread = True
@@ -10887,10 +10890,15 @@ _____"|f|" to see the |free| keys you can use.
                 )
             except:
                 pass
+        # if self._remote_control_server is not None:
+        #     logger.error('\n\nclose_server\n\n')
+        #     ret, _ = self._remote_control_server.close_server()
         while self._remote_control_server is not None:
+            logger.error('\n\nclose_server\n\n')
             ret, _ = self._remote_control_server.close_server()
             if ret:
                 self._remote_control_server = None
+        self._remote_control_server = None
         self._wait_for_threads()
 
     def _windows_signal_handler(self, event):
@@ -10919,7 +10927,9 @@ _____"|f|" to see the |free| keys you can use.
                 logger.info('My console window got closed... Terminating...')
             self.log.stop_timer()
             if self._remote_control_server is not None:
+                logger.error('\n\nclose_server\n\n')
                 self._remote_control_server.close_server()
+                self._remote_control_server = None
             self._force_exit = True
             self.player.close_from_windows()
             self._cnf.save_config()
@@ -11197,9 +11207,11 @@ _____"|f|" to see the |free| keys you can use.
 
     def _stop_remote_control_server(self):
         if self._remote_control_server:
+            logger.error('\n\nclose_server\n\n')
             ret = self._remote_control_server.close_server()
             while not ret:
                 sleep(.15)
+                logger.error('\n\nclose_server\n\n')
                 ret = self._remote_control_server.close_server()
         self._remote_control_server = self._remote_control_server_thread = None
 

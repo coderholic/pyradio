@@ -310,6 +310,10 @@ sed -i '/<li><a href="#requirements">Requirements/ a\
 git add index.html
 cd ..
 
+cp devel/fix_pyradio_desktop_file  pyradio/scripts/
+chmod -x pyradio/scripts/fix_pyradio_desktop_file 
+git add pyradio/scripts/fix_pyradio_desktop_file
+
 # chmod +x devel/update_win_mplayer
 # devel/update_win_mplayer && {
 #     git add pyradio/win.py

@@ -94,11 +94,11 @@ Write an Internal or System Theme to themes directory.
 Use this terminal for Desktop file instead of the
 auto-detected one. Use "\fInone\fR" to reset to the default
 terminal or "\fIauto\fR" to reset to the auto-detected one.
-.IP\ \fB--terminal-param\fR\ \fITERMINAL_PARAM\fR
+.IP\ \fB--terminal-param\fR\ \fI...\fR
 Use this as PyRadio parameter in the Desktop File.
-Please replace hyphens with underscores when passing
-the parameter, for example: \fB--terminal-param\fR \fI"_p 3 _t
-light"\fR (which will result to "\fBpyradio \fI-p 3 -t light\fR").
+Please make sure that the argument is at the end of the command line,
+for example: \fB--terminal-param\fR \fI"-p 3 -t
+light"\fR.
 
 .PP
 \fICache:\fR
