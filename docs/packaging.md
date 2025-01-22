@@ -27,7 +27,7 @@ The following data is provided by [Repology, the packaging hub](https://repology
 <!-- [![Packaging status](https://repology.org/badge/vertical-allrepos/pyradio.svg)](https://repology.org/project/pyradio/versions) -->
 
 <a href="https://repology.org/project/pyradio/versions">
-    <img style="width: 50%" src="https://repology.org/badge/vertical-allrepos/pyradio.svg" alt="Packaging status">
+    <img style="width: 35%" src="https://repology.org/badge/vertical-allrepos/pyradio.svg" alt="Packaging status">
 </a>
 
 

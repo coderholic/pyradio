@@ -240,7 +240,7 @@ do
             "$out"
     fi
     if [ "$out" = "packaging.html" ];then
-        sed -i -e '/img */s/750px/50%/' "$out"
+        sed -i -e '/img */s/750px/35%/' "$out"
     fi
     #
     # convert images to links
