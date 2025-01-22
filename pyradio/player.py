@@ -3728,7 +3728,7 @@ class VlcPlayer(Player):
             dec_sep = '.' if '.' in volume_string else ','
             self.actual_volume = int(volume_string.split(self.volume_string)[1].split(dec_sep)[0].split()[0])
             self.volume = int(100 * self.actual_volume / self.max_volume)
-        return '[Vol: {}%] '.format(self.volume)
+        return '[' + M_STRINGS['vol_'] + '{}%] '.format(self.volume)
 
     def _format_title_string(self, title_string):
         ''' format vlc's title '''
@@ -3878,7 +3878,7 @@ class VlcPlayer(Player):
         self._thrededreq_thread.join()
         pvol = int(100 * self.actual_volume / self.max_volume)
         if pvol > 0:
-            avol = '[Vol: {}%] '.format(pvol)
+            avol = '[' + M_STRINGS['vol_'] + '{}%] '.format(pvol)
             if self.show_volume and self.oldUserInput['Title']:
                 self.outputStream.write(msg_id=STATES.VOLUME, msg=avol + self.oldUserInput['Title'], counter='')
                 self.threadUpdateTitle()

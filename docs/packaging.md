@@ -3,6 +3,7 @@
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->
 
+* [Packaging status](#packaging-status)
 * [Dependencies](#dependencies)
 * [Files to change](#files-to-change)
     * [distro name (must do)](#distro-name-(must-do))
@@ -18,6 +19,17 @@
 <!-- vim-markdown-toc -->
 
 [ [Back to main doc](index.md#packaging-pyradio)  ]
+
+## Packaging status
+
+The following data is provided by [Repology, the packaging hub](https://repology.org/).
+
+<!-- [![Packaging status](https://repology.org/badge/vertical-allrepos/pyradio.svg)](https://repology.org/project/pyradio/versions) -->
+
+<a href="https://repology.org/project/pyradio/versions">
+    <img style="width: 50%" src="https://repology.org/badge/vertical-allrepos/pyradio.svg" alt="Packaging status">
+</a>
+
 
 ## Dependencies
 

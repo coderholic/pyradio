@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+DESKTOP_FILE=~/.local/share/applications/pyradio.desktop
+
 function help_terminal(){
 echo "Suitable terminals are:
    gnome-terminal, mate-terminal, xfce4-terminal, lxterminal, terminator,
@@ -31,6 +34,8 @@ Available options:
          If this is a distribution package, and the Desktop File is not
          installed under /usr/share/applications, this parameter will
          tell the script where it is installed.
+    -z   Delete the Desktop file before doing anything else.
+    -s   Show Desktop file and exit.
 
 For passing the command parameter, the script will use \"-e\" for all terminals,
 so that an executable line will be constracted.
@@ -230,6 +235,13 @@ do
             help
             exit
             ;;
+        -s)
+            echo "Printing: ${DESKTOP_FILE}"
+            echo
+            cat "${DESKTOP_FILE}"
+            echo
+            exit
+            ;;
         -d)
             shift
             if [ ! -r "$1" ];then
@@ -307,7 +319,6 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 get_data_dir
 echo "Installing Desktop file ...   "
-DESKTOP_FILE=~/.local/share/applications/pyradio.desktop
 [ -z ${ZERO} ] && rm ${DESKTOP_FILE}
 # set -x
 get_req_terminal

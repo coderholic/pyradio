@@ -387,12 +387,12 @@ class Log():
 
             if msg:
                 logger.error('****** self._current_msg_id = {}: "{}" with msg_id = {}'.format(self._current_msg_id, msg, msg_id))
-        logger.error(f'{suffix = }, {counter = }, {p_time = } with {msg_id = }')
-        logger.error(
-            'self._current_player_id() = {}, self._current_player_id() = {}'.format(
-                current_player_id, current_player_id
-            )
-        )
+        # logger.error(f'{suffix = }, {counter = }, {p_time = } with {msg_id = }')
+        # logger.error(
+        #     'self._current_player_id() = {}, self._current_player_id() = {}'.format(
+        #         current_player_id, current_player_id
+        #     )
+        # )
         if self.cursesScreen:
             if msg_id == STATES.RESET:
                 with self.lock:
@@ -473,7 +473,7 @@ class Log():
 
                 ''' start normal execution '''
                 if msg:
-                    logger.error('msg\n{}'.format(msg))
+                    logger.error('self.msg\n{}\nmsg\n{}'.format(self.msg, msg))
                 if msg and self._player_stopped:
                     ''' Refuse to print anything if "Playback stopped"
                         was the last message printed
@@ -533,7 +533,7 @@ class Log():
                         self.cursesScreen.addstr(0, self._x_start-1, ' ')
                     try:
                         d_msg = fix_chars(self.msg.strip()[0: self.width])
-                        logger.error('printing "{}" at x = {}'.format(d_msg, self._x_start))
+                        # logger.error('printing "{}" at x = {}'.format(d_msg, self._x_start))
                         dd_msg = d_msg.strip()[:self.width -2]
                         while cjklen(dd_msg) > self.width -2:
                             dd_msg = dd_msg[:-1]
@@ -559,7 +559,7 @@ class Log():
                         pass
 
                     if msg:
-                        if msg.startswith('[Vol:') or msg.startswith(M_STRINGS['muted']):
+                        if msg.startswith(M_STRINGS['vol_']) or msg.startswith(M_STRINGS['muted']):
                             msg = msg.split('] ')[-1]
                     with self._song_title_lock:
                         if msg:

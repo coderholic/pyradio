@@ -86,7 +86,7 @@ Command line internet radio player.
 **PyRadio** provides the following features:
 
  - vi like keys in addition to arrows and special keys
- - [RadioBrowser](docs/radio-browser.md) support
+ - [RadioBrowser](radio-browser.md) support
  - Remote Control Server
  - Multiple playlist support
  - vi like station registers
@@ -121,7 +121,7 @@ Linux users will have to install a [resource opener](https://wiki.archlinux.org/
 
 The best way to install **PyRadio** is via a distribution package, if one exists (*Arch Linux* and derivatives can install [any of these packages](https://aur.archlinux.org/packages/?K=pyradio) from the AUR, *FreeBSD* users will find it in the [ports](https://www.freshports.org/audio/py-pyradio/), etc.).
 
-In any other case you will have to [build it from source](docs/build.md).
+In any other case you will have to [build it from source](build.md).
 
 **Note:** Please avoid installing **PyRadio** via **pip**. I (user [s-n-g](https://github.com/s-n-g) @ github) am not the creator of this project, nor do I maintain it on [The Python Package Index (PyPI)](https://pypi.org/project/pyradio/). As a result, the version available there is outdated and I cannot provide any support for it. \
 \
@@ -1203,7 +1203,7 @@ If for any reason **PyRadio** always starts in "*locked mode*", one can **unlock
 
 If so, a notification message will be displayed, informing the user about it and asking to proceed with updating the program (provided this is not a distribution package).
 
-**Note:** Packages coming from a distribution repository will display no notification; it's up to the distro to update / uninstall **PyRadio**, as stated in [Packaging PyRadio](docs/packaging.md).
+**Note:** Packages coming from a distribution repository will display no notification; it's up to the distro to update / uninstall **PyRadio**, as stated in [Packaging PyRadio](packaging.md).
 
 ## Remote Control Server
 

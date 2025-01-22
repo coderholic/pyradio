@@ -239,6 +239,9 @@ do
             -e 's{</h3>{ <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span>&{' \
             "$out"
     fi
+    if [ "$out" = "packaging.html" ];then
+        sed -i -e '/img */s/750px/50%/' "$out"
+    fi
     #
     # convert images to links
     images_to_links "$out"

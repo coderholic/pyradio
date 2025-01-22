@@ -402,7 +402,6 @@ If nothing else works, try the following command:
                 import subprocess
                 r = None
                 script = None
-                # script = '/home/spiros/projects/my-gits/pyradio/devel/fix_pyradio_desktop_file'
                 if script is None:
                     package_file = path.join(path.dirname(__file__), 'scripts', 'fix_pyradio_desktop_file')
                     script = path.join(pyradio_config.cache_dir, 'fix_pyradio_desktop_file')
@@ -424,8 +423,7 @@ If nothing else works, try the following command:
                     #     print('Cannot contact github...')
                     #     sys.exit(1)
                     # script = r[0]
-                # script = '/home/spiros/projects/my-gits/pyradio/devel/fix_pyradio_desktop_file'
-                chmod(script , 0o766)
+                chmod(script , 0o700)
                 if args.terminal_param:
                     command = 'bash -c "' + script + ' -t ' + args.terminal + " -p '" + ' '.join(args.terminal_param) + "'" + '"'
                 else:
