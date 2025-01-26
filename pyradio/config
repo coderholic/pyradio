@@ -115,6 +115,16 @@ use_station_icon = True
 # Default value: True
 remove_station_icons = True
 
+# Titles logging
+# If this option is True, Pyradio will start logging song titles to a log file
+# at startup, provided that the station playing does provide title data.
+#
+# This is the same as using the -lt command line parameter, or pressing "W" 
+# while the program is running.
+#
+# Default value: False
+log_titles = True
+
 # Connection timeout
 # PyRadio will wait for this number of seconds to get a station/server message
 # indicating that playback has actually started. If this does not happen

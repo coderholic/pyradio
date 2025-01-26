@@ -21,7 +21,7 @@ from .themes import *
 from .server import IPsWithNumbers
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesMenu
 from .client import PyRadioClient
-from .keyboard import kbkey, kbkey_orig, ctrl_code_to_string, is_valid_char, is_invalid_key, is_ctrl_key, set_kbkey, conflicts, read_keyboard_shortcuts, check_localized, LetterDisplay, get_kb_letter
+from .keyboard import kbkey, kbkey_orig, ctrl_code_to_string, is_valid_char, is_invalid_key, is_ctrl_key, set_kbkey, conflicts, read_keyboard_shortcuts, check_localized, LetterDisplay, get_kb_letter, to_str
 from .log import TIME_FORMATS
 
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -60,7 +60,7 @@ class PyRadioConfigWindow():
     'This is the equivalent to the -u , --use-player command line option.', '|',
     'Example:', '  player = vlc', 'or', '  player = vlc,mpv, mplayer', '|',
     'Default value: mpv,mplayer,vlc'])
-    _help_text.append([r'If this option is enabled, the last local playlist loaded before terminating, will be automatically opened the next time PyRadio is executed. Furthermore, playback will resume, if it was on when PyRadio exited. Otherwise, station selection will be restored.', '|', 'This option will take precedence over the "Def. playlist" configuration option and the "-s" command line option.', '|', r'It can also be toggled on the fly by pressing \l while on Main mode.', '|', 'Default value: False'])
+    _help_text.append([r'If this option is enabled, the last local playlist loaded before terminating, will be automatically opened the next time PyRadio is executed. Furthermore, playback will resume, if it was on when PyRadio exited. Otherwise, station selection will be restored.', '|', 'This option will take precedence over the "Def. playlist" configuration option and the "-s" command line option.', '|', r'It can also be toggled on the fly by pressing ' + to_str('open_extra') + to_str('last_playlist')+ ' while on Main mode.', '|', 'Default value: False'])
     _help_text.append(['This is the playlist to open at start up, if none is specified and "Open last playlist" is not set.', '|',
     'This is the equivalent to the -s, --stations command line option.', '|',
     'Default value: stations'])
@@ -74,22 +74,23 @@ class PyRadioConfigWindow():
     _help_text.append(['This is a Linux (et al) only parameter. It has no effect on Windows or MacOS.', '|',
                        'Default value is "auto", in which case, PyRadio will try to use xdg-open, gio, mimeopen, mimeo or handlr, in that order of detection.  If none if found, the requested file will simply not open.'
                        ])
+    _help_text.append(['If this option is True, Pyradio will start logging song titles to a log file at program startup, provided that the station playing does provide title data.', '|', 'This is the same as using the -lt command line option, or pressing "' + to_str('t_tag') +  '" while the program is running.', '|', 'Please keep in mind that this option will only affect ptogram startup.', '|', 'Default value: False'])
     _help_text.append(None)
     _help_text.append(['Specify whether you will be asked to confirm every station deletion action.', '|', 'Default value: True'])
     _help_text.append(['Specify whether you will be asked to confirm playlist reloading, when the playlist has not been modified within PyRadio.', '|', 'Default value: True'])
     _help_text.append(['Specify whether you will be asked to save a modified playlist whenever it needs saving.', '|', 'Default value: False'])
     _help_text.append(None)
     _help_text.append(['PyRadio will wait for this number of seconds to get a station/server message indicating that playback has actually started.', '|',
-    'If this does not happen within this number of seconds after the connection is initiated, PyRadio will consider the station unreachable, and display the "Failed to connect to: station" message.', '|', 'Press "h"/Left or "l"/Right to change value.',
+    'If this does not happen within this number of seconds after the connection is initiated, PyRadio will consider the station unreachable, and display the "Failed to connect to: station" message.', '|', 'Press "' + to_str('h')+  '"/Left or "' + to_str('l')  + '"/Right to change value.',
     '|', 'Valid values: 5 - 60, 0 disables check', 'Default value: 10'])
-    _help_text.append(['Most radio stations use plain old http protocol to broadcast, but some of them use https.', '|', 'If this parameter is enabled, all connections will use http; results depend on the combination of station/player.', '|', 'This value is read at program startup, use "z" to change its effect while mid-session.',
+    _help_text.append(['Most radio stations use plain old http protocol to broadcast, but some of them use https.', '|', 'If this parameter is enabled, all connections will use http; results depend on the combination of station/player.', '|', 'This value is read at program startup, use "' + to_str('https') +  '" to change its effect while mid-session.',
     '|', 'Default value: False'])
     _help_text.append(None)
     _help_text.append(['If this options is enabled, a Desktop Notification will be displayed using the notification daemon / service.', '|', 'If enabled but no notification is displayed, please refer to', 'https://github.com/coderholic/pyradio/desktop-notification.md', '|', 'Valid values are:', '   -1: disabled ', '    0: enabled (no repetition) ', '    x: repeat every x seconds ', '|', 'Default value: -1'])
     _help_text.append(['Notice: Not applicable on Windows!', '|',  'Online Radio Directory Services (like RadioBrowser) will usually provide an icon for the stations they advertise.', '|', 'PyRadio can use this icon (provided that one exists and is of JPG or PNG format) while displaying Desktop Notifications.', '|', 'Setting this option to True, will enable the behavior above.', '|', 'If this option is False, the default icon will be used.', '|', 'Default value: True'])
     _help_text.append(['Notice: Not applicable on Windows!', '|', 'If the previous option is enabled, Stations Icons will be cached.', '|', 'If this option is set to True, all icons will be deleted at program exit.', '|', 'If set to False, the icons will be available for future use.', '|', 'Default value: True'])
     _help_text.append(None)
-    _help_text.append(['If this option is enabled, the current time will be displayed at the bottom left corner of the window at program startup.', '|', 'Adjust the time format in the next option to change how the current time is displayed.', '|', r'You can always hide it by pressing \t (default shortcut).', '|', 'Default value: False'])
+    _help_text.append(['If this option is enabled, the current time will be displayed at the bottom left corner of the window at program startup.', '|', 'Adjust the time format in the next option to change how the current time is displayed.', '|', r'You can always hide it by pressing ' + to_str('open_extra') + to_str('toggle_time') +  '.', '|', 'Default value: False'])
     _help_text.append(['This is the time format to be used when the clock is visible.', '|', 'Available values are:', '   0: 24h, with seconds', '   1: 24h, no seconds', '   2: 12h, with am/pm and seconds', '   3: 12h, no am/pm, with seconds', '   4: 12h, with am/pm, no seconds', '   5: 12h, no am/pm, no seconds', '|', 'Default value: 1'])
     _help_text.append(None)
     _help_text.append(['The theme to be used by default.', '|',
@@ -108,7 +109,7 @@ class PyRadioConfigWindow():
     _help_text.append(['This is the IP for the Remote Control Server.', '|', 'Available options:', '- localhost : PyRadio will be accessible from within the current system only.', '- lan : PyRadio will be accessible from any computer in the local network.', '- IP : In case the system has more than one interfaces.', '|', 'Use "Space", "Enter", "l/Right" to change the value.','|', 'Default value: localhost'])
     _help_text.append(
         ['This is the port used by the Remote Control Server (the port the server is listening to).', '|', 'Please make sure that a "free" port is specified here, to avoid any conflicts with existing services and daemons.', '|', 'If an invalid port number is inserted, the cursor will not move to another field.', '|', 'Valid values: 1025-65535', 'Default value: 9998'])
-    _help_text.append(['If set to True, the Server will be automatically started when PyRadio starts.', '|', r'If set to False, one can start the Server using the "\s" command from the Main program window.', '|', 'Default value: False'])
+    _help_text.append(['If set to True, the Server will be automatically started when PyRadio starts.', '|', r'If set to False, one can start the Server using the "' + to_str('open_extra') + to_str('open_remote_control') + '" command from the Main program window.', '|', 'Default value: False'])
     _help_text.append(None)
     _help_text.append(['This options will open the configuration window for the Shortcuts Definitions.', '|', 'Please keep in mind that if you customize the keyboard shortcuts, the documentation may no longer align with your personalized settings. While the in-program runtime help will always reflect your current key configurations, the static documentation will continue to display the default shortcuts.', '|', 'To ensure you have the best experience, refer to the runtime help for the most accurate information regarding your customized key bindings!'])
     _help_text.append(['The "Localized Shortcuts" option allows you to define and customize keyboard shortcuts based on your preferred language. This feature enhances your experience by providing a seamless way to interact with the program in your chosen language.', '|', 'You can choose a language name from the list to load the corresponding character mapping file. This file contains the relationship between English letters (A-Z, a-z) and the letters used in your selected language.', '|', 'If the language does not exit, you will be able to create it.'])
@@ -1058,6 +1059,7 @@ class PyRadioConfigWindow():
                     sel == 'use_station_icon' or \
                     sel == 'enable_clock' or \
                     sel == 'wheel_adjusts_volume' or \
+                    sel == 'log_titles' or \
                     sel == 'remove_station_icons':
                 self._config_options[sel][1] = not self._config_options[sel][1]
                 # # if sel == 'open_last_playlist':

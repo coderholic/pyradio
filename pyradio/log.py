@@ -110,7 +110,7 @@ class PyRadioTimer:
         The duration (in seconds) to sleep between updates (default is 0.5 seconds).
     """
 
-    def __init__(self, update_functions, exit_thread, time_format=0, sleep_interval=0.24):
+    def __init__(self, update_functions, exit_thread, time_format=0, sleep_interval=0.24, check_start_time=None):
         self._exit = exit_thread
         self.current_time = ""
         self._timer_thread = None
@@ -119,6 +119,7 @@ class PyRadioTimer:
         self.function_lock = threading.Lock()  # Lock for thread-safe access
         self.SLEEP_INTERVAL = sleep_interval  # Set custom sleep interval
         self._update_functions = update_functions  # Store the update function
+        self._check_start_time = check_start_time
 
     @property
     def is_active(self):
@@ -199,7 +200,15 @@ class PyRadioTimer:
     def _show_time(self, old_time=None):
         with self.lock:  # Acquire lock before updating
             now = datetime.datetime.now()
-            self.current_time = now.strftime(self._time_format)
+            if self._check_start_time is None:
+                self.current_time = now.strftime(self._time_format)
+            else:
+                cur_time = now - self._check_start_time
+                if self.current_time == '':
+                    self.current_time = '00:00:00'
+                else:
+                    self.current_time = f"{cur_time.seconds // 3600:02}:{(cur_time.seconds % 3600) // 60:02}:{(cur_time.seconds + 1) % 60:02}"
+
 
         if old_time:
             if self.current_time == old_time:
@@ -262,12 +271,17 @@ class Log():
 
     can_display_help_msg = None
 
+    _check_start_time = None
+
     def __init__(self,
                  config,
                  current_player_id,
                  active_player_id,
                  get_web_song_title
                  ):
+        if config.check_playlist:
+            self._check_start_time = datetime.datetime.now()
+            logger.error(f'{self._check_start_time = }')
         self._current_msg_id = STATES.RESET
         self._current_player_id = current_player_id
         self._active_player_id = active_player_id
@@ -346,7 +360,8 @@ class Log():
             self.timer = PyRadioTimer(
                 update_functions=(self.write_time, ),
                 exit_thread=lambda: self.asked_to_stop or self._stop_thread,
-                sleep_interval=0.24
+                sleep_interval=0.24,
+                check_start_time=self._check_start_time
             )
         if time_format is not None:
             self.timer.time_format = time_format
@@ -411,7 +426,7 @@ class Log():
                         self._current_msg_id = msg_id
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug(f'setting {self._current_msg_id = }')
-            elif msg_id == STATES.CONNECT_ERROR or msg_id >= 100:
+            elif msg_id >= STATES.CONNECT_ERROR:
                 with self.lock:
                     self._current_msg_id = STATES.RESET
                 if logger.isEnabledFor(logging.DEBUG):
@@ -1089,6 +1104,9 @@ class Log():
                 token_id = 0
                 Log.locked = True
                 d_msg = default
+            elif d_msg.endswith(M_STRINGS['checking-playlist']):
+                token_id = 0
+                d_msg = default
             else:
                 # # no update
                 # for a_return_token in just_return:
@@ -1114,6 +1132,8 @@ class Log():
 
         if token_id == 0 and Log.locked:
             d_msg += M_STRINGS['session-locked']
+        elif token_id == 0:
+            d_msg += M_STRINGS['checking-playlist']
 
         if platform.lower().startswith('win'):
             ctypes.windll.kernel32.SetConsoleTitleW(tokens[token_id] + d_msg)

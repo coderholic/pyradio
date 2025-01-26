@@ -127,11 +127,14 @@ def __configureLogger(pyradio_config, debug=None, titles=None):
             else:
                 print('Debug mode activated; printing messages to file: "[red]~/pyradio.log[/red]"')
 
-        pyradio_config.titles_log.configure_logger(
+        ret = pyradio_config.titles_log.configure_logger(
             recording_dir=pyradio_config.recording_dir,
             debug=debug,
             titles=titles
         )
+        if not ret:
+            print('error creating log folder')
+            sys.exit(1)
 
 def print_session_is_locked():
     print_simple_error('Error: This session is locked!')
@@ -270,6 +273,8 @@ If nothing else works, try the following command:
                         help='When -d is used, this option will not log player input (value = 0), log accepted input (value = 1) or raw input (value = 2).')
     parser.add_argument('-ul', '--unlock', action='store_true',
                         help="Remove sessions' lock file.")
+    parser.add_argument('-cp', '--check-playlist', action='store_true',
+                        help='Enter playlist check mode.')
     parser.add_argument('-us', '--update-stations', action='store_true',
                         help='Update "stations.csv" (if needed).')
     parser.add_argument('-U', '--update', action='store_true',
@@ -389,7 +394,13 @@ If nothing else works, try the following command:
                 sys.exit(1)
 
     with pyradio_config_file(user_config_dir, args.headless) as pyradio_config:
-        read_config(pyradio_config)
+        read_config(pyradio_config, args.check_playlist)
+
+        if args.check_playlist:
+            pyradio_config.check_playlist = args.check_playlist
+            args.play = 'False'
+            args.debug = True
+            args.d_player_input = '2'
 
         if not system().lower().startswith('darwin') and \
                 not system().lower().startswith('win'):
@@ -855,9 +866,9 @@ If nothing else works, try the following command:
             console.print(centered_table)
             return
 
-        if args.debug or args.log_titles:
+        if args.debug or args.log_titles or pyradio_config.log_titles:
             __configureLogger(debug=args.debug,
-                              titles=args.log_titles,
+                              titles=args.log_titles or pyradio_config.log_titles,
                               pyradio_config=pyradio_config
                               )
             logging.raiseExceptions = False
@@ -936,7 +947,9 @@ If nothing else works, try the following command:
 
         ''' set window title '''
         try:
-            if pyradio_config.locked:
+            if pyradio_config.check_playlist:
+                win_title = ' (' + M_STRINGS['checking-playlist'] + ')'
+            elif pyradio_config.locked:
                 win_title = M_STRINGS['session-locked']
             else:
                 win_title = None
@@ -987,6 +1000,9 @@ If nothing else works, try the following command:
             else:
                 break
 
+        if pyradio_config.check_playlist:
+            pyradio.program_restart = False
+        print(f'curses is off, {pyradio.program_restart = }')
         ''' curses is off '''
         pyradio_config._online_browser = None
         if pyradio.setup_return_status:
@@ -1032,8 +1048,8 @@ If nothing else works, try the following command:
         else:
             print('\nThis terminal can not display colors.\nPyRadio cannot function in such a terminal.\n')
 
-def read_config(pyradio_config):
-    ret = pyradio_config.read_config()
+def read_config(pyradio_config, check_playlist):
+    ret = pyradio_config.read_config(check_playlist=check_playlist)
     if ret == -1:
         print('Error opening config: "[red]{}[/red]"'.format(pyradio_config.config_file))
         sys.exit(1)

@@ -334,6 +334,9 @@ class Player():
 
     USE_EXTERNAL_PLAYER = False
 
+    success_in_check_playlist = None
+    error_in_check_playlist = None
+
     def __init__(self,
                  config,
                  outputStream,
@@ -999,6 +1002,10 @@ class Player():
                 if http_error:
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('----==== playbak stopped, reason: "{}" ====----'.format(subsystemOut.strip()))
+                        if self.success_in_check_playlist is not None:
+                            self.error_in_check_playlist(http_error)
+                        else:
+                            logger.error('1008 self.success_in_check_playlist is None')
                     break
 
                 subsystemOut = subsystemOut.strip()
@@ -1067,6 +1074,10 @@ class Player():
                                 else:
                                     new_input = M_STRINGS['playing_'] + self.name
                                     msg_id=STATES.PLAY
+                                    if self.success_in_check_playlist is not None:
+                                        self.success_in_check_playlist()
+                                    else:
+                                        logger.error('1077 self.success_in_check_playlist is None')
                             else:
                                 new_input = self.oldUserInput['Title']
                                 logger.error(f'using msg_id=self.outputStream.current_msg_id: {self.outputStream.current_msg_id}')
@@ -1074,6 +1085,10 @@ class Player():
                                     msg_id = STATES.BUFFER
                                 else:
                                     msg_id = STATES.PLAY
+                                    if self.success_in_check_playlist is not None:
+                                        self.success_in_check_playlist()
+                                    else:
+                                        logger.error('1090 self.success_in_check_playlist is None')
                         if not self.playback_is_on:
                             on_connect()
                         self.outputStream.write(msg_id=msg_id, msg=new_input, counter='')
@@ -1102,6 +1117,10 @@ class Player():
                                             ),
                                         counter=''
                                         )
+                                if self.success_in_check_playlist is not None:
+                                    self.success_in_check_playlist()
+                                else:
+                                    logger.error('1122 self.success_in_check_playlist is None')
                         # logger.error('DE 3 {}'.format(self._icy_data))
                     elif self._is_icy_entry(subsystemOut):
                         if not subsystemOut.endswith('Icy-Title=(null)'):
@@ -1147,6 +1166,10 @@ class Player():
                                     if ok_to_display and self.playback_is_on:
                                         string_to_show = self.title_prefix + title
                                         self.outputStream.write(msg_id=STATES.TITLE, msg=string_to_show, counter='')
+                                        if self.success_in_check_playlist is not None:
+                                            self.success_in_check_playlist()
+                                        else:
+                                            logger.error('1008 self.success_in_check_playlist is None')
                                     else:
                                         if logger.isEnabledFor(logging.DEBUG):
                                             logger.debug('***** Title change inhibited: ok_to_display = {0}, playbabk_is_on = {1}'.format(ok_to_display, self.playback_is_on))
@@ -1163,6 +1186,10 @@ class Player():
                                     else:
                                         title = M_STRINGS['playing_'] + self.name
                                         msg_id = STATES.PLAY
+                                        if self.success_in_check_playlist is not None:
+                                            self.success_in_check_playlist()
+                                        else:
+                                            logger.error('1008 self.success_in_check_playlist is None')
                                         # logger.error('playing')
                                     self.oldUserInput['Title'] = title
                                     string_to_show = self.title_prefix + title
@@ -1395,40 +1422,38 @@ class Player():
                                     b'HTTPError 404' in a_data or \
                                     b'Not Found' in a_data:
                                 http_error = 404
-                                break
                             elif b'HTTP Error 403' in a_data or \
                                     b'HTTPError 403' in a_data or \
                                     b'Forbidden' in a_data:
                                 http_error = 403
-                                break
                             elif b'HTTP Error 503' in a_data or \
                                     b'HTTPError 503' in a_data or \
                                     b'All backends failed or unhealthy' in a_data:
                                 http_error = 503
-                                break
                             elif b'[Errno 110]' in a_data:
                                 http_error = 1001
-                                break
                             elif b'[Errno 104]' in a_data or \
                                     b'[Errno 111]' in a_data:
                                 http_error = 1003
-                                break
                             elif b'[Errno -2]' in a_data or \
                                     b'[Errno -3]' in a_data:
                                 http_error = 1005
-                                break
                             elif b'[Errno 101]' in a_data or \
                                     b'[Errno 113]' in a_data:
                                 http_error = 1006
-                                break
                             elif b'[Errno 13]' in a_data:
                                 http_error = 1007
-                                break
                             else:
                                 if logger.isEnabledFor(logging.INFO):
                                     logger.info('----==== HTTP Error Message not handled ====----')
                                 http_error = 1001
-                                break
+
+                    if http_error:
+                        if self.success_in_check_playlist is not None:
+                            self.error_in_check_playlist(http_error)
+                        else:
+                            logger.error('1008 self.success_in_check_playlist is None')
+                        break
 
                     if stop():
                         break
@@ -1490,6 +1515,10 @@ class Player():
                                                         ),
                                                         counter=''
                                                         )
+                                                if self.success_in_check_playlist is not None:
+                                                    self.success_in_check_playlist()
+                                                else:
+                                                    logger.error('1008 self.success_in_check_playlist is None')
                                         elif (d['event'] == 'file-loaded' or \
                                                 d['event'] == 'audio-reconfig') and \
                                                 self.buffering:
@@ -1649,12 +1678,20 @@ class Player():
                             else:
                                 new_input = M_STRINGS['playing_'] + self.name
                                 msg_id = STATES.PLAY
+                                if self.success_in_check_playlist is not None:
+                                    self.success_in_check_playlist()
+                                else:
+                                    logger.error('1008 self.success_in_check_playlist is None')
                         else:
                             new_input = self.oldUserInput['Title']
                             if self.buffering:
                                 msg_id = STATES.BUFFER
                             else:
                                 msg_id = STATES.PLAY
+                                if self.success_in_check_playlist is not None:
+                                    self.success_in_check_playlist()
+                                else:
+                                    logger.error('1008 self.success_in_check_playlist is None')
                         self.outputStream.write(msg_id=msg_id, msg=new_input, counter='')
                         self.playback_is_on = True
                         self.connecting = False
@@ -1715,6 +1752,10 @@ class Player():
                                 if ok_to_display and self.playback_is_on:
                                     string_to_show = self.title_prefix + title
                                     self.outputStream.write(msg_id=STATES.TITLE, msg=string_to_show, counter='')
+                                    if self.success_in_check_playlist is not None:
+                                        self.success_in_check_playlist()
+                                    else:
+                                        logger.error('1008 self.success_in_check_playlist is None')
                             else:
                                 ok_to_display = True
                                 if (logger.isEnabledFor(logging.INFO)):
@@ -1727,6 +1768,10 @@ class Player():
                                     self.oldUserInput['Title'] = title
                                     string_to_show = self.title_prefix + title
                                     self.outputStream.write(msg_id=STATES.TITLE, msg=string_to_show, counter='')
+                                    if self.success_in_check_playlist is not None:
+                                        self.success_in_check_playlist()
+                                    else:
+                                        logger.error('1008 self.success_in_check_playlist is None')
                     #else:
                     #    if self.oldUserInput['Title'] == '':
                     #        self.oldUserInput['Title'] = M_STRINGS['connecting_'] + self.name
@@ -1933,6 +1978,10 @@ class Player():
                     if stop():
                         return False
                     self.outputStream.write(msg_id=STATES.TITLE, msg=string_to_show, counter='')
+                    if self.success_in_check_playlist is not None:
+                        self.success_in_check_playlist()
+                    else:
+                        logger.error('1008 self.success_in_check_playlist is None')
                 if not self.playback_is_on:
                     if stop():
                         return False
@@ -1948,6 +1997,10 @@ class Player():
                 if stop():
                     return False
                 self.outputStream.write(msg_id=STATES.PLAY, msg=string_to_show, counter='')
+                if self.success_in_check_playlist is not None:
+                    self.success_in_check_playlist()
+                else:
+                    logger.error('1008 self.success_in_check_playlist is None')
                 self.oldUserInput['Title'] = title
 
         # logger.info('DE a_data {}'.format(a_data))
@@ -2032,6 +2085,11 @@ class Player():
         else:
             new_input = M_STRINGS['playing_'] + self.name
             msg_id = STATES.PLAY
+            if self.success_in_check_playlist is not None:
+                logger.error('1008 self.success_in_check_playlist is not None')
+                self.success_in_check_playlist()
+            else:
+                logger.error('1008 self.success_in_check_playlist is None')
         self.outputStream.write(msg_id=msg_id, msg=new_input, counter='')
         with self.buffering_lock:
             self.buffering_change_function()
@@ -2040,6 +2098,10 @@ class Player():
         self.oldUserInput['Title'] = new_input
         self.playback_is_on = True
         self.connecting = False
+        if self.success_in_check_playlist is not None:
+            self.success_in_check_playlist()
+        else:
+            logger.error('\n\nself.success_in_check_playlist is None\n\n')
         if stop():
             return False
         enable_crash_detection_function()
@@ -2065,6 +2127,10 @@ class Player():
             arg[0].write(msg_id=STATES.TITLE, msg=arg[1])
         else:
             arg[0].write(msg_id=STATES.TITLE, msg=self.title_prefix + self._format_title_string(self.oldUserInput['Title']))
+        if self.success_in_check_playlist is not None:
+            self.success_in_check_playlist()
+        else:
+            logger.error('1008 self.success_in_check_playlist is None')
 
     def _is_icy_entry(self, a_string):
         for a_token in self.icy_tokens:
@@ -2125,6 +2191,10 @@ class Player():
             self.playback_is_on = True
             the_title = self.oldUserInput['Title']
         self.outputStream.write(msg_id=STATES.TITLE, msg=the_title, counter='')
+        if self.success_in_check_playlist is not None:
+            self.success_in_check_playlist()
+        else:
+            logger.error('1008 self.success_in_check_playlist is None')
         # self.threadUpdateTitle()
         self.monitor_update_thread.start()
 
@@ -2496,6 +2566,10 @@ class Player():
             self.outputStream.write(msg_id=STATES.TITLE, msg=self.title_prefix + self._format_title_string(self.oldUserInput['Input']), counter='')
         else:
             self.outputStream.write(msg_id=STATES.TITLE, msg=self.title_prefix + self._format_title_string(self.oldUserInput['Title']), counter='')
+        if self.success_in_check_playlist is not None:
+            self.success_in_check_playlist()
+        else:
+            logger.error('1008 self.success_in_check_playlist is None')
 
     def toggleMute(self):
         ''' mute / unmute player '''
@@ -2520,6 +2594,10 @@ class Player():
                 self.outputStream.write(msg_id=STATES.TITLE, msg=self.title_prefix + self._format_title_string(self.oldUserInput['Input']), counter='')
             else:
                 self.outputStream.write(msg_id=STATES.TITLE, msg=self.title_prefix + self._format_title_string(self.oldUserInput['Title']), counter='')
+            if self.success_in_check_playlist is not None:
+                self.success_in_check_playlist()
+            else:
+                logger.error('1008 self.success_in_check_playlist is None')
         else:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Cannot toggle mute, player paused!')

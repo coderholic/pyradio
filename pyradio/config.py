@@ -1271,7 +1271,6 @@ class PyRadioConfig(PyRadioStations):
     ''' PyRadio Config Class '''
 
     check_playlist = False
-    # check_playlist = True
 
     ''' if degub is on, this will tell the logger to
             0:  not log input from the player
@@ -1307,7 +1306,6 @@ class PyRadioConfig(PyRadioStations):
     theme_download_failed = False
     theme_not_supported_notification_shown = False
 
-    log_titles = False
     log_degub = False
 
     ''' Title logging '''
@@ -1332,6 +1330,7 @@ class PyRadioConfig(PyRadioStations):
     opts['default_encoding'] = ['Def. encoding: ', 'utf-8']
     opts['recording_dir'] = ['Recordings dir: ', '']
     opts['resource_opener'] = ['Resource Opener: ', 'auto']
+    opts['log_titles'] = ['Log titles: ', False]
     opts['playlist_manngement_title'] = ['Playlist Management Options', '']
     opts['confirm_station_deletion'] = ['Confirm station deletion: ', True]
     opts['confirm_playlist_reload'] = ['Confirm playlist reload: ', True]
@@ -1436,6 +1435,11 @@ class PyRadioConfig(PyRadioStations):
 
     notification_image_file = None
 
+    _last_station_checked = None
+    _last_station_checked_id = -1
+    _check_output_folder = None
+    _check_output_file = None
+
     def __init__(self, user_config_dir=None, headless=False):
         # keep old recording / new recording dir
         self._user_config_dir = user_config_dir
@@ -1488,6 +1492,17 @@ class PyRadioConfig(PyRadioStations):
         self.auto_update_frameworks = ( self.base16_themes, self.pywal_themes, self.theme_sh_themes)
 
         self._read_notification_command()
+
+    @property
+    def log_titles(self):
+        return self.opts['log_titles'][1]
+
+    @log_titles.setter
+    def log_titles(self, val):
+        old_val = self.opts['log_titles'][1]
+        self.opts['log_titles'][1] = val
+        if old_val != val:
+            self.dirty_config = True
 
     @property
     def linux_resource_opener(self):
@@ -1840,6 +1855,38 @@ class PyRadioConfig(PyRadioStations):
         # self.xdg.recording_dir = val
         self.dirty_config = True
 
+    @property
+    def last_station_checked(self):
+        return self._last_station_checked
+
+    @last_station_checked.setter
+    def last_station_checked(self, value):
+        self._last_station_checked = value
+
+    @property
+    def last_station_checked_id(self):
+        return self._last_station_checked_id
+
+    @last_station_checked_id.setter
+    def last_station_checked_id(self, value):
+        self._last_station_checked_id = value
+
+    @property
+    def check_output_folder(self):
+        return self._check_output_folder
+
+    @check_output_folder.setter
+    def check_output_folder(self, value):
+        self._check_output_folder = value
+
+    @property
+    def check_output_file(self):
+        return self._check_output_file
+
+    @check_output_file.setter
+    def check_output_file(self, value):
+        self._check_output_file = value
+
     def is_default_file(self, a_theme_name):
         for n in self.auto_update_frameworks:
             if a_theme_name == n.default_filename_only:
@@ -1985,6 +2032,7 @@ class PyRadioConfig(PyRadioStations):
             If it exists, locked becomes True
             Otherwise, the file is created
         '''
+        self._i_created_the_lock_file = False
         self.locked = False
         if platform == 'win32':
             self._session_lock_file = path.join(self.state_dir, 'pyradio.lock')
@@ -2027,6 +2075,7 @@ class PyRadioConfig(PyRadioStations):
                 try:
                     with open(self._session_lock_file, 'w', encoding='utf-8'):
                         pass
+                    self._i_created_the_lock_file = True
                 except:
                     pass
 
@@ -2206,7 +2255,12 @@ class PyRadioConfig(PyRadioStations):
             # logger.error('\n\nsetting lkbkey 1\n{}\n\n'.format(reversed_dict))
             set_lkbkey(reversed_dict)
 
-    def read_config(self, distro_config=False):
+    def read_config(self, distro_config=False, check_playlist=False):
+        if check_playlist:
+            if self._i_created_the_lock_file:
+                self.remove_session_lock_file()
+            self.locked = True
+        self.check_playlist = check_playlist
         self._read_config(distro_config=True)
         self.config_opts = deepcopy(self.opts)
         # for n in self.config_opts.items():
@@ -2352,6 +2406,11 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['force_transparency'][1] = True
                 else:
                     self.opts['force_transparency'][1] = False
+            elif sp[0] == 'log_titles':
+                if sp[1].lower() == 'true':
+                    self.opts['log_titles'][1] = True
+                else:
+                    self.opts['log_titles'][1] = False
             elif sp[0] == 'calculated_color_factor':
                 try:
                     t = round(float(sp[1]), 2)
@@ -2475,6 +2534,8 @@ class PyRadioConfig(PyRadioStations):
             self.opts['remote_control_server_auto_start'][1] = False
             self.opts['enable_clock'][1] = False
             self.opts['auto_update_theme'][1] = False
+            self.opts['enable_clock'][1] = True
+            self.opts['time_format'][1] = 0
 
         if self.headless:
             self.opts['remote_control_server_ip'][1], self.opts['remote_control_server_port'][1] = to_ip_port(self._headless)
@@ -2825,7 +2886,7 @@ class PyRadioConfig(PyRadioStations):
         if self.check_playlist:
             if not from_command_line and \
                     logger.isEnabledFor(logging.INFO):
-                logger.info('Config not saved (checking playlist mode activated)')
+                logger.info('Not saving Config (checking playlist mode activated)')
             return 1
 
         if self.locked:
@@ -3497,7 +3558,17 @@ class PyRadioLog():
         if debug or titles:
             if debug and not self.log_debug:
                 # Handler
-                self.debug_handler = logging.FileHandler(path.join(path.expanduser('~'), 'pyradio.log'))
+                if self._cnf.check_playlist:
+                    if self._cnf.check_output_folder is  None:
+                        ret = self._create_check_output_folder()
+                        logger.error(f'{ret = }')
+                        if not ret:
+                            return False
+                    log_file = path.join(self._cnf.check_output_folder, 'pyradio.log')
+                    self._cnf.check_output_file = log_file
+                else:
+                    log_file = path.join(path.expanduser('~'), 'pyradio.log')
+                self.debug_handler = logging.FileHandler(log_file)
                 self.debug_handler.setLevel(logging.DEBUG)
 
                 # create formatter
@@ -3557,6 +3628,29 @@ class PyRadioLog():
         logging.lastResort = None
         # logger.info('self.log_titles = {}'.format(self.log_titles))
         return True
+
+    def _create_check_output_folder(self):
+        # Generate the timestamped folder name using os.strftime
+        timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        folder_name = f"{timestamp}-playlist-check"
+
+        # Join with state directory
+        self._cnf.check_output_folder = path.join(self._cnf.state_dir, folder_name)
+
+        # print('self._cnf.check_output_folder = "{}"'.format(self._cnf.check_output_folder))
+        # Check if the directory exists, if not, create it
+        try:
+            if not path.exists(self._cnf.check_output_folder):
+                makedirs(self._cnf.check_output_folder, exist_ok=True)
+
+            # Double-check if the folder was created successfully
+            if path.isdir(self._cnf.check_output_folder):
+                return True
+            else:
+                return False
+        except Exception as e:
+            # print(f"Error creating directory: {e}")
+            return False
 
     def tag_title(self, the_log):
         ''' tags a title

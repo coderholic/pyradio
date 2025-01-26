@@ -24,6 +24,7 @@ CAPTION = 2
 BORDER = 3
 
 M_STRINGS = {
+	'checking-playlist': ' (Checking Playlist)',
 	'session-locked': ' (Session Locked)',
 	'session-locked-title': 'Session Locked',
 	'win-title': 'Your Internet Radio Player',
@@ -242,6 +243,16 @@ class StationsChanges():
                 ['Radio 35 (Serbian and English Pop, Folk, Country & Hits)', 'http://stream.radio035.net:8010/listen.pls']
             ],
             [],
+            [],
+        ],
+        
+        (0, 9, 3, 11, 5):
+        [
+            [],
+            [
+				['DanceUK', 'http://uk2.internet-radio.com:8024/listen.pls'],
+				['JazzGroove', 'http://199.180.72.2:8015/listen.pls\?sid\=1'],
+            ],
             [],
         ],
     }

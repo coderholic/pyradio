@@ -17,8 +17,8 @@ import random
 import signal
 from copy import deepcopy
 from sys import version as python_version, platform
-from os.path import join, basename, getmtime, getsize
-from os import remove, rename
+from os.path import join, basename, getmtime, getsize, exists, isdir
+from os import remove, rename, makedirs
 from platform import uname
 from time import sleep
 from datetime import datetime
@@ -424,7 +424,7 @@ class PyRadio():
 
     _missing_dependency = None
 
-    _last_played_station_id = 0
+    _last_played_station_id = -1
 
     playback_timeout = 0
 
@@ -1124,6 +1124,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.log.program_restart = self.program_restart
         self.program_restart = False
         self.log.can_display_help_msg = self._can_display_help_msg
+        # if self._cnf.check_playlist:
+        #     self.log.restart_timer(
+        #         time_format=int(self._cnf.time_format),
+        #         update_functions=(self.log.write_time, )
+        #     )
         ''' For the time being, supported players are mpv, mplayer and vlc. '''
         try:
             self.player = player.probePlayer(
@@ -1142,6 +1147,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.player.buffering_change_function = self._show_recording_status_in_header
             self.player.buffering_lock = self._buffering_lock
             self.player.log = self.log
+            if self._cnf.check_playlist:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('******* registering check playlist callback functions')
+                self.player.success_in_check_playlist = self._success_in_check_playlist
+                self.player.error_in_check_playlist = self._error_in_check_playlist
             self._cnf.buffering_data = []
             if self._request_recording:
                 if not (platform.startswith('win') and \
@@ -1344,12 +1354,20 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         try:
             self.headWin.addstr(0, 0, info, curses.color_pair(4))
             if self._cnf.locked:
-                self.headWin.addstr('[', curses.color_pair(4))
-                self.headWin.addstr(
-                    M_STRINGS['session-locked'].replace(' (', '').replace(')', ''),
-                    curses.color_pair(4)
-                )
-                self.headWin.addstr('] ', curses.color_pair(4))
+                if self._cnf.check_playlist:
+                    self.headWin.addstr('[', curses.color_pair(4))
+                    self.headWin.addstr(
+                        M_STRINGS['checking-playlist'].replace(' (', '').replace(')', ''),
+                        curses.color_pair(5)
+                    )
+                    self.headWin.addstr(']', curses.color_pair(4))
+                else:
+                    self.headWin.addstr('[', curses.color_pair(4))
+                    self.headWin.addstr(
+                        M_STRINGS['session-locked'].replace(' (', '').replace(')', ''),
+                        curses.color_pair(4)
+                    )
+                    self.headWin.addstr('] ', curses.color_pair(4))
             elif self._cnf.headless:
                 self.headWin.addstr('[', curses.color_pair(4))
                 self.headWin.addstr('Headless Session', curses.color_pair(4))
@@ -2046,10 +2064,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                         self.playSelection()
                         self._goto_playing_station(changing_playlist=True)
                     self.refreshBody()
-                    self.selections[self.ws.NORMAL_MODE] = [self.selection,
-                                                            self.startPos,
-                                                            self.playing,
-                                                            self.stations]
+                    self.selections[self.ws.NORMAL_MODE] = [
+                        self.selection,
+                        self.startPos,
+                        self.playing,
+                        self.stations]
                     # self.ll('run')
 
             elif self._pre_select != 'False':
@@ -2057,10 +2076,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     self.setStation(self._pre_select)
                     self._put_selection_in_the_middle(force=True)
                     self.refreshBody()
-                    self.selections[self.ws.NORMAL_MODE] = [self.selection,
-                                                            self.startPos,
-                                                            self.playing,
-                                                            self.stations]
+                    self.selections[self.ws.NORMAL_MODE] = [
+                        self.selection,
+                        self.startPos,
+                        self.playing,
+                        self.stations]
 
             if self._cnf.foreign_file:
                 ''' ask to copy this playlist in config dir '''
@@ -2081,11 +2101,59 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 self._watch_theme(self._cnf.theme_path)
             self._global_letter = None
             remaining_keys = 0
+            self._accumulated_errors = None
             if self._cnf.check_playlist:
-                for i in range(10):
-                    self.setStation(i)
-                    self.refreshBody()
-                    sleep(1)
+                self.bodyWin.nodelay(True)
+                for a_player in self._cnf.AVAILABLE_PLAYERS:
+                    end_id = 35
+                    cur_id = 27
+                    old_id = -1
+                    self._accumulated_errors = None
+                    self._activate_player(a_player.PLAYER_NAME)
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('''\n\n
+############################################################################
+#
+#                       Activating player: {}
+#
+############################################################################
+'''.format(self.player.PLAYER_NAME))
+                    self._cnf.check_output_file = path.join(
+                        self._cnf.check_output_folder,
+                        self._cnf.station_title + '-' + self.player.PLAYER_NAME  + '.csv'
+                    )
+                    if path.exists(self._cnf.check_output_file):
+                        remove(self._cnf.check_output_file)
+                    self._write_check_output('write_header')
+                    logger.error('\n\nself._cnf.check_output_file\n{}\n\n'.format(self._cnf.check_output_file))
+                    while cur_id < end_id:
+                        if cur_id != old_id:
+                            logger.error(f'working on {old_id = }, {cur_id = }')
+                            self.setStation(cur_id)
+                            self.playSelection()
+                            self.refreshBody()
+                            # self.log.write(msg_id=STATES.RESET, msg=M_STRINGS['wait_for_player_'] + self.player.PLAYER_NAME, help_msg=True)
+                            logger.error('1')
+                            # ret = self._loop_wait_for_next_station()
+                            # logger.error('2')
+                            # if ret is not None:
+                            #     break
+                            # logger.error('3')
+                            sleep(1)
+                            old_id = cur_id
+                        logger.error('4')
+                        logger.error(f'brefore {old_id = }, {cur_id = }')
+                        cur_id, old_id = self._loop_check_playlist(cur_id, old_id, end_id)
+                        logger.error(f' after {old_id = }, {cur_id = }')
+                        logger.error('5')
+                    self._write_accumulated_errors()
+                self.detect_if_player_exited = False
+                self.player.stop_mpv_status_update_thread = True
+                self.player.stop_win_vlc_status_update_thread = True
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Playlist check finished! Terminating...')
+                self.player.ctrl_c_pressed = True
+                self.ctrl_c_handler(0, 0)
                 return
             while True:
                 try:
@@ -2142,6 +2210,32 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     self.player.ctrl_c_pressed = True
                     self.ctrl_c_handler(0, 0)
                     break
+
+    def _loop_check_playlist(self, cur_id, old_id, end_id):
+        for k in range(10):
+            sleep(.1)
+            char = self.bodyWin.getch()
+            if char == kbkey['q']:
+                cur_id = end_id
+                return cur_id, old_id
+            elif char == kbkey['p_next']:
+                old_id = cur_id
+                cur_id += 1
+                return cur_id, old_id
+        return cur_id, old_id
+
+    def _loop_wait_for_next_station(self):
+        ch = None
+        for k in range(20):
+            sleep(.1)
+            char = self.bodyWin.getch()
+            if char == ord('q'):
+                return 'q'
+            elif char == ord('|'):
+                ch = char
+        if ch is not None:
+            curses.ungetch(ch)
+        return None
 
     def _give_me_a_search_class(self, operation_mode):
         ''' get a search class for a given operation mode
@@ -2522,6 +2616,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.player.stop_mpv_status_update_thread = True
         self.log.write(msg_id=STATES.CONNECT_ERROR, msg=self.player.PLAYER_NAME  + ': ' + M_STRINGS['error-1001'])
         self.player.connecting = False
+        logger.error('self._error_in_check_playlist()')
+        self._error_in_check_playlist(1001)
         if self._random_requested and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
             if logger.isEnabledFor(logging.INFO):
@@ -2627,6 +2723,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         if from_update_thread:
             msg_key = http_error if http_error else 1000
             state = STATES.CONNECT_ERROR
+            logger.error('self._error_in_check_playlist()')
+            self._error_in_check_playlist(msg_key)
         else:
             msg_key = 1
             state = STATES.STOPPED
@@ -6228,6 +6326,56 @@ ____Using |fallback| theme.''')
         # success
         return ''
 
+    def _activate_player(self, player_name):
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('selected player = {}'.format(player_name))
+        self._change_player = None
+        to_play = self.playing
+        to_record = self.player.recording
+        if self.player.isPlaying():
+            self.stopPlayer()
+        self.player = None
+        for i, n in enumerate(player.available_players):
+            if n.PLAYER_NAME == player_name:
+                player_index = i
+                break
+        self.detect_if_player_exited = True
+        self.player = player.available_players[player_index](
+            self._cnf,
+            self.log,
+            self.playbackTimeoutCounter,
+            self.connectionFailed,
+            self._show_station_info_from_thread,
+            self._add_station_to_stations_history,
+            self._recording_lock
+        )
+        self._cnf.player_instance = self.player_instance
+        self._cnf.backup_player_params = [
+                self._cnf.params[self.player.PLAYER_NAME],
+                self._cnf.params[self.player.PLAYER_NAME]
+                ]
+        self.player.params = self._cnf.params[self.player.PLAYER_NAME][:]
+        self.player.buffering_change_function = self._show_recording_status_in_header
+        self.player.buffering_lock = self._buffering_lock
+        self.player.log = self.log
+        if self._cnf.check_playlist:
+            self.player.success_in_check_playlist = self._success_in_check_playlist
+            self.player.error_in_check_playlist = self._error_in_check_playlist
+        self._cnf.buffering_data = []
+        if self._cnf.check_playlist:
+            self.player.recording = 0
+        else:
+            if not (self.player.PLAYER_NAME == 'vlc' and \
+                    platform.startswith('win')):
+                self.player.recording = to_record
+        self.log.display_help_message = False
+        self.log.write(msg_id=STATES.PLAYER_ACTIVATED, msg=player_name + M_STRINGS['player-acivated_'], help_msg=False, suffix='')
+        self.player.volume = -1
+        if to_play > -1:
+            if to_play != self.selections:
+                self.setStation(to_play)
+            self.playSelection()
+
     def keypress(self, char):
         ''' PyRadio keypress '''
         # # logger.error('\n\nparams\n{}\n\n'.format(self._cnf.params))
@@ -7010,50 +7158,10 @@ _____"|f|" to see the |free| keys you can use.
             elif ret != '':
                 # set player
                 self.ws.close_window()
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('selected player = {}'.format(ret))
-                self._change_player = None
-                to_play = self.playing
-                to_record = self.player.recording
-                if self.player.isPlaying():
-                    self.stopPlayer()
-                self.player = None
-                for i, n in enumerate(player.available_players):
-                    if n.PLAYER_NAME == ret:
-                        player_index = i
-                        break
-                self.detect_if_player_exited = True
-                self.player = player.available_players[player_index](
-                    self._cnf,
-                    self.log,
-                    self.playbackTimeoutCounter,
-                    self.connectionFailed,
-                    self._show_station_info_from_thread,
-                    self._add_station_to_stations_history,
-                    self._recording_lock
-                )
-                self._cnf.player_instance = self.player_instance
-                self._cnf.backup_player_params = [
-                        self._cnf.params[self.player.PLAYER_NAME],
-                        self._cnf.params[self.player.PLAYER_NAME]
-                        ]
-                self.player.params = self._cnf.params[self.player.PLAYER_NAME][:]
-                self.player.buffering_change_function = self._show_recording_status_in_header
-                self.player.buffering_lock = self._buffering_lock
-                self.player.log = self.log
-                self._cnf.buffering_data = []
-                if not (self.player.PLAYER_NAME == 'vlc' and \
-                        platform.startswith('win')):
-                    self.player.recording = to_record
-                self.log.display_help_message = False
-                self.log.write(msg_id=STATES.PLAYER_ACTIVATED, msg=ret + M_STRINGS['player-acivated_'], help_msg=False, suffix='')
-                self.player.volume = -1
-                if to_play > -1:
-                    if to_play != self.selections:
-                        self.setStation(to_play)
-                    self.playSelection()
+                self._activate_player(ret)
                 self.refreshBody()
                 self._change_player = None
+
 
         elif self.ws.operation_mode == self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE:
             if char == kbkey['s'] or \
@@ -11167,6 +11275,11 @@ _____"|f|" to see the |free| keys you can use.
             return False
 
     def _start_remote_control_server(self):
+        if self._cnf.check_playlist:
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('check playlist mode is on, Not starting!!!')
+            self._remote_control_server = None
+            return
         self._remote_control_server = PyRadioServer(
             bind_ip=self._cnf.active_remote_control_server_ip,
             bind_port=int(self._cnf.active_remote_control_server_port),
@@ -11216,6 +11329,11 @@ _____"|f|" to see the |free| keys you can use.
         self._remote_control_server = self._remote_control_server_thread = None
 
     def _restart_remote_control_server(self):
+        if self._cnf.check_playlist:
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('check playlist mode is on, Not starting!!!')
+            self._remote_control_server = None
+            return
         self._stop_remote_control_server()
         self._cnf._remote_control_server = self._cnf._remote_control_server_thread = None
         self._cnf.active_remote_control_server_ip = self._cnf.remote_control_server_ip
@@ -11262,6 +11380,76 @@ _____"|f|" to see the |free| keys you can use.
         #     self.refreshBody()
         self.refreshBody()
         return num
+
+    ############################################################################
+    #
+    #                   Start of Chech Playlist functions
+    #
+    ############################################################################
+    def _get_check_output_paths(self):
+        self._cnf.check_output_file = path.join(
+            self._cnf.check_output_folder,
+            self._cnf.station_title + '-' + self.player.PLAYER_NAME  + '.csv'
+        )
+        if path.exists(self._cnf.check_output_file):
+            remove(self._cnf.check_output_file)
+
+    def _success_in_check_playlist(self):
+        logger.error('got called!!!\nself._cnf.last_station_checked_id = {}, self._last_played_station_id = {}'.format(self._cnf.last_station_checked_id, self._last_played_station_id))
+        if self._cnf.last_station_checked_id != self._last_played_station_id:
+            logger.error('\n\nsuccess in check playlist\n{}\n\n'.format(self.stations[self._last_played_station_id]))
+            self._cnf.last_station_checked = self.stations[self._last_played_station_id]
+            self._cnf.last_station_checked_id = self._last_played_station_id
+            curses.ungetch(kbkey['p_next'])
+            self._write_check_output(None)
+
+    def _error_in_check_playlist(self, http_error):
+        if self._cnf.last_station_checked_id != self._last_played_station_id:
+            logger.error('\n\nerror in check playlist\nhttp_error: {}\n{}\n\n'.format(http_error, self.stations[self._last_played_station_id]))
+            self._cnf.last_station_checked = self.stations[self._last_played_station_id]
+            self._cnf.last_station_checked_id = self._last_played_station_id
+            curses.ungetch(kbkey['p_next'])
+            self._write_check_output(http_error)
+
+    def _write_check_output(self, http_error):
+        logger.error(f'got called with {http_error = }')
+        if http_error == 'write_header':
+            with open(self._cnf.check_output_file, mode='w', newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerow(
+                        ['#', 'Error', 'Station Name', 'URL', 'Playlist: ' + self._cnf.station_title]
+                    )
+        elif http_error == 'accumulated':
+            with open(self._cnf.check_output_file, mode='a', newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerows(self._accumulated_errors)
+        else:
+            with open(self._cnf.check_output_file, mode='a', newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerow(
+                        [str(self._last_played_station_id+1), str(http_error)] + self.stations[self._last_played_station_id]
+                    )
+            if http_error is not None:
+                if self._accumulated_errors is None:
+                    self._accumulated_errors = [http_error]
+                else:
+                    if http_error not in self._accumulated_errors:
+                        self._accumulated_errors.append(http_error)
+
+    def _write_accumulated_errors(self):
+        if self._accumulated_errors is not None:
+            out = []
+            for n in self._accumulated_errors:
+                line = ['#', str(n), player_start_stop_token[n]]
+                out.append(line)
+            if out:
+                self._accumulated_errors = out
+                self._write_check_output('accumulated')
+    ############################################################################
+    #
+    #                    End of Chech Playlist functions
+    #
+    ############################################################################
 
 
 # pymode:lint_ignore=W901
