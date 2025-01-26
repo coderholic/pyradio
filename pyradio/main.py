@@ -120,7 +120,9 @@ Please install the module (named "python-netifaces" or
 def __configureLogger(pyradio_config, debug=None, titles=None):
     if debug or titles:
 
-        if debug and not pyradio_config.log_degub:
+        if debug and \
+                not pyradio_config.log_degub and \
+                not pyradio_config.check_playlist:
             if platform.startswith('win'):
                 print(r'''Debug mode activated
   printing messages to file: "[red]{}\pyradio.log[/red]"'''.format(getenv('USERPROFILE')))
@@ -1002,7 +1004,7 @@ If nothing else works, try the following command:
 
         if pyradio_config.check_playlist:
             pyradio.program_restart = False
-        print(f'curses is off, {pyradio.program_restart = }')
+            print('Output folder:\n  "[red]{}[/red]"'.format(pyradio_config.check_output_folder))
         ''' curses is off '''
         pyradio_config._online_browser = None
         if pyradio.setup_return_status:
@@ -1033,18 +1035,19 @@ If nothing else works, try the following command:
                     upd.user = is_pyradio_user_installed()
                     upd.update_pyradio()
             else:
-                st = en = ''
-                if platform.startswith('win') or \
-                        platform.lower().startswith('dar'):
-                    st = '\n'
-                else:
-                    if is_graphical_environment_running():
+                if not pyradio_config.check_playlist:
+                    st = en = ''
+                    if platform.startswith('win') or \
+                            platform.lower().startswith('dar'):
                         st = '\n'
                     else:
-                        import subprocess
-                        subprocess.call('clear')
-                        en = '\n'
-                print(st + 'Thank you for using [magenta]PyRadio[/magenta]. Cheers!' + en)
+                        if is_graphical_environment_running():
+                            st = '\n'
+                        else:
+                            import subprocess
+                            subprocess.call('clear')
+                            en = '\n'
+                    print(st + 'Thank you for using [magenta]PyRadio[/magenta]. Cheers!' + en)
         else:
             print('\nThis terminal can not display colors.\nPyRadio cannot function in such a terminal.\n')
 

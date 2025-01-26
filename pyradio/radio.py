@@ -2105,8 +2105,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             if self._cnf.check_playlist:
                 self.bodyWin.nodelay(True)
                 for a_player in self._cnf.AVAILABLE_PLAYERS:
-                    end_id = 35
-                    cur_id = 27
+                    end_id = 28
+                    cur_id = 26
                     old_id = -1
                     self._accumulated_errors = None
                     self._activate_player(a_player.PLAYER_NAME)

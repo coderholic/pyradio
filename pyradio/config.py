@@ -3561,7 +3561,6 @@ class PyRadioLog():
                 if self._cnf.check_playlist:
                     if self._cnf.check_output_folder is  None:
                         ret = self._create_check_output_folder()
-                        logger.error(f'{ret = }')
                         if not ret:
                             return False
                     log_file = path.join(self._cnf.check_output_folder, 'pyradio.log')

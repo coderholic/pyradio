@@ -251,7 +251,7 @@ class StationsChanges():
             [],
             [
 				['DanceUK', 'http://uk2.internet-radio.com:8024/listen.pls'],
-				['JazzGroove', 'http://199.180.72.2:8015/listen.pls\?sid\=1'],
+				['JazzGroove', r'http://199.180.72.2:8015/listen.pls\?sid\=1'],
             ],
             [],
         ],
