@@ -1005,6 +1005,10 @@ If nothing else works, try the following command:
         if pyradio_config.check_playlist:
             pyradio.program_restart = False
             print('Output folder:\n  "[red]{}[/red]"'.format(pyradio_config.check_output_folder))
+            pyradio.split_logs()
+            pyradio.generate_markdown_report()
+            pyradio.generate_html_report()
+
         ''' curses is off '''
         pyradio_config._online_browser = None
         if pyradio.setup_return_status:

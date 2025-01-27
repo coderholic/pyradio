@@ -2105,7 +2105,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             if self._cnf.check_playlist:
                 self.bodyWin.nodelay(True)
                 for a_player in self._cnf.AVAILABLE_PLAYERS:
-                    end_id = 28
+                    end_id = 35
                     cur_id = 26
                     old_id = -1
                     self._accumulated_errors = None
@@ -2120,7 +2120,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 '''.format(self.player.PLAYER_NAME))
                     self._cnf.check_output_file = path.join(
                         self._cnf.check_output_folder,
-                        self._cnf.station_title + '-' + self.player.PLAYER_NAME  + '.csv'
+                        self.player.PLAYER_NAME + '-' + self._cnf.station_title + '.csv'
                     )
                     if path.exists(self._cnf.check_output_file):
                         remove(self._cnf.check_output_file)
@@ -11445,6 +11445,443 @@ _____"|f|" to see the |free| keys you can use.
             if out:
                 self._accumulated_errors = out
                 self._write_check_output('accumulated')
+
+    def split_logs(self):
+        import re
+        from os import path
+
+        # Define the input and output file paths
+        input_file = path.join(self._cnf.check_output_folder, 'pyradio.log')
+        output_files = {
+            'mpv': path.join(self._cnf.check_output_folder, 'mpv.log'),
+            'mplayer': path.join(self._cnf.check_output_folder, 'mplayer.log'),
+            'vlc': path.join(self._cnf.check_output_folder, 'vlc.log')
+        }
+
+        # Initialize variables
+        current_player = None
+        logs = {player: [] for player in output_files}
+
+        # Regular expression to detect player activation
+        player_pattern = re.compile(r'Activating player: (mpv|mplayer|vlc)')
+
+        # Read the input log file
+        with open(input_file, 'r') as file:
+            lines = file.readlines()  # Read all lines into a list
+
+        # Process the lines
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+            # Check if the line indicates a player activation
+            match = player_pattern.search(line)
+            if match:
+                current_player = match.group(1)  # Set the current player
+                # Include the two preceding lines and the activation line
+                if i >= 2:  # Ensure there are at least two preceding lines
+                    logs[current_player].extend(lines[i-2:i+1])  # Add the two preceding lines and the activation line
+                i += 1  # Skip the activation line to avoid duplication
+                continue  # Move to the next iteration
+            # Write the line to the appropriate player's log
+            if current_player:
+                logs[current_player].append(line)
+            i += 1
+
+        # Write logs to separate files (only if logs exist for the player)
+        for player, log_lines in logs.items():
+            if log_lines:  # Only create a file if there are logs for the player
+                if log_lines[-2].startswith('#'):
+                    log_lines.pop()
+                    log_lines.pop()
+                with open(output_files[player], 'w') as file:
+                    file.writelines(log_lines)
+
+    def generate_markdown_report(self):
+        # Define player file names
+        player_files = {
+            'mpv': 'mpv-stations.csv',
+            'mplayer': 'mplayer-stations.csv',
+            'vlc': 'vlc-stations.csv'
+        }
+
+        # Initialize data structures
+        errors = {}  # To store error codes and descriptions
+        station_data = {}  # To store station data
+
+        # Read and parse CSV files
+        for player, filename in player_files.items():
+            filepath = os.path.join(self._cnf.check_output_folder, filename)
+            if not os.path.exists(filepath):
+                continue  # Skip if the file doesn't exist
+
+            with open(filepath, 'r') as file:
+                reader = csv.reader(file)
+                header = next(reader)  # Skip header row
+
+                for row in reader:
+                    if row[0].startswith('#'):  # Error summary row
+                        error_code = row[1]
+                        error_desc = row[2]
+                        if error_code not in errors:
+                            errors[error_code] = error_desc
+                        continue
+
+                    # Extract station data
+                    station_number = row[0]
+                    station_name = row[2]
+                    station_url = row[3]
+                    error_code = row[1] if row[1] != 'None' else 'None'
+
+                    # Initialize station entry if it doesn't exist
+                    if station_number not in station_data:
+                        station_data[station_number] = {
+                            'name': station_name,
+                            'url': station_url,
+                            'errors': {}
+                        }
+
+                    # Add player-specific error
+                    station_data[station_number]['errors'][player] = error_code
+
+        # Generate Markdown content
+        markdown_content = []
+
+        # Errors and Descriptions section
+        markdown_content.append("### Errors and Descriptions\n")
+        for error_code, error_desc in errors.items():
+            markdown_content.append(f"- **{error_code}**: {error_desc}\n")
+        markdown_content.append("\n")
+
+        # Station Data section
+        markdown_content.append("### Station Data\n")
+        markdown_content.append("| #  | Station Name                     | URL                                      | Errors (mpv, mplayer, vlc) |\n")
+        markdown_content.append("|----|----------------------------------|------------------------------------------|----------------------------|\n")
+
+        for station_number, data in sorted(station_data.items(), key=lambda x: int(x[0])):
+            station_name = data['name']
+            station_url = data['url']
+            errors_combined = [
+                data['errors'].get('mpv', 'N/A'),
+                data['errors'].get('mplayer', 'N/A'),
+                data['errors'].get('vlc', 'N/A')
+            ]
+            errors_str = ', '.join(errors_combined)
+
+            markdown_content.append(f"| {station_number} | {station_name} | {station_url} | {errors_str} |\n")
+
+        # Write Markdown file
+        output_file = os.path.join(self._cnf.check_output_folder, 'playlist_report.md')
+        with open(output_file, 'w') as file:
+            file.writelines(markdown_content)
+
+        print(f"Markdown report generated at: {output_file}")
+
+    def generate_html_report(self):
+        # Define player file names
+        player_files = {
+            'mpv': 'mpv-stations.csv',
+            'mplayer': 'mplayer-stations.csv',
+            'vlc': 'vlc-stations.csv'
+        }
+
+        # Initialize data structures
+        errors = {}  # To store combined error codes and descriptions
+        station_data = {}  # To store combined station data
+
+        # Read and parse CSV files
+        for player, filename in player_files.items():
+            filepath = os.path.join(self._cnf.check_output_folder, filename)
+            if not os.path.exists(filepath):
+                continue  # Skip if the file doesn't exist
+
+            with open(filepath, 'r') as file:
+                reader = csv.reader(file)
+                header = next(reader)  # Skip header row
+
+                for row in reader:
+                    if row[0].startswith('#'):  # Error summary row
+                        error_code = row[1]
+                        error_desc = row[2]
+                        if error_code not in errors:
+                            errors[error_code] = error_desc
+                        continue
+
+                    # Extract station data
+                    station_number = row[0]
+                    error_code = row[1]
+                    station_name = row[2]
+                    station_url = row[3]
+
+                    # Initialize station entry if it doesn't exist
+                    if station_number not in station_data:
+                        station_data[station_number] = {
+                            'name': station_name,
+                            'url': station_url,
+                            'errors': {}
+                        }
+
+                    # Add player-specific error
+                    station_data[station_number]['errors'][player] = (error_code, errors.get(error_code, 'Unknown error'))
+
+        # Define a palette of 20 colors
+        color_palette = [
+            '#FF0000',  # Red
+            '#158A15',  # Green
+            '#0000FF',  # Blue
+            '#FFA500',  # Orange
+            '#800080',  # Purple
+            '#FFC0CB',  # Pink
+            '#008080',  # Teal
+            '#FFD700',  # Gold
+            '#A52A2A',  # Brown
+            '#00FFFF',  # Cyan
+            '#800000',  # Maroon
+            '#808000',  # Olive
+            '#000080',  # Navy
+            '#FF00FF',  # Magenta
+            '#C0C0C0',  # Silver
+            '#40E0D0',  # Turquoise
+            '#FF4500',  # OrangeRed
+            '#4B0082',  # Indigo
+            '#8B0000',  # DarkRed
+            '#2E8B57',  # SeaGreen
+        ]
+
+        # Sort error codes numerically (excluding 'None')
+        sorted_error_codes = sorted(
+            (code for code in errors.keys() if code != 'None'),
+            key=lambda x: int(x)
+        )
+        # Add 'None' at the end
+        if 'None' in errors:
+            sorted_error_codes.append('None')
+
+        # Generate dynamic CSS for error classes
+        dynamic_css = []
+        for i, error_code in enumerate(sorted_error_codes):
+            if error_code == 'None':
+                # Set "None" to black
+                dynamic_css.append(f'.error-none {{ color: black; font-weight: bold; }}')
+            else:
+                # Assign a color from the palette
+                color = color_palette[i % len(color_palette)]
+                dynamic_css.append(f'.error-{error_code} {{ color: {color}; font-weight: bold; }}')
+
+        # Generate HTML content
+        html_content = []
+        html_content.append('''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playlist Report: |STATION TITLE|</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        .filters-container { display: flex; align-items: center; margin-bottom: 20px; }
+        .filters-container label { margin-right: 10px; font-size: 16px; }
+        .filters-container input { padding: 10px; width: 300px; font-size: 16px; margin-right: 10px; }
+        .filters-container button { padding: 10px; font-size: 14px; cursor: pointer; margin-right: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f4f4f4; }
+        tr:hover { background-color: #f9f9f9; }
+        .highlight { background-color: yellow; }
+        .error-summary { margin-bottom: 20px; }
+        .error-summary h2 { cursor: pointer; }
+        .error-summary ul { list-style-type: none; padding: 0; }
+        .error-summary ul li { margin: 5px 0; }
+        .tooltip { position: relative; display: inline-block; }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%; /* Position above the text */
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }'''.replace('|STATION TITLE|', self._cnf.station_title))
+
+        # Add dynamic CSS
+        html_content.extend(dynamic_css)
+        html_content.append('''    </style>
+</head>
+<body>
+    <h1>Playlist Report: {}</h1>
+
+    <!-- Error Summary Section -->
+    <div class="error-summary">
+        <h2 onclick="toggleErrorSummary()">▼ Errors and Descriptions</h2>
+        <ul id="error-list">'''.format(self._cnf.station_title))
+
+        # Add error descriptions
+        for error_code in sorted_error_codes:
+            error_desc = errors[error_code]
+            html_content.append(f'            <li><span class="error-{error_code}">{error_code}</span>: {error_desc}</li>\n')
+
+        html_content.append('''        </ul>
+    </div>
+
+    <!-- Filters Container -->
+    <div class="filters-container">
+        <label for="search-input">Filters:</label>
+        <input type="text" id="search-input" placeholder="Search for stations or errors...">
+        <button onclick="filterStationsWithErrors()">Show Stations with Errors</button>
+        <button onclick="filterStationsWithAllErrors()">Show Stations with All Errors</button>
+        <button onclick="resetFilters()">Reset Filters</button>
+    </div>
+
+    <!-- Station Data Table -->
+    <table id="station-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Station Name</th>
+                <th>URL</th>
+                <th>Errors (mpv, mplayer, vlc)</th>
+            </tr>
+        </thead>
+        <tbody>''')
+
+        # Add station data rows
+        for station_number, data in sorted(station_data.items(), key=lambda x: int(x[0])):
+            station_name = data['name']
+            station_url = data['url']
+            errors_combined = []
+            for player in ['mpv', 'mplayer', 'vlc']:
+                if player in data['errors']:
+                    error_code, error_desc = data['errors'][player]
+                    errors_combined.append(f'<span class="tooltip error-{error_code}" title="{error_desc}">{error_code}</span>')
+                else:
+                    errors_combined.append('<span class="tooltip">N/A</span>')
+            errors_str = ', '.join(errors_combined)
+
+            html_content.append(f'''            <tr>
+                <td>{station_number}</td>
+                <td>{station_name}</td>
+                <td>{station_url}</td>
+                <td>{errors_str}</td>
+            </tr>\n''')
+
+        html_content.append('''        </tbody>
+    </table>
+
+    <script>
+        // JavaScript for search functionality
+        const searchInput = document.getElementById('search-input');
+        const tableRows = document.querySelectorAll('#station-table tbody tr');
+
+        // Save the original HTML of each cell
+        tableRows.forEach(row => {
+            Array.from(row.children).forEach(cell => {
+                cell.setAttribute('data-original-html', cell.innerHTML);
+            });
+        });
+
+        searchInput.addEventListener('input', function () {
+            const searchTerm = this.value.toLowerCase();
+            tableRows.forEach(row => {
+                const rowText = row.textContent.toLowerCase().split('\\n').slice(2).join('\\n');
+                if (rowText.includes(searchTerm)) {
+                    row.style.display = '';
+                    // Highlight matching text without breaking HTML
+                    Array.from(row.children).forEach((cell, index) => {
+                        const originalHTML = cell.getAttribute('data-original-html');
+                        if (index >= 1 && index < 3) { // Skip the first cell (index 0)
+                            const textContent = cell.textContent.toLowerCase();
+                            if (textContent.includes(searchTerm)) {
+                                const highlightedHTML = originalHTML.replace(
+                                    new RegExp(searchTerm, 'gi'),
+                                    match => `<span class="highlight">${match}</span>`
+                                );
+                                cell.innerHTML = highlightedHTML;
+                            } else {
+                                cell.innerHTML = originalHTML; // Restore original HTML if no match
+                            }
+                        } else {
+                            cell.innerHTML = originalHTML; // Restore original HTML for the first cell
+                        }
+                    });
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        // JavaScript to toggle error summary
+        function toggleErrorSummary() {
+            const errorList = document.getElementById('error-list');
+            if (errorList.style.display === 'none') {
+                errorList.style.display = 'block';
+            } else {
+                errorList.style.display = 'none';
+            }
+        }
+
+        // JavaScript to filter stations with at least one error
+        function filterStationsWithErrors() {
+            resetFilters(); // Reset the table and clear the search field
+            tableRows.forEach(row => {
+                const errorCell = row.querySelector('td:last-child');
+                const errorText = errorCell.textContent
+                    .replace(/\\s+/g, ' ') // Replace multiple spaces/newlines with a single space
+                    .trim(); // Remove leading/trailing whitespace
+                if (errorText !== 'None, None, None') {
+                    row.style.display = ''; // Show the row if it has at least one error
+                } else {
+                    row.style.display = 'none'; // Hide the row if all errors are "None"
+                }
+            });
+        }
+
+        // JavaScript to filter stations with all errors
+        function filterStationsWithAllErrors() {
+            resetFilters(); // Reset the table and clear the search field
+            tableRows.forEach(row => {
+                const errorCell = row.querySelector('td:last-child');
+                const errorText = errorCell.textContent
+                    .replace(/\\s+/g, ' ') // Replace multiple spaces/newlines with a single space
+                    .trim(); // Remove leading/trailing whitespace
+                if (!errorText.includes('None')) {
+                    row.style.display = ''; // Show the row if it has all errors
+                } else {
+                    row.style.display = 'none'; // Hide the row if any error is "None"
+                }
+            });
+        }
+
+        // JavaScript to reset filters and clear search field
+        function resetFilters() {
+            searchInput.value = ''; // Clear the search field
+            tableRows.forEach(row => {
+                row.style.display = ''; // Show all rows
+                // Restore the original HTML to remove highlighting
+                Array.from(row.children).forEach(cell => {
+                    cell.innerHTML = cell.getAttribute('data-original-html');
+                });
+            });
+        }
+    </script>
+</body>
+</html>''')
+
+        # Write HTML file
+        output_file = os.path.join(self._cnf.check_output_folder, 'playlist_report.html')
+        with open(output_file, 'w') as file:
+            file.writelines(html_content)
+
+        print(f"HTML report generated at: {output_file}")
     ############################################################################
     #
     #                    End of Chech Playlist functions
