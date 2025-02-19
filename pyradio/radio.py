@@ -1061,9 +1061,24 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 logger.info('\n\n<<<===---  Program start  ---===>>>')
             # self.program_restart = False
             if self._cnf.distro == 'None':
-                logger.info('PyRadio {0}: TUI initialization on python v. {1} on "{2}"'.format(self._cnf.current_pyradio_version, python_version.replace('\n', ' ').replace('\r', ' '), ', '.join(uname())))
+                logger.info(
+                    'PyRadio {}: TUI initialization on python v. {} on "{}"{}'.format(
+                        self._cnf.current_pyradio_version,
+                        python_version.replace('\n', ' ').replace('\r', ' '),
+                        ', '.join(uname()),
+                        ', XDG Compliant Operation' if self._cnf.xdg_compliant else ''
+                    )
+                )
             else:
-                logger.info('PyRadio {0}: TUI initialization on python v. {1} on {2} ({3})'.format(self._cnf.current_pyradio_version, python_version.replace('\n', ' ').replace('\r', ' '), self._cnf.distro, ', '.join(uname())))
+                logger.info(
+                    'PyRadio {}: TUI initialization on python v. {} on {} ({}){}'.format(
+                        self._cnf.current_pyradio_version,
+                        python_version.replace('\n', ' ').replace('\r', ' '),
+                        self._cnf.distro,
+                        ', '.join(uname()),
+                        ', XDG Compliant Operation' if self._cnf.xdg_compliant else ''
+                    )
+                )
         self.setup_return_status = True
         if not curses.has_colors():
             self.setup_return_status = False

@@ -464,8 +464,8 @@ class RadioBrowser(PyRadioStationsBrowser):
                 if use_fav.endswith('.jpg') or \
                         use_fav.endswith('.png'):
                     fav = use_fav
-                # ret.append([n['name'], n['url'], enc, ''])
-                ret.append([n['name'], n['url'], enc, {'image': fav}])
+                # ret.append([n['name'], n['url'], enc, '', '', '', ''])
+                ret.append([n['name'], n['url'], enc, {'image': fav}, '', '', ''])
         return ret
 
     def save_config(self):
@@ -708,7 +708,7 @@ class RadioBrowser(PyRadioStationsBrowser):
             r.raise_for_status()
 
             new_raw_stations = self._extract_data(json.loads(r.text))
-            # logger.error('DE \n\n{}'.format(new_raw_stations))
+            # logger.error('DE new_raw_stations\n\n{}'.format(new_raw_stations))
             ret = True, len(new_raw_stations), go_back_in_history
         except requests.exceptions.RequestException as e:
             if logger.isEnabledFor(logging.INFO):

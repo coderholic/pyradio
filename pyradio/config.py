@@ -125,6 +125,17 @@ class PyRadioStations():
     PLAYLIST_HAS_NAME_URL = 0
     PLAYLIST_HAS_NAME_URL_ENCODING = 1
     PLAYLIST_HAS_NAME_URL_ENCODING_ICON = 2
+    PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL = 3
+    PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP = 4
+    PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP_REF = 5
+    PLAYLIST_TYPE = [
+        'PLAYLIST_HAS_NAME_URL',
+        'PLAYLIST_HAS_NAME_URL_ENCODING',
+        'PLAYLIST_HAS_NAME_URL_ENCODING_ICON',
+        'PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL',
+        'PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP',
+        'PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP_REF',
+    ]
     _playlist_version = PLAYLIST_HAS_NAME_URL
     _read_playlist_version = PLAYLIST_HAS_NAME_URL
 
@@ -697,6 +708,7 @@ class PyRadioStations():
                 self.stations = []
                 return ret
 
+        current_playlist_version = self.PLAYLIST_HAS_NAME_URL
         if read_file:
             if self._register_to_open:
                 self.playlist_recovery_result = 0
@@ -711,27 +723,60 @@ class PyRadioStations():
             prev_format = self._playlist_version
             self._read_playlist_version = self._playlist_version = self.PLAYLIST_HAS_NAME_URL
             self._reading_stations = []
-            with open(stationFile, 'r', encoding='utf-8') as cfgfile:
-                try:
-                    for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
-                        if not row:
-                            continue
-                        try:
-                            name, url = [s.strip() for s in row]
-                            self._reading_stations.append([name, url, '', ''])
-                        except:
-                            try:
-                                name, url, enc = [s.strip() for s in row]
-                                self._reading_stations.append([name, url, enc, ''])
-                                self._read_playlist_version = self._playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING
-                            except:
-                                name, url, enc, icon = [s.strip() for s in row]
-                                self._reading_stations.append([name, url, enc, {'image': icon}])
-                                self._read_playlist_version = self._playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON
-                except:
-                    self._reading_stations = []
-                    self._playlist_version = prev_format
-                    return -1
+            try:
+                with open(stationFile, 'r', encoding='utf-8') as cfgfile:
+                    try:
+                        for row in csv.reader(filter(lambda row: row[0] != '#', cfgfile), skipinitialspace=True):
+                            if not row:
+                                continue
+
+                            # Initialize variables with default values
+                            name = url = enc = icon = volume = http = referer = ''
+
+                            # Assign values based on the length of the row
+                            row_length = len(row)
+                            name = row[0].strip()
+                            if row_length > 1:
+                                url = row[1].strip()
+                            if row_length > 2:
+                                enc = row[2].strip()
+                            if row_length > 3:
+                                icon = row[3].strip()
+                            if row_length > 4:
+                                volume = row[4].strip()
+                            if row_length > 5:
+                                http = row[5].strip()
+                            if row_length > 6:
+                                referer = row[6].strip()
+
+                            # Append the parsed values to the reading stations list
+                            station_info = [name, url, enc, {'image': icon} if icon else '', volume, http, referer]
+
+                            self._reading_stations.append(station_info)
+
+                            # Update playlist version based on the presence of optional fields
+                            if referer and current_playlist_version < self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP_REF:
+                                current_playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP_REF
+                            elif http and current_playlist_version <self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP:
+                                current_playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP
+                            elif volume and current_playlist_version < self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL:
+                                current_playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL
+                            elif icon and current_playlist_version < self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON:
+                                current_playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON
+                            elif enc and current_playlist_version < self.PLAYLIST_HAS_NAME_URL_ENCODING:
+                                current_playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING
+                    except (csv.Error, ValueError):
+                        self._reading_stations = []
+                        self._playlist_version = prev_format
+                        return -1
+            except (FileNotFoundError, IOError) as e:
+                # Handle file not found or IO errors
+                self._reading_stations = []
+                self._playlist_version = prev_format
+                return -1
+        self._read_playlist_version = self._playlist_version = current_playlist_version
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Playlist is: {} = {}'.format(self.PLAYLIST_TYPE[self._playlist_version], self._playlist_version))
 
         self.stations = list(self._reading_stations)
         # logger.error('DE stations\n{}\n\n'.format(self.stations))
@@ -888,18 +933,27 @@ class PyRadioStations():
         return 0
 
     def _format_playlist_row(self, a_row):
-        ''' Return a 2-column if in old format,
-            a 3-column row if has encoding, or
-            a 4 column row if has icon too '''
+        ''' Return a row formatted according to the current playlist version,
+            eliminating any empty fields that are not part of the specified version. '''
         this_row = deepcopy(a_row)
-        if 'image' in this_row[3]:
-            this_row[3] = this_row[3] ['image']
-        if self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON:
-            return this_row
+
+        # Extract the 'image' from the icon dictionary if present
+        if len(this_row) > 3 and 'image' in this_row[3]:
+            this_row[3] = this_row[3]['image']
+
+        # Determine the number of columns to return based on the playlist version
+        if self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP_REF:
+            return this_row  # Return all fields
+        elif self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP:
+            return this_row[:-1]  # Exclude 'referer'
+        elif self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL:
+            return this_row[:-2]  # Exclude 'http' and 'referer'
+        elif self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON:
+            return this_row[:-3]  # Exclude 'volume', 'http', and 'referer'
         elif self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING:
-            return this_row[:-1]
+            return this_row[:-4]  # Exclude 'icon', 'volume', 'http', and 'referer'
         else:
-            return this_row[:-2]
+            return this_row[:-5]  # Exclude 'encoding', 'icon', 'volume', 'http', and 'referer'
 
     def _set_playlist_elements(self, a_playlist, a_title=''):
         self.station_path = path.abspath(a_playlist)
@@ -2578,7 +2632,7 @@ class PyRadioConfig(PyRadioStations):
             d_dir = XdgDirs.get_xdg_dir('XDG_DATA_HOME')
             s_dir = XdgDirs.get_xdg_dir('XDG_STATE_HOME')
             if path.exists(d_dir) and path.exists(s_dir):
-                print('[magenta]XDG Dirs[/magenta] found; enabling [magenta]XDG Base compliant[/magenta] operation')
+                # print('[magenta]XDG Dirs[/magenta] found; enabling [magenta]XDG Base compliant[/magenta] operation')
                 self.xdg_compliant = True
                 self.need_to_fix_desktop_file_icon = True
 
