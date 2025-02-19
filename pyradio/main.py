@@ -955,7 +955,7 @@ If nothing else works, try the following command:
                 win_title = M_STRINGS['session-locked']
             else:
                 win_title = None
-            Log.set_win_title(win_title)
+            Log.set_win_title(win_title, args.check_playlist)
         except:
             pass
 

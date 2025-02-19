@@ -604,9 +604,9 @@ class Log():
                     if msg:
                         msg = fix_chars(msg)
                     if msg_id in (STATES.PLAY, STATES.TITLE):
-                        self.set_win_title(d_msg if d_msg else msg)
+                        self.set_win_title(d_msg if d_msg else msg, is_checking_playlist=self._cnf.check_playlist)
                     elif msg_id not in (STATES.ANY, STATES.VOLUME, STATES.BUFF_MSG):
-                        self.set_win_title()
+                        self.set_win_title(is_checking_playlist=self._cnf.check_playlist)
                     self._write_title_to_log(msg if msg else 'No')
                     self._show_notification(msg)
                     self._set_web_title(msg)
@@ -1063,7 +1063,7 @@ class Log():
             stdout.flush()
 
     @staticmethod
-    def set_win_title(msg=None):
+    def set_win_title(msg=None, is_checking_playlist=None):
         default = M_STRINGS['win-title']
         # just_return = (
         #     'Config saved',
@@ -1130,10 +1130,10 @@ class Log():
                 # if logger.isEnabledFor(logging.DEBUG):
                 #     logger.debug('set_win_title(): d_msg = "' + d_msg + '"')
 
-        if token_id == 0 and Log.locked:
-            d_msg += M_STRINGS['session-locked']
-        elif token_id == 0:
+        if is_checking_playlist:
             d_msg += M_STRINGS['checking-playlist']
+        elif token_id == 0 and Log.locked:
+            d_msg += M_STRINGS['session-locked']
 
         if platform.lower().startswith('win'):
             ctypes.windll.kernel32.SetConsoleTitleW(tokens[token_id] + d_msg)
