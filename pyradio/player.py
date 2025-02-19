@@ -2302,6 +2302,8 @@ class Player():
                         lambda: self._cnf.debug_log_player_input
                     )
                 )
+        if logger.isEnabledFor(logging.INFO):
+            logger.info(f'Started Player with PID = {self.process.pid}')
         self.update_thread.start()
         if self.PLAYER_NAME == 'vlc':
             if self.WIN:
@@ -2734,9 +2736,9 @@ class MpvPlayer(Player):
         return self._do_save_volume(self.profile_token + '\nvolume={}\n')
 
     def _buildStartOpts(self, streamName, streamUrl, playList=False):
+        ''' Builds the options to pass to mpv subprocess.'''
         # logger.error('\n\nself._recording = {}'.format(self._recording))
         # logger.error('self.profile_name = "{}"'.format(self.profile_name))
-        ''' Builds the options to pass to mpv subprocess.'''
 
         ''' Test for newer MPV versions as it supports different IPC flags. '''
         p = subprocess.Popen([self.PLAYER_CMD, '--no-video',  '--input-ipc-server=' + self.mpvsocket], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=False)
@@ -2773,9 +2775,11 @@ class MpvPlayer(Player):
         ''' Do I have user profile in config?
             If so, can I use it?
         '''
-        self.USE_PROFILE, profile = self._configHasProfile(self.profile_name)
+        if not self._cnf.check_playlist:
+            self.USE_PROFILE, profile = self._configHasProfile(self.profile_name)
 
-        if self._recording == self.RECORD_WITH_SILENCE:
+        if self._recording == self.RECORD_WITH_SILENCE or \
+                self._cnf.check_playlist:
             self._write_silenced_profile()
             opts.append('--profile=silent')
         else:
@@ -2831,7 +2835,7 @@ class MpvPlayer(Player):
             self.buffering_change_function()
         # logger.error('==== self.buffering = {}'.format(self.buffering))
 
-        # logger.error('Opts:\n{}'.format(opts))
+        logger.error('Opts:\n{}'.format(opts))
         return opts, None
 
     def _fix_returned_data(self, data):
@@ -3251,9 +3255,14 @@ class MpPlayer(Player):
         ''' Do I have user profile in config?
             If so, can I use it?
         '''
-        self.USE_PROFILE, profile = self._configHasProfile(self.profile_name)
+        if not self._cnf.check_playlist:
+            self.USE_PROFILE, profile = self._configHasProfile(self.profile_name)
 
-        if self._recording == self.RECORD_WITH_SILENCE:
+        if self._cnf.check_playlist:
+            self._write_silenced_profile()
+            opts.append('-profile')
+            opts.append('silent')
+        elif self._recording == self.RECORD_WITH_SILENCE:
             if self.USE_PROFILE > -1:
                 self._write_silenced_profile()
                 opts.append('-profile')

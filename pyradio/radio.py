@@ -448,6 +448,9 @@ class PyRadio():
 
     program_restart = False
 
+    _check_lock = threading.Lock()
+    _station_to_check_id = -1
+
     try:
         handled_signals = {
             'SIGHUP': signal.SIGHUP,
@@ -2104,12 +2107,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self._accumulated_errors = None
             if self._cnf.check_playlist:
                 self.bodyWin.nodelay(True)
+                exit_players_loop = False
                 for a_player in self._cnf.AVAILABLE_PLAYERS:
                     end_id = 35
                     cur_id = 26
                     old_id = -1
                     self._accumulated_errors = None
-                    self._activate_player(a_player.PLAYER_NAME)
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('''\n\n
 ############################################################################
@@ -2117,13 +2120,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 #                       Activating player: {}
 #
 ############################################################################
-'''.format(self.player.PLAYER_NAME))
+'''.format(a_player.PLAYER_NAME))
+                    self._activate_player(a_player.PLAYER_NAME)
                     self._cnf.check_output_file = path.join(
                         self._cnf.check_output_folder,
                         self.player.PLAYER_NAME + '-' + self._cnf.station_title + '.csv'
                     )
-                    if path.exists(self._cnf.check_output_file):
-                        remove(self._cnf.check_output_file)
                     self._write_check_output('write_header')
                     logger.error('\n\nself._cnf.check_output_file\n{}\n\n'.format(self._cnf.check_output_file))
                     while cur_id < end_id:
@@ -2143,10 +2145,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                             old_id = cur_id
                         logger.error('4')
                         logger.error(f'brefore {old_id = }, {cur_id = }')
-                        cur_id, old_id = self._loop_check_playlist(cur_id, old_id, end_id)
+                        cur_id, old_id, exit_players_loop = self._loop_check_playlist(cur_id, old_id, end_id)
                         logger.error(f' after {old_id = }, {cur_id = }')
                         logger.error('5')
                     self._write_accumulated_errors()
+                    if exit_players_loop:
+                        break
                 self.detect_if_player_exited = False
                 self.player.stop_mpv_status_update_thread = True
                 self.player.stop_win_vlc_status_update_thread = True
@@ -2154,6 +2158,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     logger.info('Playlist check finished! Terminating...')
                 self.player.ctrl_c_pressed = True
                 self.ctrl_c_handler(0, 0)
+                if exit_players_loop:
+                    from shutil import rmtree
+                    rmtree(self._cnf.check_output_folder, ignore_errors=True)
                 return
             while True:
                 try:
@@ -2217,12 +2224,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             char = self.bodyWin.getch()
             if char == kbkey['q']:
                 cur_id = end_id
-                return cur_id, old_id
-            elif char == kbkey['p_next']:
+                return cur_id, old_id, True
+            elif char == kbkey['open_config']:
                 old_id = cur_id
                 cur_id += 1
-                return cur_id, old_id
-        return cur_id, old_id
+                return cur_id, old_id, False
+        return cur_id, old_id, False
 
     def _loop_wait_for_next_station(self):
         ch = None
@@ -2514,6 +2521,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             #         stream_url = self._cnf.online_browser.url(self.selection)
             self._last_played_station = self.stations[self.selection]
             self._last_played_station_id = self.selection
+            with self._check_lock:
+                self._station_to_check_id = self.selection
+                logger.error('********* checking {} : {} ********\n'.format(self._station_to_check_id, self.stations[self._station_to_check_id]))
             # logger.error('setting playing to {}'.format(self.selection))
             self.playing = self.selection
             if not stream_url:
@@ -2723,8 +2733,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         if from_update_thread:
             msg_key = http_error if http_error else 1000
             state = STATES.CONNECT_ERROR
-            logger.error('self._error_in_check_playlist()')
-            self._error_in_check_playlist(msg_key)
+            if self._cnf.check_playlist:
+                logger.error(f'self._error_in_check_playlist({msg_key})')
+                self._error_in_check_playlist(msg_key)
         else:
             msg_key = 1
             state = STATES.STOPPED
@@ -5259,26 +5270,30 @@ ____Using |fallback| theme.''')
             self._handle_cursor_move_down()
 
     def _handle_mouse(self, main_window=True):
-        my, mx, a_button = self._get_mouse()
-        if a_button == -1:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Mouse event: assuming scroll down')
-            if self._cnf.wheel_adjusts_volume:
-                self._volume_down()
-            else:
-                self._page_down()
-            return
+        if self._cnf.enable_mouse:
+            my, mx, a_button = self._get_mouse()
+            if a_button == -1:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Mouse event: assuming scroll down')
+                if self._cnf.wheel_adjusts_volume:
+                    self._volume_down()
+                else:
+                    self._page_down()
+                return
 
-        stop_here = self._handle_middle_mouse(a_button)
-        if not stop_here:
-            stop_here = self._handle_all_windows_mouse_event(my, mx, a_button)
-            # logger.error('DE stop_here = {}'.format(stop_here))
+            stop_here = self._handle_middle_mouse(a_button)
             if not stop_here:
-                if main_window:
-                    _, update = self._handle_main_window_mouse_event(my, mx, a_button)
+                stop_here = self._handle_all_windows_mouse_event(my, mx, a_button)
+                # logger.error('DE stop_here = {}'.format(stop_here))
+                if not stop_here:
+                    if main_window:
+                        _, update = self._handle_main_window_mouse_event(my, mx, a_button)
 
-                    if update:
-                        self.refreshBody()
+                        if update:
+                            self.refreshBody()
+        else:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Mouse support is disabled, ignoring...')
 
     def _get_mouse(self):
         ''' Gets a mouse event
@@ -5356,22 +5371,26 @@ ____Using |fallback| theme.''')
     def _handle_main_window_mouse_event(self, my, mx, a_button):
         if no_modifiers(a_button):
             if a_button not in self.buttons:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Mouse event on main window: page down')
                 if self._cnf.wheel_adjusts_volume:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Mouse event on main window: volume down')
                     self._volume_down()
                     return True, False
                 else:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Mouse event on main window: page down')
                     self._page_down()
                     return True, True
 
             if a_button & curses.BUTTON4_PRESSED:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Mouse event on main window: page up')
                 if self._cnf.wheel_adjusts_volume:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Mouse event on main window: volume up')
                     self._volume_up()
                     return True, False
                 else:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Mouse event on main window: page up')
                     self._page_up()
                     return True, True
 
@@ -6369,6 +6388,7 @@ ____Using |fallback| theme.''')
                     platform.startswith('win')):
                 self.player.recording = to_record
         self.log.display_help_message = False
+        logger.error(f'Player activated: ' + player_name)
         self.log.write(msg_id=STATES.PLAYER_ACTIVATED, msg=player_name + M_STRINGS['player-acivated_'], help_msg=False, suffix='')
         self.player.volume = -1
         if to_play > -1:
@@ -7535,8 +7555,6 @@ _____"|f|" to see the |free| keys you can use.
                                     )
                             self._cnf.player_changed = False
                         self.player.playback_timeout = int(self._cnf.connection_timeout)
-                        if self._config_win.mouse_support_option_changed:
-                            self._open_simple_message_by_key('M_MOUSE_RESTART')
                         if self._config_win.need_to_update_theme:
                             self._theme.recalculate_theme(False)
                         if self._cnf.active_remote_control_server_ip != self._cnf.remote_control_server_ip or \
@@ -11395,23 +11413,31 @@ _____"|f|" to see the |free| keys you can use.
             remove(self._cnf.check_output_file)
 
     def _success_in_check_playlist(self):
-        logger.error('got called!!!\nself._cnf.last_station_checked_id = {}, self._last_played_station_id = {}'.format(self._cnf.last_station_checked_id, self._last_played_station_id))
-        if self._cnf.last_station_checked_id != self._last_played_station_id:
-            logger.error('\n\nsuccess in check playlist\n{}\n\n'.format(self.stations[self._last_played_station_id]))
-            self._cnf.last_station_checked = self.stations[self._last_played_station_id]
-            self._cnf.last_station_checked_id = self._last_played_station_id
-            curses.ungetch(kbkey['p_next'])
-            self._write_check_output(None)
+        with self._check_lock:
+            station_to_check_id = self._station_to_check_id
+        logger.error('got called!!!\nself._cnf.last_station_checked_id = {}, station_to_check_id = {}'.format(self._cnf.last_station_checked_id, station_to_check_id))
+        station_to_check = self.stations[station_to_check_id]
+        if self._cnf.last_station_checked_id != station_to_check_id:
+            logger.error('\n\nsuccess in check playlist\n{}\n\n'.format(station_to_check))
+            self._cnf.last_station_checked = station_to_check
+            self._cnf.last_station_checked_id = station_to_check_id
+            logger.error('\n\nnungetch c\n\n')
+            curses.ungetch(kbkey['open_config'])
+            self._write_check_output(None, station_to_check, station_to_check_id)
 
     def _error_in_check_playlist(self, http_error):
+        with self._check_lock:
+            station_to_check_id = self._station_to_check_id
         if self._cnf.last_station_checked_id != self._last_played_station_id:
             logger.error('\n\nerror in check playlist\nhttp_error: {}\n{}\n\n'.format(http_error, self.stations[self._last_played_station_id]))
-            self._cnf.last_station_checked = self.stations[self._last_played_station_id]
-            self._cnf.last_station_checked_id = self._last_played_station_id
-            curses.ungetch(kbkey['p_next'])
-            self._write_check_output(http_error)
+            station_to_check = self.stations[station_to_check_id]
+            self._cnf.last_station_checked = station_to_check
+            self._cnf.last_station_checked_id = station_to_check_id
+            logger.error('\n\nnungetch c\n\n')
+            curses.ungetch(kbkey['open_config'])
+            self._write_check_output(http_error, station_to_check, station_to_check_id)
 
-    def _write_check_output(self, http_error):
+    def _write_check_output(self, http_error, station_to_check=None, station_to_check_id=None):
         logger.error(f'got called with {http_error = }')
         if http_error == 'write_header':
             with open(self._cnf.check_output_file, mode='w', newline='') as file:
@@ -11424,17 +11450,18 @@ _____"|f|" to see the |free| keys you can use.
                     writer = csv.writer(file)
                     writer.writerows(self._accumulated_errors)
         else:
-            with open(self._cnf.check_output_file, mode='a', newline='') as file:
-                    writer = csv.writer(file)
-                    writer.writerow(
-                        [str(self._last_played_station_id+1), str(http_error)] + self.stations[self._last_played_station_id]
-                    )
-            if http_error is not None:
-                if self._accumulated_errors is None:
-                    self._accumulated_errors = [http_error]
-                else:
-                    if http_error not in self._accumulated_errors:
-                        self._accumulated_errors.append(http_error)
+            if self._cnf.check_output_file is not None:
+                with open(self._cnf.check_output_file, mode='a', newline='') as file:
+                        writer = csv.writer(file)
+                        writer.writerow(
+                            [str(station_to_check_id+1), str(http_error)] + station_to_check
+                        )
+                if http_error is not None:
+                    if self._accumulated_errors is None:
+                        self._accumulated_errors = [http_error]
+                    else:
+                        if http_error not in self._accumulated_errors:
+                            self._accumulated_errors.append(http_error)
 
     def _write_accumulated_errors(self):
         if self._accumulated_errors is not None:
@@ -11446,7 +11473,7 @@ _____"|f|" to see the |free| keys you can use.
                 self._accumulated_errors = out
                 self._write_check_output('accumulated')
 
-    def split_logs(self):
+    def _split_logs(self):
         import re
         from os import path
 
@@ -11496,7 +11523,7 @@ _____"|f|" to see the |free| keys you can use.
                 with open(output_files[player], 'w') as file:
                     file.writelines(log_lines)
 
-    def generate_markdown_report(self):
+    def _generate_markdown_report(self):
         # Define player file names
         player_files = {
             'mpv': 'mpv-stations.csv',
@@ -11554,65 +11581,110 @@ _____"|f|" to see the |free| keys you can use.
 
         # Station Data section
         markdown_content.append("### Station Data\n")
-        markdown_content.append("| #  | Station Name                     | URL                                      | Errors (mpv, mplayer, vlc) |\n")
-        markdown_content.append("|----|----------------------------------|------------------------------------------|----------------------------|\n")
 
+        # Calculate maximum column widths
+        max_station_num_width = max(len(str(num)) for num in station_data.keys())
+        max_station_name_width = max(len(data['name']) for data in station_data.values())
+        max_station_url_width = max(len(data['url']) for data in station_data.values())
+        max_errors_width = 30  # Fixed width for errors column (mpv, mplayer, vlc)
+
+        # Adjust column widths to fit headers if necessary
+        headers = ["#", "Station Name", "URL", "Errors (mpv, mplayer, vlc)"]
+        max_station_num_width = max(max_station_num_width, len(headers[0]))
+        max_station_name_width = max(max_station_name_width, len(headers[1]))
+        max_station_url_width = max(max_station_url_width, len(headers[2]))
+
+        # Create the header row
+        header_row = (
+            f"| {headers[0].ljust(max_station_num_width)} "
+            f"| {headers[1].ljust(max_station_name_width)} "
+            f"| {headers[2].ljust(max_station_url_width)} "
+            f"| {headers[3].ljust(max_errors_width)} |\n"
+        )
+        markdown_content.append(header_row)
+
+        # Create the header separator row
+        separator_row = (
+            f"|{'-' * (max_station_num_width + 2)}"
+            f"|{'-' * (max_station_name_width + 2)}"
+            f"|{'-' * (max_station_url_width + 2)}"
+            f"|{'-' * (max_errors_width + 2)}|\n"
+        )
+        markdown_content.append(separator_row)
+
+        # Add station data rows
         for station_number, data in sorted(station_data.items(), key=lambda x: int(x[0])):
             station_name = data['name']
             station_url = data['url']
             errors_combined = [
-                data['errors'].get('mpv', 'N/A'),
-                data['errors'].get('mplayer', 'N/A'),
-                data['errors'].get('vlc', 'N/A')
+                data['errors'].get('mpv', 'None'),
+                data['errors'].get('mplayer', 'None'),
+                data['errors'].get('vlc', 'None')
             ]
             errors_str = ', '.join(errors_combined)
 
-            markdown_content.append(f"| {station_number} | {station_name} | {station_url} | {errors_str} |\n")
+            # Format each column with consistent width
+            station_num_col = str(station_number).ljust(max_station_num_width)
+            station_name_col = station_name.ljust(max_station_name_width)
+            station_url_col = station_url.ljust(max_station_url_width)
+            errors_col = errors_str.ljust(max_errors_width)
+
+            # Append the formatted row
+            markdown_content.append(
+                f"| {station_num_col} | {station_name_col} | {station_url_col} | {errors_col} |\n"
+            )
 
         # Write Markdown file
         output_file = os.path.join(self._cnf.check_output_folder, 'playlist_report.md')
         with open(output_file, 'w') as file:
             file.writelines(markdown_content)
 
-        print(f"Markdown report generated at: {output_file}")
+        return player_files.values()
 
-    def generate_html_report(self):
-        # Define player file names
-        player_files = {
-            'mpv': 'mpv-stations.csv',
-            'mplayer': 'mplayer-stations.csv',
-            'vlc': 'vlc-stations.csv'
-        }
+    def read_markdown_file(self):
+        markdown_file = os.path.join(self._cnf.check_output_folder, 'playlist_report.md')
 
-        # Initialize data structures
-        errors = {}  # To store combined error codes and descriptions
-        station_data = {}  # To store combined station data
+        errors = {}  # Για αποθήκευση κωδικών σφαλμάτων και περιγραφών
+        station_data = {}  # Για αποθήκευση δεδομένων σταθμών
 
-        # Read and parse CSV files
-        for player, filename in player_files.items():
-            filepath = os.path.join(self._cnf.check_output_folder, filename)
-            if not os.path.exists(filepath):
-                continue  # Skip if the file doesn't exist
+        with open(markdown_file, 'r') as file:
+            lines = file.readlines()
 
-            with open(filepath, 'r') as file:
-                reader = csv.reader(file)
-                header = next(reader)  # Skip header row
+        current_section = None
+        found_table_header = False
+        for line in lines:
+            line = line.strip()
 
-                for row in reader:
-                    if row[0].startswith('#'):  # Error summary row
-                        error_code = row[1]
-                        error_desc = row[2]
-                        if error_code not in errors:
-                            errors[error_code] = error_desc
+            # Detect Section
+            if line.startswith('###'):
+                current_section = line[4:].strip()  # Αφαιρούμε το "### "
+                continue
+
+            # Section is now "Errors and Descriptions"
+            if current_section == 'Errors and Descriptions':
+                if line.startswith('- **'):
+                    # get error code and description
+                    error_code = line.split('**')[1]
+                    error_desc = line.split(': ')[1]
+                    errors[error_code] = error_desc.split(' (error ')[0]
+
+            # Section is now "Station Data"
+            elif current_section == 'Station Data':
+                if line.startswith('|'):
+                    # Find the first table row that has the actual data
+                    if not found_table_header:
+                        if '--|--' in line:
+                            found_table_header = True
                         continue
 
-                    # Extract station data
-                    station_number = row[0]
-                    error_code = row[1]
-                    station_name = row[2]
-                    station_url = row[3]
+                    # Export data from the row
+                    columns = [col.strip() for col in line.split('|')[1:-1]]
+                    station_number = columns[0]
+                    station_name = columns[1]
+                    station_url = columns[2]
+                    player_errors = columns[3].split(', ')
 
-                    # Initialize station entry if it doesn't exist
+                    # Initialize station (if it does not exits already)
                     if station_number not in station_data:
                         station_data[station_number] = {
                             'name': station_name,
@@ -11620,8 +11692,25 @@ _____"|f|" to see the |free| keys you can use.
                             'errors': {}
                         }
 
-                    # Add player-specific error
-                    station_data[station_number]['errors'][player] = (error_code, errors.get(error_code, 'Unknown error'))
+                    # Add errors per player
+                    players = ['mpv', 'mplayer', 'vlc']
+                    for player, error_code in zip(players, player_errors):
+                        if error_code == 'None':
+                            station_data[station_number]['errors'][player] = (error_code, 'Success!')
+                        else:
+                            station_data[station_number]['errors'][player] = (error_code, errors.get(error_code, 'Unknown error'))
+
+        logger.info('\n\nErrors:\n{}\n\n'.format(errors))
+        logger.info('\n\nStation Data:\n{}\n\n'.format(station_data))
+
+        try:
+            to_delete = [index for index, value in station_data.items() if all(error[0] != "None" for error in value['errors'].values())]
+        except:
+            to_delete = None
+        logger.info('\n\nItems to be Deleted:\n{}\n\n'.format(to_delete))
+        return station_data, errors, to_delete
+
+    def _generate_html_report(self, station_data, errors):
 
         # Define a palette of 20 colors
         color_palette = [
@@ -11630,7 +11719,7 @@ _____"|f|" to see the |free| keys you can use.
             '#0000FF',  # Blue
             '#FFA500',  # Orange
             '#800080',  # Purple
-            '#FFC0CB',  # Pink
+            '#FF91A4',  # Pink
             '#008080',  # Teal
             '#FFD700',  # Gold
             '#A52A2A',  # Brown
@@ -11881,7 +11970,13 @@ _____"|f|" to see the |free| keys you can use.
         with open(output_file, 'w') as file:
             file.writelines(html_content)
 
-        print(f"HTML report generated at: {output_file}")
+    def handle_check_playlist_data(self):
+        self._split_logs()
+        csv_files = self._generate_markdown_report()
+        for a_csv_file in csv_files:
+            remove(path.join(self._cnf.check_output_folder, a_csv_file))
+        station_data, errors, to_delete = self.read_markdown_file()
+        self._generate_html_report(station_data, errors)
     ############################################################################
     #
     #                    End of Chech Playlist functions

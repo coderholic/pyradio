@@ -227,13 +227,13 @@ class StationsChanges():
                 ['Heavyweight Reggae', 'https://somafm.com/reggae.pls'],
                 ['Metal Detector', 'https://somafm.com/metal.pls'],
                 ['Synphaera Radio (Space Music)', 'https://somafm.com/synphaera.pls']
-            ],
+            ], # added
 
             [
                 [0, ['Reggae Dancehall (Ragga Kings)', 'https://raggakings.radio:8443/stream.ogg']]
-            ],
+            ], # changed
 
-            []
+            [] # deleted
         ],
 
         (0, 9, 3):
@@ -241,19 +241,23 @@ class StationsChanges():
             [
                 ['Radio Levač (Serbian Folk & Country)', 'http://213.239.205.210:8046/stream'],
                 ['Radio 35 (Serbian and English Pop, Folk, Country & Hits)', 'http://stream.radio035.net:8010/listen.pls']
-            ],
-            [],
-            [],
+            ], # added
+            [], # changed
+            [], # deleted
         ],
         
         (0, 9, 3, 11, 5):
         [
-            [],
+            [], # added
             [
 				['DanceUK', 'http://uk2.internet-radio.com:8024/listen.pls'],
 				['JazzGroove', r'http://199.180.72.2:8015/listen.pls\?sid\=1'],
-            ],
-            [],
+				['Metal Detector' 'http://somafm.com/metal.pls'],
+            ], # changed
+            [
+				['Beyond Metal (Progressive - Symphonic)', 'http://streamingV2.shoutcast.com/BeyondMetal'],
+				['Vox Noctem: Rock-Goth', 'http://r2d2.voxnoctem.de:8000/voxnoctem.mp3'],
+            ], # deleted
         ],
     }
 

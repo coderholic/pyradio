@@ -123,7 +123,7 @@ remove_station_icons = True
 # while the program is running.
 #
 # Default value: False
-log_titles = True
+log_titles = False
 
 # Connection timeout
 # PyRadio will wait for this number of seconds to get a station/server message

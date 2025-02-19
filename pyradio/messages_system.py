@@ -1026,17 +1026,6 @@ command: |pyradio --unlock|
 '''
 ),
 
-    'M_MOUSE_RESTART': ('Program Restart required',
-r'''
-You have just changed the |mouse support| config
-option.
-
-|PyRadio| must be |restarted| for this change to
-take effect.
-
-'''
-),
-
     'M_NO_PLAYLIST': ('Error',
 r'''
 |No playlists found!!!

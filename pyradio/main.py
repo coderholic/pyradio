@@ -1004,10 +1004,12 @@ If nothing else works, try the following command:
 
         if pyradio_config.check_playlist:
             pyradio.program_restart = False
-            print('Output folder:\n  "[red]{}[/red]"'.format(pyradio_config.check_output_folder))
-            pyradio.split_logs()
-            pyradio.generate_markdown_report()
-            pyradio.generate_html_report()
+            print('[blue bold]-->[/blue bold] [magenta]Check Playlist Mode[/magenta] activated!')
+            if path.exists(pyradio_config.check_output_folder):
+                print('[blue bold]-->[/blue bold] Output folder:\n    "[red]{}[/red]"'.format(pyradio_config.check_output_folder))
+                pyradio.handle_check_playlist_data()
+            else:
+                print('[blue bold]-->[/blue bold] Operation [red bold]Cancelled![/red bold]')
 
         ''' curses is off '''
         pyradio_config._online_browser = None

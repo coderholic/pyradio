@@ -192,7 +192,13 @@ a:visited{color: SaddleBrown;}
 <pre style="height: 200px;">
 
 2025-01-XX s-n-g
+    * version 0.9.3.11.5 - 0.9.3.12-beta5
     * config option added to invert the mouse wheel action (#272)
+    * fixing #276 : mouse support will always be on
+        - if disabled, mouse keys will be ignored
+        - toggling the config option does not require a program restart any more
+    * removing ont working stations from stations.csv
+    * updating docs
 
 2025-01-18 s-n-g
     * version 0.9.3.11.4 - 0.9.3.12-beta4
@@ -2114,7 +2120,7 @@ volume=50</pre>
 <p>Being a console application, <strong>PyRadio</strong> was never intended to work with a mouse.</p>
 <p>Furthermore, when using the mouse on a console application, the result is highly dependent on the terminal used and the way it implements mouse support.</p>
 <p>Having said that, and since the question of using the mouse with <strong>PyRadio</strong> has been risen, basic mouse support has been implemented; starting, stopping and muting the player, scrolling within the playlist and adjusting the player’s volume is now possible using the mouse.</p>
-<p>All one has to do is enable mouse support in the “<em>Config Window</em>” (mouse support is disabled by default) and restart <strong>PyRadio</strong> for the change to take effect.</p>
+<p>All one has to do is enable mouse support in the “<em>Config Window</em>”.</p>
 <p>Then, the mouse can be used as follows:</p>
 <table>
 <colgroup>

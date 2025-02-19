@@ -710,10 +710,6 @@ class PyRadioConfigWindow():
             return
         ''' save and exit '''
         self._old_theme = self._config_options['theme'][1]
-        if self._saved_config_options['enable_mouse'][1] == self._config_options['enable_mouse'][1]:
-            self.mouse_support_option_changed = False
-        else:
-            self.mouse_support_option_changed = True
         if self._saved_config_options['calculated_color_factor'][1] == self._config_options['calculated_color_factor'][1]:
             self.need_to_update_theme = False
         else:

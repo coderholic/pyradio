@@ -1065,7 +1065,7 @@ Furthermore, when using the mouse on a console application, the result is highly
 
 Having said that, and since the question of using the mouse with **PyRadio** has been risen, basic mouse support has been implemented; starting, stopping and muting the player, scrolling within the playlist and adjusting the player's volume is now possible using the mouse.
 
-All one has to do is enable mouse support in the "*Config Window*" (mouse support is disabled by default) and restart **PyRadio** for the change to take effect.
+All one has to do is enable mouse support in the "*Config Window*".
 
 Then, the mouse can be used as follows:
 

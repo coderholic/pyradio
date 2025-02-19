@@ -1985,10 +1985,9 @@ class PyRadioConfig(PyRadioStations):
                 pass
 
     def setup_mouse(self):
-        if self.enable_mouse:
-            curses.mousemask(curses.ALL_MOUSE_EVENTS
-                             | curses.REPORT_MOUSE_POSITION)
-            #curses.mouseinterval(0)
+        curses.mousemask(curses.ALL_MOUSE_EVENTS
+                         | curses.REPORT_MOUSE_POSITION)
+        #curses.mouseinterval(0)
 
     def open_a_dir(self, a_dir):
         if system().lower() == 'windows':
