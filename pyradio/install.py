@@ -1573,7 +1573,7 @@ Then try installing PyRadio again
                     if '\\build\\' not in n:
                         win_file = n
                         break
-                subprocess.call('python ' + win_file)
+                subprocess.call('python "' + win_file + '"')
             print('\n\nNow you can delete the folder:')
             print('    "{}"'.format(uni._dir))
             print('and the file:')

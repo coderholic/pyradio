@@ -449,7 +449,7 @@ class PyRadioStations():
     def can_go_back_in_time(self):
         return True if len(self._ps._p) > 1 else False
 
-    @can_go_cack_in_time.setter
+    @can_go_back_in_time.setter
     def can_go_cack_in_time(self, value):
         raise ValueError('property is read only')
 
