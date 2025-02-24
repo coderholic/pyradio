@@ -140,10 +140,13 @@ class PyRadioStations():
     _read_playlist_version = PLAYLIST_HAS_NAME_URL
 
     _playlist_version_to_string = {
-            PLAYLIST_HAS_NAME_URL: 'PLAYLIST_HAS_NAME_URL',
-            PLAYLIST_HAS_NAME_URL_ENCODING: 'PLAYLIST_HAS_NAME_URL_ENCODING',
-            PLAYLIST_HAS_NAME_URL_ENCODING_ICON: 'PLAYLIST_HAS_NAME_URL_ENCODING_ICON'
-        }
+        PLAYLIST_HAS_NAME_URL: 'PLAYLIST_HAS_NAME_URL',
+        PLAYLIST_HAS_NAME_URL_ENCODING: 'PLAYLIST_HAS_NAME_URL_ENCODING',
+        PLAYLIST_HAS_NAME_URL_ENCODING_ICON: 'PLAYLIST_HAS_NAME_URL_ENCODING_ICON',
+        PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL: 'PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL',
+        PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP: 'PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP',
+        PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP_REF: 'PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP_REF',
+    }
 
     dirty_playlist = False
 
@@ -446,9 +449,17 @@ class PyRadioStations():
     def can_go_back_in_time(self):
         return True if len(self._ps._p) > 1 else False
 
-    @can_go_back_in_time.setter
-    def can_go_back_in_time(self, value):
+    @can_go_cack_in_time.setter
+    def can_go_cack_in_time(self, value):
         raise ValueError('property is read only')
+
+    @property
+    def playlist_version(self):
+        return self._playlist_version
+
+    @playlist_version.setter
+    def playlist_version(self, value):
+        self._playlist_version = value
 
     def set_station_history(self,
                             execute_funct,
@@ -730,6 +741,7 @@ class PyRadioStations():
                             if not row:
                                 continue
 
+                            # logger.error(f'{row = }')
                             # Initialize variables with default values
                             name = url = enc = icon = volume = http = referer = ''
 
@@ -852,14 +864,22 @@ class PyRadioStations():
         '''
         playlist_version = self.PLAYLIST_HAS_NAME_URL
         for n in self.stations:
-            if n[3] != '':
-                playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON
+            if n [6]:
+                playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP_REF
                 break
-        if playlist_version == self.PLAYLIST_HAS_NAME_URL:
-            for n in self.stations:
-                if n[2] != '':
+            elif n[5]:
+                if playlist_version < self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP:
+                    playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP
+            elif n[4]:
+                if playlist_version < self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL:
+                    playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL
+            elif n[3]:
+                if playlist_version < self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON:
+                    playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON
+            elif n[2]:
+                if playlist_version < self.PLAYLIST_HAS_NAME_URL_ENCODING:
                     playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING
-                    break
+
         if self._playlist_version == playlist_version:
             ret = False
         else:

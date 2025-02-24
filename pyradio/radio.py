@@ -1165,6 +1165,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.player.buffering_change_function = self._show_recording_status_in_header
             self.player.buffering_lock = self._buffering_lock
             self.player.log = self.log
+            self.player.handle_old_referer = self._handle_old_referer
             if self._cnf.check_playlist:
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('******* registering check playlist callback functions')
@@ -2337,7 +2338,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         If that causes problems, uncomment lines
         '''
         while self._remote_control_server is not None:
-            logger.error('\n\nclose_server\n\n')
             ret, _ = self._remote_control_server.close_server()
             if ret:
                 self._remote_control_server = None
@@ -2556,14 +2556,17 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         logger.error('DE \n\nself.detect_if_player_exited = {}\n\n'.format(self.detect_if_player_exited))
         # if self._random_requested:
         #     self.detect_if_player_exited = False
+        logger.error('\n====\n====\nself._last_played_station = {}\n====\n====\n'.format(self._last_played_station))
         try:
-            self.player.play(name=self._last_played_station[0],
-                             streamUrl=stream_url,
-                             stop_player=self.stopPlayerOnConnectionFailed,
-                             detect_if_player_exited=lambda: self.detect_if_player_exited,
-                             enable_crash_detection_function=self._enable_player_crash_detection,
-                             encoding=self.get_active_encoding(enc)
-                             )
+            self.player.play(
+                name=self._last_played_station[0],
+                streamUrl=stream_url,
+                stop_player=self.stopPlayerOnConnectionFailed,
+                detect_if_player_exited=lambda: self.detect_if_player_exited,
+                enable_crash_detection_function=self._enable_player_crash_detection,
+                encoding=self.get_active_encoding(enc),
+                referer=self._last_played_station[Station.referer]
+            )
         except OSError:
             self.log.write(msg_id=STATES.RESET, msg='Error starting player.'
                            'Are you sure a supported player is installed?')
@@ -3917,6 +3920,32 @@ ____Using |fallback| theme.''')
                 self.ws.BROWSER_PERFORMING_SEARCH_MODE,
                 'D_RB_SEARCH'
         )
+
+    def _handle_old_referer(self, referer, referer_file):
+        self.stations[self.selection][Station.referer] = referer
+        self._cnf.dirty_playlist = True
+        self._cnf.playlist_version = self._cnf.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP_REF
+        logger.error('\n\nself.handle_old_referer : {} - {}\n\n'.format(referer, self.stations[self.selection][Station.referer]))
+        try:
+            remove(referer_file)
+        except:
+            pass
+        msg = '''
+The old method of providing a referer for this
+stations has been used!
+
+|PyRadio| has removed the referer file and updated the
+station, marking the playlist as changed.
+
+Please save the playlist after this window is closed.
+
+'''
+        self._messaging_win.set_a_message(
+                'UNIVERSAL', (
+                    'Playlist Changed',
+                    msg)
+                )
+        self._open_simple_message_by_key('UNIVERSAL')
 
     def _show_recording_status_in_header(
         self,
@@ -6392,6 +6421,7 @@ ____Using |fallback| theme.''')
         self.player.buffering_change_function = self._show_recording_status_in_header
         self.player.buffering_lock = self._buffering_lock
         self.player.log = self.log
+        self.player.handle_old_referer = self._handle_old_referer
         if self._cnf.check_playlist:
             self.player.success_in_check_playlist = self._success_in_check_playlist
             self.player.error_in_check_playlist = self._error_in_check_playlist
@@ -6772,6 +6802,41 @@ _____"|f|" to see the |free| keys you can use.
             self._cnf.jump_tag = -1
             self._random_requested = False
             return
+
+        elif self._backslash_pressed and \
+                (char == kbkey['station_volume'] or \
+                 check_localized(char, (kbkey['station_volume'],))):
+            self._update_status_bar_right(status_suffix='')
+            if self.player.isPlaying():
+                if self.player.playback_is_on:
+                    if self.player.buffering:
+                        self.log.write(msg_id=STATES.BUFF_MSG, msg='Player is buffering; cannot save volume...')
+                        self.player.threadUpdateTitle()
+                    else:
+                        logger.error(f'{self.player.volume = }')
+                        if self.player.volume == -1:
+                            ''' inform no change '''
+                            if (logger.isEnabledFor(logging.DEBUG)):
+                                logger.debug('Volume is -1. Aborting...')
+                            ret_string = 'Volume: already saved...'
+                        elif self.player.volume == -2:
+                            if (logger.isEnabledFor(logging.DEBUG)):
+                                logger.debug('Error saving volume...')
+                            ret_string = 'Volume: NOT saved!'
+                        else:
+                            if (logger.isEnabledFor(logging.DEBUG)):
+                                logger.debug('Volume is {}%. Saving...'.format(self.player.volume))
+                            ret_string = 'Volume: {}% saved'.format(self.player.volume)
+                            self.stations[self.selection][Station.volume] = self.player.volume
+                            self._cnf.dirty_playlist = True
+
+                        self.log.write(msg_id=STATES.VOLUME, msg=ret_string)
+                        self.player.threadUpdateTitle()
+                        self.refreshBody()
+            else:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Station volume save inhibited because playback is off')
+
         elif self._backslash_pressed and \
                 self.ws.operation_mode in (self.ws.NORMAL_MODE,
                 self.ws.PLAYLIST_MODE):
@@ -9272,18 +9337,21 @@ _____"|f|" to see the |free| keys you can use.
                         return
                     self.player.USE_EXTERNAL_PLAYER = True
                     stream_url = self.stations[self.selection][1]
+                    logger.error('\n====\n====\nself.stations[self.selection] = {}\n====\n====\n'.format(self.stations[self.selection]))
                     self._set_active_stations()
                     self.playing = self.selection
                     self.selections[0][2] = self.playing
                     self._click_station()
                     self._add_station_to_stations_history()
-                    self._cnf.EXTERNAL_PLAYER_OPTS = self.player.play(name='',
-                                     streamUrl=stream_url,
-                                     stop_player=None,
-                                     detect_if_player_exited=None,
-                                     enable_crash_detection_function=None,
-                                     encoding='utf-8'
-                                     )
+                    self._cnf.EXTERNAL_PLAYER_OPTS = self.player.play(
+                        name='',
+                        streamUrl=stream_url,
+                        stop_player=None,
+                        detect_if_player_exited=None,
+                        enable_crash_detection_function=None,
+                        encoding='utf-8',
+                        referer=self.stations[self.selection][Station.referer]
+                    )
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('Launching external player: {}'.format(' '.join(self._cnf.EXTERNAL_PLAYER_OPTS)))
                     self._cnf.EXTERNAL_PLAYER_OPTS = [self.stations[self.selection][0]] + self._cnf.EXTERNAL_PLAYER_OPTS
@@ -11006,7 +11074,6 @@ _____"|f|" to see the |free| keys you can use.
             logger.info('My terminal got closed... Terminating...')
         self.log.stop_timer()
         if self._remote_control_server is not None:
-            logger.error('\n\nclose_server\n\n')
             self._remote_control_server.close_server()
             self._remote_control_server = None
         self._force_exit = True
@@ -11035,7 +11102,6 @@ _____"|f|" to see the |free| keys you can use.
         #     logger.error('\n\nclose_server\n\n')
         #     ret, _ = self._remote_control_server.close_server()
         while self._remote_control_server is not None:
-            logger.error('\n\nclose_server\n\n')
             ret, _ = self._remote_control_server.close_server()
             if ret:
                 self._remote_control_server = None
@@ -11068,7 +11134,6 @@ _____"|f|" to see the |free| keys you can use.
                 logger.info('My console window got closed... Terminating...')
             self.log.stop_timer()
             if self._remote_control_server is not None:
-                logger.error('\n\nclose_server\n\n')
                 self._remote_control_server.close_server()
                 self._remote_control_server = None
             self._force_exit = True

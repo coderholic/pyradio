@@ -2204,7 +2204,8 @@ class Player():
              stop_player,
              detect_if_player_exited,
              enable_crash_detection_function=None,
-             encoding=''
+             encoding='',
+             referer=None
          ):
         # logger.error('')
         # logger.error('params = {}'.format(self.params))
@@ -2231,7 +2232,7 @@ class Player():
             self._station_encoding = self.config_encoding
         opts = []
         isPlayList = streamUrl.split("?")[0][-3:] in ['m3u', 'pls']
-        opts, self.monitor_opts = self._buildStartOpts(name, streamUrl, isPlayList)
+        opts, self.monitor_opts, referer, referer_file = self._buildStartOpts(name, streamUrl, streamReferer=referer, playList=isPlayList)
         self.stop_mpv_status_update_thread = False
         if logger.isEnabledFor(logging.INFO):
             try:
@@ -2381,6 +2382,8 @@ class Player():
                         args=(lambda: self.stop_mpv_status_update_thread,  limit, self._start_monitor_update_thread)
                         ).start()
             # logger.error('=======================\n\n')
+        if referer_file:
+            self.handle_old_referer(referer, referer_file)
 
     def _sendCommand(self, command):
         ''' send keystroke command to player '''
@@ -2502,7 +2505,7 @@ class Player():
             except:
                 pass
 
-    def _buildStartOpts(self, streamName, streamUrl, playList):
+    def _buildStartOpts(self, streamName, streamUrl, streamReferer, playList):
         pass
 
     def _write_silenced_profile(self):
@@ -2535,16 +2538,26 @@ class Player():
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Cannot wirte [silent] profile in: "{}"'.format(self.config_files[0]))
 
-    def _get_referer(self, streamName):
+    def _get_referer(self, streamName, streamReferer):
         referer = None
-        ref = os.path.join(self._cnf.xdg.stations_dir, streamName + '.referer.txt')
-        if os.path.exists(ref):
+        referer_file = os.path.join(self._cnf.xdg.stations_dir, streamName + '.referer.txt')
+        if os.path.exists(referer_file):
             try:
-                with open(ref, 'r', encoding='utf-8') as f:
+                with open(referer_file, 'r', encoding='utf-8') as f:
                     referer = f.read().strip()
             except:
-                pass
-        return referer
+                referer_file = None
+        else:
+            referer_file = None
+        logger.error(f'{streamReferer = }')
+        if streamReferer:
+            referer = streamReferer
+        else:
+            ''' get referer to station info
+                prompt user to save the playlist
+                and remove old referer file
+            '''
+        return referer, referer_file
 
     def togglePause(self):
         if self.PLAYER_NAME == 'mpv':
@@ -2735,7 +2748,7 @@ class MpvPlayer(Player):
             self.volume = -2
         return self._do_save_volume(self.profile_token + '\nvolume={}\n')
 
-    def _buildStartOpts(self, streamName, streamUrl, playList=False):
+    def _buildStartOpts(self, streamName, streamUrl, streamReferer=None, playList=False):
         ''' Builds the options to pass to mpv subprocess.'''
         # logger.error('\n\nself._recording = {}'.format(self._recording))
         # logger.error('self.profile_name = "{}"'.format(self.profile_name))
@@ -2801,9 +2814,9 @@ class MpvPlayer(Player):
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('---=== Starting Recording: "{}" ===---'.format(self.recording_filename))
 
-        referer = self._get_referer(streamName)
+        referer, referer_file = self._get_referer(streamName, streamReferer)
         if referer is not None:
-            opts.append(r'--http-header-fields="User-Agent: ' + self._cnf.user_agent_string + r',Referer:' + referer)
+            opts.append(r'--http-header-fields="User-Agent: ' + self._cnf.user_agent_string + r',Referer:' + referer + '"')
 
         if playList:
             if newerMpv:
@@ -2836,7 +2849,7 @@ class MpvPlayer(Player):
         # logger.error('==== self.buffering = {}'.format(self.buffering))
 
         logger.error('Opts:\n{}'.format(opts))
-        return opts, None
+        return opts, None, referer,referer_file
 
     def _fix_returned_data(self, data):
         if isinstance(data, tuple):
@@ -3237,7 +3250,7 @@ class MpPlayer(Player):
             return 0
         return self._do_save_volume(self.profile_token + '\nvolstep=1\nvolume={}\n')
 
-    def _buildStartOpts(self, streamName, streamUrl, playList=False):
+    def _buildStartOpts(self, streamName, streamUrl, streamReferer=None, playList=False):
         ''' Builds the options to pass to mplayer subprocess.'''
         if self.USE_EXTERNAL_PLAYER:
             self.recording = self.NO_RECORDING
@@ -3247,10 +3260,10 @@ class MpPlayer(Player):
         # opts = [self.PLAYER_CMD, '-vo', 'null']
         monitor_opts = None
 
-        referer = self._get_referer(streamName)
+        referer, referer_file = self._get_referer(streamName, streamReferer)
         if referer is not None:
             opts.append(r'-http-header-fields')
-            opts.append(r'Referer: ' + referer)
+            opts.append(r'Referer: "' + referer + '"')
 
         ''' Do I have user profile in config?
             If so, can I use it?
@@ -3340,7 +3353,7 @@ class MpPlayer(Player):
             opts.remove('all=6')
 
         # logger.error('Opts:\n{0}\n{1}'.format(opts, monitor_opts))
-        return opts, monitor_opts
+        return opts, monitor_opts, referer, referer_file
 
     def _mute(self):
         ''' mute mplayer '''
@@ -3608,7 +3621,7 @@ class VlcPlayer(Player):
     def save_volume(self):
         return self._do_save_volume('{}')
 
-    def _buildStartOpts(self, streamName, streamUrl, playList=False):
+    def _buildStartOpts(self, streamName, streamUrl, streamReferer=None, playList=False):
         ''' Builds the options to pass to vlc subprocess.'''
         #opts = [self.PLAYER_CMD, "-Irc", "--quiet", streamUrl]
         monitor_opts = None
@@ -3678,7 +3691,7 @@ class VlcPlayer(Player):
         if self._cnf.buffering_data:
             opts.extend(self._cnf.buffering_data)
 
-        referer = self._get_referer(streamName)
+        referer, referer_file = self._get_referer(streamName, streamReferer)
         if referer is not None:
             opts.append('--http-user-agent')
             opts.append(self._cnf.user_agent_string)
@@ -3720,7 +3733,7 @@ class VlcPlayer(Player):
         if self.USE_EXTERNAL_PLAYER:
             opts.append(streamUrl)
 
-        return opts, monitor_opts
+        return opts, monitor_opts, referer, referer_file
 
     def _mute(self):
         ''' mute vlc '''

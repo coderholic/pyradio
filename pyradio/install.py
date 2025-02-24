@@ -46,6 +46,7 @@ VERSION = ''
 
 HAS_PIPX = True if shutil.which('pipx') else False
 
+need_to_exit = False
 try:
     from rich import print
 except ImportError:
@@ -73,6 +74,27 @@ or even
     python -m pip install --user rich
 
 ''')
+    need_to_exit = True
+
+if platform.system().lower() == 'windows':
+    try:
+        import psutil
+    except ImportError:
+        if need_to_exit:
+            print('')
+        print('''Error: Module "psutil" not found!
+
+Please install the above module and try again.
+
+Execute the command:
+    python -m pip install psutil
+or even
+    python -m pip install --user psutil
+
+    ''')
+        need_to_exit = True
+
+if need_to_exit:
     sys.exit(1)
 
 # import logging
@@ -173,11 +195,28 @@ def is_pyradio_user_installed():
     home = os.path.expanduser('~')
     return True if ret.startswith(home) else False
 
+
+def is_process_running(process_name):
+    """Check if there is any running process that contains the given name."""
+    import psutil
+    for proc in psutil.process_iter(['name']):
+        try:
+            if process_name.lower() in proc.info['name'].lower():
+                return True
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    return False
+
+# Check if pyradio.exe is running
+if is_process_running('pyradio.exe'):
+    print("pyradio.exe is running.")
+else:
+    print("pyradio.exe is not running.")
+
 def isRunning():
     count = 1
     ctypes.windll.kernel32.SetConsoleTitleW('PyRadio Installation')
-    while WindowExists('PyRadio: ' + M_STRINGS['win-title']) or \
-            WindowExists('PyRadio: ' + M_STRINGS['win-title'] + M_STRINGS['session-locked']):
+    while is_process_running('pyradio.exe'):
         sleep(1)
         if count > 2:
             print('[bold magenta]PyRadio[/bold magenta] is still running. Please terminate it to continue ... ')
@@ -1369,7 +1408,7 @@ if __name__ == '__main__':
             )
 
     if not python_exec.can_use:
-        print('Error: Python {} not found on your system...\n'.format('2' if python_exec.requested_python_version == 2 else '3'))
+        print('Error: Python was not found on your system...\n')
         sys.exit(1)
 
     ''' download official release '''

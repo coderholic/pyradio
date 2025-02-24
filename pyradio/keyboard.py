@@ -156,6 +156,7 @@ kbkey_orig['clear_reg']                = ( ord('c')               , 'Clear curre
 kbkey_orig['clear_all_reg']            = ( ord('C')               , 'Clear all registers')
 kbkey_orig['unnamed']                  = ( ord('u')               , 'Show unnamed register')
 kbkey_orig['html_help']                = ( ord('h')               , 'Open html help')
+kbkey_orig['station_volume']           = ( ord('v')               , 'Set station volume')
 
 
 # ! RadioBrowser Keys:

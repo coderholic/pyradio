@@ -8,6 +8,7 @@ from os import rename, remove, access, X_OK
 from os.path import exists, dirname, join
 from shutil import which
 from rich import print
+from enum import IntEnum
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,15 @@ def BACKGROUND():
 # for pop up window
 CAPTION = 2
 BORDER = 3
+
+class Station(IntEnum):
+    name = 0
+    url = 1
+    encoding =2
+    icon = 3
+    volume = 4
+    http = 5
+    referer = 6
 
 M_STRINGS = {
 	'checking-playlist': ' (Checking Playlist)',
@@ -245,7 +255,7 @@ class StationsChanges():
             [], # changed
             [], # deleted
         ],
-        
+
         (0, 9, 3, 11, 5):
         [
             [], # added

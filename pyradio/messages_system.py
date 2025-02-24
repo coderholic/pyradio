@@ -199,6 +199,7 @@ Esc|, |{q}                                      |*|  Exit alternative mode.
 {rename_playlist}                               |*|  |R|ename current playlist.
 {clear_all_reg}                                 |*|  |C|lear all registers.
 {html_help}                                     |*|  Display |H|TML help.
+{station_volume}								|*|  Save station |v|olume.
 
 !Copy mode ({add_to_reg})
 Enter                                           |*|  Copy station to unnamed register.
@@ -592,6 +593,7 @@ kb2str(r'''{open_extra}       |*| Open previous playlist.
 {clear_all_reg}               |*| |C|lear all registers.
 {unnamed}                     |*| Show |U|nnamed Register.
 {open_dirs}                   |*| |O|pen dirs in file manager.
+{station_volume}			  |*|  Save station |v|olume.
 
 Any other key exits current mode.
 '''
@@ -610,6 +612,7 @@ kb2str(r'''{open_extra}       |*| Open previous playlist.
 {clear_reg}                   |*| Clear |c|urrent register.
 {unnamed}                     |*| Show |U|nnamed Register.
 {open_dirs}                   |*| |O|pen dirs in file manager.
+{station_volume}			  |*|  Save station |v|olume.
 
 Any other key exits current mode.
 '''
@@ -622,6 +625,7 @@ kb2str(r'''{rename_playlist}  |*| |R|ename current register.
 {clear_all_reg}               |*| |C|lear all registers.
 {unnamed}                     |*| Show |U|nnamed Register.
 {open_dirs}                   |*| |O|pen dirs in file manager.
+{station_volume}			  |*|  Save station |v|olume.
 
 Any other key exits current mode.
 '''

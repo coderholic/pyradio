@@ -135,13 +135,13 @@ ECHO.
 
 SET INSTALL_PLAYER=no
 IF NOT EXIST "%APPDATA%\pyradio\*" (
-    MKDIR %APPDATA%\pyradio
+    MKDIR "%APPDATA%\pyradio"
     SET INSTALL_PLAYER=yes
 )
-IF NOT EXIST "%APPDATA%\pyradio\help\*" MKDIR %APPDATA%\pyradio\help
-COPY /Y docs\*.html %APPDATA%\pyradio\help >NUL
-COPY /Y devel\pyradio.* %APPDATA%\pyradio\help >NUL
-COPY /Y devel\*.lnk %APPDATA%\pyradio\help >NUL
+IF NOT EXIST "%APPDATA%\pyradio\help\*" MKDIR "%APPDATA%\pyradio\help"
+COPY /Y docs\*.html "%APPDATA%\pyradio\help" >NUL
+COPY /Y devel\pyradio.* "%APPDATA%\pyradio\help" >NUL
+COPY /Y devel\*.lnk "%APPDATA%\pyradio\help" >NUL
 python devel\reg.py
 ECHO *** HTML files copyed to "%APPDATA%\pyradio\help"
 
@@ -155,11 +155,11 @@ CD ..
 ECHO *** Installing Dekstop Shortcut
 REM DEL %USERPROFILE%\desktop\PyRadio.lnk >NUL
 REM DEL "%APPDATA%\Microsoft\Windows\Start Menu\Programs\PyRadio.lnk" >NUL
-REM REM COPY /Y %APPDATA%\pyradio\help\PyRadio.lnk %DESKTOP% >NUL
-REM COPY /Y %APPDATA%\pyradio\help\PyRadio.lnk %USERPROFILE%\desktop >NUL
+REM REM COPY /Y "%APPDATA%\pyradio\help\PyRadio.lnk" %DESKTOP% >NUL
+REM COPY /Y "%APPDATA%\pyradio\help\PyRadio.lnk" %USERPROFILE%\desktop >NUL
 REM IF EXIST "%APPDATA%\Microsoft\Windows\Start Menu\Programs" (
 REM     ECHO *** Installing Start Menu Shortcut
-REM     COPY /Y %APPDATA%\pyradio\help\PyRadio.lnk "%APPDATA%\Microsoft\Windows\Start Menu\Programs" >NUL
+REM     COPY /Y "%APPDATA%\pyradio\help\PyRadio.lnk" "%APPDATA%\Microsoft\Windows\Start Menu\Programs" >NUL
 REM )
 CD pyradio
 %PROGRAM% -c "from win import install_pyradio_link; install_pyradio_link()"
@@ -256,18 +256,18 @@ IF "%ANS%" == "y" (
 ) else (
     ECHO ECHO ** Removing stations.csv>>pyremove.bat
     ECHO DEL "%APPDATA%\pyradio\stations.csv">>pyremove.bat
-    IF EXIST %APPDATA%\pyradio\mpv (
+    IF EXIST "%APPDATA%\pyradio\mpv" (
         ECHO ECHO ** Removing MPV>>pyremove.bat
         ECHO RD /Q /S "%APPDATA%\pyradio\mpv">>pyremove.bat
     )
-    IF EXIST %APPDATA%\pyradio\mplayer (
+    IF EXIST "%APPDATA%\pyradio\mplayer" (
         ECHO ECHO ** Removing MPlayer>>pyremove.bat
         ECHO RD /Q /S "%APPDATA%\pyradio\mplayer">>pyremove.bat
     )
 )
 
 ECHO IF EXIST dirs DEL dirs >>pyremove.bat
-ECHO %PROGRAM% -m pip uninstall -y pyradio>>pyremove.bat
+ECHO "%PROGRAM%" -m pip uninstall -y pyradio>>pyremove.bat
 ECHO ECHO.>>pyremove.bat
 ECHO ECHO.>>pyremove.bat
 :: ECHO ECHO PyRadio successfully uninstalled! >>pyremove.bat
