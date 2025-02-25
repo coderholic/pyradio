@@ -338,7 +338,7 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
             if exists(patool_exec):
                 break
             else:
-                patool_exec = glob.glob(join(environ['APPDATA'], '**', 'patool.exe'), recursive=True)
+                patool_exec = glob.glob(join(dirname(environ['APPDATA']), '**', 'patool.exe'), recursive=True)
                 if patool_exec:
                     patool_exec = patool_exec[0]
                     break

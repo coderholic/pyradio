@@ -195,13 +195,12 @@ def is_pyradio_user_installed():
     home = os.path.expanduser('~')
     return True if ret.startswith(home) else False
 
-
 def is_process_running(process_name):
-    """Check if there is any running process that contains the given name."""
-    import psutil
-    for proc in psutil.process_iter(['name']):
+    """Check if there is any running process that contains the given name, excluding the current process."""
+    current_pid = os.getpid()  # Get the PID of the current process
+    for proc in psutil.process_iter(['name', 'pid']):
         try:
-            if process_name.lower() in proc.info['name'].lower():
+            if (process_name.lower() in proc.info['name'].lower()) and (proc.info['pid'] != current_pid):
                 return True
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass

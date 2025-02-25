@@ -6684,7 +6684,7 @@ _____"|f|" to see the |free| keys you can use.
             elif char in (kbkey['q'], curses.KEY_EXIT, 27) or \
                     check_localized(char, (kbkey['q'],)):
                 self.ws.close_window()
-                curses.ungetch('q')
+                curses.ungetch(kbkey['q'])
                 #self.refreshBody()
             return
 
@@ -6696,7 +6696,7 @@ _____"|f|" to see the |free| keys you can use.
                 self._global_functions[l_char]()
             else:
                 self.ws.close_window()
-                curses.ungetch('q')
+                curses.ungetch(kbkey['q'])
                 #self.refreshBody()
             return
 
@@ -8740,7 +8740,7 @@ _____"|f|" to see the |free| keys you can use.
                 if ret is not None:
                     self._apply_search_result(ret, reapply=True)
             else:
-                curses.ungetch('/')
+                curses.ungetch(kbkey['search'])
             return
 
         elif (char in (kbkey['search_prev'], ) or \
@@ -8788,7 +8788,7 @@ _____"|f|" to see the |free| keys you can use.
                 if ret is not None:
                     self._apply_search_result(ret, reapply=True)
             else:
-                curses.ungetch('/')
+                curses.ungetch(kbkey['search'])
             return
 
         elif self.ws.operation_mode in \
