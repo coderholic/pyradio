@@ -11125,6 +11125,7 @@ _____"|f|" to see the |free| keys you can use.
                      win32con.CTRL_BREAK_EVENT,
                      win32con.CTRL_SHUTDOWN_EVENT,
                      win32con.CTRL_CLOSE_EVENT,
+                     win32con.CTRL_LOGOFF_EVENT,
                      signal.SIGINT,
                      signal.SIGBREAK):
             if self._system_asked_to_terminate:

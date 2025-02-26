@@ -40,8 +40,8 @@ Command line internet radio player.
 * [Player detection / selection](#player-detection-/-selection)
     * [Changing player mid-session](#changing-player-mid-session)
     * [Specifying a station's Referer URL](#specifying-a-station's-referer-url)
-        * [A note of caution](#a-note-of-caution)
         * [Note about MPlayer](#note-about-mplayer)
+        * [Referer support in the playlist](#referer-support-in-the-playlist)
     * [Extra Player Parameters](#extra-player-parameters)
         * [Using the Configuration Window](#using-the-configuration-window)
 * [Player connection protocol](#player-connection-protocol)
@@ -421,11 +421,36 @@ If saving the configuration file fails, **PyRadio** will create a back up file a
 
 **PyRadio** reads the stations to use from a CSV file, where each line contains two columns, the first being the station name and the second being the stream URL.
 
-Optionally, two more columns can be used.
+Optionally, a number of more columns can be used.
 
-The third column will define the encoding used by the station (more on this at [Specifying stations' encoding](#specifying-stations-encoding)).
+- The third column will define the encoding used by the station (more on this at [Specifying stations' encoding](#specifying-stations-encoding)).
 
-The fourth column will set an  *Icon URL*, to be used when displaying [Desktop Notifications](#desktop-notifications).
+- The fourth column will set an *Icon URL*, to be used when displaying [Desktop Notifications](#desktop-notifications).
+
+- The fifth column is the profile to be used with this station.
+
+- The sixth column will determine whether **Buffering** will be used (more on this at [Buffering](#buffering)).
+
+- The seventh column will determine whether the station will be forced to be using http instead of https (more on this at [Player connection protocol](#player-connection-protocol)).
+
+- The eight column defines the volume value to be used.
+
+- The last column will define the referer to be used (more on this at [Specifying a station's Referer URL](##specifying-a-station's-referer-url)).
+
+The following table presents the **Station's fields** and the current level of support.
+
+| Station Field   | Takes Effect in Playlist | Customizable in Program         |
+|-----------------|------------------------------|-----------------------------|
+| Name            | <0.9.3.11.5              | <0.9.3.11.5                     |
+| URL             | <0.9.3.11.5              | <0.9.3.11.5                     |
+| Encoding        | <0.9.3.11.5              | <0.9.3.11.5                     |
+| Icon            | <0.9.3.11.5              | <0.9.3.11.5                     |
+| Profile         | **No**                   | **No**                          |
+| Buffering       | **No**                   | **No**                          |
+| Force HTTP      | **No**                   | **No**                          |
+| Volume          | **No**                   | 0.9.3.11.5                      |
+| Referer URL     | <0.9.3.11.5              | **No**<br>Using a referer file  |
+
 
 **PyRadio** will by default load the user's stations file (e.g. *~/.config/pyradio/stations.csv*) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.
 
@@ -751,12 +776,6 @@ In our example above, the file will have to be named:
 
 **"My video station.referer.txt"**
 
-#### A note of caution
-
-If such a file has been created for a station, please do not rename the station in the playlist manually; the "link" to the referer file will be lost.
-
-Rename the station using **PyRadio** rename functionality and save the playlist instead; the referer file will be renamed as well.
-
 #### Note about MPlayer
 
 This will unfortunately not work with **MPlayer**.
@@ -775,6 +794,25 @@ Icy-MetaData: 1
 
 [https @ 0x7f4a42c7fa60]HTTP error 403 Forbidden
 ```
+
+#### Referer support in the playlist
+
+As of v. **0.9.3.11.5**, support for the referer in the playilist has been implemented.
+
+In this case, if a referer file is found for a station, **PyRadio** will:
+
+1. update the station info in the playlist
+2. mark the playlist as **modified**
+3. remove the referer file
+4. inform the user so that he saves the playlist
+
+**Note:** At this point, inserting the referer from **PyRadio** TUI has not yet been implemented. \
+\
+One can either use the referer file method described above, or just manually edit the playlist file and add it using the following format:
+
+    Station Name,Station URL,,,,,,Referer URL
+
+Please note the number of commas inserted after the *Station URL*.
 
 ### Extra Player Parameters
 

@@ -29,9 +29,11 @@ class Station(IntEnum):
     url = 1
     encoding =2
     icon = 3
-    volume = 4
-    http = 5
-    referer = 6
+    profile = 4
+    buffering = 5
+    http = 6
+    volume = 7
+    referer = 8
 
 M_STRINGS = {
 	'checking-playlist': ' (Checking Playlist)',
@@ -142,6 +144,18 @@ THEME_ITEMS = (
     ('Active Cursor', 9, 0, 0),
     ('Edit Cursor', 8, 0, 0)
 )
+
+def describe_playlist(value):
+    # Check if the value is within the range of the enum
+    if value < 0 or value >= len(Station.__members__):
+        # Return the default message if the value is out of range
+        return f"Playlist has {Station.name.name} {Station.url.name}"
+
+    # Collect all names from 0 to the given value
+    names = [station.name for station in list(Station)[:value + 1]]
+
+    # Join the names with spaces and return the result
+    return f"Playlist has {' '.join(names)}"
 
 
 def erase_curses_win(Y, X, beginY, beginX, char=' ', color=5):

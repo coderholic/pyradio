@@ -91,8 +91,8 @@ a:visited{color: SaddleBrown;}
 <li><a href="#changing-player-mid-session">Changing player mid-session</a></li>
 <li><a href="#specifying-a-station&#39;s-referer-url">Specifying a station’s Referer URL</a>
 <ul>
-<li><a href="#a-note-of-caution">A note of caution</a></li>
 <li><a href="#note-about-mplayer">Note about MPlayer</a></li>
+<li><a href="#referer-support-in-the-playlist">Referer support in the playlist</a></li>
 </ul></li>
 <li><a href="#extra-player-parameters">Extra Player Parameters</a>
 <ul>
@@ -1639,9 +1639,78 @@ Esc/q/Left/h      -                                                Cancel / clos
 <p>If saving the configuration file fails, <strong>PyRadio</strong> will create a back up file and terminate. When restarted, <strong>PyRadio</strong> will try to restore previously used settings from the said back up file.</p>
 <h2 id="about-playlist-files">About Playlist files <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>PyRadio</strong> reads the stations to use from a CSV file, where each line contains two columns, the first being the station name and the second being the stream URL.</p>
-<p>Optionally, two more columns can be used.</p>
-<p>The third column will define the encoding used by the station (more on this at <a href="#specifying-stations-encoding">Specifying stations’ encoding</a>).</p>
-<p>The fourth column will set an <em>Icon URL</em>, to be used when displaying <a href="#desktop-notifications">Desktop Notifications</a>.</p>
+<p>Optionally, a number of more columns can be used.</p>
+<ul>
+<li><p>The third column will define the encoding used by the station (more on this at <a href="#specifying-stations-encoding">Specifying stations’ encoding</a>).</p></li>
+<li><p>The fourth column will set an <em>Icon URL</em>, to be used when displaying <a href="#desktop-notifications">Desktop Notifications</a>.</p></li>
+<li><p>The fifth column is the profile to be used with this station.</p></li>
+<li><p>The sixth column will determine whether <strong>Buffering</strong> will be used (more on this at <a href="#buffering">Buffering</a>).</p></li>
+<li><p>The seventh column will determine whether the station will be forced to be using http instead of https (more on this at <a href="#player-connection-protocol">Player connection protocol</a>).</p></li>
+<li><p>The eight column defines the volume value to be used.</p></li>
+<li><p>The last column will define the referer to be used (more on this at <a href="##specifying-a-station&#39;s-referer-url">Specifying a station’s Referer URL</a>).</p></li>
+</ul>
+<p>The following table presents the <strong>Station’s fields</strong> and the current level of support.</p>
+<table>
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 39%" />
+<col style="width: 38%" />
+</colgroup>
+<thead>
+<tr>
+<th>Station Field</th>
+<th>Takes Effect in Playlist</th>
+<th>Customizable in Program</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>&lt;0.9.3.11.5</td>
+<td>&lt;0.9.3.11.5</td>
+</tr>
+<tr>
+<td>URL</td>
+<td>&lt;0.9.3.11.5</td>
+<td>&lt;0.9.3.11.5</td>
+</tr>
+<tr>
+<td>Encoding</td>
+<td>&lt;0.9.3.11.5</td>
+<td>&lt;0.9.3.11.5</td>
+</tr>
+<tr>
+<td>Icon</td>
+<td>&lt;0.9.3.11.5</td>
+<td>&lt;0.9.3.11.5</td>
+</tr>
+<tr>
+<td>Profile</td>
+<td><strong>No</strong></td>
+<td><strong>No</strong></td>
+</tr>
+<tr>
+<td>Buffering</td>
+<td><strong>No</strong></td>
+<td><strong>No</strong></td>
+</tr>
+<tr>
+<td>Force HTTP</td>
+<td><strong>No</strong></td>
+<td><strong>No</strong></td>
+</tr>
+<tr>
+<td>Volume</td>
+<td><strong>No</strong></td>
+<td>0.9.3.11.5</td>
+</tr>
+<tr>
+<td>Referer URL</td>
+<td>&lt;0.9.3.11.5</td>
+<td><strong>No</strong><br>Using a referer file</td>
+</tr>
+</tbody>
+</table>
 <p><strong>PyRadio</strong> will by default load the user’s stations file (e.g. <em>~/.config/pyradio/stations.csv</em>) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Older versions used to use <strong>~/.pyradio</strong> as default stations file. If this file is found, it will be copied to use’s config directory (e.g. <strong>~/.config/pyradio</strong>) and renamed to <strong>stations.csv</strong> or if this file exists, to <strong>pyradio.csv</strong>. In this case, this file will be the default one.</p>
 <h3 id="defining-and-using-groups">Defining and using Groups</h3>
@@ -1850,9 +1919,6 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p>To rectify the situation, a file containing the referer URL would have to be saved in the config directory: its name must be the name of the station as it is in the playlist, followed by the “<strong>.referer.txt</strong>” extension.</p>
 <p>In our example above, the file will have to be named:</p>
 <p><strong>“My video station.referer.txt”</strong></p>
-<h4 id="a-note-of-caution">A note of caution</h4>
-<p>If such a file has been created for a station, please do not rename the station in the playlist manually; the “link” to the referer file will be lost.</p>
-<p>Rename the station using <strong>PyRadio</strong> rename functionality and save the playlist instead; the referer file will be renamed as well.</p>
 <h4 id="note-about-mplayer">Note about MPlayer</h4>
 <p>This will unfortunately not work with <strong>MPlayer</strong>.</p>
 <p>It seems it will not use the <strong>Referer</strong> provided, as shown in the following part of the command execution output:</p>
@@ -1866,6 +1932,20 @@ Host: XXXXXX-XXXXXXXXX.XXXXXX.XXX.XXX.XX
 Icy-MetaData: 1
 
 [https @ 0x7f4a42c7fa60]HTTP error 403 Forbidden</pre>
+<h4 id="referer-support-in-the-playlist">Referer support in the playlist</h4>
+<p>As of v. <strong>0.9.3.11.5</strong>, support for the referer in the playilist has been implemented.</p>
+<p>In this case, if a referer file is found for a station, <strong>PyRadio</strong> will:</p>
+<ol type="1">
+<li>update the station info in the playlist</li>
+<li>mark the playlist as <strong>modified</strong></li>
+<li>remove the referer file</li>
+<li>inform the user so that he saves the playlist</li>
+</ol>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> At this point, inserting the referer from <strong>PyRadio</strong> TUI has not yet been implemented.<br />
+<br />
+One can either use the referer file method described above, or just manually edit the playlist file and add it using the following format:</p>
+<pre>Station Name,Station URL,,,,,,Referer URL</pre>
+<p>Please note the number of commas inserted after the <em>Station URL</em>.</p>
 <h3 id="extra-player-parameters">Extra Player Parameters</h3>
 <p>All three supported players can accept a significant number of “<em>command line options</em>”, which are well documented and accessible through man pages (on linux and MacOs) or the documentation (on Windows).</p>
 <p><strong>PyRadio</strong> uses some of these parameters in order to execute and communicate with the players. In particular, the following parameters are in use <strong>by default</strong>:</p>

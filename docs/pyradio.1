@@ -388,14 +388,43 @@ If saving the configuration file fails, \fBpyradio\fR will create a back up file
 .SH About Playlist Files
 .PP
 \fBpyradio\fR reads the stations to use from a CSV file, where each line contains two columns, the first being the station name and the second being the stream URL.
+
 .PP
-Optionally, a third column can be inserted, stating the encoding used by the station (more on this at \fBSpecifying Stations' Encoding\fR).
+Optionally, a number of more columns can be used.
+.IP - 3
+The third column will define the encoding used by the station (more on this at \fISpecifying stations' encoding\fR).
+.IP - 3
+The fourth column will set an *Icon URL*, to be used when displaying \fIDesktop Notifications\fR.
+.IP - 3
+The fifth column is the profile to be used with this station.
+.IP - 3
+The sixth column will determine whether **Buffering** will be used (more on this at \fIBuffering\fR).
+.IP - 3
+The seventh column will determine whether the station will be forced to be using http instead of https (more on this at \fIPlayer connection protocol\fR).
+.IP - 3
+The eighth column defines the volume value to be used.
+.IP - 3
+The last column will define the referer to be used (more on this at \fISpecifying a station's Referer URL\fR).
 .PP
-Optionally, two more columns can be used.
-.PP
-The third column will define the encoding used by the station (more on this at \fBSpecifying Stations' Encoding\fR).
-.PP
-The fourth column will set an \fIIcon URL\fR, to be used when displaying \fBDesktop Notifiacations\fR.
+The following table presents the \fBStation's fields\fR and the current level of support.
+.P
+.TS
+center;
+l l.
+\fBStation field    Takes Effect     Customizable
+                 in Playlist      in Program
+_
+\fIName\fR             <0.9.3.11.5      <0.9.3.11.5
+\fIURL\fR              <0.9.3.11.5      <0.9.3.11.5
+\fIEncoding\fR         <0.9.3.11.5      <0.9.3.11.5
+\fIIcon\fR             <0.9.3.11.5      <0.9.3.11.5
+\fIProfile\fR          \fBNo               No\fR
+\fIBuffering\fR        \fBNo               No\fR
+\fIForce HTTP\fR       \fBNo               No\fR
+\fIVolume\fR           \fBNo\fR               0.9.3.11.5
+\fIReferer URL\fR     <0.9.3.11.5      \fBNo\fR (\fIUsing a referer file\fR)
+.TE
+
 .PP
 \fBpyradio\fR will by default load the user's stations file (e.g. \fI~/.config/pyradio/stations.csv\fR). If this file is not found, it will be created and populated with a default set of stations.
 
@@ -864,13 +893,6 @@ In our example above, the file will have to be named:
 "\fIMy video station.referer.txt\fR"
 .RE
 
-\fBA note of caution\fR
-.RS
-If such a file has been created for a station, please do not rename the station in the playlist manually; the "link" to the referer file will be lost.
-
-Rename the station using \fBpyradio\fR rename functionality and save the playlist instead; the referer file will be renamed as well.
-.RE
-
 \fBNote\fR
 .RS 2
 
@@ -896,6 +918,36 @@ Icy-MetaData: 1
 
 [https @ 0x7f4a42c7fa60]\fBHTTP error 403 Forbidden\fR
 .RE
+
+\fBReferer support in the playlist\fR
+
+As of v. \fB0.9.3.11.5\fR, support for the referer in the playilist has been implemented.
+
+In this case, if a referer file is found for a station, \fBpyradio\fR will:
+
+.IP 
+1. update the station info in the playlist
+.IP 
+2. mark the playlist as \fBmodified\fR
+.IP 
+3. remove the referer file
+.IP 
+4. inform the user so that he saves the playlist
+
+.P
+\fBNote\fR 
+.RS 2
+At this point, inserting the referer from \fBpyradio\fR TUI has not yet been implemented. \
+\
+One can either use the referer file method described above, or just manually edit the playlist file and add it using the following format:
+
+    \fIStation Name,Station URL,,,,,,Referer URL\fR
+.RE
+
+.P
+.RS 2
+Please note the number of commas inserted after the \fIStation URL\fR.
+.RS
 
 
 .SH Extra Player Parameters

@@ -21,11 +21,10 @@ from rich.table import Table
 from rich.align import Align
 from rich import print
 from pyradio import version, stations_updated
-from .common import validate_resource_opener_path
+from .common import validate_resource_opener_path, is_rasberrypi, Station, describe_playlist
 from .keyboard import kbkey, lkbkey, read_keyboard_shortcuts, read_localized_keyboard, get_lkbkey, set_lkbkey, check_localized
 from .browser import probeBrowsers
 from .install import get_github_long_description
-from .common import is_rasberrypi
 from .player import pywhich
 from .server import IPsWithNumbers
 from .xdg import XdgDirs, XdgMigrate, CheckDir
@@ -128,25 +127,9 @@ class PyRadioStations():
     PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL = 3
     PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP = 4
     PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP_REF = 5
-    PLAYLIST_TYPE = [
-        'PLAYLIST_HAS_NAME_URL',
-        'PLAYLIST_HAS_NAME_URL_ENCODING',
-        'PLAYLIST_HAS_NAME_URL_ENCODING_ICON',
-        'PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL',
-        'PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP',
-        'PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP_REF',
-    ]
-    _playlist_version = PLAYLIST_HAS_NAME_URL
-    _read_playlist_version = PLAYLIST_HAS_NAME_URL
 
-    _playlist_version_to_string = {
-        PLAYLIST_HAS_NAME_URL: 'PLAYLIST_HAS_NAME_URL',
-        PLAYLIST_HAS_NAME_URL_ENCODING: 'PLAYLIST_HAS_NAME_URL_ENCODING',
-        PLAYLIST_HAS_NAME_URL_ENCODING_ICON: 'PLAYLIST_HAS_NAME_URL_ENCODING_ICON',
-        PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL: 'PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL',
-        PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP: 'PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP',
-        PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP_REF: 'PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP_REF',
-    }
+    _playlist_version = Station.url
+    _read_playlist_version = Station.url
 
     dirty_playlist = False
 
@@ -713,13 +696,13 @@ class PyRadioStations():
                 self._reading_stations = []
                 prev_file = self.station_path
                 prev_format = self._playlist_version
-                self._read_playlist_version = self._playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON
+                self._read_playlist_version = self._playlist_version = Station.referer
                 read_file = False
             else:
                 self.stations = []
                 return ret
 
-        current_playlist_version = self.PLAYLIST_HAS_NAME_URL
+        current_playlist_version = Station.url
         if read_file:
             if self._register_to_open:
                 self.playlist_recovery_result = 0
@@ -732,7 +715,7 @@ class PyRadioStations():
                     return -7
             prev_file = self.station_path
             prev_format = self._playlist_version
-            self._read_playlist_version = self._playlist_version = self.PLAYLIST_HAS_NAME_URL
+            self._read_playlist_version = self._playlist_version = Station.url
             self._reading_stations = []
             try:
                 with open(stationFile, 'r', encoding='utf-8') as cfgfile:
@@ -743,40 +726,45 @@ class PyRadioStations():
 
                             # logger.error(f'{row = }')
                             # Initialize variables with default values
-                            name = url = enc = icon = volume = http = referer = ''
-
+                            name = url = enc = icon = volume = http = referer = profile = buffering = ''
+                            this_row_version = Station.url
                             # Assign values based on the length of the row
                             row_length = len(row)
                             name = row[0].strip()
-                            if row_length > 1:
-                                url = row[1].strip()
-                            if row_length > 2:
-                                enc = row[2].strip()
-                            if row_length > 3:
-                                icon = row[3].strip()
-                            if row_length > 4:
-                                volume = row[4].strip()
-                            if row_length > 5:
-                                http = row[5].strip()
-                            if row_length > 6:
-                                referer = row[6].strip()
+                            url = row[1].strip()
+                            if row_length > Station.encoding:
+                                enc = row[Station.encoding].strip()
+                                this_row_version = Station.encoding
+                            if row_length > Station.icon:
+                                icon = row[Station.icon].strip()
+                                this_row_version = Station.icon
+                            if row_length > Station.profile:
+                                profile = row[Station.profile].strip()
+                                this_row_version = Station.profile
+                            if row_length > Station.buffering:
+                                buffering = row[Station.buffering].strip()
+                                this_row_version = Station.buffering
+                            if row_length > Station.volume:
+                                volume = row[Station.volume].strip()
+                                this_row_version = Station.volume
+                            if row_length > Station.http:
+                                http = row[Station.http].strip()
+                                this_row_version = Station.http
+                            if row_length > Station.referer:
+                                referer = row[Station.referer].strip()
+                                this_row_version = Station.referer
 
                             # Append the parsed values to the reading stations list
-                            station_info = [name, url, enc, {'image': icon} if icon else '', volume, http, referer]
+                            station_info = [
+                                name, url, enc, {'image': icon} if icon else '',
+                                profile, buffering, http, volume, referer
+                            ]
 
                             self._reading_stations.append(station_info)
 
                             # Update playlist version based on the presence of optional fields
-                            if referer and current_playlist_version < self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP_REF:
-                                current_playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP_REF
-                            elif http and current_playlist_version <self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP:
-                                current_playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP
-                            elif volume and current_playlist_version < self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL:
-                                current_playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL
-                            elif icon and current_playlist_version < self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON:
-                                current_playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON
-                            elif enc and current_playlist_version < self.PLAYLIST_HAS_NAME_URL_ENCODING:
-                                current_playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING
+                            if this_row_version > current_playlist_version:
+                                current_playlist_version = this_row_version
                     except (csv.Error, ValueError):
                         self._reading_stations = []
                         self._playlist_version = prev_format
@@ -788,7 +776,7 @@ class PyRadioStations():
                 return -1
         self._read_playlist_version = self._playlist_version = current_playlist_version
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Playlist is: {} = {}'.format(self.PLAYLIST_TYPE[self._playlist_version], self._playlist_version))
+            logger.debug('===> {} = {}'.format(describe_playlist(self._playlist_version), self._playlist_version))
 
         self.stations = list(self._reading_stations)
         # logger.error('DE stations\n{}\n\n'.format(self.stations))
@@ -811,7 +799,7 @@ class PyRadioStations():
         self._is_playlist_in_config_dir()
         self.dirty_playlist = False
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('read_playlist_file: Playlist version: {}'.format(self._playlist_version_to_string[self._playlist_version]))
+            logger.debug('===> {} = {}'.format(describe_playlist(self._playlist_version), self._playlist_version))
         self.jump_tag = -1
 
     def _recover_backed_up_playlist(self, stationFile):
@@ -858,27 +846,23 @@ class PyRadioStations():
     def _playlist_format_changed(self):
         ''' Check if we have new or old format
             and report if format has changed
-
-            Format type can change by editing encoding,
-            deleting a non-utf-8 station etc.
         '''
-        playlist_version = self.PLAYLIST_HAS_NAME_URL
-        for n in self.stations:
-            if n [6]:
-                playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP_REF
+        playlist_version = Station.url  # Start with the assumption that the minimum version is 'url'
+        max_value = max(station.value for station in Station)  # Get the maximum value from the Station enum
+
+        found_max = False  # Flag to indicate if the maximum version has been found
+
+        for n in self.stations:  # Iterate over each station in self.stations
+            if found_max:  # If we've already found the maximum version, skip further processing
                 break
-            elif n[5]:
-                if playlist_version < self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP:
-                    playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP
-            elif n[4]:
-                if playlist_version < self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL:
-                    playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL
-            elif n[3]:
-                if playlist_version < self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON:
-                    playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON
-            elif n[2]:
-                if playlist_version < self.PLAYLIST_HAS_NAME_URL_ENCODING:
-                    playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING
+
+            for a_version in range(max_value - 1, 0, -1):  # Iterate backward from max_value-1 down to 1
+                if n[a_version]:  # Check if the value at index a_version is non-empty
+                    if a_version > playlist_version:  # If this version is greater than the current playlist_version
+                        playlist_version = a_version  # Update playlist_version to this higher version
+                        if playlist_version == max_value - 1:  # If we just reached the highest possible version
+                            found_max = True  # Set the flag to True
+                            break  # Exit the inner loop immediately
 
         if self._playlist_version == playlist_version:
             ret = False
@@ -886,7 +870,11 @@ class PyRadioStations():
             self._playlist_version = playlist_version
             ret = True
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('_playlist_format_changed: Playlist version: {}'.format(self._playlist_version_to_string[self._playlist_version]))
+            logger.debug('===> {} = {}, {}'.format(
+                self._playlist_version,
+                describe_playlist(self._playlist_version),
+                '(format changed)' if ret else '(same format)'
+            ))
         return ret
 
     def save_playlist_file(self, stationFile=''):
@@ -961,19 +949,7 @@ class PyRadioStations():
         if len(this_row) > 3 and 'image' in this_row[3]:
             this_row[3] = this_row[3]['image']
 
-        # Determine the number of columns to return based on the playlist version
-        if self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP_REF:
-            return this_row  # Return all fields
-        elif self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP:
-            return this_row[:-1]  # Exclude 'referer'
-        elif self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL:
-            return this_row[:-2]  # Exclude 'http' and 'referer'
-        elif self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON:
-            return this_row[:-3]  # Exclude 'volume', 'http', and 'referer'
-        elif self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING:
-            return this_row[:-4]  # Exclude 'icon', 'volume', 'http', and 'referer'
-        else:
-            return this_row[:-5]  # Exclude 'encoding', 'icon', 'volume', 'http', and 'referer'
+        return this_row[:self._playlist_version]
 
     def _set_playlist_elements(self, a_playlist, a_title=''):
         self.station_path = path.abspath(a_playlist)
@@ -1303,7 +1279,7 @@ class PyRadioStations():
             a_station[0] = '"' + name + '"'
         else:
             a_station[0] = name
-        while len(a_station) < self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON + 2:
+        while len(a_station) < Station.referer:
             a_station.append('')
         if 'image' in a_station[3]:
             a_station[3] = a_station[3]['image']

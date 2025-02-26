@@ -46,11 +46,37 @@ VERSION = ''
 
 HAS_PIPX = True if shutil.which('pipx') else False
 
-need_to_exit = False
 try:
     from rich import print
+    if platform.system().lower() == 'windows':
+        import psutil
 except ImportError:
-    print('''Error: Module "rich" not found!
+    if platform.system().lower() == 'windows':
+        for a_module in (
+                'rich',
+                'psutil',
+        ):
+            print('Installing module: ' + a_module + ' ...')
+            ret = subprocess.call('python -m pip install --upgrade ' + a_module,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL)
+            if ret != 0:
+                print('\nPyradio cannot install python module: ' + a_module)
+                print('Please make sure your internet connection is up and try again')
+                sys.exit(1)
+        msg = '''\n\nPyRadio has installed all required python modules.
+In order for them to be properly loaded, the installation script
+has to start afresh.
+
+Please execute the installation script again, like so:
+
+python install.py
+
+'''
+        print(msg)
+        sys.exit()
+    else:
+        print('''Error: Module "rich" not found!
 
 Please install the above module and try again.
 
@@ -74,27 +100,6 @@ or even
     python -m pip install --user rich
 
 ''')
-    need_to_exit = True
-
-if platform.system().lower() == 'windows':
-    try:
-        import psutil
-    except ImportError:
-        if need_to_exit:
-            print('')
-        print('''Error: Module "psutil" not found!
-
-Please install the above module and try again.
-
-Execute the command:
-    python -m pip install psutil
-or even
-    python -m pip install --user psutil
-
-    ''')
-        need_to_exit = True
-
-if need_to_exit:
     sys.exit(1)
 
 # import logging
@@ -205,12 +210,6 @@ def is_process_running(process_name):
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
     return False
-
-# Check if pyradio.exe is running
-if is_process_running('pyradio.exe'):
-    print("pyradio.exe is running.")
-else:
-    print("pyradio.exe is not running.")
 
 def isRunning():
     count = 1
