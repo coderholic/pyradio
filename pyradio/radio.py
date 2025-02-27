@@ -2559,8 +2559,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         logger.error('\n====\n====\nself._last_played_station = {}\n====\n====\n'.format(self._last_played_station))
         try:
             self.player.play(
-                name=self._last_played_station[0],
-                streamUrl=stream_url,
+                self._last_played_station,
                 stop_player=self.stopPlayerOnConnectionFailed,
                 detect_if_player_exited=lambda: self.detect_if_player_exited,
                 enable_crash_detection_function=self._enable_player_crash_detection,
@@ -9344,8 +9343,7 @@ _____"|f|" to see the |free| keys you can use.
                     self._click_station()
                     self._add_station_to_stations_history()
                     self._cnf.EXTERNAL_PLAYER_OPTS = self.player.play(
-                        name='',
-                        streamUrl=stream_url,
+                        self._last_played_station,
                         stop_player=None,
                         detect_if_player_exited=None,
                         enable_crash_detection_function=None,
