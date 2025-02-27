@@ -81,7 +81,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#cjk-characters-support">CJK characters support</a></li>
 </ul></li>
 <li><a href="#moving-stations-around">Moving stations around</a></li>
-<li><a href="#specifying-stations&#39;-encoding">Specifying stations’ encoding</a>
+<li><a href="#specifying-stations-encoding">Specifying stations’ encoding</a>
 <ul>
 <li><a href="#station-by-station-encoding-declaration">Station by station encoding declaration</a></li>
 <li><a href="#global-encoding-declaration">Global encoding declaration</a></li>
@@ -89,7 +89,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#player-detection-/-selection">Player detection / selection</a>
 <ul>
 <li><a href="#changing-player-mid-session">Changing player mid-session</a></li>
-<li><a href="#specifying-a-station&#39;s-referer-url">Specifying a station’s Referer URL</a>
+<li><a href="#specifying-a-stations-referer-url">Specifying a station’s Referer URL</a>
 <ul>
 <li><a href="#note-about-mplayer">Note about MPlayer</a></li>
 <li><a href="#referer-support-in-the-playlist">Referer support in the playlist</a></li>
@@ -191,13 +191,18 @@ a:visited{color: SaddleBrown;}
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
 
-2025-01-XX s-n-g
+2025-02-27 s-n-g
     * version 0.9.3.11.5 - 0.9.3.12-beta5
+    * fixing the installation script
+    * playlist format change: adding profile, buffering, http, volume
+      and referer fields (support for these fields not implemented yet)
+    * referer files will be integrated to playlists
     * config option added to invert the mouse wheel action (#272)
     * fixing #276 : mouse support will always be on
         - if disabled, mouse keys will be ignored
         - toggling the config option does not require a program restart any more
-    * removing ont working stations from stations.csv
+    * fixing #277: installation fails when username contains a space character
+    * removing not working stations from stations.csv
     * updating docs
 
 2025-01-18 s-n-g
@@ -1647,7 +1652,7 @@ Esc/q/Left/h      -                                                Cancel / clos
 <li><p>The sixth column will determine whether <strong>Buffering</strong> will be used (more on this at <a href="#buffering">Buffering</a>).</p></li>
 <li><p>The seventh column will determine whether the station will be forced to be using http instead of https (more on this at <a href="#player-connection-protocol">Player connection protocol</a>).</p></li>
 <li><p>The eight column defines the volume value to be used.</p></li>
-<li><p>The last column will define the referer to be used (more on this at <a href="##specifying-a-station&#39;s-referer-url">Specifying a station’s Referer URL</a>).</p></li>
+<li><p>The last column will define the referer to be used (more on this at <a href="#specifying-a-stations-referer-url">Specifying a station’s Referer URL</a>).</p></li>
 </ul>
 <p>The following table presents the <strong>Station’s fields</strong> and the current level of support.</p>
 <table>

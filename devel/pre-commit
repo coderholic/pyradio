@@ -158,6 +158,8 @@ for afile in index.md \
     client.md \
     rec-dir.md
 do
+    sed -i -e "s/'s-/s-/g" -e "s/s'-/s-/g"  "$afile"
+    git add "$afile"
     echo -ne '.'
 #[ -z "$(git status | grep ${afile})" ] || {
     out=${afile/%.md/.html}
@@ -259,6 +261,9 @@ do
     if [ "$out" = "packaging.html" ];then
         sed -i -e '/img */s/750px/35%/' "$out"
     fi
+    #
+    # fix #links
+    sed -i '/href="#/s/\&#39;//g' "$out"
     #
     # convert images to links
     images_to_links "$out"

@@ -1,10 +1,15 @@
-2025-01-XX s-n-g
+2025-02-27 s-n-g
     * version 0.9.3.11.5 - 0.9.3.12-beta5
+    * fixing the installation script
+    * playlist format change: adding profile, buffering, http, volume
+      and referer fields (support for these fields not implemented yet)
+    * referer files will be integrated to playlists
     * config option added to invert the mouse wheel action (#272)
     * fixing #276 : mouse support will always be on
         - if disabled, mouse keys will be ignored
         - toggling the config option does not require a program restart any more
-    * removing ont working stations from stations.csv
+    * fixing #277: installation fails when username contains a space character
+    * removing not working stations from stations.csv
     * updating docs
 
 2025-01-18 s-n-g

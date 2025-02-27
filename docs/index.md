@@ -34,12 +34,12 @@ Command line internet radio player.
 * [Line editor](#line-editor)
     * [CJK characters support](#cjk-characters-support)
 * [Moving stations around](#moving-stations-around)
-* [Specifying stations' encoding](#specifying-stations'-encoding)
+* [Specifying stations' encoding](#specifying-stations-encoding)
     * [Station by station encoding declaration](#station-by-station-encoding-declaration)
     * [Global encoding declaration](#global-encoding-declaration)
 * [Player detection / selection](#player-detection-/-selection)
     * [Changing player mid-session](#changing-player-mid-session)
-    * [Specifying a station's Referer URL](#specifying-a-station's-referer-url)
+    * [Specifying a station's Referer URL](#specifying-a-stations-referer-url)
         * [Note about MPlayer](#note-about-mplayer)
         * [Referer support in the playlist](#referer-support-in-the-playlist)
     * [Extra Player Parameters](#extra-player-parameters)
@@ -435,7 +435,7 @@ Optionally, a number of more columns can be used.
 
 - The eight column defines the volume value to be used.
 
-- The last column will define the referer to be used (more on this at [Specifying a station's Referer URL](##specifying-a-station's-referer-url)).
+- The last column will define the referer to be used (more on this at [Specifying a station's Referer URL](#specifying-a-stations-referer-url)).
 
 The following table presents the **Station's fields** and the current level of support.
 

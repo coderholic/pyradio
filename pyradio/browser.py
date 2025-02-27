@@ -464,8 +464,9 @@ class RadioBrowser(PyRadioStationsBrowser):
                 if use_fav.endswith('.jpg') or \
                         use_fav.endswith('.png'):
                     fav = use_fav
-                # ret.append([n['name'], n['url'], enc, '', '', '', ''])
-                ret.append([n['name'], n['url'], enc, {'image': fav}, '', '', ''])
+                ret.append(
+                    [n['name'], n['url'], enc, {'image': fav}, '', '', '', '', '']
+                )
         return ret
 
     def save_config(self):

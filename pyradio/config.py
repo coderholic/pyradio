@@ -906,6 +906,11 @@ class PyRadioStations():
         try:
             with open(st_new_file, 'w', encoding='utf-8') as cfgfile:
                 writter = csv.writer(cfgfile)
+                writter.writerow(['# PyRadio Playlist File Format:'])
+                writter.writerow(
+                    ['# name', 'url', 'encoding', 'icon',
+                     'profile', 'buffering', 'force-http',
+                     'volume', 'referer'])
                 for a_station in self.stations:
                     writter.writerow(self._format_playlist_row(a_station))
         except:

@@ -280,7 +280,7 @@ def client():
 
     server_opts = parser.add_argument_group('• Server Parameters')
     server_opts.add_argument('-s', '--server_and_port', default='',
-                             help="Set the servers's IP and PORT (format: IP:PORT)")
+                             help="Set the server IP and PORT (format: IP:PORT)")
     server_opts.add_argument('-r', '--reverse-detection', action='store_true', default=False,
                              help='Reverse server detection (when no server IP and PORT specified);'
                              ' detect headless server last, instead of headless server first')

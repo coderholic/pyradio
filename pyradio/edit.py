@@ -21,7 +21,7 @@ from .cjkwrap import cjkslices
 from .xdg import CheckDir
 from .html_help import HtmlHelp
 from .keyboard import kbkey, kb2str, kb2chr, check_localized
-from .common import M_STRINGS
+from .common import M_STRINGS, Station
 
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
@@ -688,6 +688,9 @@ class PyRadioEditor():
                     self._encoding,
                     {'image': self._line_editor[2].string.strip()}
                 ]
+        max_value = max(station.value for station in Station)
+        while len(self.new_station) <= max_value:
+            self.new_station.append('')
         return ret
 
     def _is_valid_url(self, a_url):
