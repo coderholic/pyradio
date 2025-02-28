@@ -3078,30 +3078,39 @@ class PyRadioSelectPlaylist():
             return 0, ret
 
         stationFile = path.join(self._config_path, self._items[self._selected_playlist_id] + '.csv')
-        self._select_playlist_error = 0
+        self._select_playlist_error = True
         with open(stationFile, 'r', encoding='utf-8') as cfgfile:
             try:
                 for row in csv.reader(filter(lambda row: row[0] != '#', cfgfile), skipinitialspace=True):
                     if not row:
                         continue
-                    try:
-                        name, url = [s.strip() for s in row]
-                        self._select_playlist_error = 1
-                    except ValueError:
-                        try:
-                            name, url, enc = [s.strip() for s in row]
-                            self._select_playlist_error = 1
-                        except ValueError:
-                            try:
-                                name, url, enc, br = [s.strip() for s in row]
-                                self._select_playlist_error = 1
-                            except ValueError:
-                                self._select_playlist_error = -1
-                                break
+                    max_value = max(station.value for station in Station) + 1
+                    # logger.error('\n\n')
+                    # logger.error('max_value = {} - len = {}'.format(max_value, len(row)))
+                    # logger.error(f'{row = }')
+                    # logger.error('\n\n')
+                    if len(row) > max_value:
+                        self._select_playlist_error = False
+                        break
+                    # try:
+                    #     name, url = [s.strip() for s in row]
+                    #     self._select_playlist_error = 1
+                    # except ValueError:
+                    #     try:
+                    #         name, url, enc = [s.strip() for s in row]
+                    #         self._select_playlist_error = 1
+                    #     except ValueError:
+                    #         try:
+                    #             name, url, enc, br = [s.strip() for s in row]
+                    #             self._select_playlist_error = 1
+                    #         except ValueError:
+                    #             self._select_playlist_error = -1
+                    #             break
             except:
-                self._select_playlist_error = -1
-        if self._select_playlist_error == -1 or \
-                self._select_playlist_error == 0:
+                self._select_playlist_error = False
+        # if self._select_playlist_error == -1 or \
+        #         self._select_playlist_error == 0:
+        if not self._select_playlist_error:
             self.print_select_playlist_error()
             return -1, ''
         else:

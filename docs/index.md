@@ -447,7 +447,7 @@ The following table presents the **Station's fields** and the current level of s
 | Icon            | <0.9.3.11.5              | <0.9.3.11.5                     |
 | Profile         | **No**                   | **No**                          |
 | Buffering       | **No**                   | **No**                          |
-| Force HTTP      | **No**                   | **No**                          |
+| Force HTTP      | 0.9.3.11.6               | **No**                          |
 | Volume          | **No**                   | 0.9.3.11.5                      |
 | Referer URL     | <0.9.3.11.5              | **No**<br>Using a referer file  |
 
