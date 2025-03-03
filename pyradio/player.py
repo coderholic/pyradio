@@ -379,6 +379,9 @@ class Player():
         '''
         self._mplayer_on_windows7 = False
 
+        # per station buffering
+        self._buffering_data = None
+
     def _return_false(self):
         return False
 
@@ -422,6 +425,14 @@ class Player():
         else:
             self._recording = 0
         logger.error('\n\nsetting recording to {}'.format(self._recording))
+
+    @property
+    def buffering_data(self):
+        return self._buffering_data
+
+    @buffering_data.setter
+    def buffering_data(self, val):
+        self._buffering_data = val
 
     def write_chapters(self):
         ''' write chapters from a player crash reoutine '''
@@ -2206,6 +2217,7 @@ class Player():
              encoding='',
              referer=None
          ):
+        self._buffering_data = None
         name = a_station[0]
         streamUrl = a_station[1]
         station_force_http = a_station[Station.http]
@@ -2234,6 +2246,24 @@ class Player():
             self._station_encoding = self.config_encoding
         opts = []
         isPlayList = streamUrl.split("?")[0][-3:] in ['m3u', 'pls']
+
+        # get buffering data from station data
+        try:
+            delay = int(a_station[Station.buffering])
+            delay = self._calculate_buffer_size_kb(delay)
+            x = PlayerCache(
+                    self.PLAYER_NAME,
+                    self._cnf.state_dir,
+                    lambda: self.recording
+                    )
+            x.enabled = True
+            x.delay = delay
+            self._buffering_data = x.cache[:]
+            logger.error(f'{self._buffering_data = }')
+            x = None
+        except ValueError:
+            self._buffering_data = None
+
         opts, self.monitor_opts, referer, referer_file = self._buildStartOpts(
             name, streamUrl, station_force_http,
             streamReferer=referer, playList=isPlayList
@@ -2510,6 +2540,9 @@ class Player():
             except:
                 pass
 
+    def _calculate_buffer_size_kb(self, delay_seconds, bitrate_kbps=None):
+        return delay_seconds
+
     def _buildStartOpts(self, streamName, streamUrl, station_force_http, streamReferer, playList):
         pass
 
@@ -2776,7 +2809,9 @@ class MpvPlayer(Player):
             opts = [self.PLAYER_CMD, '--no-video']
         else:
             opts = [self.PLAYER_CMD, '--no-video', '--quiet']
-        if self._cnf.buffering_data:
+        if self.buffering_data:
+            opts.extend(self.buffering_data)
+        elif self._cnf.buffering_data:
             opts.extend(self._cnf.buffering_data)
 
         ''' this will set the profile too '''
@@ -3255,12 +3290,31 @@ class MpPlayer(Player):
             return 0
         return self._do_save_volume(self.profile_token + '\nvolstep=1\nvolume={}\n')
 
+    def _calculate_buffer_size_kb(self, delay_seconds, bitrate_kbps=None):
+        if bitrate_kbps is None:
+            bitrate_kbps =192
+        # Convert bitrate from kbps to bytes per second
+        bytes_per_second = (bitrate_kbps * 1000) / 8
+
+        # Calculate buffer size in bytes
+        buffer_size_bytes = bytes_per_second * delay_seconds
+
+        # Convert buffer size to kilobytes
+        buffer_size_kb = int( buffer_size_bytes / 1024 )
+
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'using {buffer_size_kb}KB for a delay of {delay_seconds}, seconds (bitrate: {bitrate_kbps}kbps)')
+
+        return buffer_size_kb
+
     def _buildStartOpts(self, streamName, streamUrl, station_force_http, streamReferer=None, playList=False):
         ''' Builds the options to pass to mplayer subprocess.'''
         if self.USE_EXTERNAL_PLAYER:
             self.recording = self.NO_RECORDING
         opts = [self.PLAYER_CMD, '-vo', 'null', '-msglevel', 'all=6']
-        if self._cnf.buffering_data:
+        if self.buffering_data:
+            opts.extend(self.buffering_data)
+        elif self._cnf.buffering_data:
             opts.extend(self._cnf.buffering_data)
         # opts = [self.PLAYER_CMD, '-vo', 'null']
         monitor_opts = None
@@ -3693,7 +3747,9 @@ class VlcPlayer(Player):
             # MacOS VLC does not support --no-one-instance
             opts.pop(1)
 
-        if self._cnf.buffering_data:
+        if self.buffering_data:
+            opts.extend(self.buffering_data)
+        elif self._cnf.buffering_data:
             opts.extend(self._cnf.buffering_data)
 
         referer, referer_file = self._get_referer(streamName, streamReferer)
