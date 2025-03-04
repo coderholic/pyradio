@@ -100,8 +100,6 @@ class STATES():
     RESET = 0
     INIT = 1
     CONNECT = 2
-    BUFFER = 4
-    BUFF_MSG = 5
     PLAY = 10
     TITLE = 11
     STOPPED = 12
@@ -110,6 +108,8 @@ class STATES():
 
     CONNECT_ERROR = 100
     VOLUME = 101
+    BUFF_MSG = 102
+    BUFFER = 103
 
     ERROR_NO_PLAYER = 200
     ERROR_DEPENDENCY = 201

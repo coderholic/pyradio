@@ -273,6 +273,8 @@ class Log():
 
     _check_start_time = None
 
+    _stop_using_buffering_msg = False
+
     def __init__(self,
                  config,
                  current_player_id,
@@ -402,6 +404,15 @@ class Log():
 
             if msg:
                 logger.error('****** self._current_msg_id = {}: "{}" with msg_id = {}'.format(self._current_msg_id, msg, msg_id))
+            if msg_id == STATES.INIT:
+                self._stop_using_buffering_msg = False
+            if msg and msg_id == STATES.VOLUME and M_STRINGS['buffering_'] in msg:
+                msg = msg.replace(M_STRINGS['buffering_'], M_STRINGS['playing_'])
+                self._stop_using_buffering_msg = True
+            if self._stop_using_buffering_msg and STATES.PLAY <= msg_id < STATES.VOLUME:
+                if msg and M_STRINGS['buffering_'] in msg:
+                    msg = msg.replace(M_STRINGS['buffering_'], M_STRINGS['playing_'])
+
         # logger.error(f'{suffix = }, {counter = }, {p_time = } with {msg_id = }')
         # logger.error(
         #     'self._current_player_id() = {}, self._current_player_id() = {}'.format(
@@ -437,7 +448,7 @@ class Log():
                 self._player_stopped = False
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('player in playback! (based on messages printed in the Status Line')
-            if msg_id in (STATES.RESET, STATES.CONNECT, STATES.CONNECT_ERROR, STATES.BUFFER, STATES.BUFF_MSG):
+            if msg_id in (STATES.RESET, STATES.CONNECT, STATES.CONNECT_ERROR):
                 self._player_stopped = True
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('player is stopped! (based on messages printed in the Status Line)')
@@ -488,13 +499,16 @@ class Log():
 
                 ''' start normal execution '''
                 if msg:
-                    logger.error('self.msg\n{}\nmsg\n{}'.format(self.msg, msg))
+                    logger.error('\nself.msg\n{}\nmsg\n{}'.format(self.msg, msg))
                 if msg and self._player_stopped:
                     ''' Refuse to print anything if "Playback stopped"
                         was the last message printed
                     '''
                     do_empty_msg = True
-                    if msg_id not in (STATES.RESET, STATES.CONNECT, STATES.CONNECT_ERROR, STATES.PLAYER_ACTIVATED):
+                    if msg_id not in (
+                            STATES.RESET, STATES.CONNECT, STATES.CONNECT_ERROR,
+                            STATES.PLAYER_ACTIVATED, STATES.BUFFER, STATES.BUFF_MSG
+                    ):
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('Refusing to show message; player is stopped: "{}"'.format(msg))
                         msg = None

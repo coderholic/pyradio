@@ -2665,6 +2665,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             Also used at self.player.play as a loopback function
             for the status update thread.
         '''
+        # this is to avoid thread exception!
+        self.player.ctrl_c_pressed = True
         am_i_playing_random = self._random_requested
         logger.error('stopPlayerOnConnectionFailed called with http_error = {}'.format(http_error))
         self.player.stop_mpv_status_update_thread = True
