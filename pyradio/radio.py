@@ -2125,8 +2125,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 self.bodyWin.nodelay(True)
                 exit_players_loop = False
                 for a_player in self._cnf.AVAILABLE_PLAYERS:
-                    end_id = 35
-                    cur_id = 26
+                    cur_id = 0
+                    end_id = self._cnf.number_of_stations
                     old_id = -1
                     self._accumulated_errors = None
                     if logger.isEnabledFor(logging.INFO):
@@ -11610,9 +11610,9 @@ _____"|f|" to see the |free| keys you can use.
     def _generate_markdown_report(self):
         # Define player file names
         player_files = {
-            'mpv': 'mpv-stations.csv',
-            'mplayer': 'mplayer-stations.csv',
-            'vlc': 'vlc-stations.csv'
+            'mpv': 'mpv-' + self._cnf.station_title + '.csv',
+            'mplayer': 'mplayer-' + self._cnf.station_title + '.csv',
+            'vlc': 'vlc-' + self._cnf.station_title + '.csv'
         }
 
         # Initialize data structures
@@ -11654,8 +11654,16 @@ _____"|f|" to see the |free| keys you can use.
                     # Add player-specific error
                     station_data[station_number]['errors'][player] = error_code
 
+        # logger.error('\n\nstation_data\n{}\n\n'.format(station_data))
+        # logger.error('\n\nerrors\n{}\n\n'.format(errors))
+
+        if errors == {}:
+            return None
+
         # Generate Markdown content
         markdown_content = []
+
+        markdown_content.append('# Playlist: {}\n\n'.format(self._cnf.station_title))
 
         # Errors and Descriptions section
         markdown_content.append("### Errors and Descriptions\n")
@@ -11738,6 +11746,12 @@ _____"|f|" to see the |free| keys you can use.
         found_table_header = False
         for line in lines:
             line = line.strip()
+
+            if line == '':
+                continue
+
+            if line.startswith('# Playlist: '):
+                continue
 
             # Detect Section
             if line.startswith('###'):
@@ -11865,6 +11879,18 @@ _____"|f|" to see the |free| keys you can use.
         .error-summary ul { list-style-type: none; padding: 0; }
         .error-summary ul li { margin: 5px 0; }
         .tooltip { position: relative; display: inline-block; }
+        /* Add to existing CSS */
+        tr.all-errors {
+            background-color: #FFD9DF !important;  /* Pastel pink */
+        }
+        tr.some-errors {
+            background-color: #FFFACD !important;  /* Pastel yellow */
+        }
+
+        /* Ensure hover doesn't override our error highlights */
+        tr:hover {
+            background-color: #D6F0D6 !important;
+        }
         .tooltip .tooltiptext {
             visibility: hidden;
             width: 120px;
@@ -11931,21 +11957,31 @@ _____"|f|" to see the |free| keys you can use.
         for station_number, data in sorted(station_data.items(), key=lambda x: int(x[0])):
             station_name = data['name']
             station_url = data['url']
+
+            # Generate error display string and collect error codes
             errors_combined = []
+            error_codes = []
             for player in ['mpv', 'mplayer', 'vlc']:
-                if player in data['errors']:
-                    error_code, error_desc = data['errors'][player]
-                    errors_combined.append(f'<span class="tooltip error-{error_code}" title="{error_desc}">{error_code}</span>')
-                else:
-                    errors_combined.append('<span class="tooltip">N/A</span>')
+                error_code, error_desc = data['errors'][player]
+                error_codes.append(error_code)
+                errors_combined.append(
+                    f'<span class="tooltip error-{error_code}" title="{error_desc}">{error_code}</span>'
+                )
             errors_str = ', '.join(errors_combined)
 
-            html_content.append(f'''            <tr>
-                <td>{station_number}</td>
-                <td>{station_name}</td>
-                <td>{station_url}</td>
-                <td>{errors_str}</td>
-            </tr>\n''')
+            # Determine row class
+            all_errors = all(code != 'None' for code in error_codes)
+            any_error = any(code != 'None' for code in error_codes)
+            row_class = 'all-errors' if all_errors else ('some-errors' if any_error else '')
+
+            # Add row to HTML
+            html_content.append(f'''            <tr class="{row_class}">
+                        <td>{station_number}</td>
+                        <td>{station_name}</td>
+                        <td>{station_url}</td>
+                        <td>{errors_str}</td>
+                    </tr>
+            ''')
 
         html_content.append('''        </tbody>
     </table>
@@ -12057,10 +12093,16 @@ _____"|f|" to see the |free| keys you can use.
     def handle_check_playlist_data(self):
         self._split_logs()
         csv_files = self._generate_markdown_report()
-        for a_csv_file in csv_files:
-            remove(path.join(self._cnf.check_output_folder, a_csv_file))
-        station_data, errors, to_delete = self.read_markdown_file()
-        self._generate_html_report(station_data, errors)
+        if csv_files is None:
+            print('[bold green]Info: [/bold green]No playback error occured!')
+            from shutil import rmtree
+            rmtree(self._cnf.check_output_folder, ignore_errors=True)
+        else:
+            for a_csv_file in csv_files:
+                remove(path.join(self._cnf.check_output_folder, a_csv_file))
+            station_data, errors, to_delete = self.read_markdown_file()
+            self._generate_html_report(station_data, errors)
+            self._cnf.open_a_dir(self._cnf.check_output_folder)
     ############################################################################
     #
     #                    End of Chech Playlist functions
