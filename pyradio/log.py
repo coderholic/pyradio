@@ -409,9 +409,10 @@ class Log():
             if msg and msg_id == STATES.VOLUME and M_STRINGS['buffering_'] in msg:
                 msg = msg.replace(M_STRINGS['buffering_'], M_STRINGS['playing_'])
                 self._stop_using_buffering_msg = True
-            if self._stop_using_buffering_msg and STATES.PLAY <= msg_id < STATES.VOLUME:
-                if msg and M_STRINGS['buffering_'] in msg:
-                    msg = msg.replace(M_STRINGS['buffering_'], M_STRINGS['playing_'])
+            if msg and M_STRINGS['buffering_'] in msg and \
+                    self._stop_using_buffering_msg and \
+                    STATES.PLAY <= msg_id < STATES.VOLUME:
+                msg = msg.replace(M_STRINGS['buffering_'], M_STRINGS['playing_'])
 
         # logger.error(f'{suffix = }, {counter = }, {p_time = } with {msg_id = }')
         # logger.error(

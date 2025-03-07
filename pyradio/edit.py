@@ -21,7 +21,7 @@ from .cjkwrap import cjkslices
 from .xdg import CheckDir
 from .html_help import HtmlHelp
 from .keyboard import kbkey, kb2str, kb2chr, check_localized
-from .common import M_STRINGS, Station
+from .common import M_STRINGS, Station, seconds_to_KB_128, seconds_to_KB_192, seconds_to_KB_320
 
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
@@ -2275,11 +2275,13 @@ class PyRadioRenameFile():
 class PyRadioBuffering():
 
     _text = 'Buffer size in seconds: '
+    _text128 = 'Buffer in KB @128kbps: '
+    _text192 = '             @192kbps: '
+    _text320 = '             @320kbps: '
     _help_text = ' Help '
     _note_text = ' Note '
-    _max_lines = 12
+    _max_lines = 16
     _cache_data  = None
-    _step = 1
     _big_step = _min = 5
     _limit = 60
 
@@ -2295,13 +2297,7 @@ class PyRadioBuffering():
         if self._global_functions is None:
             self._global_functions = {}
         self.recording = lambda: self._player.recording
-        self._title = ' ' + self._player.PLAYER_NAME + ' ' + M_STRINGS['buffering_'].replace(':', '')
-        if self._player.PLAYER_NAME == 'mplayer':
-            self._text = 'Buffer size in KBytes: '
-            self._step = 250
-            self._min = 250
-            self._big_step = 1000
-            self._limit = 100000
+        self._title = ' ' + M_STRINGS['buffering_'].replace(':', '')
         self._cache_data = PlayerCache(
                 player.PLAYER_NAME,
                 self._cnf.state_dir,
@@ -2344,23 +2340,40 @@ class PyRadioBuffering():
             self._win.addstr(2, 4, self._text, curses.color_pair(10))
             self._win.addstr('{}'.format(self._delay), curses.color_pair(11))
 
+            # show KB
+            self._win.addstr(3, 4, self._text128, curses.color_pair(10))
+            self._win.addstr('{}'.format(
+                seconds_to_KB_128[self._delay if self._delay == 0 else self._delay - 4]
+            ), curses.color_pair(11))
+            self._win.addstr(4, 4, self._text192, curses.color_pair(10))
+            self._win.addstr('{}'.format(
+                seconds_to_KB_192[self._delay if self._delay == 0 else self._delay - 4]
+            ), curses.color_pair(10))
+            self._win.addstr(5, 4, self._text320, curses.color_pair(10))
+            self._win.addstr('{}'.format(
+                seconds_to_KB_320[self._delay if self._delay == 0 else self._delay - 4]
+            ), curses.color_pair(10))
+
+
             # show help
             try:
-                self._win.addstr(4, 2, '─' * (self.MaxX - 4), curses.color_pair(3))
+                self._win.addstr(7, 2, '─' * (self.MaxX - 4), curses.color_pair(3))
             except:
-                self._win.addstr(4, 2, '─'.encode('utf-8') * (self.MaxX - 6), curses.color_pair(3))
-            self._win.addstr(4, int((self.MaxX - len(self._help_text))/2), self._help_text, curses.color_pair(3))
-            self._win.addstr(5, 2, kb2str('{j} {k} Up Down'), curses.color_pair(11))
-            self._win.addstr(6, 2, 'PgUp PgDown', curses.color_pair(11))
+                self._win.addstr(7, 2, '─'.encode('utf-8') * (self.MaxX - 6), curses.color_pair(3))
+            self._win.addstr(7, int((self.MaxX - len(self._help_text))/2), self._help_text, curses.color_pair(3))
+            self._win.addstr(8, 2, kb2str('{j} {k} Up Down'), curses.color_pair(11))
+            self._win.addstr(9, 2, 'PgUp PgDown', curses.color_pair(11))
             self._win.addstr('     Adjust value', curses.color_pair(10))
-            self._win.addstr(7, 2, kb2chr('revert_saved'), curses.color_pair(11))
+            self._win.addstr(10, 2, kb2chr('revert_saved'), curses.color_pair(11))
             self._win.addstr('               Load saved value', curses.color_pair(10))
-            self._win.addstr(8, 2, kb2chr('no_buffer'), curses.color_pair(11))
+            self._win.addstr(11, 2, kb2chr('no_buffer'), curses.color_pair(11))
             self._win.addstr('               No buffering', curses.color_pair(10))
-            self._win.addstr(9, 2, 'Enter ' + kb2chr('s'), curses.color_pair(11))
+            self._win.addstr(12, 2, 'Enter ' + kb2chr('s'), curses.color_pair(11))
             self._win.addstr('         Accept value', curses.color_pair(10))
-            self._win.addstr(10, 2, kb2str('Esc {q} {h} Right'), curses.color_pair(11))
+            self._win.addstr(13, 2, kb2str('Esc {q} {h} Right'), curses.color_pair(11))
             self._win.addstr('   Cancel operation', curses.color_pair(10))
+            self._win.addstr(14, 2, kb2str('{?}'), curses.color_pair(11))
+            self._win.addstr('               Display help', curses.color_pair(10))
         self._win.refresh()
 
     def keypress(self, char):
@@ -2398,12 +2411,12 @@ class PyRadioBuffering():
                 self._delay = self._cache_data.delay
             elif char in (kbkey['k'], curses.KEY_UP) or \
                     check_localized(char, (kbkey['k'], )):
-                self._delay += self._step
+                self._delay += 1
                 if self._delay < self._min:
                     self._delay = self._min
             elif char in (kbkey['j'], curses.KEY_DOWN) or \
                     check_localized(char, (kbkey['j'], )):
-                self._delay -= self._step
+                self._delay -= 1
                 if self._delay < self._min:
                     self._delay = 0
             elif char == curses.KEY_NPAGE:
@@ -2421,6 +2434,24 @@ class PyRadioBuffering():
             elif self._delay > self._limit:
                 self._delay = self._limit
             self._win.addstr(2, len(self._text) + 4, '{:<7}'.format(self._delay), curses.color_pair(11))
+            self._win.addstr(
+                3, len(self._text128) + 4, '{:<7}'.format(
+                    seconds_to_KB_128[self._delay if self._delay == 0 else self._delay - 4]
+                    ),
+                    curses.color_pair(11)
+            )
+            self._win.addstr(
+                4, len(self._text192) + 4, '{:<7}'.format(
+                    seconds_to_KB_192[self._delay if self._delay == 0 else self._delay - 4]
+                    ),
+                    curses.color_pair(10)
+            )
+            self._win.addstr(
+                5, len(self._text320) + 4, '{:<7}'.format(
+                    seconds_to_KB_320[self._delay if self._delay == 0 else self._delay - 4]
+                    ),
+                    curses.color_pair(10)
+            )
             self._win.refresh()
         return 0, []
 

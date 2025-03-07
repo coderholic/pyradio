@@ -37,7 +37,7 @@ To install it, execute
 ## 2. what_tag
 
 This script will help you create a local tag (i.e.
-RyRadio version) and commit it upstream.
+PyRadio version) and commit it upstream.
 
 It will not perform the actual action; just report
 what you should do manually.

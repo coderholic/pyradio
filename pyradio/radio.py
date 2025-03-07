@@ -2643,8 +2643,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.player.stop_mpv_status_update_thread = True
         self.log.write(msg_id=STATES.CONNECT_ERROR, msg=self.player.PLAYER_NAME  + ': ' + M_STRINGS['error-1001'])
         self.player.connecting = False
-        logger.error('self._error_in_check_playlist()')
-        self._error_in_check_playlist(1001)
+        if self._cnf.check_playlist:
+            self._error_in_check_playlist(1001)
         if self._random_requested and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
             if logger.isEnabledFor(logging.INFO):
@@ -2665,8 +2665,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             Also used at self.player.play as a loopback function
             for the status update thread.
         '''
-        # this is to avoid thread exception!
-        self.player.ctrl_c_pressed = True
         am_i_playing_random = self._random_requested
         logger.error('stopPlayerOnConnectionFailed called with http_error = {}'.format(http_error))
         self.player.stop_mpv_status_update_thread = True
@@ -2679,7 +2677,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.log.counter = None
         self._update_status_bar_right()
         if self.player.isPlaying():
-            self.stopPlayer(show_message=True, from_update_thread=from_update_thread, http_error=http_error)
+            self.stopPlayer(
+                show_message=True,
+                from_update_thread=from_update_thread,
+                http_error=http_error,
+                player_disappeared=player_disappeared
+            )
         with self._buffering_lock:
             self._show_recording_status_in_header(player_disappeared=player_disappeared)
         # if from_update_thread and self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -2697,7 +2700,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                    from_update_thread=False,
                    reset_playing=True,
                    from_connectionFailed_function=False,
-                   http_error=False):
+                   http_error=False,
+                   player_disappeared=False):
         # logger.error(f'{show_message = }')
         # logger.error(f'{from_update_thread = }')
         # logger.error(f'{reset_playing = }')
@@ -2708,34 +2712,33 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         if from_update_thread:
             self.detect_if_player_exited = True
         try:
-            self.player.close()
+            self.player.close(player_disappeared)
         except:
             pass
-        finally:
-            self.player.connecting = False
-            if self.ws.window_mode == self.ws.PLAYLIST_MODE:
-                self._last_played_station_id = self.selections[0][2]
-            else:
-                self._last_played_station_id = self.playing
-            self.selections[0][2] = -1
-            # logger.error('self.selection = {}'.format(self.selection))
-            # logger.error('self.playing = {}'.format(self.playing))
-            # logger.error('self.selections = {}'.format(self.selections[0][:3]))
-            # logger.error('self._last_played_station = {}'.format(self._last_played_station))
-            # logger.error('self._last_played_station_id = {}'.format(self._last_played_station_id))
-            if reset_playing \
-                    and self.ws.window_mode != self.ws.PLAYLIST_MODE:
-                self.playing = -1
-            self.player.process = None
-            if show_message:
-                self._show_player_is_stopped(from_update_thread, http_error)
-            elif not from_connectionFailed_function:
-                self._current_player_id = self._next_current_player_id
-                logger.error(f'increasing {self._current_player_id = }')
-                self._prepare_next_current_player_id()
+        self.player.connecting = False
+        if self.ws.window_mode == self.ws.PLAYLIST_MODE:
+            self._last_played_station_id = self.selections[0][2]
+        else:
+            self._last_played_station_id = self.playing
+        self.selections[0][2] = -1
+        # logger.error('self.selection = {}'.format(self.selection))
+        # logger.error('self.playing = {}'.format(self.playing))
+        # logger.error('self.selections = {}'.format(self.selections[0][:3]))
+        # logger.error('self._last_played_station = {}'.format(self._last_played_station))
+        # logger.error('self._last_played_station_id = {}'.format(self._last_played_station_id))
+        if reset_playing \
+                and self.ws.window_mode != self.ws.PLAYLIST_MODE:
+            self.playing = -1
+        self.player.process = None
+        if show_message:
+            self._show_player_is_stopped(from_update_thread, http_error)
+        elif not from_connectionFailed_function:
+            self._current_player_id = self._next_current_player_id
+            logger.error(f'increasing {self._current_player_id = }')
+            self._prepare_next_current_player_id()
 
-            # with self._buffering_lock:
-            #     self._show_recording_status_in_header()
+        # with self._buffering_lock:
+        #     self._show_recording_status_in_header()
 
     def _prepare_next_current_player_id(self):
         if self._current_player_id > 65000:
@@ -11514,7 +11517,7 @@ _____"|f|" to see the |free| keys you can use.
             station_to_check = self.stations[station_to_check_id]
             self._cnf.last_station_checked = station_to_check
             self._cnf.last_station_checked_id = station_to_check_id
-            logger.error('\n\nnungetch c\n\n')
+            logger.error('\n\nungetch c\n\n')
             curses.ungetch(kbkey['open_config'])
             self._write_check_output(http_error, station_to_check, station_to_check_id)
 

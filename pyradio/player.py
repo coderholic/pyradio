@@ -3,6 +3,7 @@ import subprocess
 import threading
 import os
 import random
+import math
 import logging
 from os.path import expanduser
 from platform import uname as platform_uname
@@ -2250,7 +2251,7 @@ class Player():
         # get buffering data from station data
         try:
             delay = int(a_station[Station.buffering])
-            delay = self._calculate_buffer_size_kb(delay)
+            delay = self._calculate_buffer_size_in_kb(delay)
             x = PlayerCache(
                     self.PLAYER_NAME,
                     self._cnf.state_dir,
@@ -2439,15 +2440,30 @@ class Player():
             self._command_to_player(self.process, command)
 
     def _command_to_player(self, a_process, command):
-        if a_process is not None:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Sending Command: {}'.format(command).strip())
-            try:
-                a_process.stdin.write(command.encode('utf-8', 'replace'))
-                a_process.stdin.flush()
-            except:
-                if logger.isEnabledFor(logging.ERROR):
-                    logger.error('Error while sending Command: {}'.format(command).strip(), exc_info=True)
+        if a_process is None:
+            return
+
+        # Check if the process has terminated
+        if a_process.poll() is not None:
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error("Cannot send command; process has terminated. Command: {}".format(command).strip())
+            return
+
+        # Optionally check if stdin is valid and open
+        if a_process.stdin is None or getattr(a_process.stdin, "closed", False):
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error("Cannot send command; process's stdin is closed. Command: {}".format(command).strip())
+            return
+
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Sending Command: {}".format(command).strip())
+        try:
+            # Write the command to the process's standard input
+            a_process.stdin.write(command.encode('utf-8', 'replace'))
+            a_process.stdin.flush()
+        except Exception as e:
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error("Error while sending Command: {}".format(command).strip(), exc_info=True)
 
     def close_from_windows(self):
         ''' kill player instance when window console is closed '''
@@ -2456,13 +2472,13 @@ class Player():
             self.close()
             self._stop()
 
-    def close(self):
+    def close(self, player_disappeared=False):
         self.currently_recording = False
         ''' kill player instance '''
-        self._no_mute_on_stop_playback()
+        self._no_mute_on_stop_playback(player_disappeared)
 
         ''' First close the subprocess '''
-        self._stop()
+        self._stop(player_disappeared)
         ''' Here is fallback solution and cleanup '''
         self.stop_timeout_counter_thread = True
         try:
@@ -2540,7 +2556,7 @@ class Player():
             except:
                 pass
 
-    def _calculate_buffer_size_kb(self, delay_seconds, bitrate_kbps=None):
+    def _calculate_buffer_size_in_kb(self, delay_seconds, bitrate_kbps=None):
         return delay_seconds
 
     def _buildStartOpts(self, streamName, streamUrl, station_force_http, streamReferer, playList):
@@ -2659,7 +2675,7 @@ class Player():
         ''' to be implemented on subclasses '''
         pass
 
-    def _stop(self):
+    def _stop(self, player_disappeared):
         pass
 
     def get_volume(self):
@@ -2684,7 +2700,7 @@ class Player():
         ''' to be implemented on subclasses '''
         pass
 
-    def _no_mute_on_stop_playback(self):
+    def _no_mute_on_stop_playback(self, player_disappeared=False):
         ''' make sure player does not stop muted, i.e. volume=0
 
             Currently implemented for vlc only.'''
@@ -2993,11 +3009,12 @@ class MpvPlayer(Player):
                 pass
             self._close_pipe(sock)
 
-    def _stop(self):
+    def _stop(self, player_disappeared):
         self.currently_recording = False
         ''' kill mpv instance '''
         self.stop_mpv_status_update_thread = True
-        self._send_mpv_command('quit')
+        if not player_disappeared:
+            self._send_mpv_command('quit')
         if not platform.startswith('win'):
             os.system('rm ' + self.mpvsocket + ' 2>/dev/null')
         self._icy_data = {}
@@ -3290,7 +3307,7 @@ class MpPlayer(Player):
             return 0
         return self._do_save_volume(self.profile_token + '\nvolstep=1\nvolume={}\n')
 
-    def _calculate_buffer_size_kb(self, delay_seconds, bitrate_kbps=None):
+    def _calculate_buffer_size_in_kb(self, delay_seconds, bitrate_kbps=None):
         if bitrate_kbps is None:
             bitrate_kbps =192
         # Convert bitrate from kbps to bytes per second
@@ -3307,6 +3324,22 @@ class MpPlayer(Player):
 
         return buffer_size_kb
 
+    def _calculate_kb_to_seconds(self, kb, bitrate=None):
+        if bitrate is None:
+            bitrate = 128
+
+        # Convert bitrate from kbps to bytes per second
+        bytes_per_second = (bitrate * 1000) / 8
+
+        # Convert kilobytes to bytes
+        bytes_total = kb * 1024
+
+        # Calculate the time in seconds
+        seconds = bytes_total / bytes_per_second
+
+        # Round up to the nearest integer
+        return math.ceil(seconds)
+
     def _buildStartOpts(self, streamName, streamUrl, station_force_http, streamReferer=None, playList=False):
         ''' Builds the options to pass to mplayer subprocess.'''
         if self.USE_EXTERNAL_PLAYER:
@@ -3315,6 +3348,9 @@ class MpPlayer(Player):
         if self.buffering_data:
             opts.extend(self.buffering_data)
         elif self._cnf.buffering_data:
+            if int(self._cnf.buffering_data[1]) < 61:
+                x = self._calculate_buffer_size_in_kb(int(self._cnf.buffering_data[1]))
+                self._cnf.buffering_data[1] = str(x)
             opts.extend(self._cnf.buffering_data)
         # opts = [self.PLAYER_CMD, '-vo', 'null']
         monitor_opts = None
@@ -3426,11 +3462,12 @@ class MpPlayer(Player):
         ''' pause streaming (if possible) '''
         self._sendCommand('p')
 
-    def _stop(self):
+    def _stop(self, player_disappeared):
         self.currently_recording = False
         ''' kill mplayer instance '''
         self.stop_mpv_status_update_thread = True
-        self._sendCommand('q')
+        if not player_disappeared:
+            self._sendCommand('q')
         self._icy_data = {}
         self.monitor = self.monitor_process = self.monitor_opts = None
         if self._chapters:
@@ -3834,7 +3871,7 @@ class VlcPlayer(Player):
         else:
             self._sendCommand('pause\n')
 
-    def _stop(self):
+    def _stop(self, player_disappeared):
         self.currently_recording = False
         ''' kill vlc instance '''
         self.stop_win_vlc_status_update_thread = True
@@ -3843,12 +3880,14 @@ class VlcPlayer(Player):
         if self.ctrl_c_pressed:
             return
         if self.WIN:
-            if self.process:
+            if self.process and \
+                    not player_disappeared:
                 logger.error('>>>> Terminating process')
                 self._req('quit')
             threading.Thread(target=self._remove_vlc_stdout_log_file, args=()).start()
         else:
-            self._sendCommand('shutdown\n')
+            if not player_disappeared:
+                self._sendCommand('shutdown\n')
         self._icy_data = {}
         self.volume = -1
         self.monitor = self.monitor_process = self.monitor_opts = None
@@ -3974,11 +4013,12 @@ class VlcPlayer(Player):
         # logger.error('self.volume = {}'.format(self.volume))
         # logger.error('=======================')
 
-    def _no_mute_on_stop_playback(self):
+    def _no_mute_on_stop_playback(self, player_disappeared=False):
         ''' make sure vlc does not stop muted '''
         if self.ctrl_c_pressed:
             return
-        if self.isPlaying():
+        if self.isPlaying() and \
+                not player_disappeared:
             self.show_volume = False
             self.set_volume(0)
             if logger.isEnabledFor(logging.DEBUG):
@@ -4408,7 +4448,7 @@ class PlayerCache():
                 '--demuxer-readahead-secs=29',
                 ],
             'mplayer': [
-                '-cache', '1000',
+                '-cache', '312',
                 '-cache-min', '80'
                 ],
             'vlc': [
@@ -4422,6 +4462,8 @@ class PlayerCache():
         'mplayer': '0',
         'vlc': '0'
      }
+
+    _bitrate = '128'
 
     def __init__(self, player_name, data_dir, recording):
         self._player_name = player_name
@@ -4491,6 +4533,19 @@ class PlayerCache():
             elif self._player_name == 'mplayer':
                 self._data['mplayer'][1] = str_x
         self._dirty = True
+
+    @property
+    def station_delay(self):
+        return self.delay
+
+    @station_delay.setter
+    def station_delay(self, value):
+        if '@' in value:
+            sp = value.split('@')
+            self.delay, self._bitrate = sp
+        else:
+            self.delay = value
+            self._bitrate = '128'
 
     def _read(self):
         if os.path.exists(self._data_file):

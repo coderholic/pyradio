@@ -150,7 +150,7 @@
     * adding --no-video command line parameter for vlc
     * removing more python 2 code
     * updating macOS installation instructions (based on Ventura)
-    * fixing #239 - Pyradio doesn't remember warning message was already shown
+    * fixing #239 - PyRadio doesn't remember warning message was already shown
     * fixing loading saved and default config options in Config Window,
       Recording Dir is excluded from change
     * updating docs
@@ -191,7 +191,7 @@
       page number
     * introducing the Messaging System; most messages displayed to the user
       have been transfered to messages_system.py
-    * moving Pyradio cache contents to ~/.cache (not on Windows)
+    * moving PyRadio cache contents to ~/.cache (not on Windows)
     * moving the recordings directory to home folder and renaming it to
       "pyradio-recordings".
     * adding recording_dir config parameter and window to customize it
@@ -865,7 +865,7 @@
       extra commands, yank i.e. copy) - implementation
       started in 0.8.8-beta1
     * Toggling transparency enabled in theme selection window
-    * Pyradio respects global encoding
+    * PyRadio respects global encoding
     * Info window gets updated as data are read
     * Display message when fallback theme is used (#99)
     * Fixing info window highlight and encoding issues

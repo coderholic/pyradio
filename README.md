@@ -2,7 +2,7 @@
 
 Command line internet radio player.
 
-![Pyradio](https://members.hellug.gr/sng/pyradio/pyradio.png)
+![PyRadio](https://members.hellug.gr/sng/pyradio/pyradio.png)
 
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->

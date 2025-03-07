@@ -30,7 +30,7 @@
 To open **RadioBrowser** one would just press "**O**" at the program's main window. Since at this point this is the only service supported, the service will be activated.
 
 
-![Pyradio's RadioBrowser interface](https://members.hellug.gr/sng/pyradio/pyradio-radio-browser.png)
+![PyRadio's RadioBrowser interface](https://members.hellug.gr/sng/pyradio/pyradio-radio-browser.png)
 
 Upon activation, the **default query** will be preformed and (if successful) its results will be presented to the user. If unsuccessful, a relevant message will be displayed and the program will return to the local playlist that was previously opened.
 

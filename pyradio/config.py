@@ -2020,7 +2020,7 @@ class PyRadioConfig(PyRadioStations):
                             ret = 'PyRadio built from git master branch'
                         else:
                             self.info = " PyRadio {0}-r{1}".format(git_info[0], git_info[1])
-                            ret = "RyRadio built from git: https://github.com/coderholic/pyradio/commit/{0} (rev. {1})".format(git_info[-1], git_info[1])
+                            ret = "PyRadio built from git: https://github.com/coderholic/pyradio/commit/{0} (rev. {1})".format(git_info[-1], git_info[1])
                     except:
                         pass
             else:
