@@ -1,3 +1,9 @@
+2025-03-10 s-n-g
+    * version 0.9.3.11.6 - 0.9.3.12-beta6
+    * fixing #279 - The list of favorite stations is reset when added
+    * fixing #278 - Typos 'RyRadio' when updating
+    * updating docs
+
 2025-02-27 s-n-g
     * version 0.9.3.11.5 - 0.9.3.12-beta5
     * fixing the installation script
