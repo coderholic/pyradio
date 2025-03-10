@@ -2,7 +2,7 @@
 
 Command line internet radio player.
 
-![Pyradio](https://members.hellug.gr/sng/pyradio/pyradio.png)
+![PyRadio](https://members.hellug.gr/sng/pyradio/pyradio.png)
 
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->
@@ -385,7 +385,7 @@ These modes are specifically designed to be used with tiling window managers, tr
 
     - When the width gets below 20 columns, the **Limited display** will be activated.
 
-![Pyradio reduced to the "Limited display"](https://members.hellug.gr/sng/pyradio/pyradio-limited-display.jpg)
+![PyRadio reduced to the "Limited display"](https://members.hellug.gr/sng/pyradio/pyradio-limited-display.jpg)
 
 **Note:** These two modes do not work on Windows, either 7 or 10. The "*Console*"window will shrink as desired, but will not always notify **PyRadio** about it, so results will vary.
 
@@ -447,7 +447,7 @@ The following table presents the **Station's fields** and the current level of s
 | Icon            | <0.9.3.11.5              | <0.9.3.11.5                     |
 | Profile         | **No**                   | **No**                          |
 | Buffering       | **No**                   | **No**                          |
-| Force HTTP      | **No**                   | **No**                          |
+| Force HTTP      | 0.9.3.11.6               | **No**                          |
 | Volume          | **No**                   | 0.9.3.11.5                      |
 | Referer URL     | <0.9.3.11.5              | **No**<br>Using a referer file  |
 
@@ -482,7 +482,7 @@ When the package's "*stations.csv*" files is updated, the changes it has will no
 
 **PyRadio** will display a message asking the user to either update the file, ignore the changes for this version or postpone his decision for the next time **PyRadio** will be executed.
 
-![Pyradio stations update](https://members.hellug.gr/sng/pyradio/pyradio-stations-update.png)
+![PyRadio stations update](https://members.hellug.gr/sng/pyradio/pyradio-stations-update.png)
 
 Either way, the user can always manually update his **stations file**, by issuing the following command:
 
@@ -666,7 +666,7 @@ The *Line editor* supports the insertion of [CJK Unified Ideographs](https://en.
 
 A depiction of the editor's behavior can be seen at this image:
 
-![CJK Characters on Pyradio](https://members.hellug.gr/sng/pyradio/pyradio-editor.jpg)
+![CJK Characters on PyRadio](https://members.hellug.gr/sng/pyradio/pyradio-editor.jpg)
 
 ## Moving stations around
 

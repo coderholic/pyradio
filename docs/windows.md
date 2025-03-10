@@ -155,7 +155,7 @@ Press any of the numbers presented to you to execute an action, or press "**q**"
 
 If [VLC](https://www.videolan.org/vlc/) is your selection, just go and get it and install it as any other Windows program.
 
-As long as you install it to its default location (e.g "*C:\\Program Files\\VideoLAN\\VLC*" or "*C:\\Program Files (x86)\\VideoLAN\\VLC*") **Pyradio** will be able to detect and use it.
+As long as you install it to its default location (e.g "*C:\\Program Files\\VideoLAN\\VLC*" or "*C:\\Program Files (x86)\\VideoLAN\\VLC*") **PyRadio** will be able to detect and use it.
 
 ### PyRadio installation
 
@@ -274,7 +274,7 @@ In any case, you can perform the update at any time, using the command:
 
     pyradio -U
 
-**Note:** If **PyRadio** is not in your PATH, you will have to use the full path to it to execute the previous command. Just right-click **Pyradio**'s icon on your Desktop and copy the command found there, or follow the instructions shown at [Getting the path to pyradio.exe](#getting-the-path-to-pyradio.exe). Once you have it, paste it on a console, add a "*-U*" and you are good to go.
+**Note:** If **PyRadio** is not in your PATH, you will have to use the full path to it to execute the previous command. Just right-click **PyRadio**'s icon on your Desktop and copy the command found there, or follow the instructions shown at [Getting the path to pyradio.exe](#getting-the-path-to-pyradio.exe). Once you have it, paste it on a console, add a "*-U*" and you are good to go.
 
 ### Updating a pre 0.8.9 installation
 
@@ -319,7 +319,7 @@ To create it, enter the following commands in a terminal:
     del pyradio.log
     pyradio -d
 
-**Note:** If **PyRadio** is not in your PATH, you will have to use the full path to it to execute the previous command. Just right-click **Pyradio**'s icon on your Desktop and copy the command found there, or follow the instructions shown at [Getting the path to pyradio.exe](#getting-the-path-to-pyradio.exe). Once you have it, paste it on a console, add a "*-d*" and you are good to go.
+**Note:** If **PyRadio** is not in your PATH, you will have to use the full path to it to execute the previous command. Just right-click **PyRadio**'s icon on your Desktop and copy the command found there, or follow the instructions shown at [Getting the path to pyradio.exe](#getting-the-path-to-pyradio.exe). Once you have it, paste it on a console, add a "*-d*" and you are good to go.
 
 
 Then try to reproduce the bug and exit **PyRadio**.

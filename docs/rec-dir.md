@@ -41,7 +41,7 @@ Then the user can change the folder's location from *Config / General options / 
 
 ## Post 0.9.3.10 behavior
 
-Up until **v. 0.9.3.10, Ryradio** would create the "*recording directory*" upon startup, no matter where it would be located, making it available for the recording and titles' log function.
+Up until **v. 0.9.3.10, PyRadio** would create the "*recording directory*" upon startup, no matter where it would be located, making it available for the recording and titles' log function.
 
 This eventually creates the following problem:
 

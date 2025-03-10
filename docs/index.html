@@ -38,7 +38,7 @@ a:visited{color: SaddleBrown;}
 </header>
 <h1 style="color: SaddleBrown" id="pyradio">PyRadio</h1>
 <p>Command line internet radio player.</p>
-<p><a href="https://members.hellug.gr/sng/pyradio/pyradio.png" target="_blank"><img style="width: 600px" src="https://members.hellug.gr/sng/pyradio/pyradio.png" alt="Pyradio" /></a></p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio.png" target="_blank"><img style="width: 600px" src="https://members.hellug.gr/sng/pyradio/pyradio.png" alt="PyRadio" /></a></p>
 
 <h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <!-- vim-markdown-toc Marked -->
@@ -190,6 +190,12 @@ a:visited{color: SaddleBrown;}
 <!-- Changelog -->
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
+
+2025-03-10 s-n-g
+    * version 0.9.3.11.6 - 0.9.3.12-beta6
+    * fixing #279 - The list of favorite stations is reset when added
+    * fixing #278 - Typos 'RyRadio' when updating
+    * updating docs
 
 2025-02-27 s-n-g
     * version 0.9.3.11.5 - 0.9.3.12-beta5
@@ -343,7 +349,7 @@ a:visited{color: SaddleBrown;}
     * adding --no-video command line parameter for vlc
     * removing more python 2 code
     * updating macOS installation instructions (based on Ventura)
-    * fixing #239 - Pyradio doesn't remember warning message was already shown
+    * fixing #239 - PyRadio doesn't remember warning message was already shown
     * fixing loading saved and default config options in Config Window,
       Recording Dir is excluded from change
     * updating docs
@@ -384,7 +390,7 @@ a:visited{color: SaddleBrown;}
       page number
     * introducing the Messaging System; most messages displayed to the user
       have been transfered to messages_system.py
-    * moving Pyradio cache contents to ~/.cache (not on Windows)
+    * moving PyRadio cache contents to ~/.cache (not on Windows)
     * moving the recordings directory to home folder and renaming it to
       "pyradio-recordings".
     * adding recording_dir config parameter and window to customize it
@@ -1058,7 +1064,7 @@ a:visited{color: SaddleBrown;}
       extra commands, yank i.e. copy) - implementation
       started in 0.8.8-beta1
     * Toggling transparency enabled in theme selection window
-    * Pyradio respects global encoding
+    * PyRadio respects global encoding
     * Info window gets updated as data are read
     * Display message when fallback theme is used (#99)
     * Fixing info window highlight and encoding issues
@@ -1625,7 +1631,7 @@ Esc/q/Left/h      -                                                Cancel / clos
 <li><p>When the width gets below 20 columns, the <strong>Limited display</strong> will be activated.</p></li>
 </ul></li>
 </ol>
-<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-limited-display.jpg" target="_blank"><img style="width: 450px" src="https://members.hellug.gr/sng/pyradio/pyradio-limited-display.jpg" alt="Pyradio reduced to the “Limited display”" /></a></p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-limited-display.jpg" target="_blank"><img style="width: 450px" src="https://members.hellug.gr/sng/pyradio/pyradio-limited-display.jpg" alt="PyRadio reduced to the “Limited display”" /></a></p>
 
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> These two modes do not work on Windows, either 7 or 10. The “<em>Console</em>”window will shrink as desired, but will not always notify <strong>PyRadio</strong> about it, so results will vary.</p>
 <h2 id="config-file">Config file <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
@@ -1701,7 +1707,7 @@ Esc/q/Left/h      -                                                Cancel / clos
 </tr>
 <tr>
 <td>Force HTTP</td>
-<td><strong>No</strong></td>
+<td>0.9.3.11.6</td>
 <td><strong>No</strong></td>
 </tr>
 <tr>
@@ -1750,7 +1756,7 @@ Esc/q/Left/h      -                                                Cancel / clos
 <h3 id="integrating-new-stations">Integrating new stations</h3>
 <p>When the package’s “<em>stations.csv</em>” files is updated, the changes it has will not automatically appear in the user’s stations file.</p>
 <p><strong>PyRadio</strong> will display a message asking the user to either update the file, ignore the changes for this version or postpone his decision for the next time <strong>PyRadio</strong> will be executed.</p>
-<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-stations-update.png" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio-stations-update.png" alt="Pyradio stations update" /></a></p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-stations-update.png" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio-stations-update.png" alt="PyRadio stations update" /></a></p>
 
 <p>Either way, the user can always manually update his <strong>stations file</strong>, by issuing the following command:</p>
 <pre>pyradio -us</pre>
@@ -1866,7 +1872,7 @@ $ pyradio -s 5</pre>
 <h3 id="cjk-characters-support">CJK characters support</h3>
 <p>The <em>Line editor</em> supports the insertion of <a target="_blank" href="https://en.wikipedia.org/wiki/CJK_Unified_Ideographs">CJK Unified Ideographs</a>, as described on <a target="_blank" href="https://en.wikipedia.org/wiki/CJK_Unified_Ideographs_(Unicode_block)">CJK Unified Ideographs (Unicode block)</a> also known as URO, abbreviation of Unified Repertoire and Ordering. These characters, although encoded as a single code-point (character), actually take up a 2-character space, when rendered on the terminal.</p>
 <p>A depiction of the editor’s behavior can be seen at this image:</p>
-<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-editor.jpg" target="_blank"><img style="width: 600px" src="https://members.hellug.gr/sng/pyradio/pyradio-editor.jpg" alt="CJK Characters on Pyradio" /></a></p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-editor.jpg" target="_blank"><img style="width: 600px" src="https://members.hellug.gr/sng/pyradio/pyradio-editor.jpg" alt="CJK Characters on PyRadio" /></a></p>
 
 <h2 id="moving-stations-around">Moving stations around <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>Rearranging the order of the stations in the playlist is another feature <strong>PyRadio</strong> offers.</p>

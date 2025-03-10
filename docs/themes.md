@@ -285,7 +285,7 @@ To provide an alternative border color, one would just add the following to a th
 Border              #69a9a7
 ```
 
-**Note:** This color will be used **only** when the terminal supports more than 16 colors. This is because **Pyradio** already uses colors 0-15, and this border color will be declared as color No 16.
+**Note:** This color will be used **only** when the terminal supports more than 16 colors. This is because **PyRadio** already uses colors 0-15, and this border color will be declared as color No 16.
 
 ### User themes
 

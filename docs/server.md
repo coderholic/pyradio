@@ -41,7 +41,7 @@ This option is available in the config only. If set to True, the server will be 
 
 After the server is up, pressing "**\\s**" will display the following window:
 
-![Pyradio](https://members.hellug.gr/sng/pyradio/server-on.jpg)
+![PyRadio](https://members.hellug.gr/sng/pyradio/server-on.jpg)
 
 
 This window will display both the server's **Text** and **Web** address.
@@ -50,7 +50,7 @@ This window will display both the server's **Text** and **Web** address.
 
 So, inserting the **Web** address displayed in the previous window in a web browser will result to the output shown at the left of following image, (which is actually a screenshot of my mobile phone).
 
-![Pyradio](https://members.hellug.gr/sng/pyradio/phone.jpg)
+![PyRadio](https://members.hellug.gr/sng/pyradio/phone.jpg)
 
 The idea is that while **PyRadio** is running on the PC, people relaxing on the sofa, chilling with friends, listening to music from their favorite radio station, being able to increase / decrease the volume, change stations, etc. using their phones.
 
@@ -115,7 +115,7 @@ This means that the user is presented at most the first 200 stations (or whateve
 
 An example can be seen in the following image.
 
-![Pyradio](https://members.hellug.gr/sng/pyradio/radiobrowser-pages.jpg)
+![PyRadio](https://members.hellug.gr/sng/pyradio/radiobrowser-pages.jpg)
 
 In this example, the user has already displayed the fourth "**page**" of results; the buttons displayed are:
 

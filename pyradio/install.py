@@ -17,7 +17,7 @@ from shutil import which
 ''' This is PyRadio version this
     install.py was released for
 '''
-PyRadioInstallPyReleaseVersion = '0.9.3.11.5'
+PyRadioInstallPyReleaseVersion = '0.9.3.11.6'
 
 locale.setlocale(locale.LC_ALL, "")
 
@@ -61,7 +61,7 @@ except ImportError:
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL)
             if ret != 0:
-                print('\nPyradio cannot install python module: ' + a_module)
+                print('\nPyRadio cannot install python module: ' + a_module)
                 print('Please make sure your internet connection is up and try again')
                 sys.exit(1)
         msg = '''\n\nPyRadio has installed all required python modules.
@@ -1029,7 +1029,7 @@ class PyRadioUpdate():
     def _no_download_method(self):
         if platform.system().lower().startswith('darwin'):
             subprocess.call('python3 -m pip install requests', shell=True)
-            print('\n\nPyradio has installed the minimum necessary modules for its execution\nPlease execute the same command again...')
+            print('\n\nPyRadio has installed the minimum necessary modules for its execution\nPlease execute the same command again...')
         else:
             print('Error: PyRadio has no way to download files...')
             print('       Please install python\'s "requests" module and try again.\n')
@@ -1532,7 +1532,7 @@ if __name__ == '__main__':
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL)
             if ret != 0:
-                print('\nPyradio cannot install python module: ' + a_module)
+                print('\nPyRadio cannot install python module: ' + a_module)
                 if a_module == 'windows-curses':
                     print('''This means that either you internet connection has failed
 (in which case you should fix it and try again), or that

@@ -4395,13 +4395,10 @@ class FavoritesManager:
             if item[1] == url:
                 if item == an_item:
                     return 1, '___Already in favorites!___'
-                if item[0] != an_item[0] or \
-                        item[2] != an_item[2] or \
-                        item[3] != an_item[3]:
-                    items[i] = an_item
-                    msg = '___Station updated!___'
-                    updated = True
-                    break
+                items[i] = an_item
+                msg = '___Station updated!___'
+                updated = True
+                break
         if not updated:
             items.append(an_item)
             updated = True
@@ -4421,18 +4418,48 @@ class FavoritesManager:
 
     def _read_csv(self):
         items = []
-        if path.exists(self.file_path):
-            try:
-                with open(self.file_path, mode='r', newline='', encoding='utf-8') as file:
-                    reader = csv.reader(file)
-                    for row in reader:
-                        if not row[0].startswith('#'):
-                            while len(row) < 4:
-                                row.append('')
-                            name, url, enc, icon = [s.strip() for s in row]
-                            items.append([name, url, enc, icon])
-            except:
-                return []
+        try:
+            with open(self.file_path, mode='r', newline='', encoding='utf-8') as file:
+                reader = csv.reader(file)
+                try:
+                    for row in csv.reader(filter(lambda row: row[0] != '#', file), skipinitialspace=True):
+                        name = url = enc = icon = volume = http = referer = profile = buffering = ''
+                        this_row_version = Station.url
+                        # Assign values based on the length of the row
+                        row_length = len(row)
+                        name = row[0].strip()
+                        url = row[1].strip()
+                        if row_length > Station.encoding:
+                            enc = row[Station.encoding].strip()
+                            this_row_version = Station.encoding
+                        if row_length > Station.icon:
+                            icon = row[Station.icon].strip()
+                            this_row_version = Station.icon
+                        if row_length > Station.profile:
+                            profile = row[Station.profile].strip()
+                            this_row_version = Station.profile
+                        if row_length > Station.buffering:
+                            buffering = row[Station.buffering].strip()
+                            this_row_version = Station.buffering
+                        if row_length > Station.volume:
+                            volume = row[Station.volume].strip()
+                            this_row_version = Station.volume
+                        if row_length > Station.http:
+                            http = row[Station.http].strip()
+                            this_row_version = Station.http
+                        if row_length > Station.referer:
+                            referer = row[Station.referer].strip()
+                            this_row_version = Station.referer
+
+                        station_info = [
+                            name, url, enc, {'image': icon} if icon else '',
+                            profile, buffering, http, volume, referer
+                        ]
+                        items.append(station_info)
+                except (csv.Error, ValueError):
+                    return []
+        except (FileNotFoundError, IOError) as e:
+            return []
         return items
 
     def _write_csv(self, items):
