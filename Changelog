@@ -1,3 +1,8 @@
+2025-03-13 s-n-g
+    * version 0.9.3.11.7 - 0.9.3.12-beta7
+    * fixing #280 - Removing station and saving removes 
+      all URLs from stations.csv file
+
 2025-03-10 s-n-g
     * version 0.9.3.11.6 - 0.9.3.12-beta6
     * fixing #279 - The list of favorite stations is reset when added

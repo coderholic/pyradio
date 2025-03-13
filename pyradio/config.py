@@ -954,7 +954,7 @@ class PyRadioStations():
         if len(this_row) > 3 and 'image' in this_row[3]:
             this_row[3] = this_row[3]['image']
 
-        return this_row[:self._playlist_version]
+        return this_row
 
     def _set_playlist_elements(self, a_playlist, a_title=''):
         self.station_path = path.abspath(a_playlist)
