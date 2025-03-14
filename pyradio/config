@@ -143,6 +143,14 @@ connection_timeout = 10
 # Default value: False
 force_http = False
 
+# Buffering 
+# This is the number of seconds the players will buffer data
+# before actually starting producing sound
+#
+# Valid values: 5 - 60 (0 to disable)
+# Default value = 0
+buffering = 0
+
 # Default theme
 # Hard coded themes:
 #   dark (default) (8 colors)

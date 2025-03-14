@@ -754,6 +754,12 @@ class PyRadioStations():
                                 referer = row[Station.referer].strip()
                                 this_row_version = Station.referer
 
+                            if buffering:
+                                if '@' not in buffering:
+                                    buffering += '@128'
+                            else:
+                                buffering = '0@128'
+
                             # Append the parsed values to the reading stations list
                             station_info = [
                                 name, url, enc, {'image': icon} if icon else '',
@@ -924,37 +930,25 @@ class PyRadioStations():
                 logger.debug('Cannot rename playlist file...')
             return -2
         self.dirty_playlist = False
-        if self.renamed_stations:
-            for n in self.renamed_stations:
-                chk_referer_file = path.join(self.stations_dir, n[0] + '.referer.txt')
-                if path.exists(chk_referer_file):
-                    new_referer_file = path.join(self.stations_dir, n[1] + '.referer.txt')
-                    try:
-                        rename(chk_referer_file, new_referer_file)
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('referer file renamed from "{}" to "{}"'.format(
-                                path.basename(chk_referer_file),
-                                path.basename(new_referer_file)
-                                ))
-                    except:
-                        pass
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('failed to rename referer file from "{}" to "{}"'.format(
-                                path.basename(chk_referer_file),
-                                path.basename(new_referer_file)
-                                ))
         return 0
 
     def _format_playlist_row(self, a_row):
         ''' Return a row formatted according to the current playlist version,
             eliminating any empty fields that are not part of the specified version. '''
         this_row = deepcopy(a_row)
-
+        logger.error(f'{this_row}')
+        logger.error(f'{self._playlist_version}')
         # Extract the 'image' from the icon dictionary if present
-        if len(this_row) > 3 and 'image' in this_row[3]:
-            this_row[3] = this_row[3]['image']
+        if len(this_row) > Station.icon and 'image' in this_row[Station.icon]:
+            this_row[Station.icon] = this_row[Station.icon]['image']
 
-        return this_row
+        if len(this_row) > Station.buffering:
+            if this_row[Station.buffering].startswith('0'):
+                this_row[Station.buffering] = ''
+
+        ret = this_row[:self._playlist_version]
+        logger.error(f'{ret = }')
+        return this_row[:self._playlist_version]
 
     def _set_playlist_elements(self, a_playlist, a_title=''):
         self.station_path = path.abspath(a_playlist)
@@ -1390,9 +1384,10 @@ class PyRadioConfig(PyRadioStations):
     opts['confirm_station_deletion'] = ['Confirm station deletion: ', True]
     opts['confirm_playlist_reload'] = ['Confirm playlist reload: ', True]
     opts['auto_save_playlist'] = ['Auto save playlist: ', False]
-    opts['conn_title'] = ['Connection Options: ', '']
+    opts['conn_title'] = ['Connection Options', '']
     opts['connection_timeout'] = ['Connection timeout: ', '10']
     opts['force_http'] = ['Force http connections: ', False]
+    opts['buffering'] = ['Buffering (seconds): ', '20']
     opts['notification'] = ['Notifications', '']
     opts['enable_notifications'] = ['Enable notifications: ', '-1']
     opts['use_station_icon'] = ['    Use station icon: ', True]
@@ -1547,6 +1542,25 @@ class PyRadioConfig(PyRadioStations):
         self.auto_update_frameworks = ( self.base16_themes, self.pywal_themes, self.theme_sh_themes)
 
         self._read_notification_command()
+
+    @property
+    def buffering(self):
+        return self.opts['buffering'][1]
+
+    @buffering.setter
+    def buffering(self, val):
+        str_val = str(val)
+        old_val = self.opts['buffering'][1]
+        try:
+            if str_val == '0' or \
+                    5 <= int(str_val) <= 60:
+                self.opts['buffering'][1] = str(int(str_val))
+            else:
+                self.opts['buffering'][1] = '0'
+        except ValueError:
+            self.opts['buffering'][1] = '0'
+        if old_val != self.opts['buffering'][1]:
+            self.dirty_config = True
 
     @property
     def log_titles(self):
@@ -2555,6 +2569,15 @@ class PyRadioConfig(PyRadioStations):
                 except (ValueError, TypeError):
                         tmp = '0'
                 self.opts['time_format'][1] = tmp
+            elif sp[0] == 'buffering':
+                try:
+                    b = int(sp[1].strip())
+                except ValueError:
+                    b = 0
+                if not (b == 0 or 5 <= b <= 60):
+                    b = 0
+                self.opts['buffering'][1] = str(b)
+
             elif sp[0] == 'localized_keys':
                 # logger.error(f'{sp[1] = }')
                 self.localize = None if sp[1].strip().lower() == 'none' else sp[1].strip().lower()

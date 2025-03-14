@@ -2249,21 +2249,33 @@ class Player():
         isPlayList = streamUrl.split("?")[0][-3:] in ['m3u', 'pls']
 
         # get buffering data from station data
-        try:
-            delay = int(a_station[Station.buffering])
-            delay = self._calculate_buffer_size_in_kb(delay)
-            x = PlayerCache(
-                    self.PLAYER_NAME,
-                    self._cnf.state_dir,
-                    lambda: self.recording
-                    )
-            x.enabled = True
-            x.delay = delay
-            self._buffering_data = x.cache[:]
-            logger.error(f'{self._buffering_data = }')
-            x = None
-        except ValueError:
+        logger.error('\n\n\n')
+        if a_station[Station.buffering].startswith('0'):
             self._buffering_data = None
+        else:
+            try:
+                sp = a_station[Station.buffering].split('@')
+                delay = sp[0]
+                bitrate = sp[1]
+                logger.error(f'{delay = }')
+                delay = self._calculate_buffer_size_in_kb(*sp)
+                logger.error(f'{delay = }')
+                x = PlayerCache(
+                        self.PLAYER_NAME,
+                        self._cnf.state_dir,
+                        lambda: self.recording
+                        )
+                logger.error(f'{delay = }')
+                x.enabled = True
+                x.delay = delay
+                self._buffering_data = x.cache[:]
+                x = None
+                logger.error(f'{self._buffering_data = }')
+                logger.error('\n\n\n')
+            except ValueError:
+                self._buffering_data = None
+                logger.error(f'{self._buffering_data = }')
+                logger.error('\n\n\n')
 
         opts, self.monitor_opts, referer, referer_file = self._buildStartOpts(
             name, streamUrl, station_force_http,
@@ -2271,11 +2283,7 @@ class Player():
         )
         self.stop_mpv_status_update_thread = False
         if logger.isEnabledFor(logging.INFO):
-            try:
-                # python 2 exception with non-englsh chars
-                logger.info('Executing command: {}'.format(' '.join(opts)))
-            except:
-                pass
+            logger.info('Executing command: {}'.format(' '.join(opts)))
 
         if self.USE_EXTERNAL_PLAYER:
             ''' do not start the player, just return opts '''
@@ -2557,6 +2565,10 @@ class Player():
                 pass
 
     def _calculate_buffer_size_in_kb(self, delay_seconds, bitrate_kbps=None):
+        ''' return delay in seconds for mpv and vlc '''
+        if '@' in delay_seconds:
+            sp = delay_seconds.split('@')
+            delay_seconds = sp[0]
         return delay_seconds
 
     def _buildStartOpts(self, streamName, streamUrl, station_force_http, streamReferer, playList):
@@ -2606,11 +2618,6 @@ class Player():
         logger.error(f'{streamReferer = }')
         if streamReferer:
             referer = streamReferer
-        else:
-            ''' get referer to station info
-                prompt user to save the playlist
-                and remove old referer file
-            '''
         return referer, referer_file
 
     def togglePause(self):
@@ -2905,7 +2912,7 @@ class MpvPlayer(Player):
         # logger.error('==== self.buffering = {}'.format(self.buffering))
 
         logger.error('Opts:\n{}'.format(opts))
-        return opts, None, referer,referer_file
+        return opts, None, referer, referer_file
 
     def _fix_returned_data(self, data):
         if isinstance(data, tuple):
@@ -3308,8 +3315,21 @@ class MpPlayer(Player):
         return self._do_save_volume(self.profile_token + '\nvolstep=1\nvolume={}\n')
 
     def _calculate_buffer_size_in_kb(self, delay_seconds, bitrate_kbps=None):
+        ''' return delay in KB for mplayer '''
         if bitrate_kbps is None:
-            bitrate_kbps =192
+            bitrate_kbps = 128
+        if '@' in delay_seconds:
+            sp = delay_seconds.split('@')
+            delay_seconds = sp[0]
+            bitrate_kbps = sp[1]
+        try:
+            delay_seconds = int(delay_seconds)
+        except ValueError:
+            delay_seconds = 20
+        try:
+            bitrate_kbps = int(bitrate_kbps)
+        except ValueError:
+            bitrate_kbps = 128
         # Convert bitrate from kbps to bytes per second
         bytes_per_second = (bitrate_kbps * 1000) / 8
 
@@ -3432,11 +3452,6 @@ class MpPlayer(Player):
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('---=== Starting Recording: "{}" ===---'.format(self.recording_filename))
 
-        ''' add URL '''
-        if playList:
-            opts.append('-playlist')
-        opts.append(self._url_to_use(streamUrl, station_force_http))
-
         ''' check if buffering '''
         self.buffering = self._player_is_buffering(opts, self.buffering_tokens)
         with self.buffering_lock:
@@ -3446,6 +3461,11 @@ class MpPlayer(Player):
         if not self.buffering:
             opts.remove('-msglevel')
             opts.remove('all=6')
+
+        ''' add URL '''
+        if playList:
+            opts.append('-playlist')
+        opts.append(self._url_to_use(streamUrl, station_force_http))
 
         # logger.error('Opts:\n{0}\n{1}'.format(opts, monitor_opts))
         return opts, monitor_opts, referer, referer_file
@@ -4445,7 +4465,7 @@ class PlayerCache():
                 '--cache=yes',
                 '--cache-on-disk=yes',
                 '--demuxer-cache-wait=yes',
-                '--demuxer-readahead-secs=29',
+                '--demuxer-readahead-secs=20',
                 ],
             'mplayer': [
                 '-cache', '312',
@@ -4453,7 +4473,7 @@ class PlayerCache():
                 ],
             'vlc': [
                  '--network-caching',
-                 '20'
+                 '20000'
                  ]
             }
 
@@ -4470,9 +4490,6 @@ class PlayerCache():
         self._data_file = os.path.join(data_dir, 'buffers')
         self._recording = recording
         self._read()
-
-    def __del__(self):
-        self._save()
 
     @property
     def enabled(self):
@@ -4548,42 +4565,30 @@ class PlayerCache():
             self._bitrate = '128'
 
     def _read(self):
+        logger.error('\n\nself._data_file = "{}"'.format(self._data_file))
         if os.path.exists(self._data_file):
             try:
                 with open(self._data_file, 'r', encoding='utf-8') as f:
                     line = f.read().strip()
                 orig_player_name = self._player_name
                 sp = line.split(',')
-                for i, a_player in enumerate(('mpv', 'mplayer', 'vlc')):
-                    self._player_name = a_player
-                    if len(sp) == 3:
-                        self.delay = sp[i]
-                        self.enabled = '0'
-                    else:
-                        self.delay = sp[2*i]
-                        self.enabled = sp[2*i+1]
+                logger.error(f'{sp }')
+                logger.error('len(sp) = {}'.format(len(sp)))
+                if len(sp) == 6 or \
+                        len(sp) == 3:
+                    # this is the old buffering format
+                    for i, a_player in enumerate(('mpv', 'mplayer', 'vlc')):
+                        self._player_name = a_player
+                        if len(sp) == 3:
+                            self.delay = sp[i]
+                            self.enabled = '0'
+                        else:
+                            self.delay = sp[2*i]
+                            self.enabled = sp[2*i+1]
                 self._player_name = orig_player_name
             except:
                 pass
-
-    def _save(self):
-        if self._dirty:
-            mpl = int(self._data['vlc'][1])
-            i_mpl = int(int(mpl) / 1000)
-            msg = self._data['mpv'][0].replace('--cache-secs=', '') + ',' + \
-                    self._enabled['mpv'] + ',' + \
-                    self._data['mplayer'][1] + ',' + \
-                    self._enabled['mplayer'] + ',' + \
-                    str(i_mpl) + ',' + \
-                    self._enabled['vlc']
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('msg = "{}"'.format(msg))
-            try:
-                with open(self._data_file, 'w', encoding='utf-8') as f:
-                    f.write(msg)
-            except:
-                pass
-            self._dirty = False
+        logger.error('\n\n')
 
     def _on_disk(self):
         if self._recording() > 0:

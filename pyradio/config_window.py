@@ -85,6 +85,7 @@ class PyRadioConfigWindow():
     '|', 'Valid values: 5 - 60, 0 disables check', 'Default value: 10'])
     _help_text.append(['Most radio stations use plain old http protocol to broadcast, but some of them use https.', '|', 'If this parameter is enabled, all connections will use http; results depend on the combination of station/player.', '|', 'This value is read at program startup, use "' + to_str('https') +  '" to change its effect while mid-session.',
     '|', 'Default value: False'])
+    _help_text.append(['This is the number of seconds the players will buffer data before actually staring playback.', '|', 'This is a global setting; it affects all stations.', '|', 'Please keep in mind that stations may have their own buffering value defined. In this case that value will be used instead of this global value.', '|', 'Accepted values:', '    5 - 60 seconds', '    0 disables buffering', '|', 'Default value: 0'])
     _help_text.append(None)
     _help_text.append(['If this options is enabled, a Desktop Notification will be displayed using the notification daemon / service.', '|', 'If enabled but no notification is displayed, please refer to', 'https://github.com/coderholic/pyradio/desktop-notification.md', '|', 'Valid values are:', '   -1: disabled ', '    0: enabled (no repetition) ', '    x: repeat every x seconds ', '|', 'Default value: -1'])
     _help_text.append(['Notice: Not applicable on Windows!', '|',  'Online Radio Directory Services (like RadioBrowser) will usually provide an icon for the stations they advertise.', '|', 'PyRadio can use this icon (provided that one exists and is of JPG or PNG format) while displaying Desktop Notifications.', '|', 'Setting this option to True, will enable the behavior above.', '|', 'If this option is False, the default icon will be used.', '|', 'Default value: True'])
@@ -753,7 +754,7 @@ class PyRadioConfigWindow():
         self._max_start =  len(self._config_options) -1 - self.maxY
         # logger.error('mas_start = {}'.format(self._max_start))
         val = list(self._config_options.items())[self.selection]
-        # logger.error(f'{val[0] = }')
+        # logger.error(f'{val = }')
         Y = self.selection - self._start + 1
 
         if char in self._local_functions:
@@ -763,6 +764,7 @@ class PyRadioConfigWindow():
                 'connection_timeout',
                 'calculated_color_factor',
                 'time_format',
+                'buffering',
             ) and char in (
                 curses.KEY_LEFT,
                 curses.KEY_RIGHT,
@@ -814,6 +816,37 @@ class PyRadioConfigWindow():
                         client.last_reply
                         ]
             return Window_Stack_Constants.INSERT_RECORDINGS_DIR_MODE, []
+
+        elif val[0] == 'buffering':
+            if char in (curses.KEY_RIGHT, kbkey['l']) or \
+                    check_localized(char, (kbkey['l'], )):
+                t = int(val[1][1])
+                if t == 0:
+                    t = 4
+                if t < 60:
+                    t += 1
+                    self._config_options[val[0]][1] = str(t)
+                    self._win.addstr(
+                        Y, 3 + len(val[1][0]),
+                        str(t) + ' ', curses.color_pair(6))
+                    self._print_title()
+                    self._win.refresh()
+                return -1, []
+
+            elif char in (curses.KEY_LEFT, kbkey['h']) or \
+                    check_localized(char, (kbkey['h'], )):
+                t = int(val[1][1])
+                if t > 5:
+                    t -= 1
+                else:
+                    t = 0
+                self._config_options[val[0]][1] = str(t)
+                self._win.addstr(
+                    Y, 3 + len(val[1][0]),
+                    str(t) + ' ', curses.color_pair(6))
+                self._print_title()
+                self._win.refresh()
+                return -1, []
 
         elif val[0] == 'radiobrowser':
             if char in (curses.KEY_RIGHT, kbkey['l'], kbkey['pause'],

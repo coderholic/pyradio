@@ -3932,18 +3932,29 @@ ____Using |fallback| theme.''')
         logger.error('\n\nself.handle_old_referer : {} - {}\n\n'.format(referer, self.stations[self.selection][Station.referer]))
         try:
             remove(referer_file)
-        except:
-            pass
-        msg = '''
+            msg = '''
 The old method of providing a referer for this
 stations has been used!
 
 |PyRadio| has removed the referer file and updated the
 station, marking the playlist as changed.
 
-Please save the playlist after this window is closed.
+Please |save the playlist| after this window is closed.
 
 '''
+        except:
+            msg = '''
+The old method of providing a referer for this
+stations has been used!
+
+|PyRadio| has updated the station, marking the playlist
+as changed, but filed to remove the referer file:
+|__{}__|
+
+Please |save the playlist| after this window is closed
+and |remove the file manually|.
+
+'''.format(referer_file)
         self._messaging_win.set_a_message(
                 'UNIVERSAL', (
                     'Playlist Changed',
@@ -6429,7 +6440,18 @@ Please save the playlist after this window is closed.
         if self._cnf.check_playlist:
             self.player.success_in_check_playlist = self._success_in_check_playlist
             self.player.error_in_check_playlist = self._error_in_check_playlist
-        self._cnf.buffering_data = []
+        if self._cnf.buffering == '0':
+            self._cnf.buffering_data = []
+        else:
+            x = PlayerCache(
+                    self.PLAYER_NAME,
+                    self._cnf.state_dir,
+                    lambda: self.recording
+                    )
+            x.enabled = True
+            x.delay = self._cnf.buffering
+            self._buffering_data = x.cache[:]
+            x = None
         if self._cnf.check_playlist:
             self.player.recording = 0
         else:
@@ -7684,6 +7706,19 @@ _____"|f|" to see the |free| keys you can use.
                                 if logger.isEnabledFor(logging.DEBUG):
                                     logger.debug('Asked to move recordings but source and target are the same\nsource: {0}\ntarget: {1}'.format(self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS], self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]))
 
+                            # update buffering data
+                            if self._cnf.buffering == '0':
+                                self._cnf.buffering_data = []
+                            else:
+                                x = PlayerCache(
+                                        self.player.PLAYER_NAME,
+                                        self._cnf.state_dir,
+                                        lambda: self.player.recording
+                                        )
+                                x.enabled = True
+                                x.delay = self._cnf.buffering
+                                self._cnf.buffering_data = x.cache[:]
+                                x = None
 
                     elif ret == 1:
                         ''' config not modified '''
