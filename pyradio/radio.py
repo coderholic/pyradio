@@ -1053,6 +1053,51 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
     def player_instance(self):
         return self.player
 
+    def _update_bitrate(self, bitrate):
+        if self.playing > -1:
+            if self._last_played_station == self.stations[self.playing]:
+                # make sure mplayer is installed
+                go_on = False
+                for a_player in self._cnf.AVAILABLE_PLAYERS:
+                    if a_player.PLAYER_NAME == 'mplayer':
+                        go_on = True
+                        break
+                if not go_on:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('mplayer not installed, aborting!')
+                    return
+                br = self.stations[self.playing][Station.buffering]
+                new_br = br
+                if br:
+                    sp = br.split('@')
+                    if sp[-1] == '128':
+                        sp[-1] = bitrate
+                        new_br = '@'.join(sp)
+                    if br != new_br:
+                        self.stations[self.playing][Station.buffering] = new_br
+                        if not self._cnf.browsing_station_service:
+                            self._cnf.dirty_playlist = True
+                            if logger.isEnabledFor(logging.INFO):
+                                logger.info('saving current playlist: {} - "{}" -> "{}"'.format(
+                                    self._cnf.station_title, br, new_br)
+                                            )
+                            self.saveCurrentPlaylist(report_success=False)
+                        else:
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug('online browser is active, not saving playlist!')
+                    else:
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('we have the same bitrate, aborting!')
+                else:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('current buffering value is empty, aborting!')
+            else:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('last played station is different from currently playing station, aborting!')
+        else:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('currently not in playback, aborting!')
+
     def setup(self, stdscr):
         if logger.isEnabledFor(logging.INFO):
             if self.program_restart:
@@ -1166,6 +1211,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.player.buffering_lock = self._buffering_lock
             self.player.log = self.log
             self.player.handle_old_referer = self._handle_old_referer
+            self.player.update_bitrate = self._update_bitrate
             if self._cnf.check_playlist:
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('******* registering check playlist callback functions')
@@ -2887,14 +2933,15 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.ws.operation_mode = self.ws.REMOVE_STATION_MODE
             self._remove_station()
 
-    def saveCurrentPlaylist(self, stationFile=''):
+    def saveCurrentPlaylist(self, stationFile='', report_success=True):
         ret = self._cnf.save_playlist_file(stationFile)
         self.refreshBody()
         if ret == 0 and not self._cnf.is_register:
-            self._show_notification_with_delay(
-                    txt='___Playlist saved!!!___',
-                    mode_to_set=self.ws.NORMAL_MODE,
-                    callback_function=self.refreshBody)
+            if report_success:
+                self._show_notification_with_delay(
+                        txt='___Playlist saved!!!___',
+                        mode_to_set=self.ws.NORMAL_MODE,
+                        callback_function=self.refreshBody)
         elif ret == -1:
             self._open_simple_message_by_key(
                     'M_PLAYLIST_SAVE_ERR_1',
@@ -6435,6 +6482,7 @@ and |remove the file manually|.
         self.player.params = self._cnf.params[self.player.PLAYER_NAME][:]
         self.player.buffering_change_function = self._show_recording_status_in_header
         self.player.buffering_lock = self._buffering_lock
+        self.player.update_bitrate = self._update_bitrate
         self.player.log = self.log
         self.player.handle_old_referer = self._handle_old_referer
         if self._cnf.check_playlist:

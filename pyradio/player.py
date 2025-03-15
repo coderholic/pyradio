@@ -1235,6 +1235,8 @@ class Player():
                                 with self.status_update_lock:
                                     if self.icy_audio_tokens[a_token] == 'icy-br':
                                         self._icy_data[self.icy_audio_tokens[a_token]] = a_str[1].replace('kbit/s', '')
+                                        if self._icy_data['icy-br'] != '128':
+                                            self.update_bitrate(self._icy_data['icy-br'])
                                     else:
                                         self._icy_data[self.icy_audio_tokens[a_token]] = a_str[1]
                                     if self.icy_audio_tokens[a_token] == 'codec':
@@ -1816,6 +1818,8 @@ class Player():
                                 with self.status_update_lock:
                                     if self.icy_audio_tokens[a_token] == 'icy-br':
                                         self._icy_data[self.icy_audio_tokens[a_token]] = a_str[1].replace('kbit/s', '')
+                                        if self._icy_data['icy-br'] != '128':
+                                            self.update_bitrate(self._icy_data['icy-br'])
                                     else:
                                         self._icy_data[self.icy_audio_tokens[a_token]] = a_str[1]
                                     if self.icy_audio_tokens[a_token] == 'codec':
@@ -2018,6 +2022,7 @@ class Player():
         # logger.info('DE a_data {}'.format(a_data))
         if b'icy-br' in a_data:
             # logger.info('DE check {}'.format(self._icy_data))
+            got_icy_br = False
             if 'icy-br' not in self._icy_data:
                 for icy in ('icy-name', 'icy-url', 'icy-genre', 'icy-br'):
                     if stop():
@@ -2027,6 +2032,8 @@ class Player():
                         enc = self._station_encoding
                     else:
                         enc = 'utf-8'
+                    if icy == 'icy-br':
+                        got_icy_br = True
                     if bytes_icy in a_data :
                         with self.status_update_lock:
                             try:
@@ -2034,6 +2041,9 @@ class Player():
                             except UnicodeDecodeError:
                                 pass
                     # logger.error('DE 0 {}'.format(self._icy_data))
+            if got_icy_br:
+                if self._icy_data['icy-br'] != '128':
+                    self.update_bitrate(self._icy_data['icy-br'])
             return True
 
         elif b'request_id' in a_data and b'"error":"success"' in a_data:

@@ -936,19 +936,16 @@ class PyRadioStations():
         ''' Return a row formatted according to the current playlist version,
             eliminating any empty fields that are not part of the specified version. '''
         this_row = deepcopy(a_row)
-        logger.error(f'{this_row}')
-        logger.error(f'{self._playlist_version}')
         # Extract the 'image' from the icon dictionary if present
         if len(this_row) > Station.icon and 'image' in this_row[Station.icon]:
             this_row[Station.icon] = this_row[Station.icon]['image']
 
         if len(this_row) > Station.buffering:
-            if this_row[Station.buffering].startswith('0'):
+            if this_row[Station.buffering] == '0@128':
                 this_row[Station.buffering] = ''
-
-        ret = this_row[:self._playlist_version]
-        logger.error(f'{ret = }')
-        return this_row[:self._playlist_version]
+        while this_row and this_row[-1] == '':
+            this_row.pop()
+        return this_row
 
     def _set_playlist_elements(self, a_playlist, a_title=''):
         self.station_path = path.abspath(a_playlist)
