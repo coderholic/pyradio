@@ -2259,33 +2259,23 @@ class Player():
         isPlayList = streamUrl.split("?")[0][-3:] in ['m3u', 'pls']
 
         # get buffering data from station data
-        logger.error('\n\n\n')
         if a_station[Station.buffering].startswith('0'):
             self._buffering_data = None
         else:
             try:
                 sp = a_station[Station.buffering].split('@')
-                delay = sp[0]
-                bitrate = sp[1]
-                logger.error(f'{delay = }')
                 delay = self._calculate_buffer_size_in_kb(*sp)
-                logger.error(f'{delay = }')
                 x = PlayerCache(
                         self.PLAYER_NAME,
                         self._cnf.state_dir,
                         lambda: self.recording
                         )
-                logger.error(f'{delay = }')
                 x.enabled = True
                 x.delay = delay
                 self._buffering_data = x.cache[:]
                 x = None
-                logger.error(f'{self._buffering_data = }')
-                logger.error('\n\n\n')
             except ValueError:
                 self._buffering_data = None
-                logger.error(f'{self._buffering_data = }')
-                logger.error('\n\n\n')
 
         opts, self.monitor_opts, referer, referer_file = self._buildStartOpts(
             name, streamUrl, station_force_http,
@@ -4493,35 +4483,17 @@ class PlayerCache():
                  ]
             }
 
-    _enabled = {
-        'mpv': '0',
-        'mplayer': '0',
-        'vlc': '0'
-     }
-
     _bitrate = '128'
 
     def __init__(self, player_name, data_dir, recording):
         self._player_name = player_name
-        self._data_file = os.path.join(data_dir, 'buffers')
         self._recording = recording
-        self._read()
-
-    @property
-    def enabled(self):
-        return bool(int(self._enabled[self._player_name]))
-
-    @enabled.setter
-    def enabled(self, val):
-        if val == '0':
-            self._enabled[self._player_name] = '0'
-        elif val == '1':
-            self._enabled[self._player_name] = '1'
-        elif not val:
-            self._enabled[self._player_name] = '0'
-        else:
-            self._enabled[self._player_name] = '1'
-        self._dirty = True
+        data_file = os.path.join(data_dir, 'buffers')
+        if os.path.exists(data_file):
+            try:
+                os.unlink(data_file)
+            except (FileNotFoundError, PermissionError, OSError):
+                pass
 
     @property
     def cache(self):
@@ -4579,32 +4551,6 @@ class PlayerCache():
         else:
             self.delay = value
             self._bitrate = '128'
-
-    def _read(self):
-        logger.error('\n\nself._data_file = "{}"'.format(self._data_file))
-        if os.path.exists(self._data_file):
-            try:
-                with open(self._data_file, 'r', encoding='utf-8') as f:
-                    line = f.read().strip()
-                orig_player_name = self._player_name
-                sp = line.split(',')
-                logger.error(f'{sp }')
-                logger.error('len(sp) = {}'.format(len(sp)))
-                if len(sp) == 6 or \
-                        len(sp) == 3:
-                    # this is the old buffering format
-                    for i, a_player in enumerate(('mpv', 'mplayer', 'vlc')):
-                        self._player_name = a_player
-                        if len(sp) == 3:
-                            self.delay = sp[i]
-                            self.enabled = '0'
-                        else:
-                            self.delay = sp[2*i]
-                            self.enabled = sp[2*i+1]
-                self._player_name = orig_player_name
-            except:
-                pass
-        logger.error('\n\n')
 
     def _on_disk(self):
         if self._recording() > 0:

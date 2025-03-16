@@ -1053,6 +1053,21 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
     def player_instance(self):
         return self.player
 
+    def _update_config_buffering_data(self):
+        self._cnf.buffering_enabled = True
+        if self._cnf.buffering == '0':
+            self._cnf.buffering_data = []
+        else:
+            x = PlayerCache(
+                    self.player.PLAYER_NAME,
+                    self._cnf.state_dir,
+                    lambda: self.player.recording
+                    )
+            x.enabled = True
+            x.delay = self._cnf.buffering
+            self._cnf.buffering_data = x.cache[:]
+            x = None
+
     def _update_bitrate(self, bitrate):
         if self.playing > -1:
             if self._last_played_station == self.stations[self.playing]:
@@ -1224,18 +1239,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 else:
                     self.ws.operation_mode = self.ws.WIN_VLC_NO_RECORD_MODE
             self._cnf.buffering_enabled = True
-            if self._cnf.buffering == '0':
-                self._cnf.buffering_data = []
-            else:
-                x = PlayerCache(
-                        self.player.PLAYER_NAME,
-                        self._cnf.state_dir,
-                        lambda: self.player.recording
-                        )
-                x.enabled = True
-                x.delay = self._cnf.buffering
-                self._cnf.buffering_data = x.cache[:]
-                x = None
+            self._update_config_buffering_data()
         except:
             ''' no player '''
             self.ws.operation_mode = self.ws.NO_PLAYER_ERROR_MODE
@@ -6506,19 +6510,7 @@ and |remove the file manually|.
             if not (self.player.PLAYER_NAME == 'vlc' and \
                     platform.startswith('win')):
                 self.player.recording = to_record
-        self._cnf.buffering_enabled = True
-        if self._cnf.buffering == '0':
-            self._cnf.buffering_data = []
-        else:
-            x = PlayerCache(
-                    self.player.PLAYER_NAME,
-                    self._cnf.state_dir,
-                    lambda: self.player.recording
-                    )
-            x.enabled = True
-            x.delay = self._cnf.buffering
-            self._cnf.buffering_data = x.cache[:]
-            x = None
+        self._update_config_buffering_data()
         self.log.display_help_message = False
         logger.error(f'Player activated: ' + player_name)
         self.log.write(msg_id=STATES.PLAYER_ACTIVATED, msg=player_name + M_STRINGS['player-acivated_'], help_msg=False, suffix='')
@@ -7757,16 +7749,9 @@ _____"|f|" to see the |free| keys you can use.
                             if self._cnf.buffering == '0':
                                 self._cnf.buffering_data = []
                             else:
-                                x = PlayerCache(
-                                        self.player.PLAYER_NAME,
-                                        self._cnf.state_dir,
-                                        lambda: self.player.recording
-                                        )
-                                x.enabled = True
-                                x.delay = self._cnf.buffering
-                                self._cnf.buffering_data = x.cache[:]
-                                x = None
-
+                                old_buffering = self._cnf.buffering
+                                self._update_config_buffering_data()
+                                self._cnf.buffering = old_buffering
                     elif ret == 1:
                         ''' config not modified '''
                         self._show_notification_with_delay(
