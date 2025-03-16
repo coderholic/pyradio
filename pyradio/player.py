@@ -2843,9 +2843,11 @@ class MpvPlayer(Player):
         else:
             opts = [self.PLAYER_CMD, '--no-video', '--quiet']
         if self.buffering_data:
-            opts.extend(self.buffering_data)
+            if self._cnf.buffering_enabled:
+                opts.extend(self.buffering_data)
         elif self._cnf.buffering_data:
-            opts.extend(self._cnf.buffering_data)
+            if self._cnf.buffering_enabled:
+                opts.extend(self._cnf.buffering_data)
 
         ''' this will set the profile too '''
         params = self.params[self.params[0]]
@@ -3376,12 +3378,14 @@ class MpPlayer(Player):
             self.recording = self.NO_RECORDING
         opts = [self.PLAYER_CMD, '-vo', 'null', '-msglevel', 'all=6']
         if self.buffering_data:
-            opts.extend(self.buffering_data)
+            if self._cnf.buffering_enabled:
+                opts.extend(self.buffering_data)
         elif self._cnf.buffering_data:
-            if int(self._cnf.buffering_data[1]) < 61:
-                x = self._calculate_buffer_size_in_kb(int(self._cnf.buffering_data[1]))
-                self._cnf.buffering_data[1] = str(x)
-            opts.extend(self._cnf.buffering_data)
+            if self._cnf.buffering_enabled:
+                if int(self._cnf.buffering_data[1]) < 61:
+                    x = self._calculate_buffer_size_in_kb(int(self._cnf.buffering_data[1]))
+                    self._cnf.buffering_data[1] = str(x)
+                opts.extend(self._cnf.buffering_data)
         # opts = [self.PLAYER_CMD, '-vo', 'null']
         monitor_opts = None
 
@@ -3815,9 +3819,11 @@ class VlcPlayer(Player):
             opts.pop(1)
 
         if self.buffering_data:
-            opts.extend(self.buffering_data)
+            if self._cnf.buffering_enabled:
+                opts.extend(self.buffering_data)
         elif self._cnf.buffering_data:
-            opts.extend(self._cnf.buffering_data)
+            if self._cnf.buffering_enabled:
+                opts.extend(self._cnf.buffering_data)
 
         referer, referer_file = self._get_referer(streamName, streamReferer)
         if referer is not None:

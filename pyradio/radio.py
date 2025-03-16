@@ -1217,13 +1217,25 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     logger.info('******* registering check playlist callback functions')
                 self.player.success_in_check_playlist = self._success_in_check_playlist
                 self.player.error_in_check_playlist = self._error_in_check_playlist
-            self._cnf.buffering_data = []
             if self._request_recording:
                 if not (platform.startswith('win') and \
                         self.player.PLAYER_NAME == 'vlc'):
                     self.player.recording = 1
                 else:
                     self.ws.operation_mode = self.ws.WIN_VLC_NO_RECORD_MODE
+            self._cnf.buffering_enabled = True
+            if self._cnf.buffering == '0':
+                self._cnf.buffering_data = []
+            else:
+                x = PlayerCache(
+                        self.player.PLAYER_NAME,
+                        self._cnf.state_dir,
+                        lambda: self.player.recording
+                        )
+                x.enabled = True
+                x.delay = self._cnf.buffering
+                self._cnf.buffering_data = x.cache[:]
+                x = None
         except:
             ''' no player '''
             self.ws.operation_mode = self.ws.NO_PLAYER_ERROR_MODE
@@ -6488,24 +6500,25 @@ and |remove the file manually|.
         if self._cnf.check_playlist:
             self.player.success_in_check_playlist = self._success_in_check_playlist
             self.player.error_in_check_playlist = self._error_in_check_playlist
-        if self._cnf.buffering == '0':
-            self._cnf.buffering_data = []
-        else:
-            x = PlayerCache(
-                    self.PLAYER_NAME,
-                    self._cnf.state_dir,
-                    lambda: self.recording
-                    )
-            x.enabled = True
-            x.delay = self._cnf.buffering
-            self._buffering_data = x.cache[:]
-            x = None
         if self._cnf.check_playlist:
             self.player.recording = 0
         else:
             if not (self.player.PLAYER_NAME == 'vlc' and \
                     platform.startswith('win')):
                 self.player.recording = to_record
+        self._cnf.buffering_enabled = True
+        if self._cnf.buffering == '0':
+            self._cnf.buffering_data = []
+        else:
+            x = PlayerCache(
+                    self.player.PLAYER_NAME,
+                    self._cnf.state_dir,
+                    lambda: self.player.recording
+                    )
+            x.enabled = True
+            x.delay = self._cnf.buffering
+            self._cnf.buffering_data = x.cache[:]
+            x = None
         self.log.display_help_message = False
         logger.error(f'Player activated: ' + player_name)
         self.log.write(msg_id=STATES.PLAYER_ACTIVATED, msg=player_name + M_STRINGS['player-acivated_'], help_msg=False, suffix='')
@@ -7135,30 +7148,17 @@ _____"|f|" to see the |free| keys you can use.
             elif char == kbkey['buffer'] or \
                     check_localized(char, (kbkey['buffer'],)):
                 self._update_status_bar_right(status_suffix='')
-                if self._cnf.buffering_data:
-                    self._cnf.buffering_data = []
+                if self._cnf.buffering_enabled:
                     self._show_notification_with_delay(
                             txt='___Buffering disabled___',
                             mode_to_set=self.ws.NORMAL_MODE,
                             callback_function=self.refreshBody)
                 else:
-                    x = PlayerCache(
-                            self.player.PLAYER_NAME,
-                            self._cnf.state_dir,
-                            lambda: self.player.recording
-                            )
-                    x.enabled = False if self._cnf.buffering_data else True
-                    self._cnf.buffering_data = x.cache[:]
                     self._show_notification_with_delay(
-                            txt='___Buffering set to {0} {1}___'.format(
-                                    x.delay,
-                                    'KBytes' if self.player.PLAYER_NAME == 'mplayer' else 'seconds',
-                                ),
+                            txt='___Buffering enabled___',
                             mode_to_set=self.ws.NORMAL_MODE,
                             callback_function=self.refreshBody)
-                    x = None
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('buffering data = {}'.format(self._cnf.buffering_data))
+                self._cnf.buffering_enabled = not self._cnf.buffering_enabled
                 return
 
             elif char == kbkey['open_buffer'] or \

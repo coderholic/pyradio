@@ -1473,6 +1473,7 @@ class PyRadioConfig(PyRadioStations):
     start_colors_at = 0
 
     buffering_data = []
+    buffering_enabled = True
 
     _fixed_recording_dir = None
 
