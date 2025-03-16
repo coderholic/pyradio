@@ -45,6 +45,7 @@ M_STRINGS = {
 	'playing_': 'Playing: ',
 	'buffering_': 'Buffering: ',
 	'station_': 'Station: ',
+	'station_buffering': 'Station Buffering',
 	'station-open': ' - Opening connection...',
 	'selected_player_': 'Selected player: ',
 	'down-icon': 'Downloading icon...',

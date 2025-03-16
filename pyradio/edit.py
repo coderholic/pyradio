@@ -2273,6 +2273,7 @@ class PyRadioRenameFile():
 
 
 class PyRadioBuffering():
+    _bitrate_manager = None
 
     _text = 'Buffer size in seconds: '
     _text128 = 'Buffer in KB @128kbps: '
@@ -2280,33 +2281,44 @@ class PyRadioBuffering():
     _text320 = '             @320kbps: '
     _help_text = ' Help '
     _note_text = ' Note '
-    _max_lines = 16
+    _max_lines = 12
     _cache_data  = None
     _big_step = _min = 5
-    _limit = 60
+    _max = 60
 
     def __init__(self,
+                 buffering,
                  parent,
-                 config,
-                 player,
                  global_functions=None):
+        self._buffering = buffering
+        self.buffering_value, self.bitrate_value = buffering.split('@')
+        if self.buffering_value != '0':
+            try:
+                if not (5 <= int(self.buffering_value) <= 60):
+                    self.buffering_value = '0'
+            except ValueError:
+                self.buffering_value = '0'
+        self._original_buffering_value = self.buffering_value
         self._parent = parent
-        self._cnf = config
-        self._player = player
         self._global_functions = global_functions
         if self._global_functions is None:
             self._global_functions = {}
         self.recording = lambda: self._player.recording
-        self._title = ' ' + M_STRINGS['buffering_'].replace(':', '')
-        self._cache_data = PlayerCache(
-                player.PLAYER_NAME,
-                self._cnf.state_dir,
-                lambda: self._player.recording
-                )
-        if self._cnf.buffering_data:
-            self._delay = self._cache_data.delay
+        self._title = ' ' + M_STRINGS['station_buffering'] + ' '
+
+    @property
+    def bitrate_value(self):
+        return self._bitrate_value
+        return self._bitrate_manager.bitrate
+
+    @bitrate_value.setter
+    def bitrate_value(self, value):
+        self._bitrate_value = value
+        return
+        if self._bitrate_manager is None:
+            self._bitrate_manager = BitrateManager(value)
         else:
-            self._delay = 0
+            self._bitrate_manager.bitrate = value
 
     def save(self):
         self._cache_data._save()
@@ -2338,50 +2350,33 @@ class PyRadioBuffering():
 
             # show content
             self._win.addstr(2, 4, self._text, curses.color_pair(10))
-            self._win.addstr('{}'.format(self._delay), curses.color_pair(11))
-
-            # show KB
-            self._win.addstr(3, 4, self._text128, curses.color_pair(10))
-            self._win.addstr('{}'.format(
-                seconds_to_KB_128[self._delay if self._delay == 0 else self._delay - 4]
-            ), curses.color_pair(11))
-            self._win.addstr(4, 4, self._text192, curses.color_pair(10))
-            self._win.addstr('{}'.format(
-                seconds_to_KB_192[self._delay if self._delay == 0 else self._delay - 4]
-            ), curses.color_pair(10))
-            self._win.addstr(5, 4, self._text320, curses.color_pair(10))
-            self._win.addstr('{}'.format(
-                seconds_to_KB_320[self._delay if self._delay == 0 else self._delay - 4]
-            ), curses.color_pair(10))
-
+            self._win.addstr('{}'.format(self.buffering_value), curses.color_pair(11))
 
             # show help
             try:
-                self._win.addstr(7, 2, '─' * (self.MaxX - 4), curses.color_pair(3))
+                self._win.addstr(4, 2, '─' * (self.MaxX - 4), curses.color_pair(3))
             except:
-                self._win.addstr(7, 2, '─'.encode('utf-8') * (self.MaxX - 6), curses.color_pair(3))
-            self._win.addstr(7, int((self.MaxX - len(self._help_text))/2), self._help_text, curses.color_pair(3))
-            self._win.addstr(8, 2, kb2str('{j} {k} Up Down'), curses.color_pair(11))
-            self._win.addstr(9, 2, 'PgUp PgDown', curses.color_pair(11))
+                self._win.addstr(4, 2, '─'.encode('utf-8') * (self.MaxX - 6), curses.color_pair(3))
+            self._win.addstr(4, int((self.MaxX - len(self._help_text))/2), self._help_text, curses.color_pair(3))
+            self._win.addstr(5, 2, kb2str('{j} {k} Up Down'), curses.color_pair(11))
+            self._win.addstr(6, 2, 'PgUp PgDown', curses.color_pair(11))
             self._win.addstr('     Adjust value', curses.color_pair(10))
-            self._win.addstr(10, 2, kb2chr('revert_saved'), curses.color_pair(11))
+            self._win.addstr(7, 2, kb2chr('revert_saved'), curses.color_pair(11))
             self._win.addstr('               Load saved value', curses.color_pair(10))
-            self._win.addstr(11, 2, kb2chr('no_buffer'), curses.color_pair(11))
+            self._win.addstr(8, 2, kb2chr('no_buffer'), curses.color_pair(11))
             self._win.addstr('               No buffering', curses.color_pair(10))
-            self._win.addstr(12, 2, 'Enter ' + kb2chr('s'), curses.color_pair(11))
+            self._win.addstr(9, 2, 'Enter ' + kb2chr('s'), curses.color_pair(11))
             self._win.addstr('         Accept value', curses.color_pair(10))
-            self._win.addstr(13, 2, kb2str('Esc {q} {h} Right'), curses.color_pair(11))
+            self._win.addstr(10, 2, kb2str('Esc {q} {h} Right'), curses.color_pair(11))
             self._win.addstr('   Cancel operation', curses.color_pair(10))
-            self._win.addstr(14, 2, kb2str('{?}'), curses.color_pair(11))
-            self._win.addstr('               Display help', curses.color_pair(10))
         self._win.refresh()
 
     def keypress(self, char):
         """ PyRadioBuffering keypress
             Returns:
-                -1: Cancel  - []
-                 0: go on   - []
-                 1: Ok      = [buffering parameters]
+                -1: Cancel  - None
+                 0: go on   - None
+                 1: Ok      = buffering parameters
         """
         l_char = None
         if char in self._global_functions or \
@@ -2392,12 +2387,11 @@ class PyRadioBuffering():
 
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'), kbkey['s']) or \
                 check_localized(char, (kbkey['s'], )):
-            self._cache_data.delay = self._delay
-            return 1, self._cache_data.cache
+            return 1, self.buffering_value + '@' + self.bitrate_value
 
         elif char in (curses.KEY_EXIT, 27, kbkey['q'], kbkey['h'], curses.KEY_LEFT) or \
                 check_localized(char, (kbkey['q'], kbkey['h'])):
-            return -1, []
+            return -1, None
 
         elif char in (kbkey['j'], curses.KEY_UP,
                       kbkey['k'], curses.KEY_DOWN,
@@ -2406,54 +2400,74 @@ class PyRadioBuffering():
                       ) or check_localized(char, (
                        kbkey['j'], kbkey['k'],
                        kbkey['no_buffer'], kbkey['revert_saved'])):
+            delay = int(self.buffering_value)
             if char == kbkey['revert_saved'] or \
                     check_localized(char, (kbkey['revert_saved'], )):
-                self._delay = self._cache_data.delay
+                self.buffering_value = self._original_buffering_value
             elif char in (kbkey['k'], curses.KEY_UP) or \
                     check_localized(char, (kbkey['k'], )):
-                self._delay += 1
-                if self._delay < self._min:
-                    self._delay = self._min
+                delay += 1
+                if delay < self._min:
+                    delay = self._min
+                if delay > self._max:
+                    delay = self._max
+                self.buffering_value = str(delay)
             elif char in (kbkey['j'], curses.KEY_DOWN) or \
                     check_localized(char, (kbkey['j'], )):
-                self._delay -= 1
-                if self._delay < self._min:
-                    self._delay = 0
+                delay -= 1
+                if delay < self._min:
+                    delay = 0
+                self.buffering_value = str(delay)
             elif char == curses.KEY_NPAGE:
-                self._delay -= self._big_step
-                if self._delay < self._min:
-                    self._delay = 0
+                delay -= self._big_step
+                if delay < self._min:
+                    delay = 0
+                self.buffering_value = str(delay)
             elif char == curses.KEY_PPAGE:
-                self._delay += self._big_step
+                delay += self._big_step
+                if delay > self._max:
+                    delay = self._max
+                self.buffering_value = str(delay)
             elif char == kbkey['no_buffer'] or \
                     check_localized(char, (kbkey['no_buffer'], )):
-                self._delay = 0
+                self.buffering_value = '0'
 
-            if self._delay < 0:
-                self._delay = 0
-            elif self._delay > self._limit:
-                self._delay = self._limit
-            self._win.addstr(2, len(self._text) + 4, '{:<7}'.format(self._delay), curses.color_pair(11))
-            self._win.addstr(
-                3, len(self._text128) + 4, '{:<7}'.format(
-                    seconds_to_KB_128[self._delay if self._delay == 0 else self._delay - 4]
-                    ),
-                    curses.color_pair(11)
-            )
-            self._win.addstr(
-                4, len(self._text192) + 4, '{:<7}'.format(
-                    seconds_to_KB_192[self._delay if self._delay == 0 else self._delay - 4]
-                    ),
-                    curses.color_pair(10)
-            )
-            self._win.addstr(
-                5, len(self._text320) + 4, '{:<7}'.format(
-                    seconds_to_KB_320[self._delay if self._delay == 0 else self._delay - 4]
-                    ),
-                    curses.color_pair(10)
-            )
+            self._win.addstr(2, len(self._text) + 4, '{:<7}'.format(self.buffering_value), curses.color_pair(11))
             self._win.refresh()
-        return 0, []
+        return 0, None
+
+
+class BitrateManager:
+    bitrates = (16, 24, 32, 48, 64, 96, 128, 160, 192, 256, 320, 700, 1411)
+
+    def __init__(self, initial_bitrate: str):
+        self._initial_bitrate = initial_bitrate
+        self._current_bitrate = initial_bitrate
+
+    @property
+    def bitrate(self) -> str:
+        return self._current_bitrate
+
+    @bitrate.setter
+    def bitrate(self, value: str):
+        self._current_bitrate = value
+
+    def next(self) -> str:
+        current = int(self._current_bitrate)
+        next_bitrates = [b for b in self.bitrates if b > current]
+        if next_bitrates:
+            self._current_bitrate = str(min(next_bitrates))
+        return self._current_bitrate
+
+    def previous(self) -> str:
+        current = int(self._current_bitrate)
+        previous_bitrates = [b for b in self.bitrates if b < current]
+        if previous_bitrates:
+            self._current_bitrate = str(max(previous_bitrates))
+        return self._current_bitrate
+
+    def reset(self) -> None:
+        self._current_bitrate = self._initial_bitrate
 
 
 class PyRadioConnectionType():

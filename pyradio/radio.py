@@ -7166,9 +7166,8 @@ _____"|f|" to see the |free| keys you can use.
                 self._update_status_bar_right(status_suffix='')
                 if self.ws.operation_mode == self.ws.NORMAL_MODE:
                     self._buffering_win = PyRadioBuffering(
+                            self.stations[self.selection][Station.buffering],
                             parent=self.outerBodyWin,
-                            config=self._cnf,
-                            player=self.player,
                             global_functions=self._global_functions
                             )
                     self.ws.operation_mode = self.ws.BUFFER_SET_MODE
@@ -7515,10 +7514,10 @@ _____"|f|" to see the |free| keys you can use.
             if ret == 0:
                 return
             elif ret == 1:
-                self._cnf.buffering_data = buf[:]
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('buffering data = {}'.format(buf))
-                self._buffering_win.save()
+                self.ws.close_window()
+                self.stations[self.selection][Station.buffering] = buf
+                self._cnf.dirty_playlist = True
+                self.saveCurrentPlaylist()
                 self._buffering_win = None
             elif ret == -1:
                 self._buffering_win = None
