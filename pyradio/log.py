@@ -507,7 +507,7 @@ class Log():
                     '''
                     do_empty_msg = True
                     if msg_id not in (
-                            STATES.RESET, STATES.CONNECT, STATES.CONNECT_ERROR,
+                            STATES.ANY, STATES.RESET, STATES.CONNECT, STATES.CONNECT_ERROR,
                             STATES.PLAYER_ACTIVATED, STATES.BUFFER, STATES.BUFF_MSG
                     ):
                         if logger.isEnabledFor(logging.DEBUG):

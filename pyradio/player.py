@@ -4497,8 +4497,6 @@ class PlayerCache():
 
     @property
     def cache(self):
-        if self._enabled[self._player_name] == '0':
-            return []
         if self._player_name == 'mpv':
             self._on_disk()
         if self._player_name != 'vlc':
@@ -4522,10 +4520,6 @@ class PlayerCache():
             x = int(a_delay)
         except ValueError:
             return
-        if x == 0:
-            self._enabled[self._player_name] = '0'
-            return
-        self._enabled[self._player_name] = '1'
 
         if self._player_name == 'vlc':
             self._data['vlc'][1] = str(x * 1000)
