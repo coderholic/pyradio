@@ -1053,8 +1053,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
     def player_instance(self):
         return self.player
 
-    def _update_config_buffering_data(self):
-        self._cnf.buffering_enabled = True
+    def _update_config_buffering_data(self, reset=True):
+        if reset:
+            self._cnf.buffering_enabled = True
         if self._cnf.buffering == '0':
             self._cnf.buffering_data = []
         else:
@@ -7620,6 +7621,9 @@ _____"|f|" to see the |free| keys you can use.
                     self._print_body_header()
                     self.refreshBody()
                 if ret == 0:
+                    # recalculate buffering data
+                    self._update_config_buffering_data(reset=False)
+
                     self.detect_if_player_exited = False
                     self._cnf.backup_player_params[0] = self._cnf.params[self._cnf.PLAYER_NAME][:]
                     ret = self._cnf.save_config()
@@ -7749,9 +7753,7 @@ _____"|f|" to see the |free| keys you can use.
                             if self._cnf.buffering == '0':
                                 self._cnf.buffering_data = []
                             else:
-                                old_buffering = self._cnf.buffering
-                                self._update_config_buffering_data()
-                                self._cnf.buffering = old_buffering
+                                self._update_config_buffering_data(reset=False)
                     elif ret == 1:
                         ''' config not modified '''
                         self._show_notification_with_delay(
