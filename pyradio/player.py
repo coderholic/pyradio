@@ -2242,6 +2242,7 @@ class Player():
         self.volume = -1
         self.close()
         self.name = name
+        self.station_volume = int(a_station[Station.volume]) if a_station[Station.volume] else -1
         self.oldUserInput = {'Input': '', 'Volume': '', 'Title': ''}
         self.muted = self.paused = False
         self.show_volume = True
@@ -3667,10 +3668,17 @@ class VlcPlayer(Player):
             self.get_volume()
             #self.actual_volume = int(self.max_volume*self._config_volume/100)
             #logger.info('1 self.actual_volume = {}'.format(self.actual_volume))
-            if self.volume != self._config_volume:
+            volume_to_use = self.station_volume
+            if volume_to_use == -1:
+                volume_to_use = self._config_volume
+            if self.volume != volume_to_use:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('volume: [config, station, used] = [{}, {}, {}]'.format(
+                        self._config_volume, self.station_volume, volume_to_use)
+                                 )
                 #self.volume = self._config_volume
                 #self.set_volume(self.actual_volume)
-                self.set_volume(self._config_volume)
+                self.set_volume(volume_to_use)
 
     def _read_config(self):
         if self._config_volume == -1:
