@@ -137,7 +137,7 @@ Esc|, |{q}                                              |*|  Quit.
 
 !Volume management
 {v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         |*|  Change volume.
-{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume (not in vlc).
+{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume.
 
 !Misc
 {open_playlist}| / |{s}| / |{reload}            |*|  |O|pen / |S|ave / |R|eload playlist.
@@ -287,7 +287,7 @@ Enter|, |Right|, |{l}                           |*|Open selected playlist.
 Esc|, |{q}|, |Left|, |{h}                       |*|Cancel.
 %Global functions (with \ on Line editor)
 {v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         |*|  Change volume.
-{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume (not in vlc).
+{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                               |*|Toggle title log / like a station.'''
 )),
 
@@ -491,7 +491,7 @@ Enter|, |Right|, |{l}                           |*| Apply selected theme.
 Esc|, |{q}|, |Left|, |{h}                       |*| Close window.
 %Global functions (with \ on Line editor)
 {v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         |*| Change volume.
-{mute}| / |{s_vol}                              |*| |M|ute player / Save |v|olume (not in vlc).
+{mute}| / |{s_vol}                              |*| |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                               |*| Toggle title log / like a station.'''
 )),
 
@@ -516,7 +516,7 @@ Down|, |{k}|, |PgDown                               |*| Change Group Header sele
 Esc|, |{q}                                          |*| Cancel.
 %Global functions
 {v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}             |*| Change volume.
-{mute}| / |{s_vol}                                  |*| |M|ute player / Save |v|olume (not in vlc).
+{mute}| / |{s_vol}                                  |*| |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                                   |*| Toggle title log / like a station.'''
 )),
 
@@ -691,7 +691,7 @@ Search history navigation works with normal keys as well
 __(|^N| is the same as |n| when not in a line editor).
 %Global functions (with \ on Line editor)
 {v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         |*|  Change volume.
-{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume (not in vlc).
+{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                               |*|Toggle title log / like a station.'''
 )),
 
@@ -709,7 +709,7 @@ PgUp|, |PgDn                               |*| Navigate through |Search Terms|.
 Esc                                        |*| Exit without saving.
 %Global functions (with \ on Line editor)
 {v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}    |*|  Change volume.
-{mute}| / |{s_vol}                         |*|  |M|ute player / Save |v|olume (not in vlc).
+{mute}| / |{s_vol}                         |*|  |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                          |*|Toggle title log / like a station.'''
 )),
 
@@ -859,7 +859,7 @@ Enter|, |{pause}|, |Right|, |{l}                |*| Change option value.
 Esc|, |{q}|, |Left|, |{h}                       |*| Cancel.
 %Global functions (with \ on Line editor)
 {v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         |*|  Change volume.
-{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume (not in vlc).
+{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                               |*|Toggle title log / like a station.'''
 )),
 
@@ -875,7 +875,7 @@ Right|, |{l}                                     |*| Select default station.
 Esc|, |{q}|, |Left|, |{h}                        |*| Canel.
 %Global functions (with \ on Line editor)
 {v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}          |*|  Change volume.
-{mute}| / |{s_vol}                               |*|  |M|ute player / Save |v|olume (not in vlc).
+{mute}| / |{s_vol}                               |*|  |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                                |*|Toggle title log / like a station.'''
 )),
 
@@ -892,7 +892,7 @@ Right|, |{l}                                    |*| Enable / disable player.
 Esc|, |{q}|, |Left|, |{h}                       |*| Canel.
 %Global functions (with \ on Line editor)
 {v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         |*|  Change volume.
-{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume (not in vlc).
+{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                               |*|Toggle title log / like a station.'''
 )),
 
@@ -907,7 +907,7 @@ Right|, |{l}                                    |*| Select default playlist.
 Esc|, |{q}|, |Left|, |{h}                       |*| Canel.
 %Global functions (with \ on Line editor)
 {v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         |*|  Change volume.
-{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume (not in vlc).
+{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                               |*|Toggle title log / like a station.'''
 )),
 
@@ -920,7 +920,7 @@ Enter|, |{pause}|, |{s}                         |*| Save encoding.
 Esc|, |{q}                                      |*| Cancel.
 %Global functions
 {v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         |*|  Change volume.
-{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume (not in vlc).
+{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                               |*|Toggle title log / like a station.'''
 )),
 
@@ -943,7 +943,7 @@ Down|, |{k}|, |PgDown                           |*| Change Directory selection.
 Esc|, |{q}                                      |*| Cancel.
 %Global functions
 {v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         |*|  Change volume.
-{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume (not in vlc).
+{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                               |*|Toggle title log / like a station.'''
 )),
 
@@ -1459,7 +1459,7 @@ Esc                                             |*|Cancel operation.
 
 %Global functions
 {v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         |*| Change volume.
-{mute}| / |{s_vol}                              |*| |M|ute player / Save |v|olume (not in vlc).
+{mute}| / |{s_vol}                              |*| |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                               |*|Toggle title log / like a station.'''
 )),
 

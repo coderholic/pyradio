@@ -733,7 +733,7 @@ class Player():
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Volume not saved!!! (config file not found!!!)')
             return 'Volume not saved!!!'
-        ret_strings = ('Volume: already saved...',
+        ret_strings = ('Volume: no initial value set...',
                        'Volume: {}% saved',
                        'Volume: {}% NOT saved (Error writing file)',
                        'Volume: NOT saved!')

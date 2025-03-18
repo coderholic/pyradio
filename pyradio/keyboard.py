@@ -158,7 +158,6 @@ kbkey_orig['unnamed']                  = ( ord('u')               , 'Show unname
 kbkey_orig['html_help']                = ( ord('h')               , 'Open html help')
 kbkey_orig['station_volume']           = ( ord('v')               , 'Set station volume')
 
-
 # ! RadioBrowser Keys:
 kbkey_orig['h_rb']                     = ( None                   , 'RadioBrowser Keys')
 kbkey_orig['rb_vote']                  = ( ord('V')               , 'Vote for station')

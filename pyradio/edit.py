@@ -534,7 +534,7 @@ class PyRadioEditor():
             self._win.addstr(22 + step, 23, 'M', curses.color_pair(4))
             self._win.addstr('ute player / Save ', curses.color_pair(5))
             self._win.addstr('v', curses.color_pair(4))
-            self._win.addstr('olume (not in vlc).', curses.color_pair(5))
+            self._win.addstr('olume.', curses.color_pair(5))
             if step + 21 < self.maxY:
                 self._win.addstr(23 + step, 5, kb2chr('t_tag'), curses.color_pair(4))
                 self._win.addstr(' / ', curses.color_pair(5))
@@ -1108,7 +1108,7 @@ class PyRadioRecordingDir():
             self._win.addstr(21 + adjust_line_Y, 23, 'M', curses.color_pair(4))
             self._win.addstr('ute player / Save ', curses.color_pair(5))
             self._win.addstr('v', curses.color_pair(4))
-            self._win.addstr('olume (not in vlc).', curses.color_pair(5))
+            self._win.addstr('olume.).', curses.color_pair(5))
             if adjust_line_Y + 23 < self.maxY:
                 self._win.addstr(22 + adjust_line_Y, 5, kb2chr('t_tag'), curses.color_pair(4))
                 self._win.addstr(' / ', curses.color_pair(5))
@@ -1544,7 +1544,7 @@ class PyRadioResourceOpener():
             self._win.addstr(21 + adjust_line_Y, 23, 'M', curses.color_pair(4))
             self._win.addstr('ute player / Save ', curses.color_pair(5))
             self._win.addstr('v', curses.color_pair(4))
-            self._win.addstr('olume (not in vlc).', curses.color_pair(5))
+            self._win.addstr('olume.', curses.color_pair(5))
             if adjust_line_Y + 23 < self.maxY:
                 self._win.addstr(22 + adjust_line_Y, 5, 'W', curses.color_pair(4))
                 self._win.addstr(' / ', curses.color_pair(5))
@@ -2055,7 +2055,7 @@ class PyRadioRenameFile():
             self._win.addstr(20 + adjust_line_Y, 23, 'M', curses.color_pair(4))
             self._win.addstr('ute player / Save ', curses.color_pair(5))
             self._win.addstr('v', curses.color_pair(4))
-            self._win.addstr('olume (not in vlc).', curses.color_pair(5))
+            self._win.addstr('olume.', curses.color_pair(5))
             if adjust_line_Y + 22 < self.maxY:
                 self._win.addstr(21 + adjust_line_Y, 5, kb2chr('t_tag'), curses.color_pair(4))
                 self._win.addstr(' / ', curses.color_pair(5))

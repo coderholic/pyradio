@@ -3407,7 +3407,7 @@ ____Using |fallback| theme.''')
                      Esc|, |q|, |Left|, |h          |*| Cancel.
                      %Global functions (with \ on Line editor)
                      -|/|+| or |,|/|.               |*| Change volume.
-                     m| / |v                        |*| |M|ute player / Save |v|olume (not in vlc).
+                     m| / |v                        |*| |M|ute player / Save |v|olume.
                      W| / |w                        |*| Toggle title log / like a station.'''
         else:
             if self._player_select_win.from_config:
@@ -3423,7 +3423,7 @@ ____Using |fallback| theme.''')
                          Esc|, |q|, |Left|, |h      |*| Cancel.
                          %Global functions (with \ on Line editor)
                          -|/|+| or |,|/|.           |*| Change volume.
-                         m| / |v                    |*| |M|ute player / Save |v|olume (not in vlc).
+                         m| / |v                    |*| |M|ute player / Save |v|olume.
                          W| / |w                    |*| Toggle title log / like a station.'''
             else:
                 txt = r'''Up|, |j|, |Down|, |k      |*|
@@ -3434,7 +3434,7 @@ ____Using |fallback| theme.''')
                          Esc|, |q|, |Left|, |h      |*| Cancel.
                          %Global functions (with \ on Line editor)
                          -|/|+| or |,|/|.           |*| Change volume.
-                         m| / |v                    |*| |M|ute player / Save |v|olume (not in vlc).
+                         m| / |v                    |*| |M|ute player / Save |v|olume.
                          W| / |w                    |*| Toggle title log / like a station.'''
         return 'Player Extra Parameters Help', txt
 
@@ -6862,7 +6862,7 @@ _____"|f|" to see the |free| keys you can use.
             self._check_to_open_playlist()
             return
             '''
-                End of pen Register - char = y
+                End of open Register - char = y
 
             '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
@@ -6890,7 +6890,7 @@ _____"|f|" to see the |free| keys you can use.
             if self.player.isPlaying():
                 if self.player.playback_is_on:
                     if self.player.buffering:
-                        self.log.write(msg_id=STATES.BUFF_MSG, msg='Player is buffering; cannot save volume...')
+                        self.log.write(msg_id=STATES.BUFF_MSG, msg='Player is buffering; cannot save station volume...')
                         self.player.threadUpdateTitle()
                     else:
                         logger.error(f'{self.player.volume = }')
@@ -6898,17 +6898,21 @@ _____"|f|" to see the |free| keys you can use.
                             ''' inform no change '''
                             if (logger.isEnabledFor(logging.DEBUG)):
                                 logger.debug('Volume is -1. Aborting...')
-                            ret_string = 'Volume: already saved...'
+                            ret_string = 'Station Volume: no initial value set...'
                         elif self.player.volume == -2:
                             if (logger.isEnabledFor(logging.DEBUG)):
                                 logger.debug('Error saving volume...')
-                            ret_string = 'Volume: NOT saved!'
+                            ret_string = 'Station Volume: NOT saved (Error writing file)'
                         else:
                             if (logger.isEnabledFor(logging.DEBUG)):
                                 logger.debug('Volume is {}%. Saving...'.format(self.player.volume))
-                            ret_string = 'Volume: {}% saved'.format(self.player.volume)
-                            self.stations[self.selection][Station.volume] = self.player.volume
-                            self._cnf.dirty_playlist = True
+                            if self.stations[self.selection][Station.volume] != self.player.volume:
+                                ret_string = 'Station Volume: {}% saved'.format(self.player.volume)
+                                self.stations[self.selection][Station.volume] = self.player.volume
+                                self._cnf.dirty_playlist = True
+                                self.saveCurrentPlaylist(report_success=False)
+                            else:
+                                ret_string = 'Station Volume: already saved!'
 
                         self.log.write(msg_id=STATES.VOLUME, msg=ret_string)
                         self.player.threadUpdateTitle()
