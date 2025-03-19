@@ -1385,6 +1385,7 @@ class PyRadioConfig(PyRadioStations):
     opts['connection_timeout'] = ['Connection timeout: ', '10']
     opts['force_http'] = ['Force http connections: ', False]
     opts['buffering'] = ['Buffering (seconds): ', '20']
+    opts['mplayer_save_br'] = ['  MPlayer auto save br: ', False]
     opts['notification'] = ['Notifications', '']
     opts['enable_notifications'] = ['Enable notifications: ', '-1']
     opts['use_station_icon'] = ['    Use station icon: ', True]
@@ -1540,6 +1541,15 @@ class PyRadioConfig(PyRadioStations):
         self.auto_update_frameworks = ( self.base16_themes, self.pywal_themes, self.theme_sh_themes)
 
         self._read_notification_command()
+
+    @property
+    def mplayer_save_br(self):
+        return self.opts['mplayer_save_br'][1]
+
+    @mplayer_save_br.setter
+    def mplayer_save_br(self, val):
+        self.opts['mplayer_save_br'][1] = val
+        self.opts['dirty_config'][1] = True
 
     @property
     def buffering(self):
@@ -2369,7 +2379,12 @@ class PyRadioConfig(PyRadioStations):
                 return -2
             for i in range(len(sp)):
                 sp[i] = sp[i].strip()
-            if sp[0] == 'show_no_themes_message':
+            if sp[0] == 'mplayer_save_br':
+                self.mplayer_save_br = True
+                st = sp[1].strip()
+                if st.lower() == 'false':
+                    self.mplayer_save_br = False
+            elif sp[0] == 'show_no_themes_message':
                 self.show_no_themes_message = True
                 st = sp[1].strip()
                 if st.lower() == 'false':
@@ -4396,8 +4411,11 @@ class FavoritesManager:
                  0 : Item added
                  1 : Item already in favorites
         '''
+        if an_item[0] == '' or \
+                an_item[1] == '':
+            return -1, '___Station is invalid!___'
+
         items = self._read_csv()
-        url = an_item[1]
         updated = False
         write_it = True
 
@@ -4407,19 +4425,11 @@ class FavoritesManager:
         while this_item[-1] == '':
             this_item.pop()
 
-        for i, item in enumerate(this_item):
-            if item is None:
-                if i in range(0, 2):
-                    return -1, '___Station is invalid!___'
-                this_item[i] = ''
-            if this_item[0] == '' or \
-                    this_item[1] == '':
-                return -1, '___Station is invalid!___'
         if isinstance(this_item[-1], dict):
             this_item[-1] = this_item[-1]['image']
         msg = None
         for i, item in enumerate(items):
-            if item[1] == url:
+            if item[1] == this_item[1]:
                 if item == this_item:
                     return 1, '___Already in favorites!___'
                 items[i] = this_item
@@ -4433,15 +4443,6 @@ class FavoritesManager:
             ret = self._write_csv(items)
             return ret[0], msg if msg else ret[1]
         return 1, '___Already in favorites!___'
-
-    # def remove(self, an_item):
-    #     items = self._read_csv()
-    #     name = an_item[0]
-    #     url = an_item[1]
-    #     new_items = [item for item in items if item[0] != name and item[1] != url]
-
-    #     if len(new_items) != len(items):
-    #         self._write_csv(new_items)
 
     def _read_csv(self):
         items = []

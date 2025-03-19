@@ -1070,6 +1070,10 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             x = None
 
     def _update_bitrate(self, bitrate):
+        if not self._cnf.mplayer_save_br:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('not updating bitrate, mplayer_save_br = False')
+            return
         if self.playing > -1:
             if self._last_played_station == self.stations[self.playing]:
                 # make sure mplayer is installed

@@ -86,6 +86,7 @@ class PyRadioConfigWindow():
     _help_text.append(['Most radio stations use plain old http protocol to broadcast, but some of them use https.', '|', 'If this parameter is enabled, all connections will use http; results depend on the combination of station/player.', '|', 'This value is read at program startup, use "' + to_str('https') +  '" to change its effect while mid-session.',
     '|', 'Default value: False'])
     _help_text.append(['This is the number of seconds the players will buffer data before actually staring playback.', '|', 'This is a global setting; it affects all stations.', '|', 'Please keep in mind that stations may have their own buffering value defined. In this case that value will be used instead of this global value.', '|', 'Accepted values:', '    5 - 60 seconds', '    0 disables buffering', '|', 'Default value: 0'])
+    _help_text.append(['This option is only relevant if MPlayer is installed.', '|', "In this case, if the station's bitrate is different to 128kbps, the station will be updated and the playlist will be silently saved.", '|', "This is because MPlayer buffering uses KB instead of seconds (as MPV and VLC do). Since buffering (the previous option) is expressed in seconds, having the station's real bitrate is essential in order to calculate the correct value (seconds to KB).", '|', 'Default value: False'])
     _help_text.append(None)
     _help_text.append(['If this options is enabled, a Desktop Notification will be displayed using the notification daemon / service.', '|', 'If enabled but no notification is displayed, please refer to', 'https://github.com/coderholic/pyradio/desktop-notification.md', '|', 'Valid values are:', '   -1: disabled ', '    0: enabled (no repetition) ', '    x: repeat every x seconds ', '|', 'Default value: -1'])
     _help_text.append(['Notice: Not applicable on Windows!', '|',  'Online Radio Directory Services (like RadioBrowser) will usually provide an icon for the stations they advertise.', '|', 'PyRadio can use this icon (provided that one exists and is of JPG or PNG format) while displaying Desktop Notifications.', '|', 'Setting this option to True, will enable the behavior above.', '|', 'If this option is False, the default icon will be used.', '|', 'Default value: True'])
@@ -765,6 +766,7 @@ class PyRadioConfigWindow():
                 'calculated_color_factor',
                 'time_format',
                 'buffering',
+                'mplayer_save_br',
             ) and char in (
                 curses.KEY_LEFT,
                 curses.KEY_RIGHT,
@@ -1089,7 +1091,8 @@ class PyRadioConfigWindow():
                     sel == 'enable_clock' or \
                     sel == 'wheel_adjusts_volume' or \
                     sel == 'log_titles' or \
-                    sel == 'remove_station_icons':
+                    sel == 'remove_station_icons' or \
+                    sel == 'mplayer_save_br':
                 self._config_options[sel][1] = not self._config_options[sel][1]
                 # # if sel == 'open_last_playlist':
                 # #     if self._config_options[sel][1]:

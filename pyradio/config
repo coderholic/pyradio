@@ -151,6 +151,19 @@ force_http = False
 # Default value = 0
 buffering = 0
 
+# MPlayer auto update bitrate
+# This option is only relevant if MPlayer is installed.
+# In this case, if the station's bitrate is different to 128kbps,
+# the station will be updated and the playlist will be silently saved.
+#
+# This is because MPlayer buffering uses KB instead of seconds (as
+# MPV and VLC do). Since buffering (the previous option) is expressed
+# in seconds, having the station's real bitrate is essential in
+# order to calculate the correct value (seconds to KB).
+#
+# Default value: False
+mplayer_save_br = False
+
 # Default theme
 # Hard coded themes:
 #   dark (default) (8 colors)
