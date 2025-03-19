@@ -71,7 +71,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#specifying-a-playlist-to-load-(command-line)">Specifying a playlist to load (command line)</a></li>
 <li><a href="#autoloading-playlists">Autoloading playlists</a></li>
 <li><a href="#managing-playlists-(within-pyradio)">Managing playlists (within PyRadio)</a></li>
-<li><a href="#managing-foreign-playlists">Managing “foreign” playlists</a>(#managing-“foreign”-playlists)</li>
+<li><a href="#managing-foreign-playlists">Managing foreign playlists</a></li>
 <li><a href="#playlist-history">Playlist history</a></li>
 </ul></li>
 <li><a href="#stations-history">Stations history</a></li>
@@ -109,12 +109,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#mplayer">MPlayer</a></li>
 <li><a href="#vlc">VLC</a></li>
 </ul></li>
-<li><a href="#buffering">Buffering</a>
-<ul>
-<li><a href="#parameters-used">Parameters used</a></li>
-<li><a href="#customizing-the-buffering-behavior">Customizing the buffering behavior</a></li>
-<li><a href="#how-it-works">How it works</a></li>
-</ul></li>
+<li><a href="#buffering">Buffering</a></li>
 <li><a href="#displaying-station-info">Displaying Station Info</a></li>
 <li><a href="#copying-and-pasting---registers">Copying and pasting - Registers</a></li>
 <li><a href="#favorites-playlist">Favorites playlist</a></li>
@@ -191,6 +186,19 @@ a:visited{color: SaddleBrown;}
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
 
+2025-03-19 s-n-g
+    * version 0.9.3.11.8 - 0.9.3.12-beta8
+    * fixing #281 - Favourite list becomes corrupted after adding station
+    * adding buffering config parameters: buffering and mplayer_save_br
+    * pressing \b will toggle global buffering for the session
+    * the Buffering Window will change station buffering value instead of config
+    * station volume will be saved (\v by default) and the playlist will
+      be silently saved - station volume will work for VLC only
+    * saveCurrentPlaylist: trailling commas will be eliminated
+    * updating Windows MPV download link
+    * adding bufferring.md and pyradio_buf man page
+    * updating docs
+    
 2025-03-13 s-n-g
     * version 0.9.3.11.7 - 0.9.3.12-beta7
     * fixing #280 - Removing station and saving removes 
@@ -1654,23 +1662,23 @@ Esc/q/Left/h      -                                                Cancel / clos
 <p>In any case, <strong>PyRadio</strong> will save the file before exiting (or in case Ctrl-C is pressed) if needed (e.g. if a config parameter has been changed during its execution).</p>
 <p>If saving the configuration file fails, <strong>PyRadio</strong> will create a back up file and terminate. When restarted, <strong>PyRadio</strong> will try to restore previously used settings from the said back up file.</p>
 <h2 id="about-playlist-files">About Playlist files <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p><strong>PyRadio</strong> reads the stations to use from a CSV file, where each line contains two columns, the first being the station name and the second being the stream URL.</p>
+<p><strong>PyRadio</strong> reads the stations to use from a CSV file, where each line contains two columns, the first being the <strong>station name</strong> and the second being the <strong>stream URL</strong>.</p>
 <p>Optionally, a number of more columns can be used.</p>
 <ul>
-<li><p>The third column will define the encoding used by the station (more on this at <a href="#specifying-stations-encoding">Specifying stations’ encoding</a>).</p></li>
-<li><p>The fourth column will set an <em>Icon URL</em>, to be used when displaying <a href="#desktop-notifications">Desktop Notifications</a>.</p></li>
-<li><p>The fifth column is the profile to be used with this station.</p></li>
+<li><p>The third column will define the <strong>Encoding</strong> used by the station (more on this at <a href="#specifying-stations-encoding">Specifying stations’ encoding</a>).</p></li>
+<li><p>The fourth column will set an <strong>Icon URL</strong>, to be used when displaying <a href="#desktop-notifications">Desktop Notifications</a>.</p></li>
+<li><p>The fifth column is the <strong>Profile</strong> to be used with this station.</p></li>
 <li><p>The sixth column will determine whether <strong>Buffering</strong> will be used (more on this at <a href="#buffering">Buffering</a>).</p></li>
-<li><p>The seventh column will determine whether the station will be forced to be using http instead of https (more on this at <a href="#player-connection-protocol">Player connection protocol</a>).</p></li>
-<li><p>The eight column defines the volume value to be used.</p></li>
-<li><p>The last column will define the referer to be used (more on this at <a href="#specifying-a-stations-referer-url">Specifying a station’s Referer URL</a>).</p></li>
+<li><p>The seventh column will determine whether the station will be forced to be using <strong>http</strong> instead of https (more on this at <a href="#player-connection-protocol">Player connection protocol</a>).</p></li>
+<li><p>The eight column defines the <strong>Volume</strong> value to be used.</p></li>
+<li><p>The last column will define the <strong>Referer</strong> to be used (more on this at <a href="#specifying-a-stations-referer-url">Specifying a station’s Referer URL</a>).</p></li>
 </ul>
 <p>The following table presents the <strong>Station’s fields</strong> and the current level of support.</p>
 <table>
 <colgroup>
-<col style="width: 22%" />
+<col style="width: 20%" />
 <col style="width: 39%" />
-<col style="width: 38%" />
+<col style="width: 40%" />
 </colgroup>
 <thead>
 <tr>
@@ -1707,8 +1715,8 @@ Esc/q/Left/h      -                                                Cancel / clos
 </tr>
 <tr>
 <td>Buffering</td>
-<td><strong>No</strong></td>
-<td><strong>No</strong></td>
+<td>0.9.3.11.8</td>
+<td>0.9.3.11.8</td>
 </tr>
 <tr>
 <td>Force HTTP</td>
@@ -1717,7 +1725,7 @@ Esc/q/Left/h      -                                                Cancel / clos
 </tr>
 <tr>
 <td>Volume</td>
-<td><strong>No</strong></td>
+<td><strong>No</strong> for <em>MPV</em> and <em>MPlayer</em></td>
 <td>0.9.3.11.5</td>
 </tr>
 <tr>
@@ -1842,7 +1850,7 @@ $ pyradio -s 5</pre>
 <p>One thing you may also want to do is remove a station from a playlist, e.g. when found that it not longer works. You can do that by pressing “<strong>DEL</strong>” or “<strong>x</strong>”. The deleted station is copied to the <strong>unnamed register</strong> (refer to section <a href="#copying-and-pasting---registers">Copying and pasting - Registers</a> for more information).</p>
 <p>Finally, opening another playlist is also possible. Just press “<strong>o</strong>” and you will be presented with a list of saved playlists to choose from. These playlists must be saved beforehand in <strong>PyRadio</strong>’s configuration directory.</p>
 <p>While executing any of the previous actions, you may get confirmation messages (when opening a playlist while the current one is modified but not saved, for example) or error messages (when an action fails). Just follow the on screen information, keeping in mind that a capital letter as an answer will save this answer in <strong>PyRadio</strong>’s configuration file for future reference.</p>
-<h3 id="managing-foreign-playlists">Managing “foreign” playlists</h3>
+<h3 id="managing-foreign-playlists">Managing foreign playlists</h3>
 <p>A playlist that does not reside within the program’s configuration directory is considered a “<strong>foreign</strong>” playlist. This playlist can only be opened by the “<strong>-s</strong>” command line option.</p>
 <p>When this happens, <strong>PyRadio</strong> will offer you the choice to copy the playlist in its configuration directory, thus making it available for manipulation within the program.</p>
 <p>If a playlist of the same name already exists in the configuration directory, the “<strong>foreign</strong>” playlist will be time-stamped. For example, if a “<strong>foreign</strong>” playlist is named “<em>stations.csv</em>”, it will be named “<em>2019-01-11_13-35-47_stations.csv</em>” (provided that the action was taken on January 11, 2019 at 13:35:47).</p>
@@ -2044,69 +2052,8 @@ volume=50</pre>
 <p>This means that <strong>VLC</strong> will start and connect to a station, use whatever volume level it’s stored for it and then <strong>PyRadio</strong> will reset the volume to the desired one (as saved within <strong>PyRadio</strong>).</p>
 <p>The volume will be saved is a file called <em>vlc.conf</em> and reside withing the <em>data</em> directory, inside <strong>PyRadio</strong>’s configuration folder.</p>
 <h2 id="buffering">Buffering <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>When a station is slow (or the internet connection is slow), one might get to a situation where the connection timeout will run out before the connection with the station can be established. Even worse, <strong>PyRadio</strong> will connect to the station, but the sound will be choppy and crackling.</p>
-<p>The solution is to use a large enough <strong>buffer</strong> to connect to the station; this will effectively make <strong>PyRadio</strong> connect to the station and start receiving data, but will not start playback until the buffer is full.</p>
-<p>All <strong>PyRadio</strong> supported support buffering, using a number of command line parameters to actually set it up. <strong>PyRadio</strong> will remove all this complexity by making is as simple as inserting a single value to the “<em>Buffering</em>” window, shown below.</p>
-<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-buffering-win.jpg" target="_blank"><img style="width: 250px" src="https://members.hellug.gr/sng/pyradio/pyradio-buffering-win.jpg" alt="PyRadio Buffering Window" /></a></p>
-
-<p>The window opens by pressing “<strong>\B</strong>” while in the <strong>Main</strong> mode.</p>
-<p>It will display the current buffer size (0 means no buffering), and will permit to adjust it, or use the previously used value (pressing “<strong>r</strong>”).</p>
-<p>In any case, one can enable or disable the use of buffering by pressing “<strong>\b</strong>” (using either the default value or the one set in the “<em>Buffering</em>” window).</p>
-<h3 id="parameters-used">Parameters used</h3>
-<p>The following table shows the command line parameters used by <strong>PyRadio</strong> when the “<em>Buffering</em>” window is used to set up buffering.</p>
-<table>
-<colgroup>
-<col style="width: 38%" />
-<col style="width: 30%" />
-<col style="width: 30%" />
-</colgroup>
-<thead>
-<tr>
-<th>mpv<br>(X in seconds)</th>
-<th>mplayer<br>(X in KBytes)</th>
-<th>vlc<br>(X in seconds)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>–demuxer-readahead-secs=X-1</td>
-<td>-cache X</td>
-<td>–network-caching X*1000</td>
-</tr>
-<tr>
-<td>–demuxer-cache-wait=yes</td>
-<td>-cache-min 80</td>
-<td></td>
-</tr>
-<tr>
-<td>–cache=yes</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>–cache-secs=X</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>–cache-on-disk=yes/no *</td>
-<td></td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<p>* disabled if more than 500KB of memory is free</p>
-<h3 id="customizing-the-buffering-behavior">Customizing the buffering behavior</h3>
-<p>In case one wants to use a different set of parameters (when using <strong>mpv</strong> or <strong>mplayer</strong>, but not <strong>vlc</strong>), one would just not use the integrated solution; one would just use a <strong>profile</strong>.</p>
-<p>Please refer to the players’ documentation on profiles and the “<a href="#player-default-volume-level">Player default volume level</a>” section in this document.</p>
-<p>As long as the word “<strong>cache</strong>” is contained in the profile’s name, <strong>PyRadio</strong> will understand this is a buffering profile and act accordingly. But it’s up to the user to make sure this presupposition is honored.</p>
-<h3 id="how-it-works">How it works</h3>
-<p>When buffering is enabled, and a connection to a station initializes, <strong>PyRadio</strong> will display a “<strong>[B]</strong>” at the top left corner of the window, and display “<strong>Buffering:</strong>” and the name of the station in the status bar, until it get a token that the buffering has stopped.</p>
-<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-b.jpg" target="_blank"><img style="width: 350px" src="https://members.hellug.gr/sng/pyradio/pyradio-b.jpg" alt="PyRadio Buffering" /></a></p>
-
-<p>An example is shown in the image above.</p>
-<p>Now, this behavior depends on the station, and the data it sends (or does not send) while it is buffering. For example, an ICY title may be received while buffering, which will be displayed in the status bar.</p>
-<p>It should be noted that, no volume adjustment can be preformed while buffering.</p>
+<p><strong>PyRadio</strong> provides stream buffering options for all supported players.</p>
+<p>Please refer to this document for more info: <a href="buffering.html">PyRadio Buffering</a>.</p>
 <h2 id="displaying-station-info">Displaying Station Info <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>When a connection to a radio station has been established, the station starts sending audio data for the user to listen to.</p>
 <p>Well, that’s obvious, right?</p>

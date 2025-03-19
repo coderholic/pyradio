@@ -156,7 +156,8 @@ for afile in index.md \
     themes.md \
     headless.md \
     client.md \
-    rec-dir.md
+    rec-dir.md \
+    buffering.md
 do
     sed -i -e "s/'s-/s-/g" -e "s/s'-/s-/g"  "$afile"
     git add "$afile"
@@ -199,6 +200,8 @@ do
         echo '% PyRadio Headless Operation' > tmp.md
     elif [ "$afile" = "rec-dir.md" ];then
         echo '% PyRadio Recordings Directory' > tmp.md
+    elif [ "$afile" = "buffering.md" ];then
+        echo '% PyRadio Buffering' > tmp.md
     fi
     cat ${afile} >> tmp.md
     pandoc --wrap=none -s -t html tmp.md -o ${out} || {
@@ -309,6 +312,12 @@ do
     fi
     if [ "$out" = "radio-browser.html" ];then
         sed -i -e '/<img /s/src=/style="width: 550px" src=/' \
+            "$out"
+    fi
+
+    if [ "$out" = "buffering.html" ];then
+        sed -i -e '/pyradio-buffering-win.jpg/s/src=/style="width: 280px" src=/' \
+            -e '/pyradio-b\.jpg/s/src=/style="width: 450px" src=/' \
             "$out"
     fi
 

@@ -27,7 +27,7 @@ Command line internet radio player.
     * [Specifying a playlist to load (command line)](#specifying-a-playlist-to-load-(command-line))
     * [Autoloading playlists](#autoloading-playlists)
     * [Managing playlists (within PyRadio)](#managing-playlists-(within-pyradio))
-    * [Managing "foreign" playlists](#managing-"foreign"-playlists)
+    * [Managing foreign playlists](#managing-foreign-playlists)
     * [Playlist history](#playlist-history)
 * [Stations history](#stations-history)
 * [Search function](#search-function)
@@ -51,9 +51,6 @@ Command line internet radio player.
     * [MPlayer](#mplayer)
     * [VLC](#vlc)
 * [Buffering](#buffering)
-    * [Parameters used](#parameters-used)
-    * [Customizing the buffering behavior](#customizing-the-buffering-behavior)
-    * [How it works](#how-it-works)
 * [Displaying Station Info](#displaying-station-info)
 * [Copying and pasting - Registers](#copying-and-pasting---registers)
 * [Favorites playlist](#favorites-playlist)
@@ -419,37 +416,37 @@ If saving the configuration file fails, **PyRadio** will create a back up file a
 
 ## About Playlist files
 
-**PyRadio** reads the stations to use from a CSV file, where each line contains two columns, the first being the station name and the second being the stream URL.
+**PyRadio** reads the stations to use from a CSV file, where each line contains two columns, the first being the **station name** and the second being the **stream URL**.
 
 Optionally, a number of more columns can be used.
 
-- The third column will define the encoding used by the station (more on this at [Specifying stations' encoding](#specifying-stations-encoding)).
+- The third column will define the **Encoding** used by the station (more on this at [Specifying stations' encoding](#specifying-stations-encoding)).
 
-- The fourth column will set an *Icon URL*, to be used when displaying [Desktop Notifications](#desktop-notifications).
+- The fourth column will set an **Icon URL**, to be used when displaying [Desktop Notifications](#desktop-notifications).
 
-- The fifth column is the profile to be used with this station.
+- The fifth column is the **Profile** to be used with this station.
 
 - The sixth column will determine whether **Buffering** will be used (more on this at [Buffering](#buffering)).
 
-- The seventh column will determine whether the station will be forced to be using http instead of https (more on this at [Player connection protocol](#player-connection-protocol)).
+- The seventh column will determine whether the station will be forced to be using **http** instead of https (more on this at [Player connection protocol](#player-connection-protocol)).
 
-- The eight column defines the volume value to be used.
+- The eight column defines the **Volume** value to be used.
 
-- The last column will define the referer to be used (more on this at [Specifying a station's Referer URL](#specifying-a-stations-referer-url)).
+- The last column will define the **Referer** to be used (more on this at [Specifying a station's Referer URL](#specifying-a-stations-referer-url)).
 
 The following table presents the **Station's fields** and the current level of support.
 
-| Station Field   | Takes Effect in Playlist | Customizable in Program         |
-|-----------------|------------------------------|-----------------------------|
-| Name            | <0.9.3.11.5              | <0.9.3.11.5                     |
-| URL             | <0.9.3.11.5              | <0.9.3.11.5                     |
-| Encoding        | <0.9.3.11.5              | <0.9.3.11.5                     |
-| Icon            | <0.9.3.11.5              | <0.9.3.11.5                     |
-| Profile         | **No**                   | **No**                          |
-| Buffering       | **No**                   | **No**                          |
-| Force HTTP      | 0.9.3.11.6               | **No**                          |
-| Volume          | **No**                   | 0.9.3.11.5                      |
-| Referer URL     | <0.9.3.11.5              | **No**<br>Using a referer file  |
+| Station Field   | Takes Effect in Playlist       | Customizable in Program         |
+|-----------------|--------------------------------|---------------------------------|
+| Name            | <0.9.3.11.5                    | <0.9.3.11.5                     |
+| URL             | <0.9.3.11.5                    | <0.9.3.11.5                     |
+| Encoding        | <0.9.3.11.5                    | <0.9.3.11.5                     |
+| Icon            | <0.9.3.11.5                    | <0.9.3.11.5                     |
+| Profile         | **No**                         | **No**                          |
+| Buffering       | 0.9.3.11.8                     | 0.9.3.11.8                      |
+| Force HTTP      | 0.9.3.11.6                     | **No**                          |
+| Volume          | **No** for *MPV* and *MPlayer* | 0.9.3.11.5                      |
+| Referer URL     | <0.9.3.11.5                    | **No**<br>Using a referer file  |
 
 
 **PyRadio** will by default load the user's stations file (e.g. *~/.config/pyradio/stations.csv*) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.
@@ -602,7 +599,7 @@ Finally, opening another playlist is also possible. Just press "**o**" and you w
 
 While executing any of the previous actions, you may get confirmation messages (when opening a playlist while the current one is modified but not saved, for example) or error messages (when an action fails). Just follow the on screen information, keeping in mind that a capital letter as an answer will save this answer in **PyRadio**'s configuration file for future reference.
 
-### Managing "foreign" playlists
+### Managing foreign playlists
 
 A playlist that does not reside within the program's configuration directory is considered a "**foreign**" playlist. This playlist can only be opened by the "**-s**" command line option.
 
@@ -920,53 +917,9 @@ The volume will be saved is a file called *vlc.conf* and reside withing the *dat
 
 ## Buffering
 
-When a station is slow (or the internet connection is slow), one might get to a situation where the connection timeout will run out before the connection with the station can be established. Even worse, **PyRadio** will connect to the station, but the sound will be choppy and crackling.
+**PyRadio** provides stream buffering options for all supported players.
 
-The solution is to use a large enough **buffer** to connect to the station; this will effectively make **PyRadio** connect to the station and start receiving data, but will not start playback until the buffer is full.
-
-All **PyRadio** supported support buffering, using a number of command line parameters to actually set it up. **PyRadio** will remove all this complexity by making is as simple as inserting a single value to the "*Buffering*" window, shown below.
-
-![PyRadio Buffering Window](https://members.hellug.gr/sng/pyradio/pyradio-buffering-win.jpg)
-
-The window opens by pressing "**\\B**" while in the **Main** mode.
-
-It will display the current buffer size (0 means no buffering), and will permit to adjust it, or use the previously used value (pressing "**r**").
-
-In any case, one can enable or disable the use of buffering by pressing "**\\b**" (using either the default value or the one set in the "*Buffering*" window).
-
-### Parameters used
-
-The following table shows the command line parameters used by **PyRadio** when the "*Buffering*" window is used to set up buffering.
-
-| mpv<br>(X in seconds)          | mplayer<br>(X in KBytes) | vlc<br>(X in seconds)    |
-|--------------------------------|--------------------------|--------------------------|
-| --demuxer-readahead-secs=X-1   | -cache X                 | --network-caching X*1000 |
-| --demuxer-cache-wait=yes       | -cache-min 80            |                          |
-| --cache=yes                    |                          |                          |
-| --cache-secs=X                 |                          |                          |
-| --cache-on-disk=yes/no \*      |                          |                          |
-
-\* disabled if more than 500KB of memory is free
-
-### Customizing the buffering behavior
-
-In case one wants to use a different set of parameters (when using **mpv** or **mplayer**, but not **vlc**), one would just not use the integrated solution; one would just use a **profile**.
-
-Please refer to the players' documentation on profiles and the "[Player default volume level](#player-default-volume-level)" section in this document.
-
-As long as the word "**cache**" is contained in the profile's name, **PyRadio** will understand this is a buffering profile and act accordingly. But it's up to the user to make sure this presupposition is honored.
-
-### How it works
-
-When buffering is enabled, and a connection to a station initializes, **PyRadio** will display a "**[B]**" at the top left corner of the window, and display "**Buffering:**" and the name of the station in the status bar, until it get a token that the buffering has stopped.
-
-![PyRadio Buffering](https://members.hellug.gr/sng/pyradio/pyradio-b.jpg)
-
-An example is shown in the image above.
-
-Now, this behavior depends on the station, and the data it sends (or does not send) while it is buffering. For example, an ICY title may be received while buffering, which will be displayed in the status bar.
-
-It should be noted that, no volume adjustment can be preformed while buffering.
+Please refer to this document for more info: [PyRadio Buffering](buffering.md).
 
 ## Displaying Station Info
 

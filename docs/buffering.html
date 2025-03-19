@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PyRadio Buffering</title>
+    <style> 
+    body {padding: 2em;} 
+    @media screen and (max-width: 770px) { 
+        body {padding: 10px;} 
+    }
+    body {max-width: 750px; margin: auto;} 
+    h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
+    h3 {margin-top: 2em; color: SaddleBrown; text-decoration: underline SaddleBrown} 
+    h4 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 1em;} 
+    h4:before {content: "# "; font-weight: bold; vertical-align: middle;} 
+    h5 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 1em;;} 
+    h5:before {content: "## "; font-weight: bold; vertical-align: middle;} 
+    p, table, ol, ul {margin-left: .8em;} 
+    STRONG {color: SaddleBrown;} 
+    dl {margin: 2em;} 
+    dd {margin: 1em;} 
+    dt {font-weight: bold;} 
+    TABLE {border: 1px solid SaddleBrown; border-collapse: collapse; margin-left: auto; margin-right: auto; border-radius: 5px; -moz-border-radius: 5px; border-collapse:separate; box-shadow: 5px 5px 15px #888888;} 
+    TH {text-align: left; vertical-align: top; padding: 5px;color: SaddleBrown;border: 1px solid SaddleBrown; background-color: SaddleBrown; color: white;} 
+    TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
+    pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; overflow: auto; box-shadow: 5px 5px 15px #C7C7C7;} 
+    .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} 
+    img{display: block; margin-left: auto; margin-right: auto; max-width: 750px; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
+    .indented {text-indent: -1.5em; padding-left: 1.5em; margin-left: 1em;} 
+    a{ color: SaddleBrown;}
+a:visited{color: SaddleBrown;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+</header>
+<h1 style="color: SaddleBrown" id="pyradio-buffering">PyRadio Buffering</h1>
+<p>Command line internet radio player.</p>
+<h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<!-- vim-markdown-toc Marked -->
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#how-it-all-works">How it all works</a>
+<ul>
+<li><a href="#mplayer-buffering">MPlayer buffering</a></li>
+</ul></li>
+<li><a href="#parameters-used">Parameters used</a></li>
+<li><a href="#user-experience">User experience</a></li>
+</ul>
+<!-- vim-markdown-toc -->
+<p class="indented">[ <a href="index.html#buffering">Return to main doc</a> ]</p>
+<h2 id="introduction">Introduction <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>When a station is slow (or the internet connection is slow), one might get to a situation where the connection timeout will run out before the connection with the station can be established. Even worse, <strong>PyRadio</strong> will connect to the station, but the sound will be choppy and crackling.</p>
+<p>The solution is to use a large enough <strong>buffer</strong> to connect to the station; this will effectively make <strong>PyRadio</strong> connect to the station and start receiving data, but will not start playback until the buffer is full.</p>
+<p>All <strong>PyRadio</strong> supported players support buffering, using a number of command line parameters to actually set it up. <strong>PyRadio</strong> will remove all this complexity by making is as simple as inserting a single value to the <strong>Configuration Window</strong>.</p>
+<p>In addition to that, or instead of that, one can set up a buffering value for any individual station using the “<em>Buffering</em>” window, shown below.</p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-buffering-win.jpg" target="_blank"><img style="width: 280px" src="https://members.hellug.gr/sng/pyradio/pyradio-buffering-win.jpg" alt="PyRadio Buffering Window" /></a></p>
+
+<p>The window opens by pressing “<strong>\B</strong>” while in the <strong>Main</strong> mode.</p>
+<p>It will display the current station’s buffer size (0 means no buffering), and will permit to adjust it, or use the previously used value (pressing “<strong>r</strong>”).</p>
+<h2 id="how-it-all-works">How it all works <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p><strong>PyRadio</strong> has both a configuration parameter and a station parameter that will be taken into account when trying to determine if a station will use buffering or not.</p>
+<ol type="1">
+<li><p>The global <em>buffering value</em> which will be used for all stations (if set). It can be found under the “<em>Connection Options</em>” section in the <strong>Configuration Window</strong>, parameter <strong>Buffering (seconds)</strong>.</p></li>
+<li><p>The <em>station buffering</em> value set using “<strong>\B</strong>” as described above.<br />
+If used, the station will be updated and the playlist will be silently saved.<br />
+<br />
+In this case, a string of the form “<strong>7@128</strong>” will be inserted in the appropriate field of the station definition, “<strong>7</strong>” being the buffering value in seconds and “<strong>128</strong>” the bitrate of the station, which is only relevant to <strong>MPlayer</strong>.</p></li>
+</ol>
+<p>In any case, one can enable or disable the use of buffering by pressing “<strong>\b</strong>”. This value will not be saved and will be set to True whenever a player change occurs.</p>
+<h3 id="mplayer-buffering">MPlayer buffering</h3>
+<p>Both <em>MPV</em> and <em>VLC</em> will directly use the buffering value (expressed in seconds) in order to buffer a stream.</p>
+<p>This is not the case with <em>MPlayer</em> unfortunately; it has to receive the number of KBytes to buffer.</p>
+<p>In order to do that in a consistent way, the station’s bitrate must be known beforehand, which is impossible. So, a workaround is being used: the player will trigger a station update (and a silent playlist save), if:</p>
+<ol type="1">
+<li><strong>MPlayer</strong> is installed and detected as a supported player.</li>
+<li>The “<strong>MPlayer auto save br</strong>” configuration parameter (under <strong>Connection Options</strong>) is set to <strong>True</strong>.</li>
+<li>The station streams at a bitrate different to 128 kbps (the default).</li>
+</ol>
+<p>This way, the first time <strong>MPlayer</strong> is used to buffer the station the buffering will be incorrect (shorter or longer depending on the real bitrate), but subsequent playback of the station will correctly set the number of KBytes that corresponds to the buffering time set.</p>
+<h2 id="parameters-used">Parameters used <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>The following table shows the command line parameters used by <strong>PyRadio</strong> when the “<em>Buffering</em>” window is used to set up buffering.</p>
+<table>
+<colgroup>
+<col style="width: 38%" />
+<col style="width: 30%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr>
+<th>mpv<br>(X in seconds)</th>
+<th>mplayer<br>(X in KBytes)</th>
+<th>vlc<br>(X in seconds)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>–demuxer-readahead-secs=X-1</td>
+<td>-cache X</td>
+<td>–network-caching X*1000</td>
+</tr>
+<tr>
+<td>–demuxer-cache-wait=yes</td>
+<td>-cache-min 80</td>
+<td></td>
+</tr>
+<tr>
+<td>–cache=yes</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>–cache-secs=X</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>–cache-on-disk=yes/no *</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>* disabled if more than 500KB of memory is free</p>
+<h2 id="user-experience">User experience <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>When buffering is enabled, and a connection to a station initializes, <strong>PyRadio</strong> will display a “<strong>[B]</strong>” at the top left corner of the window, and display “<strong>Buffering:</strong>” and the name of the station in the status bar, until it get a token that the buffering has stopped.</p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-b.jpg" target="_blank"><img style="width: 450px" src="https://members.hellug.gr/sng/pyradio/pyradio-b.jpg" alt="PyRadio Buffering" /></a></p>
+
+<p>An example is shown in the image above.</p>
+<p>Now, this behavior depends on the station, and the data it sends (or does not send) while it is buffering. For example, an ICY title may be received while buffering, which will be displayed in the status bar.</p>
+<p>It should be noted that, no volume adjustment can be preformed while buffering.</p>
+</body>
+</html>

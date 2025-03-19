@@ -1,0 +1,155 @@
+.TH pyradio_buf 1 "March 2025" pyradio
+
+.SH Name
+.PP
+pyradio \- a curses Internet radio player.
+.PP
+.SH PyRadio Buffering
+.SS Introduction
+When a station is slow (or the internet connection is slow), one might
+get to a situation where the connection timeout will run out before the
+connection with the station can be established.
+Even worse, \f[B]PyRadio\f[R] will connect to the station, but the sound
+will be choppy and crackling.
+.PP
+The solution is to use a large enough \f[B]buffer\f[R] to connect to the
+station; this will effectively make \f[B]PyRadio\f[R] connect to the
+station and start receiving data, but will not start playback until the
+buffer is full.
+.PP
+All \f[B]PyRadio\f[R] supported players support buffering, using a
+number of command line parameters to actually set it up.
+\f[B]PyRadio\f[R] will remove all this complexity by making is as simple
+as inserting a single value to the \f[B]Configuration Window\f[R].
+.PP
+In addition to that, or instead of that, one can set up a buffering
+value for any individual station using the \[lq]\f[I]Buffering\f[R]\[rq]
+window, shown in this image:
+.PP
+
+    \fIhttps://members.hellug.gr/sng/pyradio/pyradio-buffering-win.jpg\fR
+
+.PP
+The window opens by pressing \[lq]\f[B]\[rs]B\f[R]\[rq] while in the
+\f[B]Main\f[R] mode.
+.PP
+It will display the current station\[cq]s buffer size (0 means no
+buffering), and will permit to adjust it, or use the previously used
+value (pressing \[lq]\f[B]r\f[R]\[rq]).
+.SS How it all works
+\f[B]PyRadio\f[R] has both a configuration parameter and a station
+parameter that will be taken into account when trying to determine if a
+station will use buffering or not.
+.IP "1." 3
+The global \f[I]buffering value\f[R] which will be used for all stations
+(if set).
+It can be found under the \[lq]\f[I]Connection Options\f[R]\[rq] section
+in the \f[B]Configuration Window\f[R], parameter \f[B]Buffering
+(seconds)\f[R].
+.IP "2." 3
+The \f[I]station buffering\f[R] value set using
+\[lq]\f[B]\[rs]B\f[R]\[rq] as described above.
+
+.RS
+If used, the station will be updated and the playlist will be silently saved.
+
+In this case, a string of the form \[lq]\f[B]7\[at]128\f[R]\[rq] will be
+inserted in the appropriate field of the station definition,
+\[lq]\f[B]7\f[R]\[rq] being the buffering value in seconds and
+\[lq]\f[B]128\f[R]\[rq] the bitrate of the station, which is only
+relevant to \f[B]MPlayer\f[R].
+.RE
+
+.PP
+In any case, one can enable or disable the use of buffering by pressing
+\[lq]\f[B]\[rs]b\f[R]\[rq].
+This value will not be saved and will be set to True whenever a player
+change occurs.
+.SS MPlayer buffering
+Both \f[I]MPV\f[R] and \f[I]VLC\f[R] will directly use the buffering
+value (expressed in seconds) in order to buffer a stream.
+.PP
+This is not the case with \f[I]MPlayer\f[R] unfortunately; it has to
+receive the number of KBytes to buffer.
+.PP
+In order to do that in a consistent way, the station\[cq]s bitrate must
+be known beforehand, which is impossible.
+So, a workaround is being used: the player will trigger a station update
+(and a silent playlist save), if:
+.IP "1." 3
+\f[B]MPlayer\f[R] is installed and detected as a supported player.
+.IP "2." 3
+The \[lq]\f[B]MPlayer auto save br\f[R]\[rq] configuration parameter
+(under \f[B]Connection Options\f[R]) is set to \f[B]True\f[R].
+.IP "3." 3
+The station streams at a bitrate different to 128 kbps (the default).
+.PP
+This way, the first time \f[B]MPlayer\f[R] is used to buffer the station
+the buffering will be incorrect (shorter or longer depending on the real
+bitrate), but subsequent playback of the station will correctly set the
+number of KBytes that corresponds to the buffering time set.
+.SS Parameters used
+The following table shows the command line parameters used by
+\f[B]PyRadio\f[R] when the \[lq]\f[I]Buffering\f[R]\[rq] window is used
+to set up buffering.
+.PP
+.TS
+tab(@);
+lw(26.7n) lw(21.7n) lw(21.7n).
+T{
+\fBmpv (\fIX\fB in seconds)
+T}@T{
+\fBmplayer( \fIX\fB in KBytes)
+T}@T{
+\fBvlc (\fIX\fB in seconds)
+T}
+_
+T{
+\[en]demuxer\-readahead\-secs=\fIX\fR\-1
+T}@T{
+\-cache \fIX
+T}@T{
+\[en]network\-caching \fIX\fR*1000
+T}
+T{
+\[en]demuxer\-cache\-wait=yes
+T}@T{
+\-cache\-min 80
+T}@T{
+T}
+T{
+\[en]cache=yes
+T}@T{
+T}@T{
+T}
+T{
+\[en]cache\-secs=\fIX
+T}@T{
+T}@T{
+T}
+T{
+\[en]cache\-on\-disk=yes/no \fB*
+T}@T{
+T}@T{
+T}
+.TE
+.PP
+    \fB*\fR disabled if more than 500KB of memory is free
+.SS User experience
+When buffering is enabled, and a connection to a station initializes,
+\f[B]PyRadio\f[R] will display a \[lq]\f[B][B]\f[R]\[rq] at the top left
+corner of the window, and display \[lq]\f[B]Buffering:\f[R]\[rq] and the
+name of the station in the status bar, until it get a token that the
+buffering has stopped.
+.PP
+    \fIhttps://members.hellug.gr/sng/pyradio/pyradio-b.jpg\fR
+.PP
+An example is shown in the image above.
+.PP
+Now, this behavior depends on the station, and the data it sends (or
+does not send) while it is buffering.
+For example, an ICY title may be received while buffering, which will be
+displayed in the status bar.
+.PP
+It should be noted that, no volume adjustment can be preformed while
+buffering.

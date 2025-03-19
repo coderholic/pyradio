@@ -1,3 +1,16 @@
+2025-03-19 s-n-g
+    * version 0.9.3.11.8 - 0.9.3.12-beta8
+    * fixing #281 - Favourite list becomes corrupted after adding station
+    * adding buffering config parameters: buffering and mplayer_save_br
+    * pressing \b will toggle global buffering for the session
+    * the Buffering Window will change station buffering value instead of config
+    * station volume will be saved (\v by default) and the playlist will
+      be silently saved - station volume will work for VLC only
+    * saveCurrentPlaylist: trailling commas will be eliminated
+    * updating Windows MPV download link
+    * adding bufferring.md and pyradio_buf man page
+    * updating docs
+    
 2025-03-13 s-n-g
     * version 0.9.3.11.7 - 0.9.3.12-beta7
     * fixing #280 - Removing station and saving removes 
