@@ -2873,6 +2873,9 @@ class MpvPlayer(Player):
                     else:
                         logger.info('No usable profile found')
 
+        # TODO: use pyradio-volume profile
+        if self.station_volume != -1:
+            logger.error('I need to use pyradio-volume profile')
         # logger.error('\n\nself._recording = {}'.format(self._recording))
         if self._recording > 0:
             self.recording_filename = self.get_recording_filename(self.name, '.mkv')
@@ -3321,7 +3324,8 @@ class MpPlayer(Player):
         ''' return delay in KB for mplayer '''
         if bitrate_kbps is None:
             bitrate_kbps = 128
-        if '@' in delay_seconds:
+        if isinstance(delay_seconds, str) and \
+                '@' in delay_seconds:
             sp = delay_seconds.split('@')
             delay_seconds = sp[0]
             bitrate_kbps = sp[1]
@@ -3415,6 +3419,9 @@ class MpPlayer(Player):
                     else:
                         logger.info('No usable profile found')
 
+        # TODO: use pyradio-volume profile
+        if self.station_volume != -1:
+            logger.error('I need to use pyradio-volume profile')
 
         ''' this will set the profile too '''
         params = self.params[self.params[0]]

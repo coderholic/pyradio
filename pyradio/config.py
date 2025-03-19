@@ -4401,27 +4401,33 @@ class FavoritesManager:
         updated = False
         write_it = True
 
-        for i, item in enumerate(an_item):
+        this_item = an_item[:]
+        if this_item[Station.buffering] == '0@128':
+            this_item[Station.buffering] = ''
+        while this_item[-1] == '':
+            this_item.pop()
+
+        for i, item in enumerate(this_item):
             if item is None:
                 if i in range(0, 2):
                     return -1, '___Station is invalid!___'
-                an_item[i] = ''
-            if an_item[0] == '' or \
-                    an_item[1] == '':
+                this_item[i] = ''
+            if this_item[0] == '' or \
+                    this_item[1] == '':
                 return -1, '___Station is invalid!___'
-        if isinstance(an_item[-1], dict):
-            an_item[-1] = an_item[-1]['image']
+        if isinstance(this_item[-1], dict):
+            this_item[-1] = this_item[-1]['image']
         msg = None
         for i, item in enumerate(items):
             if item[1] == url:
-                if item == an_item:
+                if item == this_item:
                     return 1, '___Already in favorites!___'
-                items[i] = an_item
+                items[i] = this_item
                 msg = '___Station updated!___'
                 updated = True
                 break
         if not updated:
-            items.append(an_item)
+            items.append(this_item)
             updated = True
         if updated:
             ret = self._write_csv(items)
@@ -4474,8 +4480,11 @@ class FavoritesManager:
 
                         station_info = [
                             name, url, enc, {'image': icon} if icon else '',
-                            profile, buffering, http, volume, referer
+                            profile, '' if buffering == '0@128' else buffering,
+                            http, volume, referer
                         ]
+                        while station_info[-1] == '':
+                            station_info.pop()
                         items.append(station_info)
                 except (csv.Error, ValueError):
                     return []
