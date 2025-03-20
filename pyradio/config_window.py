@@ -316,6 +316,10 @@ class PyRadioConfigWindow():
             self.__selection = val
         #self.refresh_config_win()
 
+    def set_selection(self, sel):
+        self.selection = sel
+        self._put_cursor(0)
+
     def init_config_win(self):
         self._win = None
         self.maxY, self.maxX = self.__parent.getmaxyx()

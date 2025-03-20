@@ -753,7 +753,6 @@ class PyRadio():
         self.search_main_window_modes = (
             self.ws.SEARCH_NORMAL_MODE,
             self.ws.SEARCH_PLAYLIST_MODE,
-            self.ws.CONFIG_SEARCH_MODE
         )
 
         ''' volume functions '''
@@ -5058,14 +5057,14 @@ and |remove the file manually|.
         def _apply_main_windows(ret):
             self.setStation(ret)
             self._put_selection_in_the_middle(force=True)
+        logger.error(f'{self.ws.operation_mode = }')
         if reapply:
             if self.ws.operation_mode in \
                     [self._mode_to_search[x] for x in self._mode_to_search]:
                 _apply_main_windows(ret)
             elif self.ws.operation_mode == self.ws.THEME_MODE:
                 self._theme_selector.set_theme(self._theme_selector._themes[ret])
-            elif self.ws.operation_mode in (self.ws.SELECT_PLAYLIST_MODE,
-                                            self.ws.PASTE_MODE):
+            elif self.ws.operation_mode in (self.ws.SELECT_PLAYLIST_MODE, self.ws.PASTE_MODE):
                 self._playlist_select_win.setPlaylistById(ret, adjust=True)
             elif self.ws.operation_mode == self.ws.SELECT_STATION_MODE:
                 self._station_select_win.setPlaylistById(ret, adjust=True)
@@ -5075,14 +5074,15 @@ and |remove the file manually|.
                 self._schedule_playlist_select_win.setPlaylistById(ret, adjust=True)
             elif self.ws.operation_mode == self.ws.SCHEDULE_STATION_SEARCH_MODE:
                 self._schedule_station_select_win.setPlaylistById(ret, adjust=True)
+            elif self.ws.operation_mode in (self.ws.CONFIG_MODE, self.ws.CONFIG_SEARCH_MODE):
+                self._config_win.set_selection(ret)
             self.refreshBody()
         else:
             if self.ws.operation_mode in self.search_main_window_modes:
                 _apply_main_windows(ret)
             elif self.ws.previous_operation_mode == self.ws.THEME_MODE:
                 self._theme_selector.set_theme(self._theme_selector._themes[ret])
-            elif self.ws.previous_operation_mode in (self.ws.SELECT_PLAYLIST_MODE,
-                                                     self.ws.PASTE_MODE):
+            elif self.ws.previous_operation_mode in (self.ws.SELECT_PLAYLIST_MODE, self.ws.PASTE_MODE):
                 self._playlist_select_win.setPlaylistById(ret, adjust=True)
             elif self.ws.previous_operation_mode == self.ws.SELECT_STATION_MODE:
                 self._station_select_win.setPlaylistById(ret, adjust=True)
@@ -5092,6 +5092,8 @@ and |remove the file manually|.
                 self._schedule_playlist_select_win.setPlaylistById(ret, adjust=True)
             elif self.ws.operation_mode == self.ws.SCHEDULE_STATION_SEARCH_MODE:
                 self._schedule_station_select_win.setPlaylistById(ret, adjust=True)
+            elif self.ws.operation_mode in (self.ws.CONFIG_MODE, self.ws.CONFIG_SEARCH_MODE):
+                self._config_win.set_selection(ret)
             self.ws.close_window()
             self.refreshBody()
 
@@ -8816,7 +8818,11 @@ _____"|f|" to see the |free| keys you can use.
             elif self.ws.operation_mode == self.ws.SCHEDULE_STATION_SELECT_MODE:
                 self._search_list = self._schedule_station_select_win._items
                 sel = self._schedule_station_select_win.selection + 1
+            elif self.ws.operation_mode == self.ws.CONFIG_MODE:
+                self._search_list = list(self._config_win._config_options.values())
+                sel = self._config_win.selection + 1
 
+            logger.error(f'{self._search_list = }')
             if self.search.string:
                 if sel == len(self._search_list):
                     sel = 0
@@ -8864,6 +8870,9 @@ _____"|f|" to see the |free| keys you can use.
             elif self.ws.operation_mode == self.ws.SCHEDULE_STATION_SELECT_MODE:
                 self._search_list = self._schedule_station_select_win._items
                 sel = self._schedule_station_select_win.selection + 1
+            elif self.ws.operation_mode == self.ws.CONFIG_MODE:
+                self._search_list = list(self._config_win._config_options.values())
+                sel = self._config_win.selection - 1
 
             if self.search.string:
                 if sel < 0:
@@ -8886,6 +8895,7 @@ _____"|f|" to see the |free| keys you can use.
             [self._search_modes[x] for x in self._search_modes]:
             ''' serve search results '''
             ret = self.search.keypress(self.search._edit_win, char)
+            logger.error(f'{self.ws.operation_mode = }')
             if ret == 0:
                 if self.ws.operation_mode in self.search_main_window_modes:
                     self._search_list = self.stations
@@ -8911,6 +8921,10 @@ _____"|f|" to see the |free| keys you can use.
                 elif self.ws.previous_operation_mode == self.ws.SCHEDULE_STATION_SELECT_MODE:
                     self._search_list = self._schedule_station_select_win._items
                     sel = self._schedule_station_select_win.selection + 1
+                elif self.ws.operation_mode in (self.ws.CONFIG_MODE, self.ws.CONFIG_SEARCH_MODE):
+                    self._search_list = list(self._config_win._config_options.values())
+                    sel = self._config_win.selection + 1
+                logger.error(f'{self._search_list = }')
 
                 ''' perform search '''
                 if sel == len(self._search_list):
