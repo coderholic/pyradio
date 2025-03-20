@@ -629,6 +629,7 @@ class PyRadio():
             self.ws.SCHEDULE_STATION_SEARCH_MODE: self._redisplay_search_show,
             self.ws.SCHEDULE_PLAYLIST_SEARCH_MODE: self._redisplay_search_show,
             self.ws.GROUP_SEARCH_MODE: self._redisplay_search_show,
+            self.ws.CONFIG_SEARCH_MODE: self._redisplay_search_show,
             self.ws.THEME_MODE: self._redisplay_theme_mode,
             self.ws.ASK_TO_CREATE_NEW_THEME_MODE: self._redisplay_ask_to_create_new_theme,
             self.ws.ADD_STATION_MODE: self._show_station_editor,
@@ -689,6 +690,7 @@ class PyRadio():
             self.ws.BROWSER_SEARCH_MODE: 'H_RB_SEARCH',
             self.ws.SEARCH_NORMAL_MODE: 'H_SEARCH',
             self.ws.SEARCH_PLAYLIST_MODE: 'H_SEARCH',
+            self.ws.CONFIG_SEARCH_MODE: 'H_SEARCH',
             self.ws.SELECT_STATION_ENCODING_MODE: 'H_CONFIG_ENCODING',
             self.ws.SELECT_ENCODING_MODE: 'H_CONFIG_ENCODING',
             self.ws.EDIT_STATION_ENCODING_MODE: 'H_CONFIG_ENCODING',
@@ -702,8 +704,9 @@ class PyRadio():
             2 - theme search
             3 - paste mode
             4 - group selection
+            5 - config search
         '''
-        self._search_classes = [None, None, None, None, None]
+        self._search_classes = [None, None, None, None, None, None]
 
         ''' the files that the search terms are stored to  '''
         self._search_files = (
@@ -712,6 +715,7 @@ class PyRadio():
                 path.join(self._cnf.state_dir, 'search-theme.txt'),
                 path.join(self._cnf.state_dir, 'search-paste.txt'),
                 path.join(self._cnf.state_dir, 'search-group.txt'),
+                path.join(self._cnf.state_dir, 'search-config.txt'),
                 )
 
         ''' points to list in which the search will be performed '''
@@ -728,6 +732,7 @@ class PyRadio():
             self.ws.THEME_MODE: 2,
             self.ws.PASTE_MODE: 3,
             self.ws.GROUP_SELECTION_MODE: 4,
+            self.ws.CONFIG_MODE: 5,
         }
 
         ''' which search mode opens from each allowed mode '''
@@ -741,12 +746,14 @@ class PyRadio():
             self.ws.GROUP_SELECTION_MODE: self.ws.GROUP_SEARCH_MODE,
             self.ws.SCHEDULE_PLAYLIST_SELECT_MODE: self.ws.SCHEDULE_PLAYLIST_SEARCH_MODE,
             self.ws.SCHEDULE_STATION_SELECT_MODE: self.ws.SCHEDULE_STATION_SEARCH_MODE,
+            self.ws.CONFIG_MODE: self.ws.CONFIG_SEARCH_MODE,
         }
 
         ''' search modes opened from main windows '''
         self.search_main_window_modes = (
             self.ws.SEARCH_NORMAL_MODE,
             self.ws.SEARCH_PLAYLIST_MODE,
+            self.ws.CONFIG_SEARCH_MODE
         )
 
         ''' volume functions '''
@@ -2333,8 +2340,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         '''
         try:
             if self._search_classes[self._mode_to_search[operation_mode]] is None:
-                self._search_classes[self._mode_to_search[operation_mode]] \
-                    = \
+                self._search_classes[self._mode_to_search[operation_mode]] = \
                     PyRadioSearch(
                         parent=self.outerBodyWin,
                         width=33,
@@ -2355,10 +2361,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             return
         self.search = self._search_classes[self._mode_to_search[operation_mode]]
         #self.search.pure_ascii = True
-        if self.ws.previous_operation_mode == self.ws.CONFIG_MODE:
+        if self.ws.operation_mode == self.ws.CONFIG_MODE or \
+                self.ws.previous_operation_mode == self.ws.CONFIG_MODE:
             self.search.box_color = curses.color_pair(3)
-        else:
-            self.search.box_color = curses.color_pair(5)
+            self.search.caption_color=curses.color_pair(11)
+            self.search.edit_color=curses.color_pair(10)
 
     def ctrl_c_handler(self, signum, frame, save_playlist=True):
         # ok
@@ -6797,6 +6804,7 @@ _____"|f|" to see the |free| keys you can use.
                 win_del_old_inst()
             return
 
+        logger.error('self.ws.operation_mode in self._search_modes = {}'.format(self.ws.operation_mode in self._search_modes))
         if self.ws.operation_mode in (
             self.ws.DEPENDENCY_ERROR,
             self.ws.NO_PLAYER_ERROR_MODE,
@@ -7526,7 +7534,9 @@ _____"|f|" to see the |free| keys you can use.
             self.refreshBody()
 
         elif self.ws.operation_mode == self.ws.CONFIG_MODE and \
-                char not in self._chars_to_bypass:
+                char not in self._chars_to_bypass and \
+                char not in self._chars_to_bypass_for_search:
+
             if char in (kbkey['revert_saved'], kbkey['revert_def']) or \
                     check_localized(char, (kbkey['revert_saved'], kbkey['revert_def'])):
                 self._player_select_win = None

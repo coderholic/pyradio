@@ -3417,13 +3417,8 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
                     for row in csv.reader(filter(lambda row: row[0] != '#', cfgfile), skipinitialspace=True):
                         if not row:
                             continue
-                        try:
-                            name, url = [s.strip() for s in row]
-                        except ValueError:
-                            try:
-                                name, url, _ = [s.strip() for s in row]
-                            except ValueError:
-                                name, url, _, _ = [s.strip() for s in row]
+                        name = row[0].strip()
+                        url =  row[1].strip()
                         self._items.append(name)
                         if url == '-':
                             self._groups_ids.append(name)
