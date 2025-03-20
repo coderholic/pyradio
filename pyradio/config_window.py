@@ -517,6 +517,8 @@ class PyRadioConfigWindow():
             else:
                 if self.__selection < self._start:
                     self._start = self.__selection
+        if self.__selection < self._start:
+            self._start = self.__selection
 
     def _populate_help_lines(self):
         self._help_lines = []
