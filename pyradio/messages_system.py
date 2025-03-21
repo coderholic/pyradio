@@ -854,6 +854,7 @@ Down|, |{k}|, |PgDown                           |*| Change option selection.
 {g}|, |Home| / |{G}|, |End                      |*| Jump to first / last option.
 Enter|, |{pause}|, |Right|, |{l}                |*| Change option value.
 {revert_saved}                                  |*| Revert to saved values.
+{search} |/ |{search_next}| / |{search_prev}    |*|  Search, go to next / previous result.
 {revert_def}                                    |*| Load default values.
 {s}                                             |*| Save config.
 Esc|, |{q}|, |Left|, |{h}                       |*| Cancel.
@@ -1480,6 +1481,7 @@ __|PgUp|, |PgDown|                       |*| Move up, down, etc.
 __|Tab|, |{tab}| / |Sh-Tab|, |{stab}|    |*| Move to next / previous field.
 __|{g}| / |{G}|                          |*| Go to top / bottom of the list.
 __|[| / |]|                              |*| Move between sections.
+__{search} |/ |{search_next}| / |{search_prev}    |*|  Search, go to next / previous result.
 __|{revert_def}| / |{revert_saved}|      |*| Revert to default / saved shortcuts.
 __|x|                                    |*| Revert current item to saved value.
 __|f|                                    |*| Show |free| keys.

@@ -316,6 +316,13 @@ class PyRadioConfigWindow():
             self.__selection = val
         #self.refresh_config_win()
 
+    def get_previous_search(self, string):
+        sel = self.__selection - 1
+        if sel in self._headers and \
+                string in list(self._config_options.values())[sel][0].lower():
+            sel -= 1
+        return sel
+
     def set_selection(self, sel):
         self.selection = sel
         self._put_cursor(0)
@@ -3555,6 +3562,9 @@ class PyRadioKeyboardConfig():
     _start = 0
     _selection = 1
 
+    # titles for search function
+    _titles = None
+
     message = None
 
     def __init__(
@@ -3609,7 +3619,7 @@ class PyRadioKeyboardConfig():
                     self._list[i][-2] = header_index
         if logger.isEnabledFor(logging.DEBUG):
             for n in self._list:
-                logger.debug(f'{n}')
+                logger.debug(f'list : {n}')
         '''
 
         # do not read keys.json to self._keys_to_classes
@@ -3630,7 +3640,33 @@ class PyRadioKeyboardConfig():
         self._keys_to_classes = self._precompute_context_map(self._classes)
         # logger.error(f'{self._keys_to_classes = }')
         self._needs_update = False
+        # logger.error('\n\ntitles\n{}\n\n'.format(self.titles()))
 
+    @property
+    def editing(self):
+        return self._editing
+
+    @property
+    def selection(self):
+        return self._selection
+
+    @selection.setter
+    def selection(self, value):
+        self._selection = value
+        if self._selection in self._headers:
+            self._selection += 1
+
+    def get_previous_search(self, string):
+        sel = self._selection - 1
+        if string.lower() in self._list[sel][-1].lower() and \
+                sel in self._headers:
+            sel -= 1
+        return sel
+
+    def titles(self):
+        if self._titles is None:
+            self._titles = [x[-1] for x in self._list]
+        return self._titles
 
     def _precompute_context_map(self, results):
         """
@@ -3681,10 +3717,10 @@ class PyRadioKeyboardConfig():
         return new_file_name
 
     def _start_editing(self):
-        self.existing_conflict = None
         self._win.addstr(self._selection - self._start + 2, self.maxX-8, '[edit]', curses.color_pair(6))
         self._win.refresh()
         self._editing = True
+        self._cnf.inhibit_search = True
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('editing "{}"'.format(self._list[self._selection]))
 
@@ -3692,6 +3728,7 @@ class PyRadioKeyboardConfig():
         self._win.addstr(self._selection - self._start + 2, self.maxX-8, '      ', curses.color_pair(6))
         self._win.refresh()
         self._editing = False
+        self._cnf.inhibit_search = False
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('edited "{}"'.format(self._list[self._selection]))
 
@@ -3891,6 +3928,10 @@ class PyRadioKeyboardConfig():
         elif chk > self._number_of_lines:
             self._start = max(0, int((self._selection - self._number_of_lines) / 2))
 
+    def set_selection(self, sel):
+        self.selection = sel
+        self._go_to_line(self._selection)
+
     def _go_to_line(self, a_line):
         self._selection = a_line
         self._make_selection_visible()
@@ -4018,6 +4059,7 @@ class PyRadioKeyboardConfig():
         """
         # reset self.existing_conflict ; None means no conflict
         self.existing_conflict = None
+        logger.error(f'2 {self.existing_conflict = }')
 
         # Extract key and the new shortcut code from the modified item
         key = modified_item[0]  # Identifier for the shortcut (e.g., "reload", "mute")
@@ -4059,13 +4101,18 @@ class PyRadioKeyboardConfig():
             if key_in_context == key:
                 continue
 
-            idx, chk = [(i, x) for i, x in enumerate(self._list) if x[0] == key_in_context][0]
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('\n\nitem with key  -  {0}: {1}\n\n'.format(idx, chk))
-            # Check if the new shortcut code matches the existing shortcut code for any other key
-            if chk[3] == new_shortcut_code:
-                self.existing_conflict = (modified_item[-3], idx)  # Return the first conflicting key and index
-                return
+            try:
+                idx, chk = [(i, x) for i, x in enumerate(self._list) if x[0] == key_in_context][0]
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('\n\nitem with key  -  {}: {}, new_shortcut_code = {}\n\n'.format(idx, chk, new_shortcut_code))
+
+                # Check if the new shortcut code matches the existing shortcut code for any other key
+                if chk[3] == new_shortcut_code:
+                    self.existing_conflict = (modified_item[-3], idx)  # Return the first conflicting key and index
+                    logger.debug(f'{self.existing_conflict = }')
+                    return
+            except IndexError:
+                pass
 
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('\n-*-*-*-*-*-*-*-*- None 2\n\n')
@@ -4143,8 +4190,10 @@ class PyRadioKeyboardConfig():
         l_char = None
         self._needs_update = False
         if char == ord('0'):
+            logger.error(f'{self.existing_conflict = }')
             if self.existing_conflict:
                 self._editing = False
+                self._cnf.inhibit_search = False
                 if self._selection == self.existing_conflict[0]:
                     self._go_to_line(self.existing_conflict[1])
                 else:

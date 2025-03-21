@@ -1,3 +1,8 @@
+2025-03-21 s-n-g
+    * version 0.9.3.11.9 - 0.9.3.12-beta9
+    * fixing default station selection in the config window
+    * adding search support for both the config window and the shortcuts window
+
 2025-03-19 s-n-g
     * version 0.9.3.11.8 - 0.9.3.12-beta8
     * fixing #281 - Favourite list becomes corrupted after adding station

@@ -630,6 +630,7 @@ class PyRadio():
             self.ws.SCHEDULE_PLAYLIST_SEARCH_MODE: self._redisplay_search_show,
             self.ws.GROUP_SEARCH_MODE: self._redisplay_search_show,
             self.ws.CONFIG_SEARCH_MODE: self._redisplay_search_show,
+            self.ws.KEYBOARD_CONFIG_SEARCH_MODE: self._redisplay_search_show,
             self.ws.THEME_MODE: self._redisplay_theme_mode,
             self.ws.ASK_TO_CREATE_NEW_THEME_MODE: self._redisplay_ask_to_create_new_theme,
             self.ws.ADD_STATION_MODE: self._show_station_editor,
@@ -691,6 +692,7 @@ class PyRadio():
             self.ws.SEARCH_NORMAL_MODE: 'H_SEARCH',
             self.ws.SEARCH_PLAYLIST_MODE: 'H_SEARCH',
             self.ws.CONFIG_SEARCH_MODE: 'H_SEARCH',
+            self.ws.KEYBOARD_CONFIG_SEARCH_MODE: 'H_SEARCH',
             self.ws.SELECT_STATION_ENCODING_MODE: 'H_CONFIG_ENCODING',
             self.ws.SELECT_ENCODING_MODE: 'H_CONFIG_ENCODING',
             self.ws.EDIT_STATION_ENCODING_MODE: 'H_CONFIG_ENCODING',
@@ -705,8 +707,9 @@ class PyRadio():
             3 - paste mode
             4 - group selection
             5 - config search
+            6 - keyboard config search
         '''
-        self._search_classes = [None, None, None, None, None, None]
+        self._search_classes = [None, None, None, None, None, None, None]
 
         ''' the files that the search terms are stored to  '''
         self._search_files = (
@@ -716,6 +719,7 @@ class PyRadio():
                 path.join(self._cnf.state_dir, 'search-paste.txt'),
                 path.join(self._cnf.state_dir, 'search-group.txt'),
                 path.join(self._cnf.state_dir, 'search-config.txt'),
+                path.join(self._cnf.state_dir, 'search-keyboard-config.txt'),
                 )
 
         ''' points to list in which the search will be performed '''
@@ -733,6 +737,7 @@ class PyRadio():
             self.ws.PASTE_MODE: 3,
             self.ws.GROUP_SELECTION_MODE: 4,
             self.ws.CONFIG_MODE: 5,
+            self.ws.KEYBOARD_CONFIG_MODE: 6,
         }
 
         ''' which search mode opens from each allowed mode '''
@@ -747,6 +752,7 @@ class PyRadio():
             self.ws.SCHEDULE_PLAYLIST_SELECT_MODE: self.ws.SCHEDULE_PLAYLIST_SEARCH_MODE,
             self.ws.SCHEDULE_STATION_SELECT_MODE: self.ws.SCHEDULE_STATION_SEARCH_MODE,
             self.ws.CONFIG_MODE: self.ws.CONFIG_SEARCH_MODE,
+            self.ws.KEYBOARD_CONFIG_MODE: self.ws.KEYBOARD_CONFIG_SEARCH_MODE,
         }
 
         ''' search modes opened from main windows '''
@@ -2361,7 +2367,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.search = self._search_classes[self._mode_to_search[operation_mode]]
         #self.search.pure_ascii = True
         if self.ws.operation_mode == self.ws.CONFIG_MODE or \
-                self.ws.previous_operation_mode == self.ws.CONFIG_MODE:
+                self.ws.previous_operation_mode in (
+                    self.ws.CONFIG_MODE,
+                    self.ws.KEYBOARD_CONFIG_MODE,
+                    self.ws.KEYBOARD_CONFIG_SEARCH_MODE,
+                ):
             self.search.box_color = curses.color_pair(3)
             self.search.caption_color=curses.color_pair(11)
             self.search.edit_color=curses.color_pair(10)
@@ -5057,7 +5067,6 @@ and |remove the file manually|.
         def _apply_main_windows(ret):
             self.setStation(ret)
             self._put_selection_in_the_middle(force=True)
-        logger.error(f'{self.ws.operation_mode = }')
         if reapply:
             if self.ws.operation_mode in \
                     [self._mode_to_search[x] for x in self._mode_to_search]:
@@ -5076,6 +5085,8 @@ and |remove the file manually|.
                 self._schedule_station_select_win.setPlaylistById(ret, adjust=True)
             elif self.ws.operation_mode in (self.ws.CONFIG_MODE, self.ws.CONFIG_SEARCH_MODE):
                 self._config_win.set_selection(ret)
+            elif self.ws.operation_mode in (self.ws.KEYBOARD_CONFIG_MODE, self.ws.KEYBOARD_CONFIG_SEARCH_MODE):
+                self._keyboard_config_win.set_selection(ret)
             self.refreshBody()
         else:
             if self.ws.operation_mode in self.search_main_window_modes:
@@ -5094,6 +5105,8 @@ and |remove the file manually|.
                 self._schedule_station_select_win.setPlaylistById(ret, adjust=True)
             elif self.ws.operation_mode in (self.ws.CONFIG_MODE, self.ws.CONFIG_SEARCH_MODE):
                 self._config_win.set_selection(ret)
+            elif self.ws.operation_mode in (self.ws.KEYBOARD_CONFIG_MODE, self.ws.KEYBOARD_CONFIG_SEARCH_MODE):
+                self._keyboard_config_win.set_selection(ret)
             self.ws.close_window()
             self.refreshBody()
 
@@ -5608,8 +5621,8 @@ and |remove the file manually|.
     def _localized_init_config(self, parent=None):
         if parent is None:
             parent = self.outerBodyWin
-        logger.error('self._keyboard_config_win is None: {}'.format(self._keyboard_config_win is None))
-        if self._keyboard_config_win is None:
+        logger.error('self._keyboard_localized_win is None: {}'.format(self._keyboard_localized_win is None))
+        if self._keyboard_localized_win is None:
             self._keyboard_localized_win = PyRadioLocalized(
                     config=self._cnf,
                     parent=self.outerBodyWin,
@@ -6534,6 +6547,23 @@ and |remove the file manually|.
                 self.setStation(to_play)
             self.playSelection()
 
+    def is_edit_keys_restriction_valid(self, char):
+        ''' check if self._chars_to_bypass_for_search should be
+            taken under consideration when assigning char to a
+            function.
+
+            if self._cnf.inhibit_search (which means that therelevant
+            window is in editing mode, accept search keys (return False)
+
+            Othewise, check for char in search keys
+
+            Always use it like this:
+                and not self.is_edit_keys_restriction_valid(char)
+        '''
+        if self._cnf.inhibit_search:
+            return False
+        return char in self._chars_to_bypass_for_search
+
     def keypress(self, char):
         ''' PyRadio keypress '''
         # # logger.error('\n\nparams\n{}\n\n'.format(self._cnf.params))
@@ -6644,7 +6674,8 @@ and |remove the file manually|.
                 self._open_simple_message_by_key('M_LOC_READ_ONLY')
             return
 
-        if self.ws.operation_mode == self.ws.KEYBOARD_CONFIG_MODE:
+        if self.ws.operation_mode == self.ws.KEYBOARD_CONFIG_MODE and \
+                not self.is_edit_keys_restriction_valid(char):
             ret = self._keyboard_config_win.keypress(char)
             if ret in (-1, 0):
                 if ret == 0:
@@ -6806,7 +6837,7 @@ _____"|f|" to see the |free| keys you can use.
                 win_del_old_inst()
             return
 
-        logger.error('self.ws.operation_mode in self._search_modes = {}'.format(self.ws.operation_mode in self._search_modes))
+        # logger.error('self.ws.operation_mode in self._search_modes = {}'.format(self.ws.operation_mode in self._search_modes))
         if self.ws.operation_mode in (
             self.ws.DEPENDENCY_ERROR,
             self.ws.NO_PLAYER_ERROR_MODE,
@@ -8741,6 +8772,7 @@ _____"|f|" to see the |free| keys you can use.
 
         elif (char in (kbkey['search'], ) or \
                 check_localized(char, (kbkey['search'],))) and \
+                not self._cnf.inhibit_search and \
                 self.ws.operation_mode in self._search_modes:
             self._reset_status_bar_right()
             if self.maxY > 5:
@@ -8821,8 +8853,11 @@ _____"|f|" to see the |free| keys you can use.
             elif self.ws.operation_mode == self.ws.CONFIG_MODE:
                 self._search_list = list(self._config_win._config_options.values())
                 sel = self._config_win.selection + 1
+            elif self.ws.operation_mode == self.ws.KEYBOARD_CONFIG_MODE:
+                self._search_list = self._keyboard_config_win.titles()
+                sel = self._keyboard_config_win.selection + 1
 
-            logger.error(f'{self._search_list = }')
+            # logger.error(f'{self._search_list = }')
             if self.search.string:
                 if sel == len(self._search_list):
                     sel = 0
@@ -8866,13 +8901,16 @@ _____"|f|" to see the |free| keys you can use.
                 sel = self._group_selection_window.selection - 1
             elif self.ws.operation_mode == self.ws.SCHEDULE_PLAYLIST_SELECT_MODE:
                 self._search_list = self._schedule_playlist_select_win._items
-                sel = self._schedule_playlist_select_win.selection + 1
+                sel = self._schedule_playlist_select_win.selection - 1
             elif self.ws.operation_mode == self.ws.SCHEDULE_STATION_SELECT_MODE:
                 self._search_list = self._schedule_station_select_win._items
-                sel = self._schedule_station_select_win.selection + 1
+                sel = self._schedule_station_select_win.selection - 1
             elif self.ws.operation_mode == self.ws.CONFIG_MODE:
                 self._search_list = list(self._config_win._config_options.values())
-                sel = self._config_win.selection - 1
+                sel = self._config_win.get_previous_search(self.search.string)
+            elif self.ws.operation_mode == self.ws.KEYBOARD_CONFIG_MODE:
+                self._search_list = self._keyboard_config_win.titles()
+                sel = self._keyboard_config_win.get_previous_search(self.search.string)
 
             if self.search.string:
                 if sel < 0:
@@ -8895,7 +8933,6 @@ _____"|f|" to see the |free| keys you can use.
             [self._search_modes[x] for x in self._search_modes]:
             ''' serve search results '''
             ret = self.search.keypress(self.search._edit_win, char)
-            logger.error(f'{self.ws.operation_mode = }')
             if ret == 0:
                 if self.ws.operation_mode in self.search_main_window_modes:
                     self._search_list = self.stations
@@ -8924,7 +8961,9 @@ _____"|f|" to see the |free| keys you can use.
                 elif self.ws.operation_mode in (self.ws.CONFIG_MODE, self.ws.CONFIG_SEARCH_MODE):
                     self._search_list = list(self._config_win._config_options.values())
                     sel = self._config_win.selection + 1
-                logger.error(f'{self._search_list = }')
+                elif self.ws.operation_mode == self.ws.KEYBOARD_CONFIG_SEARCH_MODE:
+                    self._search_list = self._keyboard_config_win.titles()
+                    sel = self._keyboard_config_win.selection + 1
 
                 ''' perform search '''
                 if sel == len(self._search_list):

@@ -1366,6 +1366,12 @@ class PyRadioConfig(PyRadioStations):
     ''' True if lock file exists '''
     locked = False
 
+    ''' this is used to inhibit opening the search window
+        currently used by:
+            - PyRadioKeyboardConfig when editing
+    '''
+    inhibit_search = False
+
     _distro = 'None'
     opts = collections.OrderedDict()
     opts['general_title'] = ['General Options', '']
@@ -1385,11 +1391,11 @@ class PyRadioConfig(PyRadioStations):
     opts['connection_timeout'] = ['Connection timeout: ', '10']
     opts['force_http'] = ['Force http connections: ', False]
     opts['buffering'] = ['Buffering (seconds): ', '20']
-    opts['mplayer_save_br'] = ['  MPlayer auto save br: ', False]
+    opts['mplayer_save_br'] = ['MPlayer auto save br: ', False]
     opts['notification'] = ['Notifications', '']
     opts['enable_notifications'] = ['Enable notifications: ', '-1']
-    opts['use_station_icon'] = ['    Use station icon: ', True]
-    opts['remove_station_icons'] = ['    Remove cached icons: ', True]
+    opts['use_station_icon'] = ['  Use station icon: ', True]
+    opts['remove_station_icons'] = ['  Remove cached icons: ', True]
     opts['clock_title'] = ['Clock', '']
     opts['enable_clock'] = ['Display on startup: ', False]
     opts['time_format'] = ['Time format: ', '1']
@@ -1401,7 +1407,7 @@ class PyRadioConfig(PyRadioStations):
     opts['console_theme'] = ['Console theme: ', 'dark']
     opts['mouse_options'] = ['Mouse Support', '']
     opts['enable_mouse'] = ['Enable mouse support: ', False]
-    opts['wheel_adjusts_volume'] = ['    Reverse wheel: ', False]
+    opts['wheel_adjusts_volume'] = ['  Reverse wheel: ', False]
     opts['remote'] = ['Remote Control Server', '']
     opts['remote_control_server_ip'] = ['Server IP: ', 'localhost']
     opts['remote_control_server_port'] = ['Server Port: ', '9998']
