@@ -6,7 +6,7 @@ import csv
 import curses
 from os import rename, remove, access, X_OK
 from os.path import exists, dirname, join
-from shutil import which
+from shutil import which, move, Error as shutil_Error
 from rich import print
 from enum import IntEnum
 
@@ -623,6 +623,171 @@ and write in it
         # print('\n\n\n')
         # for n in self._stations:
         #     print(n)
+
+class CsvReadWrite():
+    ''' A base class to read and write a PyRadio playlist '''
+    _items = None
+
+    def __init__(self, a_file=None):
+        self._file = a_file
+
+    @property
+    def items(self):
+        return self._items
+
+    @items.setter
+    def items(self, value):
+        self._items = value[:]
+
+    @property
+    def version(self):
+        return self._version
+
+    @version.setter
+    def version(self, value):
+        delf._version = value
+
+    @property
+    def groups(self):
+        if self._items:
+            return [i for i,x in enumerate(self._items) if x[1] == '-']
+        else:
+            return None
+
+    def read(self, a_file=None):
+        ''' Reads a PyRadio playlist
+
+            The file is a_file or self._file (if a_file is None)
+            Populates self._items and self._version
+            Returns True or False (if error)
+        '''
+        current_version = Station.url
+        in_file = a_file if a_file else self._file
+        self._items = []
+        try:
+            with open(in_file, 'r', encoding='utf-8') as cfgfile:
+                try:
+                    for row in csv.reader(filter(lambda row: row[0] != '#', cfgfile), skipinitialspace=True):
+                        if not row:
+                            continue
+
+                        # logger.error(f'{row = }')
+                        # Initialize variables with default values
+                        name = url = enc = icon = volume = http = referer = profile = buffering = ''
+                        this_row_version = Station.url
+                        # Assign values based on the length of the row
+                        row_length = len(row)
+                        name = row[0].strip()
+                        url = row[1].strip()
+                        if row_length > Station.encoding:
+                            enc = row[Station.encoding].strip()
+                            this_row_version = Station.encoding
+                        if row_length > Station.icon:
+                            icon = row[Station.icon].strip()
+                            this_row_version = Station.icon
+                        if row_length > Station.profile:
+                            profile = row[Station.profile].strip()
+                            this_row_version = Station.profile
+                        if row_length > Station.buffering:
+                            buffering = row[Station.buffering].strip()
+                            this_row_version = Station.buffering
+                        if row_length > Station.volume:
+                            volume = row[Station.volume].strip()
+                            this_row_version = Station.volume
+                        if row_length > Station.http:
+                            http = row[Station.http].strip()
+                            this_row_version = Station.http
+                        if row_length > Station.referer:
+                            referer = row[Station.referer].strip()
+                            this_row_version = Station.referer
+
+                        if buffering:
+                            if '@' not in buffering:
+                                buffering += '@128'
+                        else:
+                            buffering = '0@128'
+
+                        # Append the parsed values to the reading stations list
+                        station_info = [
+                            name, url, enc, {'image': icon} if icon else '',
+                            profile, buffering, http, volume, referer
+                        ]
+
+                        self._items.append(station_info)
+
+                        # Update playlist version based on the presence of optional fields
+                        if this_row_version > current_version:
+                            current_version = this_row_version
+                        self._version = current_version
+                except (csv.Error, ValueError):
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug(f'Playlist is malformed: {e}')
+                    self._items = []
+                    self._version = current_version
+                    return False
+        except (FileNotFoundError, IOError) as e:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'Cannot open playlist file: {e}')
+            # Handle file not found or IO errors
+            self._items = []
+            self._version = current_version
+            return False
+        return True
+
+    def _format_playlist_row(self, a_row):
+        ''' Returns a formatted row (list)
+            Functionality:
+                Removes {'image': '...'}
+                Removes '0@128'
+                Eliminates any trailing empty fields
+        '''
+        this_row = a_row[:]
+        # Extract the 'image' from the icon dictionary if present
+        if len(this_row) > Station.icon and 'image' in this_row[Station.icon]:
+            this_row[Station.icon] = this_row[Station.icon]['image']
+
+        if len(this_row) > Station.buffering:
+            if this_row[Station.buffering] == '0@128':
+                this_row[Station.buffering] = ''
+        while this_row and this_row[-1] == '':
+            this_row.pop()
+        return this_row
+
+    def write(self, a_file=None, items=None):
+        ''' Saves a PyRadio playlist
+        Creates a txt file and write stations in it.
+        Then renames it to final target
+
+        Returns   0: All ok
+                 -1: Error writing file
+                 -2: Error renaming file
+        '''
+        out_file = a_file if a_file else self._file
+        out_items = items if items else self._items
+        txt_out_file = out_file.replace('.csv', '.txt')
+
+        try:
+            with open(txt_out_file, 'w', encoding='utf-8') as cfgfile:
+                writter = csv.writer(cfgfile)
+                writter.writerow(['# PyRadio Playlist File Format:'])
+                writter.writerow(
+                    ['# name', 'url', 'encoding', 'icon',
+                     'profile', 'buffering', 'force-http',
+                     'volume', 'referer'])
+                for a_station in out_items:
+                    writter.writerow(self._format_playlist_row(a_station))
+        except (IOError, OSError, UnicodeEncodeError) as e:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'Cannot open playlist file for writing: {e}')
+            return -1
+        try:
+            move(txt_out_file, out_file)
+        except (shutil.Error, FileNotFoundError, PermissionError) as e:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'Cannot rename playlist file: {e}...')
+            return -2
+        return 0
+
 
 def validate_resource_opener_path(a_file):
     # Check if the file exists

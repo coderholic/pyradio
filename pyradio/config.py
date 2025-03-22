@@ -21,7 +21,7 @@ from rich.table import Table
 from rich.align import Align
 from rich import print
 from pyradio import version, stations_updated
-from .common import validate_resource_opener_path, is_rasberrypi, Station, describe_playlist
+from .common import validate_resource_opener_path, is_rasberrypi, Station, describe_playlist, CsvReadWrite
 from .keyboard import kbkey, lkbkey, read_keyboard_shortcuts, read_localized_keyboard, get_lkbkey, set_lkbkey, check_localized
 from .browser import probeBrowsers
 from .install import get_github_long_description
@@ -717,69 +717,16 @@ class PyRadioStations():
             prev_format = self._playlist_version
             self._read_playlist_version = self._playlist_version = Station.url
             self._reading_stations = []
-            try:
-                with open(stationFile, 'r', encoding='utf-8') as cfgfile:
-                    try:
-                        for row in csv.reader(filter(lambda row: row[0] != '#', cfgfile), skipinitialspace=True):
-                            if not row:
-                                continue
-
-                            # logger.error(f'{row = }')
-                            # Initialize variables with default values
-                            name = url = enc = icon = volume = http = referer = profile = buffering = ''
-                            this_row_version = Station.url
-                            # Assign values based on the length of the row
-                            row_length = len(row)
-                            name = row[0].strip()
-                            url = row[1].strip()
-                            if row_length > Station.encoding:
-                                enc = row[Station.encoding].strip()
-                                this_row_version = Station.encoding
-                            if row_length > Station.icon:
-                                icon = row[Station.icon].strip()
-                                this_row_version = Station.icon
-                            if row_length > Station.profile:
-                                profile = row[Station.profile].strip()
-                                this_row_version = Station.profile
-                            if row_length > Station.buffering:
-                                buffering = row[Station.buffering].strip()
-                                this_row_version = Station.buffering
-                            if row_length > Station.volume:
-                                volume = row[Station.volume].strip()
-                                this_row_version = Station.volume
-                            if row_length > Station.http:
-                                http = row[Station.http].strip()
-                                this_row_version = Station.http
-                            if row_length > Station.referer:
-                                referer = row[Station.referer].strip()
-                                this_row_version = Station.referer
-
-                            if buffering:
-                                if '@' not in buffering:
-                                    buffering += '@128'
-                            else:
-                                buffering = '0@128'
-
-                            # Append the parsed values to the reading stations list
-                            station_info = [
-                                name, url, enc, {'image': icon} if icon else '',
-                                profile, buffering, http, volume, referer
-                            ]
-
-                            self._reading_stations.append(station_info)
-
-                            # Update playlist version based on the presence of optional fields
-                            if this_row_version > current_playlist_version:
-                                current_playlist_version = this_row_version
-                    except (csv.Error, ValueError):
-                        self._reading_stations = []
-                        self._playlist_version = prev_format
-                        return -1
-            except (FileNotFoundError, IOError) as e:
-                # Handle file not found or IO errors
+            csv_in = CsvReadWrite(a_file=stationFile)
+            ret = csv_in.read()
+            if not ret:
                 self._reading_stations = []
                 self._playlist_version = prev_format
+                csv_in = None
                 return -1
+            self._reading_stations = csv_in.items
+            current_playlist_version = csv_in.version
+            csv_in = None
         self._read_playlist_version = self._playlist_version = current_playlist_version
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('===> {} = {}'.format(describe_playlist(self._playlist_version), self._playlist_version))
@@ -907,45 +854,12 @@ class PyRadioStations():
                 logger.debug('Playlist not modified...')
             return 0
 
-        st_new_file = st_file.replace('.csv', '.txt')
-
-        try:
-            with open(st_new_file, 'w', encoding='utf-8') as cfgfile:
-                writter = csv.writer(cfgfile)
-                writter.writerow(['# PyRadio Playlist File Format:'])
-                writter.writerow(
-                    ['# name', 'url', 'encoding', 'icon',
-                     'profile', 'buffering', 'force-http',
-                     'volume', 'referer'])
-                for a_station in self.stations:
-                    writter.writerow(self._format_playlist_row(a_station))
-        except:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Cannot open playlist file for writing,,,')
-            return -1
-        try:
-            move(st_new_file, st_file)
-        except:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Cannot rename playlist file...')
-            return -2
-        self.dirty_playlist = False
-        return 0
-
-    def _format_playlist_row(self, a_row):
-        ''' Return a row formatted according to the current playlist version,
-            eliminating any empty fields that are not part of the specified version. '''
-        this_row = deepcopy(a_row)
-        # Extract the 'image' from the icon dictionary if present
-        if len(this_row) > Station.icon and 'image' in this_row[Station.icon]:
-            this_row[Station.icon] = this_row[Station.icon]['image']
-
-        if len(this_row) > Station.buffering:
-            if this_row[Station.buffering] == '0@128':
-                this_row[Station.buffering] = ''
-        while this_row and this_row[-1] == '':
-            this_row.pop()
-        return this_row
+        out_csv = CsvReadWrite(st_file)
+        ret = out_csv.write(items=self.stations)
+        if ret == 0:
+            self.dirty_playlist = False
+        out_csv = None
+        return ret
 
     def _set_playlist_elements(self, a_playlist, a_title=''):
         self.station_path = path.abspath(a_playlist)
@@ -4451,52 +4365,13 @@ class FavoritesManager:
         return 1, '___Already in favorites!___'
 
     def _read_csv(self):
-        items = []
-        try:
-            with open(self.file_path, mode='r', newline='', encoding='utf-8') as file:
-                reader = csv.reader(file)
-                try:
-                    for row in csv.reader(filter(lambda row: row[0] != '#', file), skipinitialspace=True):
-                        name = url = enc = icon = volume = http = referer = profile = buffering = ''
-                        this_row_version = Station.url
-                        # Assign values based on the length of the row
-                        row_length = len(row)
-                        name = row[0].strip()
-                        url = row[1].strip()
-                        if row_length > Station.encoding:
-                            enc = row[Station.encoding].strip()
-                            this_row_version = Station.encoding
-                        if row_length > Station.icon:
-                            icon = row[Station.icon].strip()
-                            this_row_version = Station.icon
-                        if row_length > Station.profile:
-                            profile = row[Station.profile].strip()
-                            this_row_version = Station.profile
-                        if row_length > Station.buffering:
-                            buffering = row[Station.buffering].strip()
-                            this_row_version = Station.buffering
-                        if row_length > Station.volume:
-                            volume = row[Station.volume].strip()
-                            this_row_version = Station.volume
-                        if row_length > Station.http:
-                            http = row[Station.http].strip()
-                            this_row_version = Station.http
-                        if row_length > Station.referer:
-                            referer = row[Station.referer].strip()
-                            this_row_version = Station.referer
-
-                        station_info = [
-                            name, url, enc, {'image': icon} if icon else '',
-                            profile, '' if buffering == '0@128' else buffering,
-                            http, volume, referer
-                        ]
-                        while station_info[-1] == '':
-                            station_info.pop()
-                        items.append(station_info)
-                except (csv.Error, ValueError):
-                    return []
-        except (FileNotFoundError, IOError) as e:
-            return []
+        csv_in = CsvReadWrite(a_file=self.file_path)
+        ret = csv_in.read()
+        if ret:
+            items = csv_in.items
+        else:
+            items = []
+        csv_in = None
         return items
 
     def _write_csv(self, items):
@@ -4504,11 +4379,10 @@ class FavoritesManager:
                 -2 : Error saving file
                  0 : Item added
         '''
-        try:
-            with open(self.file_path, mode='w', newline='', encoding='utf-8') as file:
-                writer = csv.writer(file)
-                writer.writerows(items)
-        except:
-            return -2, '___Error writing favorites!___'
-        return 0, '___Added to favorites!___'
+        csv_out = CsvReadWrite(a_file=self.file_path)
+        ret = csv_out.write(items=items)
+        csv_out = None
+        if ret == 0:
+            return 0, '___Added to favorites!___'
+        return -2, '___Error writing favorites!___'
 
