@@ -3424,26 +3424,15 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
         self._items = []
         self._groups_ids = []
         stationFile = path.join(self._config_path, self._default_playlist + '.csv')
-        if path.exists(stationFile):
-            with open(stationFile, 'r', encoding='utf-8') as cfgfile:
-                try:
-                    for row in csv.reader(filter(lambda row: row[0] != '#', cfgfile), skipinitialspace=True):
-                        if not row:
-                            continue
-                        name = row[0].strip()
-                        url =  row[1].strip()
-                        self._items.append(name)
-                        if url == '-':
-                            self._groups_ids.append(name)
-                except:
-                    pass
-            if self._groups_ids:
-                for i, n in enumerate(self._groups_ids):
-                    self._groups_ids[i] = self._items.index(n)
-                    if not self._is_from_schedule:
-                        self._groups_ids[i] += 2
+        csv_in = CsvReadWrite(stationFile)
+        if csv_in.read():
+            self._items = [x[0] for x in csv_in.items]
+            self._groups_ids = csv_in.groups
             if not self._is_from_schedule:
                 self._items.reverse()
+                if self._groups_ids:
+                    self._groups_ids = [x + 2 for x in self._groups_ids]
+        csv_in = None
         index = 0
         if self._is_from_schedule:
             if a_station:
@@ -3467,7 +3456,7 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
                 self._orig_playlist == 'Random' or \
                 self._orig_playlist is None:
             or_pl = 0
-        if i in self._groups_ids:
+        if i + self.startPos in self._groups_ids:
             col = curses.color_pair(3)
         else:
             col = curses.color_pair(10)
@@ -3478,7 +3467,7 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
             else:
                 col = curses.color_pair(11)
         elif i + self.startPos == self._selected_playlist_id:
-            if i in self._groups_ids:
+            if i + self.startPos in self._groups_ids:
                 col = curses.color_pair(9)
             else:
                 col = curses.color_pair(6)
