@@ -1104,7 +1104,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     sp = br.split('@')
                     if sp[-1] == '128':
                         sp[-1] = bitrate
-                        new_br = '@'.join(sp)
+                        new_br = '@'.join(sp).replace(' ', '')
                     if br != new_br:
                         self.stations[self.playing][Station.buffering] = new_br
                         if not self._cnf.browsing_station_service:

@@ -2857,7 +2857,7 @@ class MpvPlayer(Player):
         '''
         if not self._cnf.check_playlist:
             self.USE_PROFILE, profile = self._configHasProfile(
-                self.profile_name
+                a_station[Station.profile] if a_station[Station.profile] else self.profile_name
             )
 
         if self._recording == self.RECORD_WITH_SILENCE or \
@@ -3400,7 +3400,9 @@ class MpPlayer(Player):
             If so, can I use it?
         '''
         if not self._cnf.check_playlist:
-            self.USE_PROFILE, profile = self._configHasProfile(self.profile_name)
+            self.USE_PROFILE, profile = self._configHasProfile(
+                a_station[Station.profile] if a_station[Station.profile] else self.profile_name
+            )
 
         if self._cnf.check_playlist:
             self._write_silenced_profile()
