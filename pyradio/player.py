@@ -2230,8 +2230,10 @@ class Player():
          ):
         self._buffering_data = None
         name = a_station[0]
-        streamUrl = a_station[1]
-        station_force_http = a_station[Station.http]
+        if encoding:
+            a_station[Station.encoding] = encoding
+        if referer:
+            a_station[Station.referer] = referer
         # logger.error('')
         # logger.error('params = {}'.format(self.params))
         # logger.error('')
@@ -2257,7 +2259,7 @@ class Player():
         else:
             self._station_encoding = self.config_encoding
         opts = []
-        isPlayList = streamUrl.split("?")[0][-3:] in ['m3u', 'pls']
+        isPlayList = a_station[Station.url].split("?")[0][-3:] in ['m3u', 'pls']
 
         # get buffering data from station data
         if a_station[Station.buffering].startswith('0'):
@@ -2279,8 +2281,7 @@ class Player():
                 self._buffering_data = None
 
         opts, self.monitor_opts, referer, referer_file = self._buildStartOpts(
-            name, streamUrl, station_force_http,
-            streamReferer=referer, playList=isPlayList
+            a_station, playList=isPlayList
         )
         self.stop_mpv_status_update_thread = False
         if logger.isEnabledFor(logging.INFO):
@@ -2572,7 +2573,7 @@ class Player():
             delay_seconds = sp[0]
         return delay_seconds
 
-    def _buildStartOpts(self, streamName, streamUrl, station_force_http, streamReferer, playList):
+    def _buildStartOpts(self, a_station, playList):
         pass
 
     def _write_silenced_profile(self):
@@ -2810,7 +2811,7 @@ class MpvPlayer(Player):
             self.volume = -2
         return self._do_save_volume(self.profile_token + '\nvolume={}\n')
 
-    def _buildStartOpts(self, streamName, streamUrl, station_force_http, streamReferer=None, playList=False):
+    def _buildStartOpts(self, a_station, playList=False):
         ''' Builds the options to pass to mpv subprocess.'''
         # logger.error('\n\nself._recording = {}'.format(self._recording))
         # logger.error('self.profile_name = "{}"'.format(self.profile_name))
@@ -2855,7 +2856,9 @@ class MpvPlayer(Player):
             If so, can I use it?
         '''
         if not self._cnf.check_playlist:
-            self.USE_PROFILE, profile = self._configHasProfile(self.profile_name)
+            self.USE_PROFILE, profile = self._configHasProfile(
+                self.profile_name
+            )
 
         if self._recording == self.RECORD_WITH_SILENCE or \
                 self._cnf.check_playlist:
@@ -2883,7 +2886,9 @@ class MpvPlayer(Player):
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('---=== Starting Recording: "{}" ===---'.format(self.recording_filename))
 
-        referer, referer_file = self._get_referer(streamName, streamReferer)
+        referer, referer_file = self._get_referer(
+            a_station[Station.name], a_station[Station.referer]
+        )
         if referer is not None:
             opts.append(r'--http-header-fields="User-Agent: ' + self._cnf.user_agent_string + r',Referer:' + referer + '"')
 
@@ -2891,20 +2896,20 @@ class MpvPlayer(Player):
             if newerMpv:
                 if not self.USE_EXTERNAL_PLAYER:
                     opts.append('--input-ipc-server=' + self.mpvsocket)
-                opts.append('--playlist=' + self._url_to_use(streamUrl, station_force_http))
+                opts.append('--playlist=' + self._url_to_use(a_station[Station.url], a_station[Station.http]))
             else:
                 if not self.USE_EXTERNAL_PLAYER:
                     opts.append('--input-unix-socket=' + self.mpvsocket)
-                opts.append('--playlist=' + self._url_to_use(streamUrl, station_force_http))
+                opts.append('--playlist=' + self._url_to_use(a_station[Station.url], a_station[Station.http]))
         else:
             if newerMpv:
                 if not self.USE_EXTERNAL_PLAYER:
                     opts.append('--input-ipc-server=' + self.mpvsocket)
-                opts.append(self._url_to_use(streamUrl, station_force_http))
+                opts.append(self._url_to_use(a_station[Station.url], a_station[Station.http]))
             else:
                 if not self.USE_EXTERNAL_PLAYER:
                     opts.append('--input-unix-socket=' + self.mpvsocket)
-                opts.append(self._url_to_use(streamUrl, station_force_http))
+                opts.append(self._url_to_use(a_station[Station.url], a_station[Station.http]))
 
         # if self.USE_EXTERNAL_PLAYER:
         #     # opts.append('--msg-color=yes')
@@ -3367,7 +3372,7 @@ class MpPlayer(Player):
         # Round up to the nearest integer
         return math.ceil(seconds)
 
-    def _buildStartOpts(self, streamName, streamUrl, station_force_http, streamReferer=None, playList=False):
+    def _buildStartOpts(self, a_station, playList=False):
         ''' Builds the options to pass to mplayer subprocess.'''
         if self.USE_EXTERNAL_PLAYER:
             self.recording = self.NO_RECORDING
@@ -3384,7 +3389,9 @@ class MpPlayer(Player):
         # opts = [self.PLAYER_CMD, '-vo', 'null']
         monitor_opts = None
 
-        referer, referer_file = self._get_referer(streamName, streamReferer)
+        referer, referer_file = self._get_referer(
+            a_station[Station.name], a_station[Station.referer]
+        )
         if referer is not None:
             opts.append(r'-http-header-fields')
             opts.append(r'Referer: "' + referer + '"')
@@ -3452,7 +3459,7 @@ class MpPlayer(Player):
             except IndexError:
                 ''' not -playlist, find and remove url '''
                 try:
-                    i = [y for y, x in enumerate(monitor_opts) if x == streamUrl][0]
+                    i = [y for y, x in enumerate(monitor_opts) if x == a_station[Station.url]][0]
                     del monitor_opts[i]
                 except IndexError:
                     pass
@@ -3477,7 +3484,7 @@ class MpPlayer(Player):
         ''' add URL '''
         if playList:
             opts.append('-playlist')
-        opts.append(self._url_to_use(streamUrl, station_force_http))
+        opts.append(self._url_to_use(a_station[Station.url], a_station[Station.http]))
 
         # logger.error('Opts:\n{0}\n{1}'.format(opts, monitor_opts))
         return opts, monitor_opts, referer, referer_file
@@ -3756,11 +3763,10 @@ class VlcPlayer(Player):
     def save_volume(self):
         return self._do_save_volume('{}')
 
-    def _buildStartOpts(self, streamName, streamUrl, station_force_http, streamReferer=None, playList=False):
+    def _buildStartOpts(self, a_station, playList=False):
         ''' Builds the options to pass to vlc subprocess.'''
-        #opts = [self.PLAYER_CMD, "-Irc", "--quiet", streamUrl]
         monitor_opts = None
-        self._vlc_url = self._url_to_use(streamUrl, station_force_http)
+        self._vlc_url = self._url_to_use(a_station[Station.url], a_station[Station.http])
         if self.USE_EXTERNAL_PLAYER:
             self.recording = self.NO_RECORDING
         if self.WIN:
@@ -3789,13 +3795,13 @@ class VlcPlayer(Player):
 
             if self.USE_EXTERNAL_PLAYER:
                 opts = [self.PLAYER_CMD, '--no-video', '--no-one-instance', '-Irc',
-                    self._url_to_use(streamUrl, station_force_http)]
+                    self._url_to_use(a_station[Station.url], a_station[Station.http])]
             else:
                 opts = [self.PLAYER_CMD, '--no-video', '--no-one-instance',
                     '--no-volume-save', '-Irc', '--rc-host', '127.0.0.1:' + str(self._port),
                     '--file-logging', '--logmode', 'text', '--log-verbose', '3',
                     '--logfile', self._vlc_stdout_log_file, '-vv',
-                    self._url_to_use(streamUrl, station_force_http)]
+                    self._url_to_use(a_station[Station.url], a_station[Station.http])]
 
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('vlc listening on 127.0.0.1:{}'.format(self._port))
@@ -3830,7 +3836,9 @@ class VlcPlayer(Player):
             if self._cnf.buffering_enabled:
                 opts.extend(self._cnf.buffering_data)
 
-        referer, referer_file = self._get_referer(streamName, streamReferer)
+        referer, referer_file = self._get_referer(
+            a_station[Station.name], a_station[Station.referer]
+        )
         if referer is not None:
             opts.append('--http-user-agent')
             opts.append(self._cnf.user_agent_string)
@@ -3853,7 +3861,7 @@ class VlcPlayer(Player):
         if self._recording > 0:
             monitor_opts = opts[:]
             try:
-                i = [y for y, x in enumerate(monitor_opts) if x == streamUrl][0]
+                i = [y for y, x in enumerate(monitor_opts) if x == a_station[Station.url]][0]
                 del monitor_opts[i]
             except IndexError:
                 pass
@@ -3870,7 +3878,7 @@ class VlcPlayer(Player):
             self.buffering_change_function()
 
         if self.USE_EXTERNAL_PLAYER:
-            opts.append(streamUrl)
+            opts.append(a_station[Station.url])
 
         return opts, monitor_opts, referer, referer_file
 
