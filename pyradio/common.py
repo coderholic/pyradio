@@ -4,11 +4,12 @@ import locale
 import io
 import csv
 import curses
-from os import rename, remove, access, X_OK
-from os.path import exists, dirname, join
+from os import rename, remove, access, X_OK, getenv, makedirs
+from os.path import exists, dirname, join, expanduser
 from shutil import which, move, Error as shutil_Error
 from rich import print
 from enum import IntEnum
+from sys import platform
 
 logger = logging.getLogger(__name__)
 
@@ -183,6 +184,20 @@ def describe_playlist(value):
     # Join the names with spaces and return the result
     return f"Playlist has {' '.join(names)}"
 
+def remove_consecutive_empty_lines(input_list):
+    cleaned_list = []
+    previous_line_empty = False
+    # remove empty fields
+    work_list = [x for x in input_list if x]
+    for line in work_list:
+        stripped_line = line.strip()
+        if stripped_line:
+            cleaned_list.append(line)
+            previous_line_empty = False
+        elif not previous_line_empty:
+            cleaned_list.append('\n')
+            previous_line_empty = True
+    return cleaned_list
 
 def erase_curses_win(Y, X, beginY, beginX, char=' ', color=5):
     ''' empty a part of the screen
@@ -787,6 +802,321 @@ class CsvReadWrite():
                 logger.debug(f'Cannot rename playlist file: {e}...')
             return -2
         return 0
+
+
+class ProfileManager():
+
+    _config_file = None
+
+    def __init__(self):
+        pass
+
+    @property
+    def config_files(self):
+        if self._config_file is None:
+            self._config_files = self.get_config_files()
+        return self._config_files
+
+    @config_files.setter
+    def config_files(self, value):
+        self._config_files = vlaue
+
+    def reread_files(self):
+        self._config_file = None
+        return self.config_files
+
+    @classmethod
+    def get_config_files(cls):
+        out = {}
+        ''' MPV config files '''
+        if platform.startswith('win'):
+            config_files = [join(getenv('APPDATA'), "mpv", "mpv.conf")]
+        else:
+            # linux, freebsd, etc.
+            xdg_config = getenv('XDG_CONFIG_HOME')
+            if xdg_config:
+                config_files = [xdg_config + "/mpv/mpv.conf"]
+            else:
+                config_files = [expanduser("~") + "/.config/mpv/mpv.conf"]
+            config_files.append("/etc/mpv/mpv.conf")
+            config_files.append("/usr/local/etc/mpv/mpv.conf")
+        out['mpv'] = config_files[:]
+
+        ''' MPlayer config files '''
+        config_files = [expanduser("~") + "/.mplayer/config"]
+        if platform.startswith('win'):
+            if exists(r'C:\\mplayer\\mplayer.exe'):
+                config_files[0] = r'C:\\mplayer\mplayer\\config'
+            elif exists(os.path.join(getenv('USERPROFILE'), "mplayer", "mplayer.exe")):
+                config_files[0] = join(getenv('USERPROFILE'), "mplayer", "mplayer", "config")
+            elif exists(join(getenv('APPDATA'), "pyradio", "mplayer", "mplayer.exe")):
+                config_files[0] = join(getenv('APPDATA'), "pyradio", "mplayer", "mplayer", "config")
+            else:
+                config_files = []
+        else:
+            config_files.append("/usr/local/etc/mplayer/mplayer.conf")
+            config_files.append('/etc/mplayer/config')
+        out['mplayer'] = config_files[:]
+        # logger.error(f'{out =  }')
+        return out
+
+    def set_vlc_config_file(self, config):
+        self._config_files['vlc'] = config
+
+    def _read_a_config_file(self, config_file):
+        # Read config file
+        if not exists(config_file):
+            return []
+        try:
+            with open(config_file, 'r', encoding='utf-8') as file:
+                ret = [line.lstrip() if line.strip() else line for line in file.readlines()]
+        except Exception as e:
+            ret = []
+        return ret
+
+    def _write_config_file(self, config_file, a_string=None, a_list=None):
+        try:
+            makedirs(dirname(config_file), exist_ok=True)
+            with open(config_file, 'w', encoding='utf-8') as file:
+                if a_string is None:
+                    file.writelines(a_list)
+                else:
+                    file.write(a_string)
+            return True
+        except (FileNotFoundError, PermissionError, IsADirectoryError,
+                UnicodeEncodeError, OSError, IOError):
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Error writing profile [{}] in "{}"'.format(profile_name, config_file))
+            return False
+
+    def save_volume(self, player_name, profile_name, volume):
+        ''' save volume value in a profile
+
+            Parameters
+                player_name         : string
+                profile_name        : string
+                volume              : any
+
+            Returns
+                profile_name        : if success
+                None                : if failure
+        '''
+        # logger.error('before profile name: "{}"'.format(profile_name))
+        config_file = self.config_files[player_name][0]
+        if profile_name.startswith('[') and \
+                profile_name.endswith(']'):
+            profile_name = profile_name[1:-1]
+        # logger.error('after  profile name: "{}"'.format(profile_name))
+        if not exists(config_file):
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    '[{}] file not found! Adding profile [{}] with volume {}\n\n'.format(
+                        config_file, profile_name, volume
+                    )
+                )
+            makedirs(dirname(config_file), exist_ok=True)
+            return self.append_to_config(player_name, profile_name, 'volume=' + str(volume))
+
+        else:
+            config_string = self._read_a_config_file(config_file)
+            # logger.error(f'{config_file = }')
+            # logger.error(f'before remove {config_string = }')
+            if '[' + profile_name + ']' in config_string:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('[{}] profile found!\n\n'.format(profile_name))
+                config_list = remove_consecutive_empty_lines(config_string.split('\n'))
+                config_string = '\n'.join(config_list)
+                # logger.error(f'after  remove {config_string = }')
+                # find all lines starting with '['
+                indexes = [i for i, x  in enumerate(config_list) if x.startswith('[')]
+                # logger.error(f'{indexes = }')
+                # get [profile_name] index
+                profile_index = config_list.index('[' + profile_name + ']')
+                # logger.error(f'{profile_index = }')
+                volume_adjusted = False
+                for i in range(profile_index+1, len(config_list)):
+                    # logger.error('checking "{}"'.format(config_list[i]))
+                    if config_list[i].startswith('volume='):
+                        config_list[i] = 'volume=' + str(volume)
+                        volume_adjusted = True
+                        break
+                    elif i in indexes:
+                        # volume not found in profile
+                        break
+                if not volume_adjusted:
+                    config_list[profile_index] += '\nvolume={}\n'.format(volume)
+                config_list = ['\n' + x if x.startswith('[') else x for x in config_list]
+                # logger.error('\n\n')
+                # for n in config_list:
+                #     logger.error(f'"{n}"')
+                # logger.error(config_list)
+                # logger.error('\n'.join(config_list))
+                # logger.error('\n\n')
+                ret = self._write_config_file(config_file, a_string='\n'.join(config_list) + '\n\n')
+                if ret:
+                    return profile_name
+                else:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Error writing profile [{}] in "{}"'.format(profile_name, config_file))
+                    return None
+            else:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('[{}] profile not found! Adding it with volume'.format(profile_name))
+                return self.append_to_config(player_name, profile_name, 'volume=' + str(volume))
+
+    def write_silenced_profile(self, player_name):
+        self.add_to_config(player_name, 'silent', 'volume=0')
+
+    def add_to_config(self, player_name, profile_name, profile_string):
+        ''' appends a profile to the user's player config file
+            it is a wrapper function for append_to_config
+
+            checks if profile already exists in user's config file
+
+            Paramaters
+                player_name         : string
+                profile_naeme       : string
+                profile_contents    : string
+
+            Returns
+                profile_name        : if success or profile exists
+                None                : if failure
+
+        '''
+        for i, config_file in enumerate(self.config_files[player_name]):
+            if exists(config_file):
+                config_string = self._read_a_config_file(config_file)
+                if '[' + profile_name + ']' in config_string:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('[{}] profile found!'.format(profile_name))
+                    return profile_name
+
+        ''' profile not found in config
+            create a default profile
+        '''
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'No [{profile_name}] profile found!')
+        # fix for #229
+        base_path = dirname(self.config_files[player_name][0])
+        if not exists(base_path):
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'Dir created: "{base_path}')
+            makedirs(base_path)
+        ret = self.append_to_config(player_name, profile_name, profile_string)
+        if ret is None:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Cannot wirte [{}] profile in: "{}"'.format(profile_name, self.config_files[player_name][0]))
+        return ret
+
+    def append_to_config(self, player_name, profile_name, profile_contents):
+        ''' appends a profile to the user's player config file
+
+            Paramaters
+                player_name         : string
+                profile_naeme       : string
+                profile_contents    : string
+
+            Returns
+                profile_name        : if success
+                None                : if failure
+        '''
+        try:
+            config_file = self.config_files[player_name][0]
+
+            # Read the current contents of the config file
+            config_list = self._read_a_config_file(config_file)
+
+            # append new profile
+            if profile_name and profile_contents:
+                config_list.append('[' + profile_name + ']\n')
+                config_list.append(profile_contents + '\n\n')
+
+            # Remove consecutive empty lines, leaving at least one
+            cleaned_list = remove_consecutive_empty_lines(config_list)
+
+            # Write back the updated list to the config file
+            self._write_config_file(config_file, a_list=cleaned_list)
+            profile = profile_name
+        except (FileNotFoundError, PermissionError, IsADirectoryError,
+                UnicodeEncodeError, OSError, IOError):
+            profile = None
+        return profile
+
+    def set_station_volume(self, player_name, existing_profile, new_profile, volume):
+        if existing_profile:
+            existing_profile = existing_profile.replace('[', '').replace(']', '')
+        new_profile = new_profile.replace('[', '').replace(']', '')
+
+        # Read config file
+        config_file = self.config_files[player_name][0]
+        config_list = self._read_a_config_file(config_file)
+
+        # Extract existing profile section if it exists
+        existing_section = None
+        if existing_profile:
+            # Find existing profile section
+            section = []
+            in_section = False
+            for line in config_list:
+                stripped = line.strip()
+                if stripped == f'[{existing_profile}]':
+                    in_section = True
+                    section.append(line)
+                elif in_section:
+                    if stripped.startswith('['):
+                        break
+                    section.append(line)
+            if in_section:
+                existing_section = section
+
+        # Create or update the new profile section
+        if existing_section:
+            # Update volume in copied section
+            new_section = []
+            volume_found = False
+            for line in existing_section:
+                stripped = line.strip()
+                if stripped.startswith('volume='):
+                    new_section.append(f'volume={volume}\n')
+                    volume_found = True
+                else:
+                    new_section.append(line)
+            if not volume_found:
+                new_section.append(f'volume={volume}\n')
+            # Rename profile
+            new_section[0] = f'[{new_profile}]\n'
+        else:
+            # Create new section
+            new_section = [f'[{new_profile}]\n', f'volume={volume}\n']
+
+        # Remove existing new_profile entries
+        cleaned_config = []
+        skip = False
+        for line in config_list:
+            stripped = line.strip()
+            if stripped == f'[{new_profile}]':
+                skip = True
+            elif skip:
+                if stripped.startswith('['):
+                    skip = False
+                    cleaned_config.append(line)
+            else:
+                cleaned_config.append(line)
+
+        # Add new profile section
+        cleaned_config += ['\n'] + new_section
+
+        # Clean up formatting
+        # cleaned_config = ['\n' + x if x.startswith('[') else x for x in cleaned_config]
+        cleaned_config = remove_consecutive_empty_lines(cleaned_config)
+
+        # Write back to file
+        ret = self._write_config_file(config_file, a_list=cleaned_config)
+        if ret:
+            return new_profile
+        else:
+            logger.error(f"Error saving {player_name} config: {str(e)}")
+            return None
 
 
 def validate_resource_opener_path(a_file):

@@ -1756,7 +1756,8 @@ class ExtraParameters():
             self._selections[a_player_name][2] = default_id - 1
         # logger.error('self._selections[a_player_name][2] = {}'.format( self._selections[a_player_name][2] ))
 
-    def _extract_profile(self, a_file):
+    @classmethod
+    def extract_a_profile_name(cls, a_file):
         ''' extract profiles from a file '''
         try:
             out = []
@@ -1779,7 +1780,7 @@ class ExtraParameters():
         ''' extract profiles for a player '''
         result = []
         for n in config_files:
-            result.extend(self._extract_profile(n))
+            result.extend(self.extract_a_profile_name(n))
 
         ''' convert to set and remove pyradio '''
         result = list(set(result))

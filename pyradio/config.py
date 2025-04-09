@@ -21,7 +21,7 @@ from rich.table import Table
 from rich.align import Align
 from rich import print
 from pyradio import version, stations_updated
-from .common import validate_resource_opener_path, is_rasberrypi, Station, describe_playlist, CsvReadWrite
+from .common import validate_resource_opener_path, is_rasberrypi, Station, describe_playlist, CsvReadWrite, ProfileManager
 from .keyboard import kbkey, lkbkey, read_keyboard_shortcuts, read_localized_keyboard, get_lkbkey, set_lkbkey, check_localized
 from .browser import probeBrowsers
 from .install import get_github_long_description
@@ -1409,6 +1409,8 @@ class PyRadioConfig(PyRadioStations):
     _check_output_folder = None
     _check_output_file = None
 
+    profile_manager = None
+
     def __init__(self, user_config_dir=None, headless=False):
         # keep old recording / new recording dir
         self._user_config_dir = user_config_dir
@@ -1461,6 +1463,7 @@ class PyRadioConfig(PyRadioStations):
         self.auto_update_frameworks = ( self.base16_themes, self.pywal_themes, self.theme_sh_themes)
 
         self._read_notification_command()
+        self.profile_manager = ProfileManager()
 
     @property
     def mplayer_save_br(self):

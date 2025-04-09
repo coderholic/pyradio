@@ -21,7 +21,6 @@ try:
     from .common import STATES, M_STRINGS, Station
 except ImportError:
     pass
-
 try:
     import psutil
 except:
@@ -362,7 +361,10 @@ class Player():
         self.status_update_lock = outputStream.lock
 
         self.config_files = []
-        self._get_all_config_files()
+        self.all_config_files = self._cnf.profile_manager.config_files
+        self._cnf.profile_manager.set_vlc_config_file([os.path.join(self._cnf.state_dir, 'vlc.conf')])
+        # TODO: get profile names?
+        # self._cnf.profile_manager.
         #if self.WIN and self.PLAYER_NAME == 'vlc':
         if platform.startswith('win'):
             ''' delete old vlc files (vlc_log.*) '''
@@ -485,30 +487,12 @@ class Player():
         ''' profile not found in config
             create a default profile
         '''
-        # fix for #229
-        base_path = os.path.dirname(self.config_files[0])
-        if not os.path.exists(base_path):
-            os.makedirs(base_path)
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug(f'Dir created: "{base_path}')
-        try:
-            with open(self.config_files[0], 'a', encoding='utf-8') as f:
-                f.write('\n[{}]\n'.format(a_profile_name))
-                f.write(self.NEW_PROFILE_STRING)
-            self.PROFILE_FROM_USER = True
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Written "{}" profile in: "{}"'.format(
-                    self.NEW_PROFILE_STRING,
-                    self.config_files[0])
-                             )
-            return 1, a_profile_name
-        except:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Cannot write "{}" profile in: "{}"'.format(
-                    self.NEW_PROFILE_STRING,
-                    self.config_files[0])
-                             )
+        ret = self._cnf.profile_manager.add_to_config(
+            self.PLAYER_NAME, 'pyradio', self.NEW_PROFILE_STRING
+        )
+        if ret is None:
             return 0, a_profile_name
+        return 1, a_profile_name
 
     def get_recording_filename(self, name, extension):
         if self._chapters is None:
@@ -526,19 +510,20 @@ class Player():
 
     def _get_all_config_files(self):
         ''' MPV config files '''
-        config_files = []
-        config_files = [expanduser("~") + "/.config/mpv/mpv.conf"]
-
         if platform.startswith('win'):
-            config_files[0] = os.path.join(os.getenv('APPDATA'), "mpv", "mpv.conf")
+            config_files = [os.path.join(os.getenv('APPDATA'), "mpv", "mpv.conf")]
         else:
             # linux, freebsd, etc.
+            xdg_config = os.getenv('XDG_CONFIG_HOME')
+            if xdg_config:
+                config_files = [xdg_config + "/mpv/mpv.conf"]
+            else:
+                config_files = [expanduser("~") + "/.config/mpv/mpv.conf"]
             config_files.append("/etc/mpv/mpv.conf")
             config_files.append("/usr/local/etc/mpv/mpv.conf")
         self.all_config_files['mpv'] = config_files[:]
 
         ''' MPlayer config files '''
-        config_files = []
         config_files = [expanduser("~") + "/.mplayer/config"]
         if platform.startswith('win'):
             if os.path.exists(r'C:\\mplayer\\mplayer.exe'):
@@ -553,6 +538,8 @@ class Player():
             config_files.append("/usr/local/etc/mplayer/mplayer.conf")
             config_files.append('/etc/mplayer/config')
         self.all_config_files['mplayer'] = config_files[:]
+
+        '''' VLC config file '''
         config_files = [os.path.join(self._cnf.state_dir, 'vlc.conf')]
         self.all_config_files['vlc'] = config_files[:]
         self._restore_win_player_config_file()
@@ -792,81 +779,17 @@ class Player():
                                 logger.debug(log_strings[2].format(config_file))
                             return ret_strings[2].format(str(self.volume))
                     else:
+                        logger.error('\n\nprofile_token = {}\n\n'.format(self.profile_token))
+                        logger.error(f'{self.PROFILE_FROM_USER}')
                         if self.PROFILE_FROM_USER:
-                            with open(config_file, 'r', encoding='utf-8') as c_file:
-                                config_string = c_file.read()
-
-                            if self.profile_token in config_string:
-                                profile_found = True
-
-                                ''' split on self.profile_token
-                                last item has our options '''
-                                sections = config_string.split(self.profile_token)
-
-                                ''' split at [ - i.e. isolate consecutive profiles
-                                first item has pyradio options '''
-                                py_section = sections[-1].split('[')
-
-                                ''' split to lines in order to get '^volume=' '''
-                                py_options = py_section[0].split('\n')
-
-                                ''' replace volume line '''
-                                vol_set = False
-                                for i, opt in enumerate(py_options):
-                                    if opt.startswith('volume='):
-                                        py_options[i]='volume=' + str(self.volume)
-                                        vol_set = True
-                                        break
-                                ''' or add it if it does not exist '''
-                                if not vol_set:
-                                    py_options.append('volume=' + str(self.volume))
-
-                                ''' join lines together in py_section's first item '''
-                                py_section[0] = '\n'.join(py_options)
-
-                                ''' join consecutive profiles (if exist)
-                                in last item of sections '''
-                                if len(py_section) > 1:
-                                    sections[-1] = '['.join(py_section)
-                                else:
-                                    sections[-1] = py_section[0]
-
-                                ''' finally get the string back together '''
-                                config_string = self.profile_token.join(sections)
-
-                            try:
-                                with open(config_file, 'w', encoding='utf-8') as c_file:
-                                    c_file.write(config_string)
-                                self.volume = -1
-                            except EnvironmentError:
-                                if (logger.isEnabledFor(logging.DEBUG)):
-                                    logger.debug(log_strings[2].format(config_file))
+                            ret = self._cnf.profile_manager.save_volume(
+                                self.PLAYER_NAME, self.profile_token, self.volume
+                            )
+                            if ret is None:
                                 return ret_strings[2].format(str(self.volume))
+                            else:
+                                self.volume = -1
 
-                ''' no user profile or user config file does not exist '''
-                if not profile_found:
-                    if os.path.isdir(os.path.dirname(config_file)):
-                        if os.path.exists(config_file):
-                            new_profile_string = '\n' + config_string
-                        else:
-                            new_profile_string = self.NEW_PROFILE_STRING + config_string
-                    else:
-                        try:
-                            os.mkdir(os.path.dirname(config_file))
-                        except OSError:
-                            if (logger.isEnabledFor(logging.DEBUG)):
-                                logger.debug(log_strings[2].format(config_file))
-                            return ret_strings[2].format(str(self.volume))
-                        new_profile_string = self.NEW_PROFILE_STRING + config_string
-                    try:
-                        with open(config_file, 'a', encoding='utf-8') as c_file:
-                            c_file.write(new_profile_string.format(str(self.volume)))
-                    except EnvironmentError:
-                        if (logger.isEnabledFor(logging.DEBUG)):
-                            logger.debug(log_strings[2].format(config_file))
-                        return ret_strings[2].format(str(self.volume))
-                    self.volume = -1
-                    self.PROFILE_FROM_USER = True
             self.bck_win_player_config_file(config_file)
             return ret_string
 
@@ -2576,36 +2499,6 @@ class Player():
     def _buildStartOpts(self, a_station, playList):
         pass
 
-    def _write_silenced_profile(self):
-        for i, config_file in enumerate(self.config_files):
-            if os.path.exists(config_file):
-                with open(config_file, 'r', encoding='utf-8') as f:
-                    config_string = f.read()
-                if '[silent]' in config_string:
-                    if i == 0:
-                        return
-
-        ''' profile not found in config
-            create a default profile
-        '''
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('No [silent] profile found!')
-        # fix for #229
-        base_path = os.path.dirname(self.config_files[0])
-        if not os.path.exists(base_path):
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug(f'Dir created: "{base_path}')
-            os.makedirs(base_path)
-        try:
-            with open(self.config_files[0], 'a', encoding='utf-8') as f:
-                f.write('\n[{}]\n'.format('silent'))
-                f.write('volume=0\n\n')
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Written [silent] profile in: "{}"'.format(self.config_files[0]))
-        except:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Cannot wirte [silent] profile in: "{}"'.format(self.config_files[0]))
-
     def _get_referer(self, streamName, streamReferer):
         referer = None
         referer_file = os.path.join(self._cnf.xdg.stations_dir, streamName + '.referer.txt')
@@ -2800,6 +2693,7 @@ class MpvPlayer(Player):
             recording_lock
         )
         self.config_files = self.all_config_files['mpv']
+        logger.error('\n\nself.config_files = {}\n\n'.format(self.config_files))
         self.recording_filename = ''
         # logger.error('\n\nMPV recording = {}\n\n'.format(self._recording))
         self._request_mpv_info_data_counter = 0
@@ -2829,7 +2723,7 @@ class MpvPlayer(Player):
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('--input-ipc-server is not supported.')
             newerMpv = False
-        logger.error('\n\nself._cnf.user_agent_string = {}\n\n'.format(self._cnf.user_agent_string))
+        logger.error(f'{self._cnf.user_agent_string = }')
         if self.USE_EXTERNAL_PLAYER:
             opts = [self.PLAYER_CMD, '--no-video']
         else:
@@ -2862,13 +2756,26 @@ class MpvPlayer(Player):
 
         if self._recording == self.RECORD_WITH_SILENCE or \
                 self._cnf.check_playlist:
-            self._write_silenced_profile()
+            self._cnf.profile_manager.write_silenced_profile(self.PLAYER_NAME)
             opts.append('--profile=silent')
         else:
             if self.USE_PROFILE == 1:
+                if self.station_volume != -1:
+                    profile_string = None
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Initial profile: "[{}]"'.format(profile))
+                    ret = self._cnf.profile_manager.set_station_volume(
+                        self.PLAYER_NAME, profile, 'pyradio-volume', str(self.station_volume)
+                    )
+                    if ret:
+                        profile = ret
+                        profile_string = 'Using profile: "[{}]", volume: {}'.format(profile, self.station_volume)
                 opts.append('--profile=' + profile)
                 if (logger.isEnabledFor(logging.INFO)):
-                    logger.info('Using profile: "[{}]"'.format(profile))
+                    if profile_string:
+                        logger.info(profile_string)
+                    else:
+                        logger.info('Using profile: "[{}]"'.format(profile))
             else:
                 if (logger.isEnabledFor(logging.INFO)):
                     if self.USE_PROFILE == 0:
@@ -2876,9 +2783,6 @@ class MpvPlayer(Player):
                     else:
                         logger.info('No usable profile found')
 
-        # TODO: use pyradio-volume profile
-        if self.station_volume != -1:
-            logger.error('I need to use pyradio-volume profile')
         # logger.error('\n\nself._recording = {}'.format(self._recording))
         if self._recording > 0:
             self.recording_filename = self.get_recording_filename(self.name, '.mkv')
@@ -3405,32 +3309,41 @@ class MpPlayer(Player):
             )
 
         if self._cnf.check_playlist:
-            self._write_silenced_profile()
+            self._cnf.profile_manager.write_silenced_profile(self.PLAYER_NAME)
             opts.append('-profile')
             opts.append('silent')
         elif self._recording == self.RECORD_WITH_SILENCE:
             if self.USE_PROFILE > -1:
-                self._write_silenced_profile()
+                self._cnf.profile_manager.write_silenced_profile(self.PLAYER_NAME)
                 opts.append('-profile')
                 opts.append('silent')
             else:
                 self._recording = self.RECORD_AND_LISTEN
         else:
             if self.USE_PROFILE == 1:
+                profile_string = None
+                if self.station_volume != -1:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Initial profile: "[{}]"'.format(profile))
+                    ret = self._cnf.profile_manager.set_station_volume(
+                        self.PLAYER_NAME, profile, 'pyradio-volume', str(self.station_volume)
+                    )
+                    if ret:
+                        profile = ret
+                        profile_string = 'Using profile: "[{}]", volume: {}'.format(profile, self.station_volume)
                 opts.append('-profile')
                 opts.append(profile)
                 if (logger.isEnabledFor(logging.INFO)):
-                    logger.info('Using profile: "[{}]"'.format(profile))
+                    if profile_string:
+                        logger.info(profile_string)
+                    else:
+                        logger.info('Using profile: "[{}]"'.format(profile))
             else:
                 if (logger.isEnabledFor(logging.INFO)):
                     if self.USE_PROFILE == 0:
                         logger.info('Profile "[{}]" not found in config file!!!'.format(profile))
                     else:
                         logger.info('No usable profile found')
-
-        # TODO: use pyradio-volume profile
-        if self.station_volume != -1:
-            logger.error('I need to use pyradio-volume profile')
 
         ''' this will set the profile too '''
         params = self.params[self.params[0]]
