@@ -337,6 +337,8 @@ class Player():
     success_in_check_playlist = None
     error_in_check_playlist = None
 
+    enable_per_station_volume = True
+
     def __init__(self,
                  config,
                  outputStream,
@@ -2167,7 +2169,7 @@ class Player():
         self.volume = -1
         self.close()
         self.name = name
-        self.station_volume = int(a_station[Station.volume]) if a_station[Station.volume] else -1
+        self.station_volume = int(a_station[Station.volume]) if a_station[Station.volume] and self.enable_per_station_volume else -1
         self.oldUserInput = {'Input': '', 'Volume': '', 'Title': ''}
         self.muted = self.paused = False
         self.show_volume = True
@@ -2760,8 +2762,8 @@ class MpvPlayer(Player):
             opts.append('--profile=silent')
         else:
             if self.USE_PROFILE == 1:
-                if self.station_volume != -1:
-                    profile_string = None
+                profile_string = None
+                if self.station_volume != -1 and self.enable_per_station_volume:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Initial profile: "[{}]"'.format(profile))
                     ret = self._cnf.profile_manager.set_station_volume(
@@ -3322,7 +3324,7 @@ class MpPlayer(Player):
         else:
             if self.USE_PROFILE == 1:
                 profile_string = None
-                if self.station_volume != -1:
+                if self.station_volume != -1 and self.enable_per_station_volume:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Initial profile: "[{}]"'.format(profile))
                     ret = self._cnf.profile_manager.set_station_volume(

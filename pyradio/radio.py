@@ -4054,20 +4054,35 @@ and |remove the file manually|.
         if self._limited_height_mode or \
                 self._limited_width_mode:
             return
+        try:
+            self.outerBodyWin.addstr(
+                0, 1, '─────', curses.color_pair(13)
+            )
+        except:
+            self.outerBodyWin.addstr(
+                0, 1, '─────'.encode('utf-8'), curses.color_pair(13)
+            )
         b_header = 'B' if self.player.buffering else ''
+        if self._last_played_station and self.player.isPlaying():
+            if self._last_played_station[Station.volume]:
+                if self.player.enable_per_station_volume:
+                    b_header += 'V'
+                else:
+                    b_header += 'v'
         # logger.info('player_disappeared = {}'.format(player_disappeared))
         if self.player.recording == 0:
-            if not from_header_update:
-                try:
-                    self.outerBodyWin.addstr(
-                        0, 1, '────', curses.color_pair(13)
-                    )
-                except:
-                    self.outerBodyWin.addstr(
-                        0, 1, '────'.encode('utf-8'), curses.color_pair(13)
-                    )
+            # if not from_header_update:
+            #     try:
+            #         self.outerBodyWin.addstr(
+            #             0, 1, '─────', curses.color_pair(13)
+            #         )
+            #     except:
+            #         self.outerBodyWin.addstr(
+            #             0, 1, '─────'.encode('utf-8'), curses.color_pair(13)
+            #         )
             # logger.error('self.player.buffering = {}'.format(self.player.buffering))
-            if self.player.buffering:
+            # if self.player.buffering:
+            if b_header:
                 self.outerBodyWin.addstr(0, 1, '[', curses.color_pair(13))
                 self.outerBodyWin.addstr(b_header, curses.color_pair(4))
                 self.outerBodyWin.addstr(']', curses.color_pair(13))
@@ -4075,15 +4090,15 @@ and |remove the file manually|.
                     self.outerBodyWin.addstr('─', curses.color_pair(13))
                 except:
                     self.outerBodyWin.addstr('─'.encode('utf-8'), curses.color_pair(13))
-            else:
-                try:
-                    self.outerBodyWin.addstr(
-                        0, 1, '────', curses.color_pair(13)
-                    )
-                except:
-                    self.outerBodyWin.addstr(
-                        0, 1, '────'.encode('utf-8'), curses.color_pair(13)
-                    )
+            # else:
+            #     try:
+            #         self.outerBodyWin.addstr(
+            #             0, 1, '─────', curses.color_pair(13)
+            #         )
+            #     except:
+            #         self.outerBodyWin.addstr(
+            #             0, 1, '─────'.encode('utf-8'), curses.color_pair(13)
+            #         )
             self.outerBodyWin.refresh()
             # logger.info('w_header = " "')
         else:
@@ -4099,11 +4114,11 @@ and |remove the file manually|.
             if b_header:
                 self.outerBodyWin.addstr(b_header, curses.color_pair(4))
             self.outerBodyWin.addstr(']', curses.color_pair(13))
-            if not b_header:
-                try:
-                    self.outerBodyWin.addstr('─', curses.color_pair(13))
-                except:
-                    self.outerBodyWin.addstr('─'.encode('utf-8'), curses.color_pair(13))
+            # if not b_header:
+            #     try:
+            #         self.outerBodyWin.addstr('──', curses.color_pair(13))
+            #     except:
+            #         self.outerBodyWin.addstr('──'.encode('utf-8'), curses.color_pair(13))
             if player_disappeared:
                 if self.player.recording == 0:
                     self.refreshBody()
@@ -6965,6 +6980,13 @@ _____"|f|" to see the |free| keys you can use.
             else:
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('Station volume save inhibited because playback is off')
+
+        elif self._backslash_pressed and \
+                (char == kbkey['toggle_station_volume'] or \
+                 check_localized(char, (kbkey['toggle_station_volume'],))):
+            self._update_status_bar_right(status_suffix='')
+            self.player.enable_per_station_volume = not self.player.enable_per_station_volume
+            self._show_recording_status_in_header()
 
         elif self._backslash_pressed and \
                 self.ws.operation_mode in (self.ws.NORMAL_MODE,

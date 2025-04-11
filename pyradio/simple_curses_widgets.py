@@ -4006,7 +4006,10 @@ class SimpleCursesLineEdit():
                 self.string = self._displayed_string = ''
                 self._curs_pos = self._disp_curs_pos = self._first = 0
         if self._enabled:
-            self._edit_win.addstr(0, 0, self._displayed_string, active_edit_color)
+            try:
+                self._edit_win.addstr(0, 0, self._displayed_string, active_edit_color)
+            except Exception as e:
+                logger.error('\n\nerror : "{}", for string: "{}"\n\n'.format(e, self._displayed_string))
 
         ''' reset position '''
         if self._reset_position:
