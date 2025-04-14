@@ -3814,6 +3814,9 @@ ____Using |fallback| theme.''')
     def _print_icon_url_format_error(self):
         self._open_simple_message_by_key('M_RB_EDIT_ICON_FORMAT_ERROR')
 
+    def _print_ref_url_format_error(self):
+        self._open_simple_message_by_key('M_RB_EDIT_REF_ERROR')
+
     def _print_browser_config_save_error(self):
         self._open_simple_message_by_key('M_RB_CONFIG_SAVE_ERROR')
 
@@ -7987,7 +7990,9 @@ _____"|f|" to see the |free| keys you can use.
             # logger.error('DE char = {0} - {1}'.format(char, chr(char)))
             restart_player = False
             ret = self._station_editor.keypress(char)
-            if ret == -5:
+            if ret == -6:
+                self._print_ref_url_format_error()
+            elif ret == -5:
                 self._print_icon_url_format_error()
             elif ret == -4:
                 self._print_icon_url_error()
@@ -9672,7 +9677,7 @@ _____"|f|" to see the |free| keys you can use.
                                 check_localized(char, (kbkey['append'], )):
                             self._station_editor.append = True
                         self._station_editor.show()
-                        self._station_editor.item = ['', '', '']
+                        self._station_editor.item = ['', '', '', '', '', '0@128', '', '', '']
                         self.ws.operation_mode = self.ws.ADD_STATION_MODE
 
                 elif char == kbkey['paste'] or \

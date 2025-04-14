@@ -22,6 +22,7 @@ from .xdg import CheckDir
 from .html_help import HtmlHelp
 from .keyboard import kbkey, kb2str, kb2chr, check_localized
 from .common import M_STRINGS, Station, seconds_to_KB_128, seconds_to_KB_192, seconds_to_KB_320
+from .cjkwrap import cjklen
 
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
@@ -295,6 +296,7 @@ class PyRadioEditor():
 
     _win = None
     _parent_win = None
+    _old_parent_win = None
 
     """ Adding a new station or editing an existing one """
     _adding = True
@@ -304,9 +306,10 @@ class PyRadioEditor():
     _append = False
 
     _focus = 0
+    _old_focus = 0
 
-    _line_editor = [None, None, None]
-    _line_editor_yx = ((3, 2), (6, 2), (9, 2))
+    _line_editor = [None, None, None, None]
+    _line_editor_yx = ((3, 2), (6, 2), (6, 2), (6,2))
 
     _item = []
     _orig_item = []
@@ -340,6 +343,14 @@ class PyRadioEditor():
         self._global_functions = global_functions
         if self._global_functions is None:
             self._global_functions = {}
+        self._volume = '-1'
+        self._orig_volume = '-1'
+        self._buff = '0'
+        self._orig_buff = '0'
+        self._profile = 'pyradio'
+        self._orig_profile = 'pyradio'
+        self._http = 'False'
+        self._orig_http = 'False'
 
     @property
     def append(self):
@@ -360,11 +371,11 @@ class PyRadioEditor():
 
     @focus.setter
     def focus(self, val):
-        if val in range(0,6):
+        if val in range(0, 11):
             self._focus = val
         else:
             if val < 0:
-                self._focus = 5
+                self._focus = 10
             else:
                 self._focus = 0
         self.show()
@@ -392,25 +403,53 @@ class PyRadioEditor():
                 self._line_editor[2].string = item[3]['image'] if 'image' in item[3] else ''
             except:
                 self._line_editor[2].string = ''
+            self._line_editor[3].string = item[Station.referer]
         else:
             self._line_editor[0].string = ''
             self._line_editor[1].string = ''
             self._line_editor[2].string = ''
+            self._line_editor[3].string = ''
 
         try:
-            if item[2]:
-                self._encoding = item[2]
+            if item[Station.encoding]:
+                self._encoding = item[Station.encoding]
             else:
                 self._encoding = self._config_encoding
         except:
             self._encoding = self._config_encoding
+        logger.error(f'{item = }')
         self._orig_encoding = self._encoding
         self._old_encoding = self._encoding
+        self._orig_volume = item[Station.volume] if item[Station.volume] else '-1'
+        self._volume = self._orig_volume
+        logger.error(f'{item[Station.buffering] = }')
+        self._buff = '0'
+        if item[Station.buffering]:
+            try:
+                x = item[Station.buffering]
+                logger.error(f'{x = }')
+                sp = x.split('@')
+                logger.error(f'{sp = }')
+                self._buff = sp[0]
+            except IndexError:
+                pass
+        self._orig_buff = self._buff
+        if item[Station.profile]:
+            self._profile = item[Station.profile]
+        else:
+            self._profile = 'pyradio'
+        self._orig_profile = 'pyradio'
+        self._http = item[Station.http]
+        if self._http == '1':
+            self._http = 'True '
+        else:
+            self._http = 'False'
+        self._orig_http = self._http
         self._item = item
         self._orig_item = item
 
     def _add_editors(self):
-        for ed in range(0, 3):
+        for ed in range(0, 4):
             if self._line_editor[ed] is None:
                 self._line_editor[ed] = SimpleCursesLineEdit(
                     parent=self._win,
@@ -431,24 +470,75 @@ class PyRadioEditor():
                 self._line_editor[ed].set_global_functions(self._global_functions)
 
     def _print_group_header(self):
+        logger.error('\n\nstring = "{}"\n\n'.format(self._line_editor[1].string.strip()))
+        string = 'Group Header'
+        str_len = cjklen(string)
+        x = int((self.maxX - str_len)/2) + 1
         if self._line_editor[1].string.strip() == '-':
-            self._win.addstr(1, self.maxX - 14 , 'Group Header', curses.color_pair(12))
+            self._win.addstr(1, x, string, curses.color_pair(12))
         else:
-            self._win.addstr(1, self.maxX - 14 , '            ', curses.color_pair(4))
+            self._win.addstr(1, x, str_len * ' ', curses.color_pair(4))
+
+    def _set_multi_headers(self):
+        col = 5
+        headers = ('URL', 'Icon', 'Referrer')
+
+        multi_header = ' {}    {}    {} '.format(*headers)
+
+        self._win.addstr(1, 2, 'Name', curses.color_pair(4))
+
+        # Calculate the x-coordinate for centering the text
+        x = 2 + int((self.maxX - 2 - len(multi_header)) / 2)
+
+        if self._focus == 2:
+            self._win.addstr(4, x, ' ' + headers[0], curses.color_pair(4))
+            self._win.addstr('   [', curses.color_pair(col))
+            self._win.addstr(headers[1], curses.color_pair(4))
+            self._win.addstr(']', curses.color_pair(col))
+            self._win.addstr('   {} '.format(headers[2]), curses.color_pair(4))
+        elif self._focus == 3:
+            self._win.addstr(4, x, ' ' + headers[0] + '    ' + headers[1] + '   ', curses.color_pair(4))
+            self._win.addstr('[', curses.color_pair(col))
+            self._win.addstr(headers[2], curses.color_pair(4))
+            self._win.addstr(']', curses.color_pair(col))
+        # if self._focus == 1:
+        else:
+            self._win.addstr(4, x, '[', curses.color_pair(col))
+            self._win.addstr(headers[0], curses.color_pair(4))
+            self._win.addstr(']', curses.color_pair(col))
+            self._win.addstr('   {}    {} '.format(headers[1], headers[2]), curses.color_pair(4))
 
     def show(self, item=None):
-        self._win = None
+        # if 3 < self._focus <= 10 and \
+        #         3 < self._old_focus <= 10 and \
+        #         self._old_parent_win is not None and \
+        #         self._parent_win == self._old_parent_win:
+        #     logger.error('\n\n------ SHOW ------')
+        #     self._show_extra_fields()
+        #     self._show_buttons()
+        #     self._win.refresh()
+        #     return
         self.maxY, self.maxX = self._parent_win.getmaxyx()
 
-        self._win = curses.newwin(self.maxY, self.maxX, 1, 0)
+        if self._parent_win is None or \
+                self._old_parent_win is None or \
+                self._parent_win != self._old_parent_win:
+            self._win = None
+            self._win = curses.newwin(self.maxY, self.maxX, 1, 0)
         self._add_editors()
-        self._win.bkgdset(' ', curses.color_pair(12))
-        self._win.erase()
+        # self._win.bkgdset(' ', curses.color_pair(12))
+        self._win.bkgd(' ', curses.color_pair(12))
+        if self._old_parent_win is None or \
+            self._parent_win != self._old_parent_win:
+            # self._win.erase()
+            logger.error('\n\n======= SHOW ======\n\n')
         self._win.box()
-
+        # self._win.refresh()
         self._show_title()
 
-        if self.maxY < 11 or self.maxX < 44:
+        self._old_parent_win = self._parent_win
+
+        if self.maxY < 11 or self.maxX < 61:
             txt = ' Window too small to display content '
             error_win = curses.newwin(3,
                                       len(txt) + 2,
@@ -469,11 +559,11 @@ class PyRadioEditor():
                 self._set_item(self._orig_item)
             self._too_small = False
 
-        self._win.addstr(1, 2, 'Name', curses.color_pair(4))
-        self._win.addstr(4, 2, 'URL', curses.color_pair(4))
-        self._win.addstr(7, 2, 'Icon', curses.color_pair(4))
+        logger.error(f'{self._focus = }')
+
+        self._set_multi_headers()
         self._show_alternative_modes()
-        self._show_encoding()
+        self._show_extra_fields()
         self._show_buttons()
 
         lim = 20 if self._adding else 21
@@ -546,77 +636,182 @@ class PyRadioEditor():
 
         if item:
             self._set_item(item)
-            self._show_encoding()
+            self._show_extra_fields()
         self._print_group_header()
-        self._win.refresh()
+        ## self._win.refresh()
         self._update_focus()
         if not self._too_small:
-            for ed in range(0, 3):
-                self._line_editor[ed].show(self._win, opening=False)
+            self._line_editor[0].show(self._win, opening=False)
+            if self._focus in (1,2,3):
+                self._line_editor[self._focus].show(self._win, opening=False)
+            else:
+                self._line_editor[1].show(self._win, opening=False)
 
-            if self._focus == 1:
-                ''' Tip: Press \\p before pasting here '''
-                self._win.addstr(6, self.maxX - 41, 'Tip: ', curses.color_pair(4))
-                self._win.addstr('Press ', curses.color_pair(5))
-                self._win.addstr(r'\p', curses.color_pair(4))
-                self._win.addstr(' before pasting a URL here', curses.color_pair(5))
-                self._win.addstr(7, self.maxX - 32, 'or type a ', curses.color_pair(5))
-                self._win.addstr('- ', curses.color_pair(4))
-                self._win.addstr('for a ', curses.color_pair(5))
-                self._win.addstr('Group Header', curses.color_pair(4))
-                self._win.refresh()
-            elif self._focus == 2:
-                ''' Tip: Press \\p before pasting here '''
-                self._win.addstr(9, self.maxX - 41, 'Tip: ', curses.color_pair(4))
-                self._win.addstr('Press ', curses.color_pair(5))
-                self._win.addstr(r'\p', curses.color_pair(4))
-                self._win.addstr(' before pasting a URL here', curses.color_pair(5))
-                self._win.refresh()
+            is_paste = False
+            if self._focus in range(0,4):
+                for n in self._line_editor:
+                    if n.paste_mode:
+                        is_paste = True
+                        break
+            # reset tip lines
+            self._win.addstr(12, 1, (self.maxX -2) * ' ', curses.color_pair(5))
+
+            self._display_field_tip()
+            if not is_paste:
+                if self._focus == 0:
+                    ''' Tip: Press \\p to enter Paste mode '''
+                    string = r'Tip: Press \p to enter Paste mode'
+                    if cjklen(string) < self.maxX - 4:
+                        x = int((self.maxX - cjklen(string) - 2 ) /2)
+                        # self._win.addstr(6, self.maxX - 41, 'Tip: ', curses.color_pair(4))
+                        self._win.addstr(12, x, 'Tip: ', curses.color_pair(4))
+                        self._win.addstr('Press ', curses.color_pair(5))
+                        self._win.addstr(r'\p', curses.color_pair(4))
+                        self._win.addstr(' to enter ', curses.color_pair(5))
+                        self._win.addstr('Paste mode', curses.color_pair(4))
+                if self._focus in range(2,4):
+                    ''' Tip: Press \\p before pasting here '''
+                    string = r'Tip: Press \p before pasting a URL here'
+                    if cjklen(string) < self.maxX - 4:
+                        x = int((self.maxX - cjklen(string) - 2 ) /2)
+                        self._win.addstr(12, x, 'Tip: ', curses.color_pair(4))
+                        self._win.addstr('Press ', curses.color_pair(5))
+                        self._win.addstr(r'\p', curses.color_pair(4))
+                        self._win.addstr(' before pasting a URL here', curses.color_pair(5))
+                elif self._focus == 1:
+                    string = r'Tip: Press \p before pasting a URL here or type a - for a Group Header'
+                    if cjklen(string) < self.maxX - 4:
+                        x = int((self.maxX - cjklen(string) - 2 ) /2) + 1
+                        self._win.addstr(12, x, 'Tip: ', curses.color_pair(4))
+                        self._win.addstr('Press ', curses.color_pair(5))
+                        self._win.addstr(r'\p', curses.color_pair(4))
+                        self._win.addstr(' before pasting a URL here', curses.color_pair(5))
+                        self._win.addstr(' or type a ', curses.color_pair(5))
+                        self._win.addstr('- ', curses.color_pair(4))
+                        self._win.addstr('for a ', curses.color_pair(5))
+                        self._win.addstr('Group Header', curses.color_pair(4))
+            self._win.refresh()
 
     def _show_alternative_modes(self):
-        lin = ( (1, 8), (4,8), (7, 8))
         disp = 0
         for n in self._line_editor:
             if n.paste_mode:
                 disp = 100
                 break
+        strings = ('Paste mode', 'Extra mode')
+        max_len = max([cjklen(x)+2 for x in strings])
+        logger.error(f'{disp = }')
         if disp == 100:
             """ print paste mode is on on all editors """
             """ set all editors' paste mode """
-            for i, n in enumerate(self._line_editor):
-                n.paste_mode = True
-                # fix for python 2
-                #self._win.addstr(*lin[i], '[', curses.color_pair(5))
-                self._win.addstr(lin[i][0], lin[i][1], '[', curses.color_pair(5))
-                self._win.addstr('Paste mode', curses.color_pair(4))
-                self._win.addstr(']    ', curses.color_pair(5))
+            string = strings[0]
+            # reset tip lines
+            self._win.addstr(12, 1, (self.maxX -2) * ' ', curses.color_pair(5))
         else:
-            for i, n in enumerate(self._line_editor):
+            string = max_len * ' '
+            for n in self._line_editor:
                 if n.backslash_pressed:
-                    """ print editor's flag """
-                    # fix for python 2
-                    #self._win.addstr(*lin[i], '[', curses.color_pair(5))
-                    self._win.addstr(lin[i][0], lin[i][1], '[', curses.color_pair(5))
-                    self._win.addstr('Extra mode', curses.color_pair(4))
-                    self._win.addstr(']', curses.color_pair(5))
-                else:
-                    """ print cleared editor's flag """
-                    # fix for python 2
-                    #self._win.addstr(*lin[i], 15 * ' ', curses.color_pair(5))
-                    self._win.addstr(lin[i][0], lin[i][1], 15 * ' ', curses.color_pair(5))
+                    string = strings[1]
+                    break
+        logger.error(f'{string = }')
+        x = self.maxX - 2 - max_len
+        self._win.addstr(1, x, max_len * ' ', curses.color_pair(5))
+        self._win.addstr(4, x, max_len * ' ', curses.color_pair(5))
+        if string.strip():
+            slen = cjklen(string) + 2
+            while slen < max_len:
+                string = ' ' + string
+                slen = cjklen(string) + 2
+            x = self.maxX - 2 - slen
+            y = 1 if self._focus == 0 else 4
+            self._win.addstr(y, x, '[', curses.color_pair(5))
+            self._win.addstr(string, curses.color_pair(12))
+            self._win.addstr(']', curses.color_pair(5))
         self._win.refresh()
 
-    def _show_encoding(self):
-        sid = 3
-        if self._focus == sid:
-            col = 9
-        else:
-            col = 5
-        self._win.addstr(10, 2, 'Encoding:', curses.color_pair(4))
-        self._win.addstr(' ' * (self.maxX - 13), curses.color_pair(4))
-        self._win.addstr(10, 11, ' ' + self._encoding + ' ', curses.color_pair(col))
-        if self._encoding in ('', self._config_encoding):
-            self._win.addstr('(from Config)', curses.color_pair(5))
+    def _show_extra_fields(self):
+        if self._item:
+            col = [5, 5, 5, 5, 5]
+            sid = 4
+            # if self._focus == sid:
+            #     col = 9
+            # else:
+            #     col = 5
+            if self._focus >= sid:
+                try:
+                    col[self._focus-sid] = 9
+                except IndexError:
+                    pass
+            logger.error(f'{self.item = }')
+            logger.error(f'{self._volume = }')
+            self._win.addstr(7, 2, 'Volume:', curses.color_pair(4))
+            self._win.addstr(' ' + f'{self._volume:>3}' + ' ', curses.color_pair(col[0]))
+            self._win.addstr('    ' + 'Buffering:', curses.color_pair(4))
+            self._win.addstr(' ' + f'{self._buff:>2}' + ' ', curses.color_pair(col[1]))
+            self._win.addstr('    ' + 'Encoding:', curses.color_pair(4))
+            self._win.addstr(' ' + self._encoding + ' ', curses.color_pair(col[2]))
+            # delete to end of line
+            y, x = self._win.getyx()
+            self._win.addstr((self.maxX - x -1) * '', curses.color_pair(5))
+            self._win.addstr(8, 2, 'Force http:', curses.color_pair(4))
+            self._win.addstr(' ' + self._http + ' ', curses.color_pair(col[3]))
+            self._win.addstr('    Profile:', curses.color_pair(4))
+            disp_profile = self._profile
+            self._win.addstr(' ' + disp_profile + ' ', curses.color_pair(col[4]))
+            y, x = self._win.getyx()
+            self._win.addstr((self.maxX - x -1) * '', curses.color_pair(5))
+            # delete to end of line
+            # if self._encoding in ('', self._config_encoding):
+            #     self._win.addstr( '(C) ', curses.color_pair(5))
+            # else:
+            #     self._win.addstr(3 * ' ', curses.color_pair(5))
+            self._display_field_tip()
+
+    def _display_field_tip(self):
+        # Display tips
+        self._win.addstr(12, 1, (self.maxX -2) * ' ', curses.color_pair(5))
+        if self._focus in (4, 5):
+            ''' Tip: Press \\p before pasting here '''
+            string = 'Tip: Press Left or Right Arrow (h or l) to adjust'
+            if cjklen(string) < self.maxX - 4:
+                x = int((self.maxX - cjklen(string) - 2 ) /2)
+                self._win.addstr(12, x, 'Tip: ', curses.color_pair(4))
+                self._win.addstr('Press ', curses.color_pair(5))
+                self._win.addstr('Left ', curses.color_pair(4))
+                self._win.addstr('or', curses.color_pair(5))
+                self._win.addstr(' Right ', curses.color_pair(4))
+                self._win.addstr('arrow (', curses.color_pair(5))
+                self._win.addstr(kb2chr('h'), curses.color_pair(4))
+                self._win.addstr(' or ', curses.color_pair(5))
+                self._win.addstr(kb2chr('l'), curses.color_pair(4))
+                self._win.addstr(') to adjust', curses.color_pair(5))
+        elif self._focus in (6, 8):
+            ''' Tip: Press \\p before pasting here '''
+            string = 'Tip: Press Enter to activate'
+            if cjklen(string) < self.maxX - 4:
+                x = int((self.maxX - cjklen(string) - 2 ) /2)
+                self._win.addstr(12, x, 'Tip: ', curses.color_pair(4))
+                self._win.addstr('Press ', curses.color_pair(5))
+                self._win.addstr('Enter ', curses.color_pair(4))
+                self._win.addstr('to activate', curses.color_pair(5))
+        elif self._focus == 7:
+            ''' Tip: Press \\p before pasting here '''
+            string = 'Tip: Press Left or Right Arrow (h or l) or Space to toggle'
+            if cjklen(string) < self.maxX - 4:
+                x = int((self.maxX - cjklen(string) - 2 ) /2)
+                self._win.addstr(12, x, 'Tip: ', curses.color_pair(4))
+                self._win.addstr('Press ', curses.color_pair(5))
+                self._win.addstr('Space', curses.color_pair(4))
+                self._win.addstr(' or ', curses.color_pair(5))
+                self._win.addstr('Left ', curses.color_pair(4))
+                self._win.addstr('or', curses.color_pair(5))
+                self._win.addstr(' Right ', curses.color_pair(4))
+                self._win.addstr('arrow (', curses.color_pair(5))
+                self._win.addstr(kb2chr('h'), curses.color_pair(4))
+                self._win.addstr(' or ', curses.color_pair(5))
+                self._win.addstr(kb2chr('l'), curses.color_pair(4))
+                self._win.addstr(') to toggle', curses.color_pair(5))
+
 
     def _show_title(self):
         token = ''
@@ -649,16 +844,16 @@ class PyRadioEditor():
         # self._refresh()
 
     def _show_buttons(self):
-        sid = 4
+        sid = 9
         if self._focus == sid:
             col = 9
         else:
             col = 5
-        self._win.addstr(11, int((self.maxX - 18) / 2), '[', curses.color_pair(4))
+        self._win.addstr(10, int((self.maxX - 18) / 2), '[', curses.color_pair(4))
         self._win.addstr(' OK ', curses.color_pair(col))
         self._win.addstr(']  [', curses.color_pair(4))
 
-        sid = 5
+        sid = 10
         if self._focus == sid:
             col = 9
         else:
@@ -667,11 +862,12 @@ class PyRadioEditor():
         self._win.addstr(']', curses.color_pair(4))
 
     def _update_focus(self):
-        for i in range(0, 3):
+        for i in range(0, 4):
             self._line_editor[i].focused = True if i == self._focus else False
 
     def _return_station(self):
         ret = self._validate()
+        logger.error(f'{ret = }')
         if ret == 1:
             if self._encoding == self._config_encoding:
                 self._encoding = ''
@@ -682,15 +878,25 @@ class PyRadioEditor():
                     '', {'image': ''}
                 ]
             else:
+                buff = self._orig_item[Station.buffering]
+                sp = buff.split('@')
+                sp[0] = self._buff
+                buff = '@'.join(sp)
                 self.new_station = [
                     self._line_editor[0].string.strip(),
                     self._line_editor[1].string.strip(),
                     self._encoding,
-                    {'image': self._line_editor[2].string.strip()}
+                    {'image': self._line_editor[2].string.strip()},
+                    '',
+                    buff,
+                    '1' if self._http.strip() == 'True' else '',
+                    '' if self._volume == '-1' else self._volume,
+                    self._line_editor[3].string.strip()
                 ]
-        max_value = max(station.value for station in Station)
-        while len(self.new_station) <= max_value:
-            self.new_station.append('')
+            max_value = max(station.value for station in Station)
+            while len(self.new_station) <= max_value:
+                self.new_station.append('')
+            logger.error(f'new station: {self.new_station}')
         return ret
 
     def _is_valid_url(self, a_url):
@@ -708,6 +914,16 @@ class PyRadioEditor():
         return True
 
     def _validate(self):
+        ''' validate a station item
+
+            Returns:
+                 1: All ok
+                -2: Name is empty
+                -3: URL is invalid
+                -4: Icon URL is invalid
+                -5: Invalid icon format
+                -6: Referer URL is invalid
+        '''
         if not self._line_editor[0].string.strip():
             return -2
         if self._line_editor[1].string.strip() != '-':
@@ -717,9 +933,13 @@ class PyRadioEditor():
         if icon_url:
             if not self._is_valid_url(icon_url):
                 return -4
-            if not (icon_url.endswith('.jpg') or \
-                    icon_url.endswith('.png')):
+            if not (icon_url.lower().endswith('.jpg') or \
+                    icon_url.lower().endswith('.png')):
                 return -5
+        ref_url = self._line_editor[3].string.strip()
+        if ref_url:
+            if not self._is_valid_url(ref_url):
+                return -6
         return 1
 
     def keypress(self, char):
@@ -735,7 +955,9 @@ class PyRadioEditor():
                  2: display line editor help
                  3: open encoding selection window
                  4: window too small
+                 5: open profile selection window
         """
+        self._old_focus = self._focus
         ret = 0
         l_char = None
         if self._too_small:
@@ -747,7 +969,7 @@ class PyRadioEditor():
         else:
             if (char in (curses.KEY_EXIT, 27, kbkey['q']) or \
                     check_localized(char, (kbkey['q'], ))) and \
-                    self.focus > 2:
+                    self.focus > 3:
                 self.new_station = None
                 self._reset_editors_modes()
                 ret = -1
@@ -771,37 +993,52 @@ class PyRadioEditor():
                     # Icon
                     self.focus += 1
                 elif self._focus == 3:
+                    # referer
+                    self.focus += 1
+                elif self._focus == 4:
+                    # volume
+                    self.focus += 1
+                elif self._focus == 5:
+                    # buffering
+                    self.focus += 1
+                elif self._focus == 6:
                     # encoding
                     return 3
-                elif self._focus == 4:
+                elif self._focus == 7:
+                    # force http
+                    self.focus += 1
+                elif self._focus == 8:
+                    # profile
+                    self.focus += 1
+                elif self._focus == 9:
                     # ok
                     ret = self._return_station()
                     self.focus = abs(ret + 2)
-                elif self._focus == 5:
+                elif self._focus == 10:
                     # cancel
                     self.new_station = None
                     ret = -1
                 self._reset_editors_escape_mode()
             elif ( char == kbkey['s'] or \
                     check_localized(char, (kbkey['s'], )) ) and \
-                    self._focus > 2:
+                    self._focus > 3:
                 ret = self._return_station()
                 self.focus = abs(ret + 2)
                 self._reset_editors_modes()
             elif (char in (curses.ascii.DC2, 18) and not self._adding) or \
                     ((char == kbkey['revert_saved'] or \
                     check_localized(char, (kbkey['revert_saved'], )) ) and \
-                    not self._adding and self.focus > 2):
+                    not self._adding and self.focus > 3):
                 # ^R, revert to saved
                 self.item = self._orig_item
-                if self.item[2]:
-                    self._encoding = self.item[2]
+                if self.item[Station.encoding]:
+                    self._encoding = self.item[Station.encoding]
                 else:
                     self._encoding = self._config_encoding
                 self._orig_encoding = self._encoding
-                for i in range(0, 3):
+                for i in range(0, 4):
                     self._line_editor[i]._go_to_end()
-            elif self._focus <= 2:
+            elif self._focus <= 3:
                 """
                  Returns:
                     2: display help
@@ -826,17 +1063,77 @@ class PyRadioEditor():
                     self.new_station = None
                     self._reset_editors_modes()
                     ret = -1
+            elif self._focus == 4 and \
+                    (char in (kbkey['h'], kbkey['l'], curses.KEY_RIGHT,
+                             curses.KEY_LEFT, curses.KEY_NPAGE,
+                             curses.KEY_PPAGE) or \
+                    check_localized(char, (kbkey['h'], kbkey['l']))):
+                # handle volume
+                self._volume = self._get_number(char, self._volume, -1, -1, 100)
+                logger.error(f'setting {self._volume = }')
+                self._show_extra_fields()
+                self._win.refresh()
+            elif self._focus == 5 and \
+                    (char in (kbkey['h'], kbkey['l'], curses.KEY_RIGHT,
+                             curses.KEY_LEFT, curses.KEY_NPAGE,
+                             curses.KEY_PPAGE) or \
+                    check_localized(char, (kbkey['h'], kbkey['l']))):
+                # handle buffering
+                self._buff = self._get_number(char, self._buff, 0, 5, 60)
+                logger.error(f'setting {self._buff = }')
+                self._show_extra_fields()
+                self._win.refresh()
+            elif self._focus == 7 and \
+                    (char in (kbkey['h'], kbkey['l'], curses.KEY_RIGHT,
+                             curses.KEY_LEFT, ord(' ')) or \
+                    check_localized(char, (kbkey['h'], kbkey['l']))):
+                # handel force http
+                if self._http.strip() == 'True':
+                    self._http = 'False'
+                else:
+                    self._http = 'True '
+                self._show_extra_fields()
+                self._win.refresh()
+
+
             elif char in self._global_functions or \
                     (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
                 if l_char is None:
                     l_char = char
                 self._global_functions[l_char]()
 
-        if self._focus > 2:
+        logger.error(f'setting {self._focus = }')
+        if self._focus > 3:
             self._reset_editors_modes()
         self._show_title()
         self._show_alternative_modes()
         return ret
+
+    def _get_number(self, char, value, reset_value, min_value, max_value):
+        x = int(value)
+        if char in (kbkey['h'], curses.KEY_LEFT) or \
+                check_localized(char, (kbkey['h'], )):
+            x -= 1
+            if x < min_value:
+                x = reset_value
+        elif char in (kbkey['l'], curses.KEY_RIGHT) or \
+                check_localized(char, (kbkey['l'], )):
+            x += 1
+            if x > max_value:
+                x = max_value
+            elif x < min_value:
+                x = min_value
+        elif char == curses.KEY_NPAGE:
+            x -= 5
+            if x < min_value:
+                x = reset_value
+        elif char == curses.KEY_PPAGE:
+            x += 5
+            if x > max_value:
+                x = max_value
+            elif x < min_value:
+                x = min_value
+        return str(x)
 
     def _reset_editors_modes(self):
         for n in self._line_editor:

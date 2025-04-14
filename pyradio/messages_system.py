@@ -824,13 +824,23 @@ ___Please provide a valid Station Icon URL.___
 '''
 ),
 
-    'M_RB_EDIT_ICON_GORMAT_ERROR': ('Error',
+    'M_RB_EDIT_ICON_FORMAT_ERROR': ('Error',
 r'''
 ______Errorenous Station Data provided!___
 
 ________Station Icon URL is invalid!___
 ____It must point to a JPG or a PNG file.__
 ___Please provide a valid Station Icon URL.___
+
+'''
+),
+
+    'M_RB_EDIT_REF_ERROR': ('Error',
+r'''
+______Errorenous Referrer Data provided!___
+
+________Referrer URL is invalid!___
+___Please provide a valid Referrer URL.___
 
 '''
 ),
