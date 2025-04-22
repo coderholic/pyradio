@@ -2708,6 +2708,8 @@ class MpvPlayer(Player):
         return self._do_save_volume(self.profile_token + '\nvolume={}\n')
 
     def _buildStartOpts(self, a_station, playList=False):
+        logger.error('\n\nprofiles = {}\n\n'.format(self._cnf.profile_manager.profiles(self.PLAYER_NAME)))
+        logger.error('\n\nall_profiles = {}\n\n'.format(self._cnf.profile_manager.all_profiles()))
         ''' Builds the options to pass to mpv subprocess.'''
         # logger.error('\n\nself._recording = {}'.format(self._recording))
         # logger.error('self.profile_name = "{}"'.format(self.profile_name))
@@ -2766,7 +2768,7 @@ class MpvPlayer(Player):
                 if self.station_volume != -1 and self.enable_per_station_volume:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Initial profile: "[{}]"'.format(profile))
-                    ret = self._cnf.profile_manager.set_station_volume(
+                    ret = self._cnf.profile_manager.copy_profile_with_new_volume(
                         self.PLAYER_NAME, profile, 'pyradio-volume', str(self.station_volume)
                     )
                     if ret:
@@ -3327,7 +3329,7 @@ class MpPlayer(Player):
                 if self.station_volume != -1 and self.enable_per_station_volume:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Initial profile: "[{}]"'.format(profile))
-                    ret = self._cnf.profile_manager.set_station_volume(
+                    ret = self._cnf.profile_manager.copy_profile_with_new_volume(
                         self.PLAYER_NAME, profile, 'pyradio-volume', str(self.station_volume)
                     )
                     if ret:

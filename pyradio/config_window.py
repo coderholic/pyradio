@@ -1756,42 +1756,6 @@ class ExtraParameters():
             self._selections[a_player_name][2] = default_id - 1
         # logger.error('self._selections[a_player_name][2] = {}'.format( self._selections[a_player_name][2] ))
 
-    @classmethod
-    def extract_a_profile_name(cls, a_file):
-        ''' extract profiles from a file '''
-        try:
-            out = []
-            with open(a_file, 'r', encoding='utf-8') as f:
-                r = f.readlines()
-                for n in r:
-                    k = n.strip()
-                    if k.startswith('[') and \
-                            k.endswith(']'):
-                        out.append(k[1:-1])
-            return out
-        except (FileNotFoundError, PermissionError):
-            return []
-
-    def _extract_profiles(self, config_files, a_player_name=None):
-        if a_player_name is None:
-            a_player_name = self._player
-        if a_player_name == 'vlc':
-            return ['Do not use any extra player parameters']
-        ''' extract profiles for a player '''
-        result = []
-        for n in config_files:
-            result.extend(self.extract_a_profile_name(n))
-
-        ''' convert to set and remove pyradio '''
-        result = list(set(result))
-        if result:
-            if 'pyradio' not in result:
-                result.append('pyradio')
-        else:
-            result = ['pyradio']
-        result.sort()
-        return ['profile:' + x for x in result]
-
     def _extract_all_profiles(self):
         ''' extract profiles for all players '''
         out = {}
@@ -1800,10 +1764,9 @@ class ExtraParameters():
                 if n == 'vlc':
                     out[n] = ['Do not use any extra player parameters']
                 else:
-                    out[n] = self._extract_profiles(
-                            self._cnf.player_instance().all_config_files[n],
-                            a_player_name=n
-                            )
+                    out[n] = self._cnf.profile_manager.profiles(n)
+                    if out[n]:
+                        out[n] = ['profile:' + x for x in out[n]]
         else:
             if self._player == 'vlc':
                 out['vlc'] = ['Do not use any extra player parameters']
@@ -1815,10 +1778,9 @@ class ExtraParameters():
                     out['mpv'] = []
                 else:
                     out['mplayer'] = []
-                out[self._player] = self._extract_profiles(
-                        self._cnf.player_instance().all_config_files[self._player],
-                        a_player_name=self._player
-                        )
+                out[self._player] = self._cnf.profile_manager.profiles(self._player)
+                if out[self._player]:
+                    out[self._player] = ['profile:' + x for x in out[self._player]]
         return out
 
     def _on_default_parameter_change(self):

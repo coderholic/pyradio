@@ -863,6 +863,53 @@ class ProfileManager():
     def set_vlc_config_file(self, config):
         self._config_files['vlc'] = config
 
+    def all_profiles(self):
+        # out = {'mpv': [], 'mplayer': [], 'vlc': []}
+        out = {'mpv': [], 'mplayer': []}
+        try:
+            # for player_name in ('mpv', 'mplayer', 'vlc'):
+            for player_name in ('mpv', 'mplayer'):
+                profiles = self.profiles(player_name)
+                logger.error('{}: {}'.format(player_name, profiles))
+                if profiles:
+                    out[player_name] = profiles[:]
+        except KeyError:
+            pass
+        result = self._create_profile_list(out)
+        logger.error(f'{result = }')
+        return result
+
+    def _create_profile_list(self, players_dict):
+        # Create a set of profile names for each player
+        profile_sets = [set(profiles) for profiles in players_dict.values()]
+
+        # Find the intersection of all profile sets
+        common_profiles = set.intersection(*profile_sets)
+
+        # Initialize the result list with common profiles
+        result = list(common_profiles)
+
+        # Add profiles that are not common, appending the player name
+        for player, profiles in players_dict.items():
+            for profile in profiles:
+                if profile not in common_profiles:
+                    result.append(f'{profile}:{player}')
+
+        return sorted(result)
+
+    def profiles(self, player_name):
+        profiles_list = []
+        for a_file in self.config_files[player_name]:
+            config_list = self._read_a_config_file(a_file)
+            if config_list:
+                config_list = [ x.strip() for x in config_list ]
+                profiles = [ x[1:-1] for x in config_list if x.startswith('[') and x.endswith(']') ]
+                if profiles:
+                    profiles_list.extend(profiles)
+        profiles_list = list(set(profiles_list))
+        profiles_list = [ x for x in profiles_list if x != 'pyradio-volume' and x != 'silent']
+        return sorted(profiles_list)
+
     def _read_a_config_file(self, config_file):
         # Read config file
         if not exists(config_file):
@@ -975,7 +1022,7 @@ class ProfileManager():
 
             Paramaters
                 player_name         : string
-                profile_naeme       : string
+                profile_name        : string
                 profile_contents    : string
 
             Returns
@@ -1013,7 +1060,7 @@ class ProfileManager():
 
             Paramaters
                 player_name         : string
-                profile_naeme       : string
+                profile_name        : string
                 profile_contents    : string
 
             Returns
@@ -1042,12 +1089,27 @@ class ProfileManager():
             profile = None
         return profile
 
-    def set_station_volume(self, player_name, existing_profile, new_profile, volume):
+    def copy_profile_with_new_volume(self, player_name, existing_profile, new_profile, volume):
+        ''' copy a profile and chnge the volume in the new profile
+
+            Parameters:
+                player_name         : the player
+                existing_profile    : the source profile
+                new_profile         : the new profile
+                volume              : volume value
+
+            if new_profile exists, it will be overwritten
+
+            Returns:
+                new_profile         : success
+                None                : failed to write the file
+        '''
         if existing_profile:
             existing_profile = existing_profile.replace('[', '').replace(']', '')
         new_profile = new_profile.replace('[', '').replace(']', '')
 
         # Read config file
+        out_file = self.config_files[player_name][0]
         config_file = self.config_files[player_name][0]
         config_list = self._read_a_config_file(config_file)
 
@@ -1111,7 +1173,7 @@ class ProfileManager():
         cleaned_config = remove_consecutive_empty_lines(cleaned_config)
 
         # Write back to file
-        ret = self._write_config_file(config_file, a_list=cleaned_config)
+        ret = self._write_config_file(out_file, a_list=cleaned_config)
         if ret:
             return new_profile
         else:
