@@ -465,7 +465,7 @@ class RadioBrowser(PyRadioStationsBrowser):
                         use_fav.endswith('.png'):
                     fav = use_fav
                 ret.append(
-                    [n['name'], n['url'], enc, {'image': fav}, '', '', '', '', '']
+                    [n['name'], n['url'], enc, {'image': fav}, '', '0@128', '', '', '']
                 )
         return ret
 

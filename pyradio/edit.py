@@ -347,8 +347,8 @@ class PyRadioEditor():
         self._orig_volume = '-1'
         self._buff = '0'
         self._orig_buff = '0'
-        self._profile = 'pyradio'
-        self._orig_profile = 'pyradio'
+        self._profile = ''
+        self._orig_profile = ''
         self._http = 'False'
         self._orig_http = 'False'
 
@@ -364,6 +364,14 @@ class PyRadioEditor():
                 self._pos_to_insert = len(self._stations)
             else:
                 self._pos_to_insert = 0
+
+    @property
+    def profile(self):
+        return self._profile
+
+    @profile.setter
+    def profile(self, value):
+        self._profile = value
 
     @property
     def focus(self):
@@ -437,8 +445,8 @@ class PyRadioEditor():
         if item[Station.profile]:
             self._profile = item[Station.profile]
         else:
-            self._profile = 'pyradio'
-        self._orig_profile = 'pyradio'
+            self._profile = ''
+        self._orig_profile = ''
         self._http = item[Station.http]
         if self._http == '1':
             self._http = 'True '
@@ -752,19 +760,17 @@ class PyRadioEditor():
             self._win.addstr(' ' + self._encoding + ' ', curses.color_pair(col[2]))
             # delete to end of line
             y, x = self._win.getyx()
-            self._win.addstr((self.maxX - x -1) * '', curses.color_pair(5))
+            self._win.addstr((self.maxX - x -1) * ' ', curses.color_pair(5))
             self._win.addstr(8, 2, 'Force http:', curses.color_pair(4))
             self._win.addstr(' ' + self._http + ' ', curses.color_pair(col[3]))
             self._win.addstr('    Profile:', curses.color_pair(4))
             disp_profile = self._profile
+            if disp_profile == '':
+                disp_profile = 'Default'
             self._win.addstr(' ' + disp_profile + ' ', curses.color_pair(col[4]))
-            y, x = self._win.getyx()
-            self._win.addstr((self.maxX - x -1) * '', curses.color_pair(5))
             # delete to end of line
-            # if self._encoding in ('', self._config_encoding):
-            #     self._win.addstr( '(C) ', curses.color_pair(5))
-            # else:
-            #     self._win.addstr(3 * ' ', curses.color_pair(5))
+            y, x = self._win.getyx()
+            self._win.addstr((self.maxX - x -1) * ' ', curses.color_pair(5))
             self._display_field_tip()
 
     def _display_field_tip(self):
@@ -887,7 +893,7 @@ class PyRadioEditor():
                     self._line_editor[1].string.strip(),
                     self._encoding,
                     {'image': self._line_editor[2].string.strip()},
-                    '',
+                    self._profile,
                     buff,
                     '1' if self._http.strip() == 'True' else '',
                     '' if self._volume == '-1' else self._volume,
@@ -981,7 +987,18 @@ class PyRadioEditor():
                     check_localized(char, (kbkey['stab'], )):
                 self.focus -= 1
                 self._reset_editors_escape_mode()
-            elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
+            elif (char in (ord(' '), kbkey['l'], kbkey['h'], curses.KEY_LEFT, curses.KEY_RIGHT) or
+                    check_localized(char, (kbkey['l'], kbkey['h']))) and \
+                    self._focus == 6:
+                # encoding
+                return 3
+            elif (char in (ord(' '), kbkey['l'], kbkey['h'], curses.KEY_LEFT, curses.KEY_RIGHT) or
+                    check_localized(char, (kbkey['l'], kbkey['h']))) and \
+                    self._focus == 8:
+                # profile
+                return 5
+            elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')) \
+                    and self._focus != 8:
                 if self._focus == 0:
                     # Name
                     self.focus += 1
@@ -1094,7 +1111,9 @@ class PyRadioEditor():
                     self._http = 'True '
                 self._show_extra_fields()
                 self._win.refresh()
-
+            elif self._focus == 8 and \
+                    char in (curses.KEY_ENTER, ord('\n'), ord('\r'), ord(' ')):
+                ret = 5
 
             elif char in self._global_functions or \
                     (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
@@ -2587,8 +2606,13 @@ class PyRadioBuffering():
                  buffering,
                  parent,
                  global_functions=None):
+        logger.error('\n\nbuffering = {}\n\n'.format(buffering))
         self._buffering = buffering
-        self.buffering_value, self.bitrate_value = buffering.split('@')
+        if '@' in buffering:
+            self.buffering_value, self.bitrate_value = buffering.split('@')
+        else:
+            self.buffering_value = buffering
+            self.bitrate_value = '128'
         if self.buffering_value != '0':
             try:
                 if not (5 <= int(self.buffering_value) <= 60):

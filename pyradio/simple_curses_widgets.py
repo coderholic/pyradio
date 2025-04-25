@@ -41,12 +41,14 @@ from sys import platform
 try:
     from .cjkwrap import is_wide, cjklen, cjkrjust, cjkcenter, cjkljust, cjkslices
     from .schedule import PyRadioTime
+    from .keyboard import kbkey, get_kb_letter, check_localized
 except:
     from cjkwrap import is_wide, cjklen, cjkrjust, cjkcenter, cjkljust, cjkslices
     from schedule import PyRadioTime
+    from keyboard import kbkey, get_kb_letter, check_localized
 # from .cjkwrap import is_wide, cjklen, cjkljust, cjkslices
 # from .schedule import PyRadioTime
-from .keyboard import kbkey, get_kb_letter, check_localized
+# from .keyboard import kbkey, get_kb_letter, check_localized
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
@@ -5225,14 +5227,14 @@ def main(stdscr):
             selection=0,
             active=5,
             display_count=True,
-            max_height=10,
+            max_height=30,
             max_width=40,
             items=items,
             title='',
             window_type=2,
             color=curses.color_pair(3),
             color_title=curses.color_pair(9),
-            bordered=False,
+            bordered=True,
             color_border=curses.color_pair(9),
             color_active=curses.color_pair(9),
             color_cursor_selection=curses.color_pair(5),

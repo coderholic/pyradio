@@ -893,7 +893,7 @@ class ProfileManager():
         for player, profiles in players_dict.items():
             for profile in profiles:
                 if profile not in common_profiles:
-                    result.append(f'{profile}:{player}')
+                    result.append(f'{player}: {profile}')
 
         return sorted(result)
 

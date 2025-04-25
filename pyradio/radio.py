@@ -451,6 +451,9 @@ class PyRadio():
     _check_lock = threading.Lock()
     _station_to_check_id = -1
 
+    # config profile window
+    _station_profile_editor  = None
+
     try:
         handled_signals = {
             'SIGHUP': signal.SIGHUP,
@@ -676,6 +679,7 @@ class PyRadio():
             self.ws.DELETE_PLAYLIST_MODE: self._ask_to_delete_playlist,
             self.ws.KEYBOARD_CONFIG_MODE: self._redisplay_keyboard_config,
             self.ws.LOCALIZED_CONFIG_MODE: self._redisplay_localized_config,
+            self.ws.EDIT_PROFILE_MODE: self._redisplay_profile_config,
         }
 
         self._help_keys = {
@@ -5649,6 +5653,63 @@ and |remove the file manually|.
                     )
         self._keyboard_localized_win.show(parent=self.outerBodyWin)
 
+    def _redisplay_profile_config(self):
+        if self._station_profile_editor is None:
+            profiles = ['Default'] + self._cnf.profile_manager.all_profiles()
+            profile = self._station_editor.profile
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Default station profile: "{}"'.format(profile))
+            if profile:
+                selection = [i for i, x in enumerate(profiles) if self._station_editor.profile in x ][0]
+            else:
+                selection = 0
+            # logger.error(f'{selection = }')
+        else:
+            profiles = self._station_profile_editor.items
+        max_X = max([len(x) for x in profiles]) + 6
+        if max_X < 30:
+            max_X = 30
+        max_Y = len(profiles) + 4
+        if max_Y > self.bodyMaxY - 4:
+            max_Y = self.bodyMaxY - 4
+        if max_Y < 8:
+            max_Y = 8
+
+        X = int((self.bodyMaxX - max_X) / 2)
+        Y = int((self.bodyMaxY - max_Y) / 2)
+        # logger.error('\n\nEDIT_PROFILE_MODE\n{}\nmax_Y = {}, max_X = {}\nY = {}, X = {}\n\n'.format(profiles, max_Y, max_X, Y, X))
+        if self._station_profile_editor is None:
+            self._station_profile_editor = SimpleCursesMenu(
+                Y, X, self.bodyWin,
+                selection=selection,
+                active=selection,
+                bordered=True,
+                display_count=True,
+                min_height=max_Y-2,
+                min_width=max_X-2,
+                max_height=max_Y,
+                max_width=max_X,
+                items=profiles,
+                title=' Profiles ',
+                window_type=2,
+                color=curses.color_pair(10),
+                color_title=curses.color_pair(11),
+                color_border=curses.color_pair(3),
+                color_active=curses.color_pair(11),
+                color_cursor_selection=curses.color_pair(6),
+                color_cursor_active=curses.color_pair(9),
+                global_functions=self._global_functions,
+            )
+            self._station_profile_editor.show()
+        else:
+            self._station_profile_editor.Y = Y
+            self._station_profile_editor.X = X
+            self._station_profile_editor.max_height = max_Y
+            self._station_profile_editor.min_height = max_Y - 2
+            self._station_profile_editor.max_weight = max_X
+            self._station_profile_editor.min_weight = max_X - 2
+            self._station_profile_editor.show(self.bodyWin)
+
     def _redisplay_localized_config(self):
         self._keyboard_localized_win.show(parent=self.outerBodyWin, reset=True)
 
@@ -8077,6 +8138,9 @@ _____"|f|" to see the |free| keys you can use.
                 self._encoding_select_win.init_window()
                 self._encoding_select_win.refresh_win()
                 self._encoding_select_win.setEncoding(self._station_editor._encoding)
+            elif ret == 5:
+                self.ws.operation_mode = self.ws.EDIT_PROFILE_MODE
+                self._redisplay_profile_config()
             return
 
         elif self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE):
@@ -8152,6 +8216,25 @@ _____"|f|" to see the |free| keys you can use.
                     self._station_editor._old_encoding = ret_encoding
                 else:
                     self._station_editor._encoding = self._station_editor._old_encoding
+                self.ws.close_window()
+                self._station_editor.show()
+            return
+
+        elif self.ws.operation_mode == self.ws.EDIT_PROFILE_MODE and \
+                char not in self._chars_to_bypass:
+            ret = self._station_profile_editor.keypress(char)
+            if ret in (-1, 0):
+                if ret == 0:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Selected profile for station: "{}"'.format(self._station_profile_editor.item))
+                    profile = self._station_profile_editor.item.split(': ')[-1]
+                    if profile == 'Default':
+                        self._station_editor.profile = ''
+                    else:
+                        self._station_editor.profile = profile
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('New station profile: "{}"'.format(self._station_editor.profile))
+                self._station_profile_editor = None
                 self.ws.close_window()
                 self._station_editor.show()
             return
