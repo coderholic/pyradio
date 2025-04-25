@@ -679,7 +679,7 @@ class PyRadio():
             self.ws.DELETE_PLAYLIST_MODE: self._ask_to_delete_playlist,
             self.ws.KEYBOARD_CONFIG_MODE: self._redisplay_keyboard_config,
             self.ws.LOCALIZED_CONFIG_MODE: self._redisplay_localized_config,
-            self.ws.EDIT_PROFILE_MODE: self._redisplay_profile_config,
+            self.ws.EDIT_PROFILE_MODE: self._redisplay_profile_editor,
         }
 
         self._help_keys = {
@@ -2625,7 +2625,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self._last_played_station_id = self.selection
             with self._check_lock:
                 self._station_to_check_id = self.selection
-                logger.error('********* checking {} : {} ********\n'.format(self._station_to_check_id, self.stations[self._station_to_check_id]))
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('\n*********\nstarting id = {}\n:{}\n********\n'.format(self._station_to_check_id, self.stations[self._station_to_check_id]))
             # logger.error('setting playing to {}'.format(self.selection))
             self.playing = self.selection
             if not stream_url:
@@ -5653,7 +5654,7 @@ and |remove the file manually|.
                     )
         self._keyboard_localized_win.show(parent=self.outerBodyWin)
 
-    def _redisplay_profile_config(self):
+    def _redisplay_profile_editor(self):
         if self._station_profile_editor is None:
             profiles = ['Default'] + self._cnf.profile_manager.all_profiles()
             profile = self._station_editor.profile
@@ -8128,19 +8129,27 @@ _____"|f|" to see the |free| keys you can use.
                 ''' display line editor help '''
                 self._show_line_editor_help()
             elif ret == 3:
+                logger.error('\n\nHERE\n\n')
                 ''' show encoding '''
-                if self._station_editor._encoding == '':
-                    self._station_editor._encoding = self._cnf.default_encoding
+                if self._station_editor._encoding == '' or \
+                    self._station_editor._encoding == self._cnf.default_encoding:
+                    self._station_editor._encoding = 'Default'
                 self.ws.operation_mode = self.ws.EDIT_STATION_ENCODING_MODE
-                self._encoding_select_win = PyRadioSelectEncodings(self.outerBodyMaxY,
-                        self.outerBodyMaxX, self._station_editor._encoding, self._cnf.default_encoding)
+                self._encoding_select_win = PyRadioSelectEncodings(
+                    self.outerBodyMaxY,
+                        self.outerBodyMaxX,
+                    self._station_editor._encoding,
+                    self._cnf.default_encoding,
+                    show_default=True
+                )
+                logger.error('{}'.format(self._station_editor._encoding))
                 self._encoding_select_win.set_reduced_global_functions(self._global_functions)
                 self._encoding_select_win.init_window()
                 self._encoding_select_win.refresh_win()
                 self._encoding_select_win.setEncoding(self._station_editor._encoding)
             elif ret == 5:
                 self.ws.operation_mode = self.ws.EDIT_PROFILE_MODE
-                self._redisplay_profile_config()
+                self._redisplay_profile_editor()
             return
 
         elif self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE):

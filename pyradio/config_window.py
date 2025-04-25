@@ -2514,14 +2514,18 @@ class PyRadioSelectEncodings():
     _invalid = []
 
     def __init__(self, maxY, maxX, encoding, config_encoding,
-                 global_functions=None):
+                 global_functions=None, show_default=False):
         self._parent_maxY = maxY
         self._parent_maxX = maxX
         self.encoding = encoding
+        logger.error('I got encoding = "{}"'.format(encoding))
         self._orig_encoding = encoding
         self._config_encoding = config_encoding
         self._orig_encoding = encoding
         self._encodings = get_encodings()
+        self._show_default = show_default
+        if show_default:
+            self._encodings += [['Default', '', 'Use the encoding set in the config']]
         self._num_of_rows = int(len(self._encodings) / self._num_of_columns)
         self.init_window()
 
@@ -2695,11 +2699,17 @@ class PyRadioSelectEncodings():
         self.refresh_selection()
 
     def setEncoding(self, this_encoding, init=False):
+        logger.error(f'{this_encoding = }')
         ret = self._is_encoding(this_encoding)
         if ret == -1:
-            if logger.isEnabledFor(logging.ERROR):
-                logger.error('encoding "{}" not found, reverting to "utf-8"'.format(this_encoding))
-            self.encoding = 'utf-8'
+            if self._show_default:
+                if logger.isEnabledFor(logging.ERROR):
+                    logger.error('encoding "{}" not found, reverting to "Default"'.format(this_encoding))
+                self.encoding = 'Default'
+            else:
+                if logger.isEnabledFor(logging.ERROR):
+                    logger.error('encoding "{}" not found, reverting to "utf-8"'.format(this_encoding))
+                self.encoding = 'utf-8'
             self.selection = self._is_encoding(self.encoding)
         else:
             self.selection = ret
@@ -2714,7 +2724,8 @@ class PyRadioSelectEncodings():
                     return True
             return False
         for i, an_encoding in enumerate(self._encodings):
-            if a_string == an_encoding[0] or in_alias(an_encoding[1], a_string):
+            if a_string == an_encoding[0] or \
+                    in_alias(an_encoding[1], a_string):
                 return i
         return -1
 

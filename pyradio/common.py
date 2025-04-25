@@ -643,6 +643,8 @@ class CsvReadWrite():
     ''' A base class to read and write a PyRadio playlist '''
     _items = None
 
+    encoding_to_remove = None
+
     def __init__(self, a_file=None):
         self._file = a_file
 
@@ -722,6 +724,10 @@ class CsvReadWrite():
                         else:
                             buffering = '0@128'
 
+                        if self.encoding_to_remove is not None:
+                            if enc == self.encoding_to_remove:
+                                enc = ''
+
                         # Append the parsed values to the reading stations list
                         station_info = [
                             name, url, enc, {'image': icon} if icon else '',
@@ -760,6 +766,9 @@ class CsvReadWrite():
         # Extract the 'image' from the icon dictionary if present
         if len(this_row) > Station.icon and 'image' in this_row[Station.icon]:
             this_row[Station.icon] = this_row[Station.icon]['image']
+        if self.encoding_to_remove is not None:
+            if this_row[Station.encoding] == self.encoding_to_remove:
+                this_row[Station.encoding] = ''
 
         if len(this_row) > Station.buffering:
             if this_row[Station.buffering] == '0@128':

@@ -718,6 +718,7 @@ class PyRadioStations():
             self._read_playlist_version = self._playlist_version = Station.url
             self._reading_stations = []
             csv_in = CsvReadWrite(a_file=stationFile)
+            csv_in.encoding_to_remove = self.default_encoding
             ret = csv_in.read()
             if not ret:
                 self._reading_stations = []
@@ -855,6 +856,7 @@ class PyRadioStations():
             return 0
 
         out_csv = CsvReadWrite(st_file)
+        out_csv.encoding_to_remove = self.default_encoding
         ret = out_csv.write(items=self.stations)
         if ret == 0:
             self.dirty_playlist = False

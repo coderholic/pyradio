@@ -750,6 +750,7 @@ class PyRadioEditor():
                     col[self._focus-sid] = 9
                 except IndexError:
                     pass
+            disp_encoding = 'Default' if self._encoding == self._config_encoding else self._encoding
             logger.error(f'{self.item = }')
             logger.error(f'{self._volume = }')
             self._win.addstr(7, 2, 'Volume:', curses.color_pair(4))
@@ -757,7 +758,7 @@ class PyRadioEditor():
             self._win.addstr('    ' + 'Buffering:', curses.color_pair(4))
             self._win.addstr(' ' + f'{self._buff:>2}' + ' ', curses.color_pair(col[1]))
             self._win.addstr('    ' + 'Encoding:', curses.color_pair(4))
-            self._win.addstr(' ' + self._encoding + ' ', curses.color_pair(col[2]))
+            self._win.addstr(' ' + disp_encoding + ' ', curses.color_pair(col[2]))
             # delete to end of line
             y, x = self._win.getyx()
             self._win.addstr((self.maxX - x -1) * ' ', curses.color_pair(5))
@@ -799,6 +800,8 @@ class PyRadioEditor():
                 self._win.addstr(12, x, 'Tip: ', curses.color_pair(4))
                 self._win.addstr('Press ', curses.color_pair(5))
                 self._win.addstr('Enter ', curses.color_pair(4))
+                self._win.addstr('or ', curses.color_pair(5))
+                self._win.addstr('Space ', curses.color_pair(4))
                 self._win.addstr('to activate', curses.color_pair(5))
         elif self._focus == 7:
             ''' Tip: Press \\p before pasting here '''
@@ -888,10 +891,14 @@ class PyRadioEditor():
                 sp = buff.split('@')
                 sp[0] = self._buff
                 buff = '@'.join(sp)
+                if self._encoding in ('Default', self._config_encoding):
+                    encoding = ''
+                else:
+                    encoding = self._encoding
                 self.new_station = [
                     self._line_editor[0].string.strip(),
                     self._line_editor[1].string.strip(),
-                    self._encoding,
+                    encoding,
                     {'image': self._line_editor[2].string.strip()},
                     self._profile,
                     buff,
