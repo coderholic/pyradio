@@ -2518,7 +2518,7 @@ class PyRadioSelectEncodings():
         self._parent_maxY = maxY
         self._parent_maxX = maxX
         self.encoding = encoding
-        logger.error('I got encoding = "{}"'.format(encoding))
+        # logger.error('I got encoding = "{}"'.format(encoding))
         self._orig_encoding = encoding
         self._config_encoding = config_encoding
         self._orig_encoding = encoding
@@ -2699,7 +2699,7 @@ class PyRadioSelectEncodings():
         self.refresh_selection()
 
     def setEncoding(self, this_encoding, init=False):
-        logger.error(f'{this_encoding = }')
+        # logger.error(f'{this_encoding = }')
         ret = self._is_encoding(this_encoding)
         if ret == -1:
             if self._show_default:

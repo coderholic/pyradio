@@ -1,3 +1,16 @@
+2025-05-06 s-n-g
+    * version 0.9.3.11.10 - 0.9.3.12-beta10
+    * redesigning the Station Editor
+        - adding Volume, Buffering, Force http, Profile and Referrer fields
+        - grouping URL, Icon and Referrer fields
+    * station encoding can now get a "Default" value, to leave the station's
+      encoding empty. This will make it use the default (config) encoding.
+    * all players will use the new station fields
+    * \V will toggle the use of station volume (revert to profile volume)
+    * fixing a couple of minor bugs
+    * updating mpv download link (Windows)
+    * - updating docs
+
 2025-03-21 s-n-g
     * version 0.9.3.11.9 - 0.9.3.12-beta9
     * fixing default station selection in the config window

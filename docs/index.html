@@ -109,6 +109,10 @@ a:visited{color: SaddleBrown;}
 <li><a href="#mplayer">MPlayer</a></li>
 <li><a href="#vlc">VLC</a></li>
 </ul></li>
+<li><a href="#station-volume">Station volume</a>
+<ul>
+<li><a href="#how-it-works">How it Works</a></li>
+</ul></li>
 <li><a href="#buffering">Buffering</a></li>
 <li><a href="#displaying-station-info">Displaying Station Info</a></li>
 <li><a href="#copying-and-pasting---registers">Copying and pasting - Registers</a></li>
@@ -185,6 +189,19 @@ a:visited{color: SaddleBrown;}
 <!-- Changelog -->
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
+
+2025-05-06 s-n-g
+    * version 0.9.3.11.10 - 0.9.3.12-beta10
+    * redesigning the Station Editor
+        - adding Volume, Buffering, Force http, Profile and Referrer fields
+        - grouping URL, Icon and Referrer fields
+    * station encoding can now get a "Default" value, to leave the station's
+      encoding empty. This will make it use the default (config) encoding.
+    * all players will use the new station fields
+    * \V will toggle the use of station volume (revert to profile volume)
+    * fixing a couple of minor bugs
+    * updating mpv download link (Windows)
+    * - updating docs
 
 2025-03-21 s-n-g
     * version 0.9.3.11.9 - 0.9.3.12-beta9
@@ -1672,18 +1689,20 @@ Esc/q/Left/h      -                                                Cancel / clos
 <ul>
 <li><p>The third column will define the <strong>Encoding</strong> used by the station (more on this at <a href="#specifying-stations-encoding">Specifying stations’ encoding</a>).</p></li>
 <li><p>The fourth column will set an <strong>Icon URL</strong>, to be used when displaying <a href="#desktop-notifications">Desktop Notifications</a>.</p></li>
-<li><p>The fifth column is the <strong>Profile</strong> to be used with this station.</p></li>
+<li><p>The fifth column is the <strong>Profile</strong> to be used with this station.<br />
+<br />
+If a profile is set for the station, a “<strong>[P]</strong>” will be displayed at the left top corner of the window when the station starts playing.</p></li>
 <li><p>The sixth column will determine whether <strong>Buffering</strong> will be used (more on this at <a href="#buffering">Buffering</a>).</p></li>
 <li><p>The seventh column will determine whether the station will be forced to be using <strong>http</strong> instead of https (more on this at <a href="#player-connection-protocol">Player connection protocol</a>).</p></li>
-<li><p>The eight column defines the <strong>Volume</strong> value to be used.</p></li>
+<li><p>The eight column defines the <strong>Volume</strong> value to be used (more on this at <a href="#station-volume">Station volume</a>).</p></li>
 <li><p>The last column will define the <strong>Referer</strong> to be used (more on this at <a href="#specifying-a-stations-referer-url">Specifying a station’s Referer URL</a>).</p></li>
 </ul>
 <p>The following table presents the <strong>Station’s fields</strong> and the current level of support.</p>
 <table>
 <colgroup>
-<col style="width: 20%" />
-<col style="width: 39%" />
-<col style="width: 40%" />
+<col style="width: 24%" />
+<col style="width: 38%" />
+<col style="width: 37%" />
 </colgroup>
 <thead>
 <tr>
@@ -1715,8 +1734,8 @@ Esc/q/Left/h      -                                                Cancel / clos
 </tr>
 <tr>
 <td>Profile</td>
-<td><strong>No</strong></td>
-<td><strong>No</strong></td>
+<td>0.9.3.11.10</td>
+<td>0.9.3.11.10</td>
 </tr>
 <tr>
 <td>Buffering</td>
@@ -1726,17 +1745,17 @@ Esc/q/Left/h      -                                                Cancel / clos
 <tr>
 <td>Force HTTP</td>
 <td>0.9.3.11.6</td>
-<td><strong>No</strong></td>
+<td>0.9.3.11.10</td>
 </tr>
 <tr>
 <td>Volume</td>
-<td><strong>No</strong> for <em>MPV</em> and <em>MPlayer</em></td>
+<td>0.9.3.11.10</td>
 <td>0.9.3.11.5</td>
 </tr>
 <tr>
 <td>Referer URL</td>
 <td>&lt;0.9.3.11.5</td>
-<td><strong>No</strong><br>Using a referer file</td>
+<td>0.9.3.11.10</td>
 </tr>
 </tbody>
 </table>
@@ -2056,6 +2075,22 @@ volume=50</pre>
 <p>In the past, <strong>VLC</strong> would just use any volume setting it had saved from a previous execution, but now it is possible to save the volume it will use when executed by <strong>PyRadio</strong>.</p>
 <p>This means that <strong>VLC</strong> will start and connect to a station, use whatever volume level it’s stored for it and then <strong>PyRadio</strong> will reset the volume to the desired one (as saved within <strong>PyRadio</strong>).</p>
 <p>The volume will be saved is a file called <em>vlc.conf</em> and reside withing the <em>data</em> directory, inside <strong>PyRadio</strong>’s configuration folder.</p>
+<h2 id="station-volume">Station volume <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>Stations in a playlist can come from various sources, each with its own default volume level. This often results in inconsistent playback volume, forcing the user to adjust <strong>PyRadio</strong>’s volume every time a new station starts.</p>
+<p>While using a volume normalization tool could solve this, it may not always be desirable or feasible.</p>
+<p><strong>PyRadio</strong> offers a better alternative: <em>station volume</em>.</p>
+<p>With this feature, each station can have a specific volume value saved along with its name and URL. When the station is played, that volume is automatically applied.</p>
+<p>Though the user needs to manually set and save the ideal volume for each station (based on their own audio setup), this provides a consistent and reliable solution over time.</p>
+<p>To set a station’s volume, start playing it, adjust the volume to the desired level, and press “<strong>\v</strong>”. This will silently save the updated volume to the playlist on disk.</p>
+<p>If you want to temporarily ignore all station volume settings, press “<strong>\V</strong>”. This will disable volume overrides for the current session only; the setting will reset the next time <strong>PyRadio</strong> is launched.</p>
+<p>When a station’s volume setting is active, a “<strong>[V]</strong>” indicator appears in the top-left corner of the window. If station volume has been disabled, you’ll see “<strong>[v]</strong>” instead. This is illustrated in the image below:</p>
+<p><a href="https://members.hellug.gr/sng/pyradio/station-volume.png" target="_blank"><img style="width: 512px" src="https://members.hellug.gr/sng/pyradio/station-volume.png" alt="PyRadio Station Volume" /></a></p>
+
+<h3 id="how-it-works">How it Works</h3>
+<p>Both <strong>MPV</strong> and <strong>MPlayer</strong> use <em>profiles</em> to configure playback options.</p>
+<p>When station volume is enabled, <strong>PyRadio</strong> creates a temporary profile named <strong>pyradio-volume</strong> by copying the selected base profile. It then updates the volume field in this profile to match the station’s saved volume. This custom profile is then used to launch the player.</p>
+<p>Naturally, this means the player’s user configuration file must be read, parsed, modified, and saved — which may introduce a slight delay, particularly on slower systems.</p>
+<p><strong>VLC</strong>, on the other hand, does not support profiles. In this case, <strong>PyRadio</strong> simply applies the station’s volume directly, overriding the global volume setting.</p>
 <h2 id="buffering">Buffering <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>PyRadio</strong> provides stream buffering options for all supported players.</p>
 <p>Please refer to this document for more info: <a href="buffering.html">PyRadio Buffering</a>.</p>

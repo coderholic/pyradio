@@ -879,13 +879,14 @@ class ProfileManager():
             # for player_name in ('mpv', 'mplayer', 'vlc'):
             for player_name in ('mpv', 'mplayer'):
                 profiles = self.profiles(player_name)
-                logger.error('{}: {}'.format(player_name, profiles))
+                # logger.error('{}: {}'.format(player_name, profiles))
                 if profiles:
                     out[player_name] = profiles[:]
         except KeyError:
             pass
         result = self._create_profile_list(out)
-        logger.error(f'{result = }')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'all_profiles: {result = }')
         return result
 
     def _create_profile_list(self, players_dict):

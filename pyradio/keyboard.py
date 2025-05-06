@@ -1181,21 +1181,23 @@ if __name__ == '__main__':
     import json
     with open('/home/spiros/projects/my-gits/pyradio/pyradio/keyboard/classes.json', 'r', encoding='utf-8') as f:
         res = json.load(f)
-    print('===> classes.py')
+    print('===> classes.py: res')
     print(res)
     out = []
     for n in res:
         out += res[n]
 
-    print('\n\n===> In list')
+    print('\n\n===> In list: out')
     out = list(set(out))
     print(out)
 
     missing = []
 
     for n in kbkey_orig:
+        # print(f'checking "{n}"')
         if n not in out and kbkey_orig[n][0]:
             missing.append(n)
+            # print(f'  missing: "{n}"')
 
     print('\n\n===> missing')
     print(missing)

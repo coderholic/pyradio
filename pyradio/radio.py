@@ -4068,28 +4068,28 @@ and |remove the file manually|.
             )
         except:
             self.outerBodyWin.addstr(
-                0, 1, '─────'.encode('utf-8'), curses.color_pair(13)
+                0, 1, '──────'.encode('utf-8'), curses.color_pair(13)
             )
-        b_header = 'B' if self.player.buffering else ''
-        if self._last_played_station and self.player.isPlaying():
-            if self._last_played_station[Station.volume]:
-                if self.player.enable_per_station_volume:
-                    b_header += 'V'
-                else:
-                    b_header += 'v'
+        logger.error('f{self._last_played_station = }')
+        b_header = ''
+        if self.player.isPlaying():
+            if self.player.buffering:
+                b_header = 'B'
+            elif self._last_played_station and \
+                    self.stations[self.selection][Station.buffering][0] != '0':
+                b_header = 'b'
+
+            ''' v for station volume and P for station profile disabled '''
+            if self._last_played_station and self.player.isPlaying():
+                if self._last_played_station[Station.volume]:
+                    if self.player.enable_per_station_volume:
+                        b_header += 'V'
+                    else:
+                        b_header += 'v'
+                if self._last_played_station[Station.profile]:
+                    b_header += 'P'
         # logger.info('player_disappeared = {}'.format(player_disappeared))
         if self.player.recording == 0:
-            # if not from_header_update:
-            #     try:
-            #         self.outerBodyWin.addstr(
-            #             0, 1, '─────', curses.color_pair(13)
-            #         )
-            #     except:
-            #         self.outerBodyWin.addstr(
-            #             0, 1, '─────'.encode('utf-8'), curses.color_pair(13)
-            #         )
-            # logger.error('self.player.buffering = {}'.format(self.player.buffering))
-            # if self.player.buffering:
             if b_header:
                 self.outerBodyWin.addstr(0, 1, '[', curses.color_pair(13))
                 self.outerBodyWin.addstr(b_header, curses.color_pair(4))
@@ -4098,15 +4098,6 @@ and |remove the file manually|.
                     self.outerBodyWin.addstr('─', curses.color_pair(13))
                 except:
                     self.outerBodyWin.addstr('─'.encode('utf-8'), curses.color_pair(13))
-            # else:
-            #     try:
-            #         self.outerBodyWin.addstr(
-            #             0, 1, '─────', curses.color_pair(13)
-            #         )
-            #     except:
-            #         self.outerBodyWin.addstr(
-            #             0, 1, '─────'.encode('utf-8'), curses.color_pair(13)
-            #         )
             self.outerBodyWin.refresh()
             # logger.info('w_header = " "')
         else:
@@ -4114,7 +4105,6 @@ and |remove the file manually|.
             if player_disappeared or \
                     self.player.already_playing:
                 w_header = 'r'
-            # logger.info('w_header = "{}"'.format(w_header))
             self.outerBodyWin.addstr(
                 0, 1, '[', curses.color_pair(13)
             )
@@ -4122,11 +4112,6 @@ and |remove the file manually|.
             if b_header:
                 self.outerBodyWin.addstr(b_header, curses.color_pair(4))
             self.outerBodyWin.addstr(']', curses.color_pair(13))
-            # if not b_header:
-            #     try:
-            #         self.outerBodyWin.addstr('──', curses.color_pair(13))
-            #     except:
-            #         self.outerBodyWin.addstr('──'.encode('utf-8'), curses.color_pair(13))
             if player_disappeared:
                 if self.player.recording == 0:
                     self.refreshBody()
@@ -7051,6 +7036,12 @@ _____"|f|" to see the |free| keys you can use.
                  check_localized(char, (kbkey['toggle_station_volume'],))):
             self._update_status_bar_right(status_suffix='')
             self.player.enable_per_station_volume = not self.player.enable_per_station_volume
+            self._show_notification_with_delay(
+                txt='___Use station volume: |{}|___'.format(
+                        self.player.enable_per_station_volume
+                        ),
+                    mode_to_set=self.ws.operation_mode,
+                    callback_function=self.refreshBody)
             self._show_recording_status_in_header()
 
         elif self._backslash_pressed and \

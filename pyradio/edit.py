@@ -425,19 +425,19 @@ class PyRadioEditor():
                 self._encoding = self._config_encoding
         except:
             self._encoding = self._config_encoding
-        logger.error(f'{item = }')
+        # logger.error(f'{item = }')
         self._orig_encoding = self._encoding
         self._old_encoding = self._encoding
         self._orig_volume = item[Station.volume] if item[Station.volume] else '-1'
         self._volume = self._orig_volume
-        logger.error(f'{item[Station.buffering] = }')
+        # logger.error(f'{item[Station.buffering] = }')
         self._buff = '0'
         if item[Station.buffering]:
             try:
                 x = item[Station.buffering]
-                logger.error(f'{x = }')
+                # logger.error(f'{x = }')
                 sp = x.split('@')
-                logger.error(f'{sp = }')
+                # logger.error(f'{sp = }')
                 self._buff = sp[0]
             except IndexError:
                 pass
@@ -478,7 +478,7 @@ class PyRadioEditor():
                 self._line_editor[ed].set_global_functions(self._global_functions)
 
     def _print_group_header(self):
-        logger.error('\n\nstring = "{}"\n\n'.format(self._line_editor[1].string.strip()))
+        # logger.error('\n\nstring = "{}"\n\n'.format(self._line_editor[1].string.strip()))
         string = 'Group Header'
         str_len = cjklen(string)
         x = int((self.maxX - str_len)/2) + 1
@@ -500,20 +500,20 @@ class PyRadioEditor():
 
         if self._focus == 2:
             self._win.addstr(4, x, ' ' + headers[0], curses.color_pair(4))
-            self._win.addstr('   [', curses.color_pair(col))
+            self._win.addstr('   <', curses.color_pair(col))
             self._win.addstr(headers[1], curses.color_pair(4))
-            self._win.addstr(']', curses.color_pair(col))
+            self._win.addstr('>', curses.color_pair(col))
             self._win.addstr('   {} '.format(headers[2]), curses.color_pair(4))
         elif self._focus == 3:
             self._win.addstr(4, x, ' ' + headers[0] + '    ' + headers[1] + '   ', curses.color_pair(4))
-            self._win.addstr('[', curses.color_pair(col))
+            self._win.addstr('<', curses.color_pair(col))
             self._win.addstr(headers[2], curses.color_pair(4))
-            self._win.addstr(']', curses.color_pair(col))
+            self._win.addstr('>', curses.color_pair(col))
         # if self._focus == 1:
         else:
-            self._win.addstr(4, x, '[', curses.color_pair(col))
+            self._win.addstr(4, x, '<', curses.color_pair(col))
             self._win.addstr(headers[0], curses.color_pair(4))
-            self._win.addstr(']', curses.color_pair(col))
+            self._win.addstr('>', curses.color_pair(col))
             self._win.addstr('   {}    {} '.format(headers[1], headers[2]), curses.color_pair(4))
 
     def show(self, item=None):
@@ -539,7 +539,8 @@ class PyRadioEditor():
         if self._old_parent_win is None or \
             self._parent_win != self._old_parent_win:
             # self._win.erase()
-            logger.error('\n\n======= SHOW ======\n\n')
+            # logger.error('\n\n======= SHOW ======\n\n')
+            pass
         self._win.box()
         # self._win.refresh()
         self._show_title()
@@ -567,7 +568,7 @@ class PyRadioEditor():
                 self._set_item(self._orig_item)
             self._too_small = False
 
-        logger.error(f'{self._focus = }')
+        # logger.error(f'{self._focus = }')
 
         self._set_multi_headers()
         self._show_alternative_modes()
@@ -708,7 +709,7 @@ class PyRadioEditor():
                 break
         strings = ('Paste mode', 'Extra mode')
         max_len = max([cjklen(x)+2 for x in strings])
-        logger.error(f'{disp = }')
+        # logger.error(f'{disp = }')
         if disp == 100:
             """ print paste mode is on on all editors """
             """ set all editors' paste mode """
@@ -721,7 +722,7 @@ class PyRadioEditor():
                 if n.backslash_pressed:
                     string = strings[1]
                     break
-        logger.error(f'{string = }')
+        # logger.error(f'{string = }')
         x = self.maxX - 2 - max_len
         self._win.addstr(1, x, max_len * ' ', curses.color_pair(5))
         self._win.addstr(4, x, max_len * ' ', curses.color_pair(5))
@@ -751,8 +752,8 @@ class PyRadioEditor():
                 except IndexError:
                     pass
             disp_encoding = 'Default' if self._encoding == self._config_encoding else self._encoding
-            logger.error(f'{self.item = }')
-            logger.error(f'{self._volume = }')
+            # logger.error(f'{self.item = }')
+            # logger.error(f'{self._volume = }')
             self._win.addstr(7, 2, 'Volume:', curses.color_pair(4))
             self._win.addstr(' ' + f'{self._volume:>3}' + ' ', curses.color_pair(col[0]))
             self._win.addstr('    ' + 'Buffering:', curses.color_pair(4))
@@ -876,7 +877,7 @@ class PyRadioEditor():
 
     def _return_station(self):
         ret = self._validate()
-        logger.error(f'{ret = }')
+        # logger.error(f'{ret = }')
         if ret == 1:
             if self._encoding == self._config_encoding:
                 self._encoding = ''
@@ -909,7 +910,7 @@ class PyRadioEditor():
             max_value = max(station.value for station in Station)
             while len(self.new_station) <= max_value:
                 self.new_station.append('')
-            logger.error(f'new station: {self.new_station}')
+            # logger.error(f'new station: {self.new_station}')
         return ret
 
     def _is_valid_url(self, a_url):
@@ -1070,7 +1071,6 @@ class PyRadioEditor():
                     0: exit edit mode, string is valid
                    -1: cancel
                 """
-                logger.error('>> line editort key press')
                 ret = self._line_editor[self._focus].keypress(self._win, char)
                 if ret == 1:
                     # get next char
@@ -1128,7 +1128,7 @@ class PyRadioEditor():
                     l_char = char
                 self._global_functions[l_char]()
 
-        logger.error(f'setting {self._focus = }')
+        # logger.error(f'setting {self._focus = }')
         if self._focus > 3:
             self._reset_editors_modes()
         self._show_title()

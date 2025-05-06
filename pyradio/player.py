@@ -556,6 +556,12 @@ class Player():
     def __del__(self):
         self.close()
 
+    def _can_update_br(self, a_br):
+        if a_br and a_br != '128':
+            if [x for x in self._cnf.AVAILABLE_PLAYERS if x.PLAYER_NAME == 'mplayer']:
+                return True
+        return False
+
     def _url_to_use(self, streamUrl, station_force_http):
         if self.force_http or station_force_http:
             return streamUrl.replace('https://', 'http://')
@@ -781,8 +787,8 @@ class Player():
                                 logger.debug(log_strings[2].format(config_file))
                             return ret_strings[2].format(str(self.volume))
                     else:
-                        logger.error('\n\nprofile_token = {}\n\n'.format(self.profile_token))
-                        logger.error(f'{self.PROFILE_FROM_USER}')
+                        # logger.error('\n\nprofile_token = {}\n\n'.format(self.profile_token))
+                        # logger.error(f'{self.PROFILE_FROM_USER}')
                         if self.PROFILE_FROM_USER:
                             ret = self._cnf.profile_manager.save_volume(
                                 self.PLAYER_NAME, self.profile_token, self.volume
@@ -1160,8 +1166,6 @@ class Player():
                                 with self.status_update_lock:
                                     if self.icy_audio_tokens[a_token] == 'icy-br':
                                         self._icy_data[self.icy_audio_tokens[a_token]] = a_str[1].replace('kbit/s', '')
-                                        if self._icy_data['icy-br'] != '128':
-                                            self.update_bitrate(self._icy_data['icy-br'])
                                     else:
                                         self._icy_data[self.icy_audio_tokens[a_token]] = a_str[1]
                                     if self.icy_audio_tokens[a_token] == 'codec':
@@ -1171,6 +1175,11 @@ class Player():
                                     if 'codec-name' in self._icy_data:
                                         self._icy_data['codec-name'] = self._icy_data['codec-name'].replace('"', '')
                                 # logger.error('DE audio data\n\n{}\n\n'.format(self._icy_data))
+                        try:
+                            if self._can_update_br(self._icy_data['icy-br']):
+                                self.update_bitrate(self._icy_data['icy-br'])
+                        except IndexError:
+                            pass
                         self.info_display_handler()
         except:
             if logger.isEnabledFor(logging.ERROR):
@@ -1743,8 +1752,6 @@ class Player():
                                 with self.status_update_lock:
                                     if self.icy_audio_tokens[a_token] == 'icy-br':
                                         self._icy_data[self.icy_audio_tokens[a_token]] = a_str[1].replace('kbit/s', '')
-                                        if self._icy_data['icy-br'] != '128':
-                                            self.update_bitrate(self._icy_data['icy-br'])
                                     else:
                                         self._icy_data[self.icy_audio_tokens[a_token]] = a_str[1]
                                     if self.icy_audio_tokens[a_token] == 'codec':
@@ -1754,6 +1761,11 @@ class Player():
                                     if 'codec-name' in self._icy_data:
                                         self._icy_data['codec-name'] = self._icy_data['codec-name'].replace('"', '')
                                 # logger.error('DE audio data\n\n{}\n\n'.format(self._icy_data))
+                        try:
+                            if self._can_update_br(self._icy_data['icy-br']):
+                                self.update_bitrate(self._icy_data['icy-br'])
+                        except IndexError:
+                            pass
                         self.info_display_handler()
         except:
             has_error = True
@@ -1947,7 +1959,6 @@ class Player():
         # logger.info('DE a_data {}'.format(a_data))
         if b'icy-br' in a_data:
             # logger.info('DE check {}'.format(self._icy_data))
-            got_icy_br = False
             if 'icy-br' not in self._icy_data:
                 for icy in ('icy-name', 'icy-url', 'icy-genre', 'icy-br'):
                     if stop():
@@ -1956,8 +1967,8 @@ class Player():
                     if icy in ('icy-name', 'icy-genre'):
                         enc = self._station_encoding
                     else:
-                        enc = 'utf-8'
-                    if icy == 'icy-br':
+                    #     enc = 'utf-8'
+                    # if icy == 'icy-br':
                         got_icy_br = True
                     if bytes_icy in a_data :
                         with self.status_update_lock:
@@ -1966,9 +1977,12 @@ class Player():
                             except UnicodeDecodeError:
                                 pass
                     # logger.error('DE 0 {}'.format(self._icy_data))
-            if got_icy_br:
-                if self._icy_data['icy-br'] != '128':
+            # if got_icy_br:
+            try:
+                if self._can_update_br(self._icy_data['icy-br']):
                     self.update_bitrate(self._icy_data['icy-br'])
+            except IndexError:
+                pass
             return True
 
         elif b'request_id' in a_data and b'"error":"success"' in a_data:
@@ -2695,7 +2709,7 @@ class MpvPlayer(Player):
             recording_lock
         )
         self.config_files = self.all_config_files['mpv']
-        logger.error('\n\nself.config_files = {}\n\n'.format(self.config_files))
+        # logger.error('\n\nself.config_files = {}\n\n'.format(self.config_files))
         self.recording_filename = ''
         # logger.error('\n\nMPV recording = {}\n\n'.format(self._recording))
         self._request_mpv_info_data_counter = 0

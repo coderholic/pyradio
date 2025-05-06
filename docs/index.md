@@ -50,6 +50,8 @@ Command line internet radio player.
     * [MPV](#mpv)
     * [MPlayer](#mplayer)
     * [VLC](#vlc)
+* [Station volume](#station-volume)
+    * [How it Works](#how-it-works)
 * [Buffering](#buffering)
 * [Displaying Station Info](#displaying-station-info)
 * [Copying and pasting - Registers](#copying-and-pasting---registers)
@@ -424,29 +426,31 @@ Optionally, a number of more columns can be used.
 
 - The fourth column will set an **Icon URL**, to be used when displaying [Desktop Notifications](#desktop-notifications).
 
-- The fifth column is the **Profile** to be used with this station.
+- The fifth column is the **Profile** to be used with this station. \
+\
+If a profile is set for the station, a "**[P]**" will be displayed at the left top corner of the window when the station starts playing.
 
 - The sixth column will determine whether **Buffering** will be used (more on this at [Buffering](#buffering)).
 
 - The seventh column will determine whether the station will be forced to be using **http** instead of https (more on this at [Player connection protocol](#player-connection-protocol)).
 
-- The eight column defines the **Volume** value to be used.
+- The eight column defines the **Volume** value to be used (more on this at [Station volume](#station-volume)).
 
 - The last column will define the **Referer** to be used (more on this at [Specifying a station's Referer URL](#specifying-a-stations-referer-url)).
 
 The following table presents the **Station's fields** and the current level of support.
 
-| Station Field   | Takes Effect in Playlist       | Customizable in Program         |
-|-----------------|--------------------------------|---------------------------------|
-| Name            | <0.9.3.11.5                    | <0.9.3.11.5                     |
-| URL             | <0.9.3.11.5                    | <0.9.3.11.5                     |
-| Encoding        | <0.9.3.11.5                    | <0.9.3.11.5                     |
-| Icon            | <0.9.3.11.5                    | <0.9.3.11.5                     |
-| Profile         | **No**                         | **No**                          |
-| Buffering       | 0.9.3.11.8                     | 0.9.3.11.8                      |
-| Force HTTP      | 0.9.3.11.6                     | **No**                          |
-| Volume          | **No** for *MPV* and *MPlayer* | 0.9.3.11.5                      |
-| Referer URL     | <0.9.3.11.5                    | **No**<br>Using a referer file  |
+| Station Field   | Takes Effect in Playlist  | Customizable in Program  |
+|-----------------|---------------------------|--------------------------|
+| Name            | <0.9.3.11.5               | <0.9.3.11.5              |
+| URL             | <0.9.3.11.5               | <0.9.3.11.5              |
+| Encoding        | <0.9.3.11.5               | <0.9.3.11.5              |
+| Icon            | <0.9.3.11.5               | <0.9.3.11.5              |
+| Profile         | 0.9.3.11.10               | 0.9.3.11.10              |
+| Buffering       | 0.9.3.11.8                | 0.9.3.11.8               |
+| Force HTTP      | 0.9.3.11.6                | 0.9.3.11.10              |
+| Volume          | 0.9.3.11.10               | 0.9.3.11.5               |
+| Referer URL     | <0.9.3.11.5               | 0.9.3.11.10              |
 
 
 **PyRadio** will by default load the user's stations file (e.g. *~/.config/pyradio/stations.csv*) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.
@@ -914,6 +918,36 @@ In the past, **VLC** would just use any volume setting it had saved from a previ
 This means that **VLC** will start and connect to a station, use whatever volume level it's stored for it and then **PyRadio** will reset the volume to the desired one (as saved within **PyRadio**).
 
 The volume will be saved is a file called *vlc.conf* and reside withing the *data* directory, inside **PyRadio**'s configuration folder.
+
+## Station volume
+
+Stations in a playlist can come from various sources, each with its own default volume level. This often results in inconsistent playback volume, forcing the user to adjust **PyRadio**'s volume every time a new station starts.
+
+While using a volume normalization tool could solve this, it may not always be desirable or feasible.
+
+**PyRadio** offers a better alternative: *station volume*.
+
+With this feature, each station can have a specific volume value saved along with its name and URL. When the station is played, that volume is automatically applied.
+
+Though the user needs to manually set and save the ideal volume for each station (based on their own audio setup), this provides a consistent and reliable solution over time.
+
+To set a station’s volume, start playing it, adjust the volume to the desired level, and press "**\\v**". This will silently save the updated volume to the playlist on disk.
+
+If you want to temporarily ignore all station volume settings, press "**\\V**". This will disable volume overrides for the current session only; the setting will reset the next time **PyRadio** is launched.
+
+When a station’s volume setting is active, a "**[V]**" indicator appears in the top-left corner of the window. If station volume has been disabled, you’ll see "**[v]**" instead. This is illustrated in the image below:
+
+![PyRadio Station Volume](https://members.hellug.gr/sng/pyradio/station-volume.png)
+
+### How it Works
+
+Both **MPV** and **MPlayer** use *profiles* to configure playback options.
+
+When station volume is enabled, **PyRadio** creates a temporary profile named **pyradio-volume** by copying the selected base profile. It then updates the volume field in this profile to match the station’s saved volume. This custom profile is then used to launch the player.
+
+Naturally, this means the player’s user configuration file must be read, parsed, modified, and saved — which may introduce a slight delay, particularly on slower systems.
+
+**VLC**, on the other hand, does not support profiles. In this case, **PyRadio** simply applies the station’s volume directly, overriding the global volume setting.
 
 ## Buffering
 

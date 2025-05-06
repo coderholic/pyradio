@@ -292,6 +292,7 @@ do
         sed -i -e '/pyradio-editor.jpg/s/src=/style="width: 600px" src=/' "$out"
         sed -i -e '/pyradio-player-selection.jpg/s/src=/style="width: 600px" src=/' "$out"
         sed -i -e '/pyradio-station-info.jpg/s/src=/style="width: 600px" src=/' "$out"
+        sed -i -e '/station-volume.png/s/src=/style="width: 512px" src=/' "$out"
     fi
     if [ "$out" = "desktop-notification.html" ];then
         sed -i -e '/pyradio-notif.jpg/s/src=/style="width: 380px" src=/' "$out"
