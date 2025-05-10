@@ -1,4 +1,10 @@
 2025-05-06 s-n-g
+    * version 0.9.3.11.11 - 0.9.3.12-beta11
+    * fixing a dict Key error that will make some stations fail - #284
+    * fixing an error that would render all player unusable on Windows - #282
+    * fixing Windows getting stuck to "PyRadio still running" message - #283
+
+2025-05-06 s-n-g
     * version 0.9.3.11.10 - 0.9.3.12-beta10
     * redesigning the Station Editor
         - adding Volume, Buffering, Force http, Profile and Referrer fields
