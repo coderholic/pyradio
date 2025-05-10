@@ -1178,7 +1178,7 @@ class Player():
                         try:
                             if self._can_update_br(self._icy_data['icy-br']):
                                 self.update_bitrate(self._icy_data['icy-br'])
-                        except IndexError:
+                        except KeyError:
                             pass
                         self.info_display_handler()
         except:
@@ -1764,7 +1764,7 @@ class Player():
                         try:
                             if self._can_update_br(self._icy_data['icy-br']):
                                 self.update_bitrate(self._icy_data['icy-br'])
-                        except IndexError:
+                        except KeyError:
                             pass
                         self.info_display_handler()
         except:
@@ -1981,7 +1981,7 @@ class Player():
             try:
                 if self._can_update_br(self._icy_data['icy-br']):
                     self.update_bitrate(self._icy_data['icy-br'])
-            except IndexError:
+            except KeyError:
                 pass
             return True
 

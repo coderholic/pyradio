@@ -212,6 +212,7 @@ def is_process_running(process_name):
     return False
 
 def isRunning():
+    return
     count = 1
     ctypes.windll.kernel32.SetConsoleTitleW('PyRadio Installation')
     while is_process_running('pyradio.exe'):

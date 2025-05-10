@@ -856,7 +856,7 @@ class ProfileManager():
         if platform.startswith('win'):
             if exists(r'C:\\mplayer\\mplayer.exe'):
                 config_files[0] = r'C:\\mplayer\mplayer\\config'
-            elif exists(os.path.join(getenv('USERPROFILE'), "mplayer", "mplayer.exe")):
+            elif exists(join(getenv('USERPROFILE'), "mplayer", "mplayer.exe")):
                 config_files[0] = join(getenv('USERPROFILE'), "mplayer", "mplayer", "config")
             elif exists(join(getenv('APPDATA'), "pyradio", "mplayer", "mplayer.exe")):
                 config_files[0] = join(getenv('APPDATA'), "pyradio", "mplayer", "mplayer", "config")
