@@ -4070,7 +4070,7 @@ and |remove the file manually|.
             self.outerBodyWin.addstr(
                 0, 1, '──────'.encode('utf-8'), curses.color_pair(13)
             )
-        logger.error('f{self._last_played_station = }')
+        logger.error(f'{self._last_played_station = }')
         b_header = ''
         if self.player.isPlaying():
             if self.player.buffering:

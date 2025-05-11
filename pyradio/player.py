@@ -1871,6 +1871,7 @@ class Player():
                     album, year      : Album and Year of song (vorbis stations)
         '''
 
+        return_value = False
         a_data = args[0]
         stop = args[1]
         enable_crash_detection_function = args[2]
@@ -1938,7 +1939,9 @@ class Player():
                 if not self.playback_is_on:
                     if stop():
                         return False
-                    return self._set_mpv_playback_is_on(stop, enable_crash_detection_function)
+                    return_value = self._set_mpv_playback_is_on(stop, enable_crash_detection_function)
+                    if not return_value:
+                        return False
             else:
                 if (logger.isEnabledFor(logging.INFO)):
                     logger.info('Icy-Title is NOT valid')
@@ -1974,7 +1977,7 @@ class Player():
                         with self.status_update_lock:
                             try:
                                 self._icy_data[icy] = a_data.split(bytes_icy + b'":"')[1].split(b'",')[0].split(b'"}')[0].decode(enc)
-                            except UnicodeDecodeError:
+                            except (IndexError, UnicodeDecodeError):
                                 pass
                     # logger.error('DE 0 {}'.format(self._icy_data))
             # if got_icy_br:
@@ -2022,7 +2025,8 @@ class Player():
             self.info_display_handler()
             return True
         else:
-            return False
+            return return_value
+            # return False
 
     def _set_mpv_playback_is_on(self, stop, enable_crash_detection_function):
         self.stop_timeout_counter_thread = True
