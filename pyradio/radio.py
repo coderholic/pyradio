@@ -313,6 +313,7 @@ class PyRadio():
     search = None
 
     _last_played_station = []
+    _last_played_playlist = ''
 
     _random_requested = False
 
@@ -641,6 +642,7 @@ class PyRadio():
             self.ws.CLEAR_REGISTER_MODE: self._print_clear_register,
             self.ws.CLEAR_ALL_REGISTERS_MODE: self._print_clear_all_registers,
             self.ws.STATION_INFO_ERROR_MODE: self._print_station_info_error,
+            self.ws.STATION_INFO_CHANGED_MODE: self._print_station_info_change,
             self.ws.STATION_INFO_MODE: self._show_station_info,
             self.ws.STATION_DATABASE_INFO_MODE: self._browser_station_info,
             self.ws.RENAME_PLAYLIST_MODE: self._show_rename_dialog,
@@ -2623,6 +2625,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             #         stream_url = self._cnf.online_browser.url(self.selection)
             self._last_played_station = self.stations[self.selection]
             self._last_played_station_id = self.selection
+            self._last_played_playlist = self._cnf.station_title
+            logger.error('\n\nself._last_played_playlist = {}\n\n'.format(self._last_played_playlist))
             with self._check_lock:
                 self._station_to_check_id = self.selection
                 if logger.isEnabledFor(logging.INFO):
@@ -2713,6 +2717,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.detect_if_player_exited = False
         if self.ws.operation_mode in (self.ws.STATION_INFO_MODE,
                 self.ws.STATION_DATABASE_INFO_MODE,
+                self.ws.STATION_INFO_CHANGED_MODE,
                 self.ws.STATION_INFO_ERROR_MODE):
             self.ws.close_window()
         old_playing = self.playing
@@ -3627,6 +3632,12 @@ ____Using |fallback| theme.''')
                 string_to_display
                 )
 
+    def _print_station_info_change(self):
+        self._open_simple_message_by_key_and_mode(
+                self.ws.STATION_INFO_CHANGED_MODE,
+                'M_STATION_INFO_CHANGED'
+                )
+
     def _print_station_info_error(self):
         self._open_simple_message_by_key_and_mode(
                 self.ws.STATION_INFO_ERROR_MODE,
@@ -3945,6 +3956,8 @@ ____Using |fallback| theme.''')
                 self.selection, self.playing = self._get_stations_ids((
                     self.active_stations[0][0],
                     self.active_stations[1][0]))
+                # TODO: continue playing after changing playlist
+                # if self.player.isPlaying():
                 if self.playing == -1:
                     self.stopPlayer()
 
@@ -3953,6 +3966,7 @@ ____Using |fallback| theme.''')
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Setting playing station at {}'.format(self.playing))
                     self.setStation(self.playing)
+                    self._last_played_playlist = self._cnf.station_title
                 else:
                     if self.selection == -1:
                         if a_selection > -1:
@@ -4807,9 +4821,13 @@ and |remove the file manually|.
 
     def _show_station_info_from_thread(self):
         if self.ws.operation_mode in (
-                self.ws.STATION_INFO_MODE,
+            self.ws.STATION_INFO_MODE,
+                self.ws.STATION_INFO_CHANGED_MODE,
                 self.ws.STATION_INFO_ERROR_MODE):
-            if self.ws.operation_mode == self.ws.STATION_INFO_ERROR_MODE:
+            if self.ws.operation_mode in (
+                self.ws.STATION_INFO_CHANGED_MODE,
+                self.ws.STATION_INFO_ERROR_MODE
+            ):
                 self.ws.close_window()
             # logger.error('\n\nself._show_station_info() from thread\n\n')
             self.ws.close_window()
@@ -5607,7 +5625,10 @@ and |remove the file manually|.
 
     def _normal_station_info(self):
         if self.player.isPlaying():
-            self._show_station_info()
+            if self._last_played_playlist == self._cnf.station_title:
+                self._show_station_info()
+            else:
+                self._print_station_info_change()
         else:
             self._print_station_info_error()
 
@@ -8023,6 +8044,9 @@ _____"|f|" to see the |free| keys you can use.
                         self.selections[0][3] = self.stations
                         if self.selection == self.playing:
                             self._last_played_station = self.stations[self.selection]
+                            # I do not need to set it here, i'm just changing the station's encoding
+                            # self._last_played_playlist = self._cnf.station_title
+                            # logger.error('\n\nself._last_played_playlist = {}\n\n'.format(self._last_played_playlist))
                         if self._cnf.browsing_station_service:
                             self._cnf.dirty_playlist = False
                             self._cnf.online_browser.set_encoding(self.selection, ret_encoding)
@@ -8082,6 +8106,9 @@ _____"|f|" to see the |free| keys you can use.
                     self._cnf.renamed_stations[-1][-1] = self.stations[self.selection][0]
                     if self.selection == self.playing:
                         self._last_played_station = self._station_editor.new_station
+                        # I do not need to set it here, i'm just editing a station
+                        # self._last_played_playlist = self._cnf.station_title
+                        # logger.error('\n\nself._last_played_playlist = {}\n\n'.format(self._last_played_playlist))
                 else:
                     ''' adding a new station '''
                     self._cnf.dirty_playlist = True
@@ -9334,6 +9361,9 @@ _____"|f|" to see the |free| keys you can use.
                 self.stations[self.playing][0] = icy_data_name
                 self._cnf.dirty_playlist = True
                 self._last_played_station = self.stations[self.playing]
+                # I do not need to set it here, i'm just renaming the station
+                # self._last_played_playlist = self._cnf.station_title
+                # logger.error('\n\nself._last_played_playlist = {}\n\n'.format(self._last_played_playlist))
                 self.selections[0][3] = self.stations
                 self._show_station_info()
             else:

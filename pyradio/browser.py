@@ -4068,7 +4068,7 @@ class RadioBrowserSort():
         elif char in (
             kbkey['l'], kbkey['pause'], curses.KEY_RIGHT,
             ord('\n'), ord('\r'), curses.KEY_ENTER
-        ) or check_localized(char, (kbkey['paluse'], kbkey['l'])):
+        ) or check_localized(char, (kbkey['pause'], kbkey['l'])):
             for i, n in enumerate(self.items.keys()):
                 if i == self.selection:
                     self.search_by = self.items[n]

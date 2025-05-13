@@ -268,6 +268,15 @@ wait until one actually starts playing).
 '''
 ),
 
+    'M_STATION_INFO_CHANGED': ('Station Info Error',
+r'''
+Station info not available at this time,
+since the station playing is not in the
+current playlist.
+
+'''
+),
+
     'M_STATION_INFO': ('',),
 
     'M_DB_INFO': ('',),
