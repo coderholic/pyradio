@@ -642,6 +642,7 @@ and write in it
 class CsvReadWrite():
     ''' A base class to read and write a PyRadio playlist '''
     _items = None
+    _version = Station.url
 
     encoding_to_remove = None
 

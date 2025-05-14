@@ -27,6 +27,17 @@ default_playlist = stations
 # Default value: False
 default_station = False
 
+# Continuous playback
+# When changing playlists while playing a station, PyRadio will check if the
+# station currently playing is in the newly opened playlist. If it is,
+# playback will continue. If it is not there, playback will stop.
+#
+# When this option is set to True, playback will not stop even when the
+# station does not exist in the newly opened playlist.
+#
+# Default value: False
+continous_playback = False
+
 
 # Mouse support
 # If this options is enabled, the mouse can be used to scroll the playlist,

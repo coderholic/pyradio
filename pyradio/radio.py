@@ -3900,10 +3900,10 @@ ____Using |fallback| theme.''')
             ''' The playlist is empty '''
             # ok
             self.detect_if_player_exited = False
-            if self.player.isPlaying():
+            if self.player.isPlaying() and \
+                    not self._cnf.continous_playback:
                 self.stopPlayer()
-            self.playing, self.selection, self.stations, \
-                self.number_of_items = (-1, 0, 0, 0)
+                self.playing, self.selection, self.startPos = (-1, 0, 0)
             self.refreshBody()
             return
         else:
@@ -3969,22 +3969,18 @@ ____Using |fallback| theme.''')
                 logger.error('DE \n\n{}\n\n'.format(self.active_stations))
                 logger.error('DE \n\n{}\n\n'.format(self._last_played_station))
                 logger.error('DE \n\n{}\n\n'.format(self._last_played_playlist))
-                if self.player.isPlaying():
-                    if self.active_stations[1][0]:
-                        self.selection, self.playing = self._get_stations_ids((
-                            self.active_stations[0][0],
-                            self.active_stations[1][0]))
-                        logger.error('1')
-                    else:
-                        self.selection, self.playing = self._get_stations_ids((
-                            self.active_stations[0][0],
-                            self._last_played_station[0]))
-                        logger.error('2')
-                else:
+                logger.error('\n\nself.playing = {}, self._cnf.continous_playback = {}\n\n'.format(self.playing, self._cnf.continous_playback))
+                self.selection, self.playing = self._get_stations_ids((
+                    self.active_stations[0][0],
+                    self.active_stations[1][0]))
+                if self.playing == -1 and \
+                        not self._cnf.continous_playback:
+                    self.stopPlayer()
+                if self.player.isPlaying() and \
+                        self.active_stations[1][0] == '':
                     self.selection, self.playing = self._get_stations_ids((
                         self.active_stations[0][0],
-                        self.active_stations[1][0]))
-                    logger.error('3')
+                        self._last_played_station[0]))
                 # TODO: continue playing after changing playlist
                 # if self.player.isPlaying():
                 if self.playing > -1:

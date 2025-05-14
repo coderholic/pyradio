@@ -70,6 +70,7 @@ class PyRadioConfigWindow():
     _help_text.append(['This is the encoding used by default when reading data provided by a station such as song title, etc. If reading said data ends up in an error, "utf-8" will be used instead.', '|',
     'If changed, playback must be restarted so that changes take effect.',
     '|', 'Default value: utf-8'])
+    _help_text.append(['When changing playlists while playing a station, PyRadio will check if the station currently playing is in the newly opened playlist. If it is, playback will continue. If it is not there, playback will stop.', '|', 'When this option is set to True, playback will not stop even when the station does not exist in the newly opened playlist.', '|', 'Default value: False'])
     _help_text.append([ 'This is the folder where recorded files will be saved', '|', 'Tip: When you open the window "h" will display HTML help about this parameter (not in Line Editor).', '|', 'Default value: "pyradio-recordings" in home dir' ])
     _help_text.append(['This is a Linux (et al) only parameter. It has no effect on Windows or MacOS.', '|',
                        'Default value is "auto", in which case, PyRadio will try to use xdg-open, gio, mimeopen, mimeo or handlr, in that order of detection.  If none if found, the requested file will simply not open.'
@@ -1105,7 +1106,8 @@ class PyRadioConfigWindow():
                     sel == 'wheel_adjusts_volume' or \
                     sel == 'log_titles' or \
                     sel == 'remove_station_icons' or \
-                    sel == 'mplayer_save_br':
+                    sel == 'mplayer_save_br' or \
+                    sel == 'continous_playback':
                 self._config_options[sel][1] = not self._config_options[sel][1]
                 # # if sel == 'open_last_playlist':
                 # #     if self._config_options[sel][1]:

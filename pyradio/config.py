@@ -1296,6 +1296,7 @@ class PyRadioConfig(PyRadioStations):
     opts['default_playlist'] = ['Def. playlist: ', 'stations']
     opts['default_station'] = ['Def. station: ', 'False']
     opts['default_encoding'] = ['Def. encoding: ', 'utf-8']
+    opts['continous_playback'] = ['Continous playback: ', False]
     opts['recording_dir'] = ['Recordings dir: ', '']
     opts['resource_opener'] = ['Resource Opener: ', 'auto']
     opts['log_titles'] = ['Log titles: ', False]
@@ -1466,6 +1467,15 @@ class PyRadioConfig(PyRadioStations):
 
         self._read_notification_command()
         self.profile_manager = ProfileManager()
+
+    @property
+    def continous_playback(self):
+        return self.opts['continous_playback'][1]
+
+    @continous_playback.setter
+    def continous_playback(self, val):
+        self.opts['continous_playback'][1] = val
+        self.opts['dirty_config'][1] = True
 
     @property
     def mplayer_save_br(self):
@@ -2354,6 +2364,11 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['default_station'][1] = None
                 else:
                     self.opts['default_station'][1] = st
+            elif sp[0] == 'continous_playback':
+                if sp[1].lower() == 'false':
+                    self.opts['continous_playback'][1] = False
+                else:
+                    self.opts['continous_playback'][1] = True
             elif sp[0] == 'open_last_playlist':
                 if sp[1].lower() == 'false':
                     self.opts['open_last_playlist'][1] = False
