@@ -643,6 +643,7 @@ class PyRadio():
             self.ws.CLEAR_ALL_REGISTERS_MODE: self._print_clear_all_registers,
             self.ws.STATION_INFO_ERROR_MODE: self._print_station_info_error,
             self.ws.STATION_INFO_CHANGED_MODE: self._print_station_info_change,
+            self.ws.PLAYING_STATION_CHANGED_ERROR_MODE: self._print_station_change_error,
             self.ws.STATION_INFO_MODE: self._show_station_info,
             self.ws.STATION_DATABASE_INFO_MODE: self._browser_station_info,
             self.ws.RENAME_PLAYLIST_MODE: self._show_rename_dialog,
@@ -2464,6 +2465,10 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
     def _goto_playing_station(self, changing_playlist=False):
         ''' make sure playing station is visible '''
+        if self._last_played_playlist != self._cnf.station_title:
+            if not changing_playlist:
+                self._print_station_change_error()
+            return
         if (self.player.isPlaying() or self.ws.operation_mode == self.ws.PLAYLIST_MODE) and \
                 (self.selection != self.playing or changing_playlist):
             if changing_playlist:
@@ -3632,6 +3637,12 @@ ____Using |fallback| theme.''')
                 string_to_display
                 )
 
+    def _print_station_change_error(self):
+        self._open_simple_message_by_key_and_mode(
+            self.ws.PLAYING_STATION_CHANGED_ERROR_MODE,
+                'M_PLAYING_STATION_CHANGE_MODE'
+                )
+
     def _print_station_info_change(self):
         self._open_simple_message_by_key_and_mode(
                 self.ws.STATION_INFO_CHANGED_MODE,
@@ -3919,30 +3930,33 @@ ____Using |fallback| theme.''')
                     self.startPos = 0
             else:
                 if not force_scan_playlist and self.player.isPlaying():
-                    ''' The playlist is not empty '''
-                    if self.playing > self.number_of_items - 1 or self._cnf.is_register:
-                        ''' Previous playing station is now invalid
-                            Need to scan playlist '''
-                        need_to_scan_playlist = True
-                    else:
-                        if self.stations[self.playing][0] == self.active_stations[1][0]:
-                            ''' ok, self.playing found, just find selection '''
-                            self.selection = self._get_station_id(self.active_stations[0][0])
-                            if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug('** Selected station is {0} at {1}'.format(self.stations[self.selection], self.selection))
+                    if self._last_played_playlist == self._cnf.station_title:
+                        ''' The playlist is not empty '''
+                        if self.playing > self.number_of_items - 1 or self._cnf.is_register:
+                            ''' Previous playing station is now invalid
+                                Need to scan playlist '''
+                            need_to_scan_playlist = True
                         else:
-                            ''' station playing id changed, try previous station '''
-                            self.playing -= 1
-                            if self.playing == -1:
-                                self.playing = len(self.stations) - 1
                             if self.stations[self.playing][0] == self.active_stations[1][0]:
                                 ''' ok, self.playing found, just find selection '''
                                 self.selection = self._get_station_id(self.active_stations[0][0])
                                 if logger.isEnabledFor(logging.DEBUG):
-                                    logger.debug('** Selection station is {0} at {1}'.format(self.stations[self.playing], self.playing))
+                                    logger.debug('** Selected station is {0} at {1}'.format(self.stations[self.selection], self.selection))
                             else:
-                                ''' self.playing still not found, have to scan playlist '''
-                                need_to_scan_playlist = True
+                                ''' station playing id changed, try previous station '''
+                                self.playing -= 1
+                                if self.playing == -1:
+                                    self.playing = len(self.stations) - 1
+                                if self.stations[self.playing][0] == self.active_stations[1][0]:
+                                    ''' ok, self.playing found, just find selection '''
+                                    self.selection = self._get_station_id(self.active_stations[0][0])
+                                    if logger.isEnabledFor(logging.DEBUG):
+                                        logger.debug('** Selection station is {0} at {1}'.format(self.stations[self.playing], self.playing))
+                                else:
+                                    ''' self.playing still not found, have to scan playlist '''
+                                    need_to_scan_playlist = True
+                    else:
+                        need_to_scan_playlist = True
                 else:
                     ''' not playing, can i get a selection? '''
                     need_to_scan_playlist = True
@@ -3952,17 +3966,28 @@ ____Using |fallback| theme.''')
                 self.detect_if_player_exited = False
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Scanning playlist for stations...')
-                # logger.error('DE \n\n{}\n\n'.format(self.active_stations))
-                self.selection, self.playing = self._get_stations_ids((
-                    self.active_stations[0][0],
-                    self.active_stations[1][0]))
+                logger.error('DE \n\n{}\n\n'.format(self.active_stations))
+                logger.error('DE \n\n{}\n\n'.format(self._last_played_station))
+                logger.error('DE \n\n{}\n\n'.format(self._last_played_playlist))
+                if self.player.isPlaying():
+                    if self.active_stations[1][0]:
+                        self.selection, self.playing = self._get_stations_ids((
+                            self.active_stations[0][0],
+                            self.active_stations[1][0]))
+                        logger.error('1')
+                    else:
+                        self.selection, self.playing = self._get_stations_ids((
+                            self.active_stations[0][0],
+                            self._last_played_station[0]))
+                        logger.error('2')
+                else:
+                    self.selection, self.playing = self._get_stations_ids((
+                        self.active_stations[0][0],
+                        self.active_stations[1][0]))
+                    logger.error('3')
                 # TODO: continue playing after changing playlist
                 # if self.player.isPlaying():
-                if self.playing == -1:
-                    self.stopPlayer()
-
-                ''' calculate new position '''
-                if self.player.isPlaying():
+                if self.playing > -1:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Setting playing station at {}'.format(self.playing))
                     self.setStation(self.playing)
@@ -3974,6 +3999,7 @@ ____Using |fallback| theme.''')
                             self.startPos = a_startPos
                         else:
                             self.selection = 0
+                            self.startPos = 0
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Setting selection station at {}'.format(self.selection))
                     self.setStation(self.selection)
@@ -3985,6 +4011,11 @@ ____Using |fallback| theme.''')
         ''' make sure playing station is visible '''
         if cur_mode != self.ws.REMOVE_STATION_MODE:
             self._goto_playing_station(changing_playlist=True)
+        ''' make sure playing station is visible '''
+        if self.selection < 0:
+            ''' make sure we have a valid selection '''
+            self.selection = 0
+            self.startPos = 0
 
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('self.selection = {0}, self.playing = {1}, self.startPos = {2}'.format(self.selection, self.playing, self.startPos))
@@ -4090,7 +4121,7 @@ and |remove the file manually|.
             if self.player.buffering:
                 b_header = 'B'
             elif self._last_played_station and \
-                    self.stations[self.selection][Station.buffering][0] != '0':
+                    not self._last_played_station[Station.buffering].startswith('0'):
                 b_header = 'b'
 
             ''' v for station volume and P for station profile disabled '''
@@ -4627,6 +4658,7 @@ and |remove the file manually|.
         return -1
 
     def _get_stations_ids(self, find):
+        logger.error('\n\nfind = "{}"\n\n'.format(find))
         ch = -2
         i_find = [-1, -1]
         debug_str = ('selection', 'playing')
@@ -4667,7 +4699,8 @@ and |remove the file manually|.
             if self.player.isPlaying():
                 self.active_stations = [
                         [self.stations[self.selection][0], self.selection],
-                        [self.stations[self.playing][0], self.playing]
+                        # an empty name (also playing=-1), says no playback, or playlist change
+                        ['' if self.playing == -1 else self.stations[self.playing][0], self.playing]
                         ]
             else:
                 if self.number_of_items > 0:
@@ -4685,7 +4718,8 @@ and |remove the file manually|.
             if self.player.isPlaying():
                 self.rename_stations = [
                         [self.stations[self.selection][0], self.selection],
-                        [self.stations[self.playing][0], self.playing]
+                        # an empty name (also playing=-1), says no playback, or playlist change
+                        ['' if self.playing == -1 else self.stations[self.playing][0], self.playing]
                         ]
             else:
                 if self.number_of_items > 0:
@@ -4868,6 +4902,9 @@ and |remove the file manually|.
 
         logger.error(f'{self.player._icy_data = }')
 
+        # if playlist has changed, do not offer rename
+        if self._last_played_playlist != self._cnf.station_title:
+            tail = ''
         msg = txt + tail
         #logger.error('msg\n{}'.format(msg))
         if tail and not self._cnf.browsing_station_service:
@@ -5625,10 +5662,11 @@ and |remove the file manually|.
 
     def _normal_station_info(self):
         if self.player.isPlaying():
-            if self._last_played_playlist == self._cnf.station_title:
-                self._show_station_info()
-            else:
-                self._print_station_info_change()
+            self._show_station_info()
+            # if self._last_played_playlist == self._cnf.station_title:
+            #     self._show_station_info()
+            # else:
+            #     self._print_station_info_change()
         else:
             self._print_station_info_error()
 
