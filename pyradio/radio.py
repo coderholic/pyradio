@@ -3901,7 +3901,7 @@ ____Using |fallback| theme.''')
             # ok
             self.detect_if_player_exited = False
             if self.player.isPlaying() and \
-                    not self._cnf.continous_playback:
+                    not self._cnf.continuous_playback:
                 self.stopPlayer()
                 self.playing, self.selection, self.startPos = (-1, 0, 0)
             self.refreshBody()
@@ -3969,12 +3969,12 @@ ____Using |fallback| theme.''')
                 logger.error('DE \n\n{}\n\n'.format(self.active_stations))
                 logger.error('DE \n\n{}\n\n'.format(self._last_played_station))
                 logger.error('DE \n\n{}\n\n'.format(self._last_played_playlist))
-                logger.error('\n\nself.playing = {}, self._cnf.continous_playback = {}\n\n'.format(self.playing, self._cnf.continous_playback))
+                logger.error('\n\nself.playing = {}, self._cnf.continuous_playback = {}\n\n'.format(self.playing, self._cnf.continuous_playback))
                 self.selection, self.playing = self._get_stations_ids((
                     self.active_stations[0][0],
                     self.active_stations[1][0]))
                 if self.playing == -1 and \
-                        not self._cnf.continous_playback:
+                        not self._cnf.continuous_playback:
                     self.stopPlayer()
                 if self.player.isPlaying() and \
                         self.active_stations[1][0] == '':

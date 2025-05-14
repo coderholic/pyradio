@@ -1107,7 +1107,7 @@ class PyRadioConfigWindow():
                     sel == 'log_titles' or \
                     sel == 'remove_station_icons' or \
                     sel == 'mplayer_save_br' or \
-                    sel == 'continous_playback':
+                    sel == 'continuous_playback':
                 self._config_options[sel][1] = not self._config_options[sel][1]
                 # # if sel == 'open_last_playlist':
                 # #     if self._config_options[sel][1]:

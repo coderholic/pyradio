@@ -36,7 +36,7 @@ default_station = False
 # station does not exist in the newly opened playlist.
 #
 # Default value: False
-continous_playback = False
+continuous_playback = False
 
 
 # Mouse support
