@@ -642,7 +642,6 @@ class PyRadio():
             self.ws.CLEAR_REGISTER_MODE: self._print_clear_register,
             self.ws.CLEAR_ALL_REGISTERS_MODE: self._print_clear_all_registers,
             self.ws.STATION_INFO_ERROR_MODE: self._print_station_info_error,
-            self.ws.STATION_INFO_CHANGED_MODE: self._print_station_info_change,
             self.ws.PLAYING_STATION_CHANGED_ERROR_MODE: self._print_station_change_error,
             self.ws.STATION_INFO_MODE: self._show_station_info,
             self.ws.STATION_DATABASE_INFO_MODE: self._browser_station_info,
@@ -2722,7 +2721,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.detect_if_player_exited = False
         if self.ws.operation_mode in (self.ws.STATION_INFO_MODE,
                 self.ws.STATION_DATABASE_INFO_MODE,
-                self.ws.STATION_INFO_CHANGED_MODE,
                 self.ws.STATION_INFO_ERROR_MODE):
             self.ws.close_window()
         old_playing = self.playing
@@ -3641,12 +3639,6 @@ ____Using |fallback| theme.''')
         self._open_simple_message_by_key_and_mode(
             self.ws.PLAYING_STATION_CHANGED_ERROR_MODE,
                 'M_PLAYING_STATION_CHANGE_MODE'
-                )
-
-    def _print_station_info_change(self):
-        self._open_simple_message_by_key_and_mode(
-                self.ws.STATION_INFO_CHANGED_MODE,
-                'M_STATION_INFO_CHANGED'
                 )
 
     def _print_station_info_error(self):
@@ -4852,10 +4844,8 @@ and |remove the file manually|.
     def _show_station_info_from_thread(self):
         if self.ws.operation_mode in (
             self.ws.STATION_INFO_MODE,
-                self.ws.STATION_INFO_CHANGED_MODE,
                 self.ws.STATION_INFO_ERROR_MODE):
             if self.ws.operation_mode in (
-                self.ws.STATION_INFO_CHANGED_MODE,
                 self.ws.STATION_INFO_ERROR_MODE
             ):
                 self.ws.close_window()
@@ -4909,7 +4899,7 @@ and |remove the file manually|.
             self._station_rename_from_info = False
         self._messaging_win.set_a_message(
             'M_STATION_INFO',
-            ('Station Info', msg)
+            ('Active Station Info', msg)
             )
         self._open_simple_message_by_key_and_mode(
                 self.ws.STATION_INFO_MODE,

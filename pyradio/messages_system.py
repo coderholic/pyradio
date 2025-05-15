@@ -269,17 +269,9 @@ wait until one actually starts playing).
 ),
 
 'M_PLAYING_STATION_CHANGE_MODE': ('Station not available',
-r'''The station playing is not in the
-_______current playlist.
-
-'''
-),
-
-    'M_STATION_INFO_CHANGED': ('Station Info Error',
 r'''
-Station info not available at this time,
-since the station playing is not in the
-current playlist.
+The station playing does not exist
+_____in the current playlist.
 
 '''
 ),
