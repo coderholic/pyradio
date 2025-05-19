@@ -10515,8 +10515,8 @@ _____"|f|" to see the |free| keys you can use.
                     callback_function=self.refreshBody)
 
     def _show_no_station_history_notification(self):
+        msg = M_STRINGS['hist-empty']
         if self._limited_height_mode or self._limited_width_mode:
-            msg = M_STRINGS['hist-empty']
             if self.player.isPlaying():
                 self.log.write(msg_id=STATES.ANY, msg=msg)
                 self.player.threadUpdateTitle()
@@ -10526,8 +10526,8 @@ _____"|f|" to see the |free| keys you can use.
             self._show_delayed_notification('___' + msg + '___')
 
     def _show_first_station_history_notification(self):
+        msg = M_STRINGS['hist-first']
         if self._limited_height_mode or self._limited_width_mode:
-            msg = M_STRINGS['hist-first']
             if self.player.isPlaying():
                 self.log.write(msg_id=STATES.ANY, msg=msg)
                 self.player.threadUpdateTitle()
@@ -10537,8 +10537,8 @@ _____"|f|" to see the |free| keys you can use.
             self._show_delayed_notification('___' + msg + '___')
 
     def _show_last_station_history_notification(self):
+        msg = M_STRINGS['hist-last']
         if self._limited_height_mode or self._limited_width_mode:
-            msg = M_STRINGS['hist-last']
             if self.player.isPlaying():
                 self.log.write(msg_id=STATES.ANY, msg=msg)
                 self.player.threadUpdateTitle()

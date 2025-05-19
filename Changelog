@@ -1,4 +1,9 @@
 2025-05-15 s-n-g
+    * version 0.9.3.11.13 - 0.9.3.13-beta12
+    * fixing #289 - sing < or > results in UnboundLocalError
+    * updating MPV download link for Windows
+
+2025-05-15 s-n-g
     * version 0.9.3.11.12 - 0.9.3.12-beta12
     * implementing #291 - Don't stop playback when entering another
       playlist a config option (Continuous playback) has been added
