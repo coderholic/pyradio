@@ -21,21 +21,12 @@ from .themes import *
 from .server import IPsWithNumbers
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesMenu
 from .client import PyRadioClient
-from .keyboard import kbkey, kbkey_orig, ctrl_code_to_string, is_valid_char, is_invalid_key, is_ctrl_key, set_kbkey, conflicts, read_keyboard_shortcuts, check_localized, LetterDisplay, get_kb_letter, to_str
+from .keyboard import kbkey, kbkey_orig, ctrl_code_to_string, is_valid_char, is_invalid_key, is_ctrl_key, set_kbkey, conflicts, read_keyboard_shortcuts, check_localized, LetterDisplay, get_kb_letter, to_str, add_l10n_to_functions_dict, remove_l10n_from_global_functions
 from .log import TIME_FORMATS
 
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
-
-def set_global_functions(global_functions):
-    ret = {}
-    if global_functions is not None:
-        ret = dict(global_functions)
-        if kbkey['t'] in ret.keys():
-            del ret[kbkey['t']]
-    return ret
-
 
 class PyRadioConfigWindow():
     _win = None
@@ -123,6 +114,8 @@ class PyRadioConfigWindow():
 
     load_default_or_saved_parameters = False
 
+    cancel_confirmed = False
+
     def __init__(
             self,
             parent,
@@ -135,11 +128,14 @@ class PyRadioConfigWindow():
             reset_parameters_function,
             show_port_number_invalid,
             parameters_editing_error=None,
+            show_confirm_cancel_config_changes=None,
             global_functions=None
             ):
+
+        self._show_confirm_cancel_config_changes = show_confirm_cancel_config_changes
         self._is_recording = recording_function
         self.parameters_editing_error = parameters_editing_error
-        self._local_functions = {
+        self._local_functions_template = {
             kbkey['j']: self._go_down,
             curses.KEY_DOWN: self._go_down,
             kbkey['k']: self._go_up,
@@ -160,7 +156,9 @@ class PyRadioConfigWindow():
             kbkey['s']: self._go_save,
         }
 
-        self._global_functions = set_global_functions(global_functions)
+        self._global_functions = add_l10n_to_functions_dict(global_functions)
+        self._local_functions = add_l10n_to_functions_dict(self._local_functions_template)
+
         self._port_line_editor = SimpleCursesLineEdit(
             parent=self._win,
             width=6,
@@ -675,6 +673,7 @@ class PyRadioConfigWindow():
             logger.info('Default options loaded')
 
     def _go_saved(self):
+        self.cancel_confirmed = True
         self.load_default_or_saved_parameters = True
         # old_theme = self._config_options['theme'][1]
         # old_transparency = self._config_options['use_transparency'][1]
@@ -710,6 +709,10 @@ class PyRadioConfigWindow():
                 logger.info('No themes saved options loaded')
         self.load_default_or_saved_parameters = False
 
+    def go_exit(self):
+        self.cancel_confirmed = True
+        self._go_exit()
+
     def _go_exit(self):
         self._win.nodelay(True)
         char = self._win.getch()
@@ -717,9 +720,20 @@ class PyRadioConfigWindow():
         if char == -1:
             ''' ESCAPE '''
             logger.error('dirty config is {}, and ESC pressed'.format(self._cnf.dirty_config))
-            self._saved_config_options['theme'][1] = self._old_theme
-            self._cnf.opts['theme'][1] = self._old_theme
-            self._cnf.theme = self._old_theme
+            if self._cnf.dirty_config and not self.cancel_confirmed:
+                pass
+                self._show_confirm_cancel_config_changes()
+
+            else:
+                self.cancel_confirmed = True
+                self._saved_config_options['theme'][1] = self._old_theme
+                self._cnf.opts['theme'][1] = self._old_theme
+                self._cnf.theme = self._old_theme
+                # curses.ungetch(27)
+
+    def go_save(self):
+        self.cancel_confirmed = False
+        self._go_save()
 
     def _go_save(self):
         if self._is_port_invalid():
@@ -788,7 +802,9 @@ class PyRadioConfigWindow():
             )):
                 ret = self._local_functions[char]()
                 if self._local_functions[char] == self._go_exit:
-                    return 1, []
+                    if self.cancel_confirmed:
+                        return 1, []
+                    return -1, []
                 elif self._local_functions[char] == self._go_save and ret:
                     return 0, []
                 return -1, []
@@ -1272,7 +1288,7 @@ class ExtraParametersEditor():
         self._caption = ' Parameter value '
         self._string = self._orig_string = string
 
-        self._global_functions = set_global_functions(global_functions)
+        self._global_functions = remove_l10n_from_global_functions(global_functions, ('t', ))
         self.Y, self.X = self._parent.getbegyx()
         self.Y += 1
         self.X += 1
@@ -1310,7 +1326,7 @@ class ExtraParametersEditor():
         self._widgets[0].bracket = False
         self._widgets[0]._use_paste_mode = True
         self._widgets[0]._mode_changed = self._show_alternative_modes
-        self._widgets[0].set_global_functions(self._global_functions)
+        self._widgets[0].remove_l10n_from_global_functions(self._global_functions, ('t', ))
         ''' enables direct insersion of ? and \\ '''
         self._widgets[0]._paste_mode = False
         self._line_editor = self._widgets[0]
@@ -1568,7 +1584,7 @@ class ExtraParameters():
         self._list = None
         self._cnf = config
         self._orig_params = deepcopy(self._cnf.params)
-        self._global_functions = set_global_functions(global_functions)
+        self._global_functions = remove_l10n_from_global_functions(global_functions, ('t', ))
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('original parameters = {}'.format(self._orig_params))
         self._player = player
@@ -2150,7 +2166,7 @@ class PyRadioSelectPlayer():
         self._parent_maxY, self._parent_maxX = parent.getmaxyx()
         self.player = player
         self._orig_player = player
-        self._global_functions = set_global_functions(global_functions)
+        self._global_functions = remove_l10n_from_global_functions(global_functions, ('t', ))
         self.focus = True
 
         ''' Is editor active?
@@ -2531,11 +2547,8 @@ class PyRadioSelectEncodings():
         self._num_of_rows = int(len(self._encodings) / self._num_of_columns)
         self.init_window()
 
-    def set_global_functions(self, global_functions):
-        self._global_functions = global_functions
-
     def set_reduced_global_functions(self, global_functions):
-        self._global_functions = set_global_functions(global_functions)
+        self._global_functions = remove_l10n_from_global_functions(global_functions, ('t', ))
 
     def init_window(self, set_encoding=True):
         self._win = None
@@ -2934,7 +2947,7 @@ class PyRadioSelectPlaylist():
         if self._include_registers:
             self._title = ' Paste: Select target '
             self._playlist_in_editor = self._selected_playlist
-        self._global_functions = set_global_functions(global_functions)
+        self._global_functions = remove_l10n_from_global_functions(global_functions, ('t', ))
         self.init_window()
 
     def __del__(self):
@@ -3353,7 +3366,7 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
             self._config_path = config_path
             default_station = self._read_items(a_station=default_station)
         PyRadioSelectPlaylist.__init__(self, parent, config_path, registers_dir, default_station)
-        self._global_functions = set_global_functions(global_functions)
+        self._global_functions = remove_l10n_from_global_functions(global_functions, ('t', ))
         self._title = ' Station Selection '
         ''' adding 2 to padding calculation
             (i.e. no selection and random selection
@@ -4486,15 +4499,15 @@ class PyRadioLocalized():
 
         # Sort and return the list of filenames
         self._files = [['Define New Layout', None, False, None], ['No Layout', None, False, None]] + sorted(filenames)
-        self._files.append(['Item 1', None, False, None])
-        self._files.append(['Item 2', None, False, None])
-        self._files.append(['Item 3', None, False, None])
-        self._files.append(['Item 4', None, False, None])
-        self._files.append(['Item 5', None, False, None])
-        self._files.append(['Item 6', None, False, None])
-        self._files.append(['Item 7', None, False, None])
-        self._files.append(['Item 8', None, False, None])
-        self._files.append(['Item 9', None, False, None])
+        # self._files.append(['Item 1', None, False, None])
+        # self._files.append(['Item 2', None, False, None])
+        # self._files.append(['Item 3', None, False, None])
+        # self._files.append(['Item 4', None, False, None])
+        # self._files.append(['Item 5', None, False, None])
+        # self._files.append(['Item 6', None, False, None])
+        # self._files.append(['Item 7', None, False, None])
+        # self._files.append(['Item 8', None, False, None])
+        # self._files.append(['Item 9', None, False, None])
 
     def _read_layout_file(self, index):
         ''' read a layout file from disk
@@ -4602,6 +4615,7 @@ class PyRadioLocalized():
 
         self._print_title()
         menu_height = 9
+        parent_Y, parent_X = self._parent.getmaxyx()
         if self._widgets[0] is None:
             items=[x[0] for x in self._files]
             if logger.isEnabledFor(logging.DEBUG):

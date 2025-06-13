@@ -10,7 +10,7 @@ from math import sqrt
 import colorsys
 from .log import Log
 from .common import *
-from .keyboard import kbkey, check_localized
+from .keyboard import kbkey, check_localized, remove_l10n_from_global_functions
 
 logger = logging.getLogger(__name__)
 
@@ -970,13 +970,10 @@ class PyRadioThemeSelector():
         return self._theme_is_watched
 
     def set_global_functions(self, global_functions):
-        self._global_functions = {}
-        if global_functions is not None:
-            self._global_functions = dict(global_functions)
-            if kbkey['t'] in self._global_functions:
-                del self._global_functions[kbkey['t']]
-            if kbkey['transp'] in self._global_functions:
-                del self._global_functions[kbkey['transp']]
+        self._global_functions = remove_l10n_from_global_functions(
+            global_functions,
+            ('t', 'transp')
+        )
 
     def show(self, touch_selection=True):
         if self._cnf.locked:

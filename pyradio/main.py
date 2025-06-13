@@ -642,6 +642,14 @@ If nothing else works, try the following command:
                     if version_string_to_list(last_tag) <= version_string_to_list(pyradio_config.current_pyradio_version):
                         print('Latest version already installed. Nothing to do....')
                         return
+                    # fixing #293
+                    if platform.startswith('win'):
+                        print('''
+[bold magenta]PyRadio[/bold magenta] will now create the update script,
+and open a [green]File Explorer[/green] window.
+
+Double click the [red]update.bat[/red] file found in
+that window to complete the update process.''')
                 else:
                     print('Error reading online version.\nPlease make sure you are connected to the internet and try again.')
                     return

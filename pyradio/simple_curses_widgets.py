@@ -41,11 +41,11 @@ from sys import platform
 try:
     from .cjkwrap import is_wide, cjklen, cjkrjust, cjkcenter, cjkljust, cjkslices
     from .schedule import PyRadioTime
-    from .keyboard import kbkey, get_kb_letter, check_localized
+    from .keyboard import kbkey, get_kb_letter, check_localized, remove_l10n_from_global_functions
 except:
     from cjkwrap import is_wide, cjklen, cjkrjust, cjkcenter, cjkljust, cjkslices
     from schedule import PyRadioTime
-    from keyboard import kbkey, get_kb_letter, check_localized
+    from keyboard import kbkey, get_kb_letter, check_localized, remove_l10n_from_global_functions
 # from .cjkwrap import is_wide, cjklen, cjkljust, cjkslices
 # from .schedule import PyRadioTime
 # from .keyboard import kbkey, get_kb_letter, check_localized
@@ -3097,8 +3097,9 @@ class SimpleCursesMenu(SimpleCursesWidget):
             if self._on_down_callback_function is not None:
                 self._on_down_callback_function()
 
-        elif char in self._local_functions.keys():
-            self._local_functions(char)
+        elif char in self._local_functions:
+            # self._local_functions(char)
+            self._local_functions[char]()
 
         elif self._external_keypress_function:
             return self._external_keypress_function(char)
@@ -3901,13 +3902,10 @@ class SimpleCursesLineEdit():
         self._local_functions = local_functions
 
     def set_global_functions(self, global_functions):
-        self._global_functions = {}
-        if global_functions is not None:
-            self._global_functions = dict(global_functions)
-            if kbkey['t'] in self._global_functions:
-                del self._global_functions[kbkey['t']]
-            # if 'T' in self._global_functions.keys():
-            #     del self._global_functions['T']
+        self._global_functions = remove_l10n_from_global_functions(
+            global_functions,
+            ('t', )
+        )
 
     def _calculate_window_metrics(self):
         if self._caption:
@@ -4025,10 +4023,13 @@ class SimpleCursesLineEdit():
             self.log('displayed string: "{}"\n'.format(self._displayed_string))
 
         if self.focused:
-            ''' enable this to get info on function '''
+            ''' enable this to get info on the function '''
             #if logger.isEnabledFor(logging.DEBUG):
             #    logger.debug('refreshEditWindow:\n  first={0}, curs={1}, dcurs={2}, max={3}\n  len={4}, cjklen={5}\n  string="{6}"\n  len={7}, cjklen={8}\n  disstr="{9}"'.format(self._first, self._curs_pos, self._disp_curs_pos, self._max_chars_to_display, len(self.string), cjklen(self.string), self.string, len(self._displayed_string), cjklen(self._displayed_string), self._displayed_string))
-            self._edit_win.chgat(0, self._disp_curs_pos, 1, self.cursor_color)
+            try:
+                self._edit_win.chgat(0, self._disp_curs_pos, 1, self.cursor_color)
+            except curses.error:
+                logger.error('\n\nERROR: self._disp_curs_pos = {}\n\n'.format(self._disp_curs_pos))
 
         self._edit_win.refresh()
         self._showed = True
@@ -4402,7 +4403,7 @@ class SimpleCursesLineEdit():
         if self.log is not None:
             self.log('char = {}\n'.format(char))
 
-        if char in self._local_functions.keys():
+        if char in self._local_functions:
             self._backslash_pressed = False
             if not self._paste_mode_always_on:
                 self._paste_mode = False

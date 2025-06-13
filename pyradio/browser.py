@@ -23,7 +23,7 @@ from .cjkwrap import cjklen
 from .countries import countries
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesWidgetColumns, SimpleCursesCheckBox, SimpleCursesCounter, SimpleCursesBoolean, DisabledWidget, SimpleCursesString, SimpleCursesWidget
 from .ping import ping
-from .keyboard import kbkey, ctrl_code_to_simple_code, kb2chr, ctrl_code_to_string, check_localized
+from .keyboard import kbkey, ctrl_code_to_simple_code, kb2chr, ctrl_code_to_string, check_localized, remove_l10n_from_global_functions
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
@@ -430,13 +430,10 @@ class RadioBrowser(PyRadioStationsBrowser):
         return self.stations_history
 
     def set_global_functions(self, global_functions):
-        self._global_functions = {}
-        if global_functions is not None:
-            self._global_functions = dict(global_functions)
-            if kbkey['t'] in self._global_functions:
-                del self._global_functions[kbkey['t']]
-            # if 'T' in self._global_functions.keys():
-            #     del self._global_functions['T']
+        self._global_functions = remove_l10n_from_global_functions(
+            global_functions,
+            ('t', )
+        )
 
     def stations(self, playlist_format=2):
         ''' Return stations' list (in PyRadio playlist format)

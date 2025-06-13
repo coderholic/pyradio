@@ -190,8 +190,16 @@ a:visited{color: SaddleBrown;}
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
 
-2025-05-15 s-n-g
-    * version 0.9.3.11.13 - 0.9.3.13-beta12
+2025-06-19 s-n-g
+    * version 0.9.3.11.14 - 0.9.3.14-beta14
+    * added a confirmation dialog to the Configuration Window, to
+      inform the user that the changes will be lost
+    * fixing a crash that would accur when trying to use the external
+      player before playing a station for the first time
+    * fixing #294 Keypresses shows up as characters in the Pyradio window
+
+2025-05-19 s-n-g
+    * version 0.9.3.11.13 - 0.9.3.13-beta13
     * fixing #289 - sing < or > results in UnboundLocalError
     * updating MPV download link for Windows
 
@@ -241,10 +249,10 @@ a:visited{color: SaddleBrown;}
     * updating Windows MPV download link
     * adding bufferring.md and pyradio_buf man page
     * updating docs
-    
+
 2025-03-13 s-n-g
     * version 0.9.3.11.7 - 0.9.3.12-beta7
-    * fixing #280 - Removing station and saving removes 
+    * fixing #280 - Removing station and saving removes
       all URLs from stations.csv file
 
 2025-03-10 s-n-g
@@ -271,7 +279,7 @@ a:visited{color: SaddleBrown;}
     * version 0.9.3.11.4 - 0.9.3.12-beta4
     * adding a clock displayed at the beginning of the Status Line
     * adding a new system theme: lambda_by_amski1
-    * all players will try to catch (and display) HTTP errors (403, 404, 
+    * all players will try to catch (and display) HTTP errors (403, 404,
       503, etc) and player errors through Crash detection
     * rearranging options in the Config Window
     * the remote control server will be cleanly terminated when the terminal closes

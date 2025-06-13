@@ -90,6 +90,7 @@ class Window_Stack_Constants():
     SCHEDULE_STATION_SEARCH_MODE = 120,
     DELETE_PLAYLIST_MODE = 121,
     EDIT_PROFILE_MODE = 122,
+    ASK_TO_SAVE_CONFIG = 123,
     # TODO: return values from opening theme
     PLAYLIST_NOT_FOUND_ERROR_MODE = 201
     PLAYLIST_LOAD_ERROR_MODE = 202
@@ -206,6 +207,7 @@ class Window_Stack_Constants():
         LOCALIZED_CONFIG_MODE: 'LOCALIZED_CONFIG_MODE',
         KEYBOARD_CONFIG_SEARCH_MODE: 'KEYBOARD_CONFIG_SEARCH_MODE',
         EDIT_PROFILE_MODE: 'EDIT_PROFILE_MODE',
+        ASK_TO_SAVE_CONFIG: 'ASK_TO_SAVE_CONFIG',
 }
 
     ''' When PASSIVE_WINDOWS target is one of them,

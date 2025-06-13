@@ -128,6 +128,7 @@ Down|, |{k}|, |PgDown                                   |*|  Change station sele
 {screen_top} {screen_middle} {screen_bottom}            |*|  Go to top / middle / bottom of screen.
 {goto_playing}                                          |*|  Go to |P|laying station.
 Enter|, |Right|, |{l}                                   |*|  Play selected station.
+{ext_player}                                            |*|  E|x|ternal player playback.
 {p_next}| / |{p_prev}                                   |*|  Play |N|ext or |P|revious station.
 {info}                                                  |*|  Display station |i|nfo (when playing).
 {random}                                                |*|  Select and play a random station.
@@ -246,6 +247,17 @@ Press "|{y}|" to confirm, "|{Y}|" to confirm and not
 be asked again, or any other key to cancel
 
 ''')),
+
+'D_ASK_TO_SAVE_CONFIG': ('Config Modified',
+kb2strL(r'''
+The configuration has been modified!
+
+Press "|{s}|" to save it, or "|{q}|" or "|ESC|" to
+disregard the changes, or any other key to
+ remain in the |Configuration Editor|.
+
+'''.replace('{s}', chr(kbkey['s']))
+)),
 
 'D_STATION_DELETE_ASK_LOCKED': ('Station Deletion',
 kb2strL(r'''

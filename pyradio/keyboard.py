@@ -725,6 +725,56 @@ def get_unicode_and_cjk_char(win, char):
     #    logger.debug(f'setting {kb_letter = }')
     return out
 
+def add_l10n_to_functions_dict(functions):
+    local_functions = functions.copy()
+    logger.error(local_functions)
+    local_keys = get_lkbkey()
+    new_keys = {}
+    for key, value in local_functions.items():
+        logger.error(f'{key}: {value}')
+        for lkey, lvalue in local_keys.items():
+            if ord(lvalue) == key:
+                logger.error(f'    {lkey}: {lvalue}')
+                logger.error('      {} {}'.format(ord(lvalue), value))
+                new_keys[ord(lvalue)] = value
+                break
+    logger.error('\n\n{}'.format(new_keys))
+    for n in new_keys:
+        local_functions[n] = new_keys[n]
+    return local_functions
+
+def remove_l10n_from_global_functions(global_functions, shortcut_names):
+    ''' remove key - value from functions dict
+        It actually removes any referenct to the function
+        that an item in shortcut_names refers to
+
+        Parameters
+        ==========
+        global_functions  :  dict       { [key code]: function }
+        shortcut_names    :  tupple     ('t', 'open')
+
+        Rerurns
+        =======
+        A modified copy of global_functions
+    '''
+    ret = {}
+
+    if global_functions is not None:
+        ret = dict(global_functions)  # shallow copy
+
+        for a_shortcut_name in shortcut_names:
+            if kbkey[a_shortcut_name] in ret:
+                func_to_remove = ret[kbkey[a_shortcut_name]]
+
+                # Find all keys that point to this function
+                keys_to_remove = [k for k, v in ret.items() if v is func_to_remove]
+
+                # Delete all these keys
+                for k in keys_to_remove:
+                    del ret[k]
+
+    return ret
+
 
 class LetterProvider:
     """

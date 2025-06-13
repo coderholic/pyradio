@@ -41,7 +41,7 @@ from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, \
     PyRadioConnectionType, PyRadioServerWindow, PyRadioBuffering, \
     PyRadioRecordingDir, PyRadioResourceOpener, PyRadioOpenDir
 from .themes import *
-from .cjkwrap import cjklen, cjkcenter, cjkslices
+from .cjkwrap import cjklen, cjkcenter, cjkslices, is_wide
 from . import player
 from .install import version_string_to_list, get_github_tag, fix_pyradio_win_exe, get_a_linux_resource_opener
 from .html_help import HtmlHelp, is_graphical_environment_running
@@ -50,7 +50,7 @@ from .schedule_win import PyRadioSimpleScheduleWindow
 from .simple_curses_widgets import SimpleCursesMenu
 from .messages_system import PyRadioMessagesSystem
 from .server import PyRadioServer, HAS_NETIFACES
-from .keyboard import kbkey, get_lkbkey, chk_key, get_unicode_and_cjk_char, dequeue_input, input_queue, get_kb_letter, set_kb_letter, check_localized, to_str, ctrl_code_to_string
+from .keyboard import kbkey, get_lkbkey, chk_key, get_unicode_and_cjk_char, dequeue_input, input_queue, get_kb_letter, set_kb_letter, check_localized, to_str, ctrl_code_to_string, add_l10n_to_functions_dict, set_kb_cjk
 
 CAN_CHECK_FOR_UPDATES = True
 try:
@@ -455,6 +455,9 @@ class PyRadio():
     # config profile window
     _station_profile_editor  = None
 
+    # localized keys window
+    _keyboard_localized_win  = None
+
     try:
         handled_signals = {
             'SIGHUP': signal.SIGHUP,
@@ -682,6 +685,7 @@ class PyRadio():
             self.ws.KEYBOARD_CONFIG_MODE: self._redisplay_keyboard_config,
             self.ws.LOCALIZED_CONFIG_MODE: self._redisplay_localized_config,
             self.ws.EDIT_PROFILE_MODE: self._redisplay_profile_editor,
+            self.ws.ASK_TO_SAVE_CONFIG: self._show_confirm_cancel_config_changes,
         }
 
         self._help_keys = {
@@ -803,7 +807,7 @@ class PyRadio():
             curses.BUTTON_SHIFT: 'BUTTON_SHIFT',
         }
 
-        self._global_functions = {
+        self._global_functions_template = {
             kbkey['tag']: self._tag_a_title,
             kbkey['t_tag']: self._toggle_titles_logging,
             kbkey['transp']: self._toggle_transparency,
@@ -819,7 +823,7 @@ class PyRadio():
             # ord('b'): self._show_schedule_editor,
         }
 
-        self._local_functions = {
+        self._local_functions_template = {
             # functions to execute in self.ws.NORMAL_MODE only
             kbkey['hist_prev']: self._stations_history_previous,
             kbkey['hist_next']: self._stations_history_next,
@@ -852,6 +856,9 @@ class PyRadio():
             instead of the saved one
         '''
         self._tmp_resource_opener = self._cnf.resource_opener
+
+        self._global_functions = add_l10n_to_functions_dict(self._global_functions_template)
+        self._local_functions = add_l10n_to_functions_dict(self._local_functions_template)
 
     def __del__(self):
         self.transientWin = None
@@ -1185,6 +1192,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
         try:
             curses.curs_set(0)
+            fixing #294
+            curses.noecho()
         except:
             pass
 
@@ -2266,8 +2275,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             while True:
                 try:
                     if self._do_launch_external_palyer:
-                        curses.ungetch(kbkey['ext_player'])
+                        self.keypress(kbkey['ext_player'])
                         self._do_launch_external_palyer = False
+                        return
+                        # curses.ungetch(kbkey['ext_player'])
+                        # self._do_launch_external_palyer = False
                     c = self.bodyWin.getch()
                     # logger.error(f'{c = }')
 
@@ -2283,11 +2295,17 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     if c == curses.KEY_RESIZE:
                         letter = ''
                     else:
-                        letter = get_unicode_and_cjk_char(self.bodyWin, c)
+                        if platform.startswith('win'):
+                            letter = chr(c)
+                            set_kb_letter(letter)
+                            set_kb_cjk(is_wide(letter))
+                        else:
+                            letter = get_unicode_and_cjk_char(self.bodyWin, c)
                     # set_kb_letter(None)
                     if letter:
                         # set_kb_letter(letter)  # Save the decoded letter
                         # Call keypress for single-byte shortcuts
+                        logger.error('Here 1')
                         if len(input_queue) == 0:  # Single-byte input
                             ret = self.keypress(c)  # Handle shortcut
                             if ret == -1:
@@ -2296,6 +2314,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                             # Set remaining_keys based on input_queue length for multi-byte input
                             remaining_keys = len(input_queue)
                     else:
+                        logger.error('Here 2')
                         # Single-byte character or invalid input
                         ret = self.keypress(c)  # Handle shortcut
                         if ret == -1:
@@ -4835,6 +4854,7 @@ and |remove the file manually|.
                 self._save_parameters,
                 self._reset_parameters,
                 self._show_port_number_invalid,
+                show_confirm_cancel_config_changes= self._show_confirm_cancel_config_changes,
                 global_functions=self._global_functions
             )
         else:
@@ -5230,6 +5250,8 @@ and |remove the file manually|.
             curses.resize_term(0, 0)
             try:
                 curses.curs_set(0)
+                # fixing #294
+                curses.noecho()
             except:
                 pass
 
@@ -7689,6 +7711,23 @@ _____"|f|" to see the |free| keys you can use.
             self.ws.close_window()
             self.refreshBody()
 
+        elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_CONFIG:
+            if char in (kbkey['s'], ) or \
+                    check_localized(char, (kbkey['s'], )):
+                self.ws.close_window()
+                # logger.error('==== save config accepted, go_save()')
+                # self._config_win.go_save()
+                self.keypress(kbkey['s'])
+            elif char in (kbkey['q'], 27) or \
+                    check_localized(char, (kbkey['q'], )):
+                self.ws.close_window()
+                # logger.error('==== save config canceled, go_exit()')
+                self._config_win.cancel_confirmed = True
+                self.keypress(27)
+            else:
+                self.ws.close_window()
+                self.refreshBody()
+
         elif self.ws.operation_mode == self.ws.CONFIG_MODE and \
                 char not in self._chars_to_bypass and \
                 char not in self._chars_to_bypass_for_search:
@@ -7811,6 +7850,10 @@ _____"|f|" to see the |free| keys you can use.
                         self._print_config_save_error()
                     elif ret == 0:
                         ''' Config saved successfully '''
+
+                        ''' update functions dicts '''
+                        self._global_functions = add_l10n_to_functions_dict(self._global_functions_template)
+                        self._local_functions = add_l10n_to_functions_dict(self._local_functions_template)
 
                         ''' check if time has to be shown / restarted / stopped'''
                         if self._cnf.active_enable_clock:
@@ -7972,9 +8015,9 @@ _____"|f|" to see the |free| keys you can use.
 
                 elif ret == self.ws.LOCALIZED_CONFIG_MODE:
                     ''' keyboard localized window '''
-                    self._print_not_implemented_yet()
-                    # self.ws.operation_mode = self.ws.LOCALIZED_CONFIG_MODE
-                    # self._localized_init_config()
+                    # self._print_not_implemented_yet()
+                    self.ws.operation_mode = self.ws.LOCALIZED_CONFIG_MODE
+                    self._localized_init_config()
                     return
 
                 else:
@@ -9033,7 +9076,8 @@ _____"|f|" to see the |free| keys you can use.
                 if ret is not None:
                     self._apply_search_result(ret, reapply=True)
             else:
-                curses.ungetch(kbkey['search'])
+                self.keypress(kbkey['search'])
+                # curses.ungetch(kbkey['search'])
             return
 
         elif (char in (kbkey['search_prev'], ) or \
@@ -9087,7 +9131,8 @@ _____"|f|" to see the |free| keys you can use.
                 if ret is not None:
                     self._apply_search_result(ret, reapply=True)
             else:
-                curses.ungetch(kbkey['search'])
+                self.keypress(kbkey['search'])
+                # curses.ungetch(kbkey['search'])
             return
 
         elif self.ws.operation_mode in \
@@ -9652,7 +9697,7 @@ _____"|f|" to see the |free| keys you can use.
                     self._click_station()
                     self._add_station_to_stations_history()
                     self._cnf.EXTERNAL_PLAYER_OPTS = self.player.play(
-                        self._last_played_station,
+                        self._last_played_station if self._last_played_station else self.stations[self.selection],
                         stop_player=None,
                         detect_if_player_exited=None,
                         enable_crash_detection_function=None,
@@ -10446,6 +10491,12 @@ _____"|f|" to see the |free| keys you can use.
                 ret = False
             # logger.error(f'2 Display ? : {ret}')
         return ret
+
+    def _show_confirm_cancel_config_changes(self):
+        self._open_simple_message_by_key_and_mode(
+                self.ws.ASK_TO_SAVE_CONFIG,
+                'D_ASK_TO_SAVE_CONFIG'
+        )
 
     def _show_open_dir_window(self):
         if not (platform.lower().startswith('win') or \
