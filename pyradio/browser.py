@@ -4702,7 +4702,6 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
         limit = term = None
         if self._items:
             if 'type' in self._items[self._selection].keys():
-                # self._log('   >>> I am here\n')
                 if self._items[self._selection]['type'] in (
                         'topvote',
                         'lastchange',

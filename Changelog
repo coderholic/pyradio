@@ -2,7 +2,7 @@
     * version 0.9.3.11.14 - 0.9.3.14-beta14
     * added a confirmation dialog to the Configuration Window, to
       inform the user that the changes will be lost
-    * fixing a crash that would accur when trying to use the external
+    * fixing a crash that would occur when trying to use the external
       player before playing a station for the first time
     * fixing #294 Keypresses shows up as characters in the Pyradio window
 

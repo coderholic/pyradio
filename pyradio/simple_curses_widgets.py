@@ -1879,6 +1879,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
     LEFT = 0        # default
     RIGHT = 1
     CENTER = 2      # not implemented
+    CENTERED_HORIZONTAL = 3
+    CENTERED_VERTICAL = 4
 
     ''' window type '''
     FULL_SCREEN = 0
@@ -1889,58 +1891,59 @@ class SimpleCursesMenu(SimpleCursesWidget):
     _local_functions = {}
     _can_add_items = _can_delete_items = False
 
-    def __init__(self,
-                 Y, X,
-                 parent,
-                 window_type,
-                 items,
-                 title,
-                 color,
-                 color_title,
-                 color_border,
-                 color_active,
-                 color_cursor_selection,
-                 color_cursor_active,
-                 mode=-1,
-                 selection=0,
-                 active=-1,
-                 max_height=0,
-                 max_width=0,
-                 min_height=8,
-                 min_width=25,
-                 auto_adjust_width=False,
-                 full_window=False,
-                 outer_margin=2,
-                 margin=0,
-                 align=0,
-                 bordered=True,
-                 has_captions = False,
-                 color_captions = None,
-                 captions = None,
-                 display_count = False,
-                 right_arrow_selects=True,
-                 on_select_callback_function=None,
-                 on_activate_callback_function=None,
-                 on_up_callback_function=None,
-                 on_down_callback_function=None,
-                 on_left_callback_function=None,
-                 on_right_callback_function=None,
-                 global_functions=None,
-                 local_functions=None,
-                 can_add_items=False,
-                 add_item_function=None,
-                 validate_add_entry=None,
-                 entry_cannot_be_added_function=None,
-                 can_edit_items=False,
-                 on_edit_item_callback_function=None,
-                 validate_edit_entry=None,
-                 entry_cannot_be_edited_function=None,
-                 can_delete_items=False,
-                 validate_delete_entry=None,
-                 entry_cannot_be_deleted_function=None,
-                 external_keypress_function=None,
-                 items_changed_function=None
-                 ):
+    def __init__(
+        self,
+        Y, X,
+        parent,
+        window_type,
+        items,
+        title,
+        color,
+        color_title,
+        color_border,
+        color_active,
+        color_cursor_selection,
+        color_cursor_active,
+        mode=-1,
+        selection=0,
+        active=-1,
+        max_height=0,
+        max_width=0,
+        min_height=8,
+        min_width=25,
+        auto_adjust_width=False,
+        full_window=False,
+        outer_margin=2,
+        margin=0,
+        align=0,
+        bordered=True,
+        has_captions = False,
+        color_captions = None,
+        captions = None,
+        display_count = False,
+        right_arrow_selects=True,
+        on_select_callback_function=None,
+        on_activate_callback_function=None,
+        on_up_callback_function=None,
+        on_down_callback_function=None,
+        on_left_callback_function=None,
+        on_right_callback_function=None,
+        global_functions=None,
+        local_functions=None,
+        can_add_items=False,
+        add_item_function=None,
+        validate_add_entry=None,
+        entry_cannot_be_added_function=None,
+        can_edit_items=False,
+        on_edit_item_callback_function=None,
+        validate_edit_entry=None,
+        entry_cannot_be_edited_function=None,
+        can_delete_items=False,
+        validate_delete_entry=None,
+        entry_cannot_be_deleted_function=None,
+        external_keypress_function=None,
+    items_changed_function=None
+    ):
         ''' Initialize the widget.
 
             Parameters
@@ -2095,6 +2098,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
         self._maxY = self._max_height = max_height
         self._maxX = self._max_width = max_width
         # log_it('init maxX = {}\n'.format(self._maxX))
+        logger.error('init maxX = {}\n'.format(self._maxX))
+        logger.error('init maxY = {}\n'.format(self._maxY))
         self._minY = min_height
         self._minX = min_width
         self._auto_adjust_width = auto_adjust_width
@@ -2352,6 +2357,30 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._Y = aY + int((Y-self._maxY)/2)
             self._X = aX + int((X-self._maxX)/2)
 
+        elif self._window_type == self.CENTERED_HORIZONTAL:
+            # self._maxY = self._Y
+            # if self._maxY > Y - 2 * self._outer_margin:
+            #     self._maxY = Y - 2 * self._outer_margin
+
+            # logger.error('max = {}'.format(max(len(x) for x in self._items)))
+            self._maxX = items_max_X = max(cjklen(x) for x in self._items) + 2
+            if self._margin > 0:
+                self._maxX = self._maxX + 2 * self._margin
+            if self._display_count:
+                self._maxX = self._maxX + len(str(items_max_Y)) + 3
+            if self._maxX > X - 2 * self._outer_margin:
+                self._maxX = X - 2 * self._outer_margin
+
+            ''' make sure we have a big enough window '''
+            if self._maxY < 5:
+                self._maxY = 5
+            if self._maxX < 30:
+                self._maxX = 30
+
+            aY, aX = self._parent.getbegyx()
+            # self._Y = aY + int((Y-self._maxY)/2)
+            self._X = aX + int((X-self._maxX)/2) + 2
+
         else:
             aY, aX = self._parent.getbegyx()
 
@@ -2495,7 +2524,6 @@ class SimpleCursesMenu(SimpleCursesWidget):
         new_win = False
         if (not self._showed or parent != self._parent) \
                 and parent is not None:
-            # log_it('\n\nhere\n\n')
             # log_it('got new parent')
             self._parent = parent
             self._get_window()

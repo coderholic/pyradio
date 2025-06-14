@@ -4637,7 +4637,7 @@ class PyRadioLocalized():
                 items=items,
                 selection=index,
                 title=' Available Layouts ',
-                window_type=2,
+                window_type=3,
                 color=curses.color_pair(5),
                 color_title=curses.color_pair(9),
                 color_border=curses.color_pair(4),
@@ -4693,7 +4693,10 @@ class PyRadioLocalized():
         self._win.refresh()
         for i in range(len(self._widgets)):
             try:
-                self._widgets[i].show()
+                if i == 0:
+                    self._widgets[i].show(parent=self._parent)
+                else:
+                    self._widgets[i].show()
             except AttributeError:
                 pass
 

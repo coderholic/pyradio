@@ -2305,7 +2305,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     if letter:
                         # set_kb_letter(letter)  # Save the decoded letter
                         # Call keypress for single-byte shortcuts
-                        logger.error('Here 1')
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('I have a letter!')
                         if len(input_queue) == 0:  # Single-byte input
                             ret = self.keypress(c)  # Handle shortcut
                             if ret == -1:
@@ -2314,7 +2315,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                             # Set remaining_keys based on input_queue length for multi-byte input
                             remaining_keys = len(input_queue)
                     else:
-                        logger.error('Here 2')
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('I do NOT have a letter!')
                         # Single-byte character or invalid input
                         ret = self.keypress(c)  # Handle shortcut
                         if ret == -1:
@@ -8214,7 +8216,6 @@ _____"|f|" to see the |free| keys you can use.
                 ''' display line editor help '''
                 self._show_line_editor_help()
             elif ret == 3:
-                logger.error('\n\nHERE\n\n')
                 ''' show encoding '''
                 if self._station_editor._encoding == '' or \
                     self._station_editor._encoding == self._cnf.default_encoding:
