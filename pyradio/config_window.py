@@ -4684,19 +4684,17 @@ class PyRadioLocalized():
             self._b_ok.focused = self._b_cancel.focused = False
         else:
             self._h_buttons.calculate_buttons_position(parent=self._win)
-            try:
-                self._widgets[-1].move(self._widgets[1].Y + self._widgets[1].height - 2)
-                self._widgets[-2].move(self._widgets[1].Y + self._widgets[1].height - 2)
-            except:
-                pass
 
         self._win.refresh()
         for i in range(len(self._widgets)):
             try:
-                if i == 0:
-                    self._widgets[i].show(parent=self._parent)
-                else:
-                    self._widgets[i].show()
+                self._widgets[i].show(parent=self._parent)
+                if i == 1:
+                    try:
+                        self._widgets[-1].move(self._widgets[1].Y + self._widgets[1].height)
+                        self._widgets[-2].move(self._widgets[1].Y + self._widgets[1].height)
+                    except:
+                        pass
             except AttributeError:
                 pass
 

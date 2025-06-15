@@ -899,6 +899,7 @@ class LetterDisplay:
     _letter_width = 7
     _layout = "QWERTY"
     _provider = LetterProvider()
+    _left_pad = 0
 
     def __init__(self, parent, focused=False, start_line=0):
         self._win = None
@@ -996,7 +997,7 @@ class LetterDisplay:
         if self.editing:
             self._win.addstr(
                 0,
-                (self._num_letters_per_line * self._letter_width - self._provider.max_length) // 2 + len('Lowercase Letters  '),
+                self._left_pad + (self._num_letters_per_line * self._letter_width - self._provider.max_length) // 2 + len('Lowercase Letters  '),
                 '  [',
                 curses.color_pair(5))
             self._win.addstr(self.editing, curses.color_pair(2))
@@ -1004,7 +1005,7 @@ class LetterDisplay:
         else:
             self._win.addstr(
                 0,
-                (self._num_letters_per_line * self._letter_width - self._provider.max_length) // 2 + len('Lowercase Letters  '),
+                self._left_pad + (self._num_letters_per_line * self._letter_width - self._provider.max_length) // 2 + len('Lowercase Letters  '),
                 ' ' * (self._width - (self._num_letters_per_line * self._letter_width - self._provider.max_length) // 2 - len('Lowercase Letters  ') - 2),
                 curses.color_pair(5))
 
@@ -1019,6 +1020,9 @@ class LetterDisplay:
     def _calculate_num_of_letters_per_line(self):
         # self._num_letters_per_line = (self._width - 2) // self._letter_width
         self._num_letters_per_line = min(13, (self._width - 2) // self._letter_width)
+        self._left_pad = int (( self._width - 2 - (self._letter_width * self._num_letters_per_line) ) / 2)
+        if self._left_pad < 3:
+            self._left_pad = 0
 
     def _clear_parent(self, col):
         self._parent.bkgd(' ', curses.color_pair(col))
@@ -1035,6 +1039,8 @@ class LetterDisplay:
         self._win = self._parent.subwin(self._height, self._width, self._start_line, 1)
         self._update_navigation_tables()
         self._win.bkgd(' ', curses.color_pair(5))
+        self._win.erase()
+        self._win.refresh()
 
     def calculate_window_size(self):
         _, self._width = self._parent.getmaxyx()
@@ -1049,7 +1055,7 @@ class LetterDisplay:
         uppercase_lines = (26 + self._num_letters_per_line - 1) // self._num_letters_per_line
 
         # Total lines including captions and spacing
-        self._height = lowercase_lines + uppercase_lines + 6 # 3 display + 2 captions + 1 line of spacing
+        self._height = lowercase_lines + uppercase_lines + 4 # 3 display + 2 captions + 1 line of spacing
         return self._height
 
     def _update_navigation_tables(self):
@@ -1081,7 +1087,7 @@ class LetterDisplay:
         # logger.debug(f'{self.prev_table = }')
 
     def show(self, parent=None):
-        if parent:
+        if parent and parent != self._parent:
             self._create_win(parent)
 
         """Calculate the dynamic height required for the window."""
@@ -1093,11 +1099,11 @@ class LetterDisplay:
         highlight = curses.color_pair(4) if self._focused else curses.color_pair(5)
         self._win.addstr(
             start_line_offset,
-            (self._num_letters_per_line * self._letter_width - self._provider.max_length) // 2,
+            self._left_pad + (self._num_letters_per_line * self._letter_width - self._provider.max_length) // 2,
             "Lowercase Letters",
             highlight
         )
-        self._win.addstr(start_line_offset, 1, "Display:", curses.color_pair(5))
+        self._win.addstr(start_line_offset, 1 + self._left_pad, "Display:", curses.color_pair(5))
         if self._focused:
             if self._active_widget == 0:
                 self._win.addstr(' ' + self._layout + ' ', curses.color_pair(9))
@@ -1111,12 +1117,12 @@ class LetterDisplay:
             for j in range(self._num_letters_per_line):
                 index = i + j
                 if index < 26:
-                    self._draw_letter(index, i // self._num_letters_per_line + start_line_offset + 1, j * self._letter_width + 2)
+                    self._draw_letter(index, i // self._num_letters_per_line + start_line_offset + 1, self._left_pad + j * self._letter_width + 2)
 
         uppercase_start_line = start_line_offset + ((26 + self._num_letters_per_line - 1) // self._num_letters_per_line) + 2
         self._win.addstr(
             uppercase_start_line,
-             (self._num_letters_per_line * self._letter_width - self._provider.max_length) // 2,
+             self._left_pad + (self._num_letters_per_line * self._letter_width - self._provider.max_length) // 2,
             "Uppercase Letters",
             highlight
         )
@@ -1124,7 +1130,7 @@ class LetterDisplay:
             for j in range(self._num_letters_per_line):
                 index = i + j
                 if index < len(self._letters):
-                    self._draw_letter(index, (i - 26) // self._num_letters_per_line + uppercase_start_line + 1, j * self._letter_width + 2)
+                    self._draw_letter(index, (i - 26) // self._num_letters_per_line + uppercase_start_line + 1, self._left_pad + j * self._letter_width + 2)
 
         selected_letter = self._letters[self._selection]
 

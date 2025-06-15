@@ -1192,7 +1192,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
         try:
             curses.curs_set(0)
-            fixing #294
+            # fixing #294
             curses.noecho()
         except:
             pass
