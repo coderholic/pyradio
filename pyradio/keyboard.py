@@ -993,6 +993,14 @@ class LetterDisplay:
     def selection(self, value):
         self._selection = value
 
+    @property
+    def left_pad(self):
+        return self._left_pad
+
+    @property
+    def active_width(self):
+        return self._num_letters_per_line * self._letter_width
+
     def _show_editing(self):
         if self.editing:
             self._win.addstr(

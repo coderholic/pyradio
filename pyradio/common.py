@@ -976,10 +976,11 @@ class ProfileManager():
             return self.append_to_config(player_name, profile_name, 'volume=' + str(volume))
 
         else:
-            config_string = self._read_a_config_file(config_file)
+            config_list = self._read_a_config_file(config_file)
+            config_string = ''.join(config_list)
             # logger.error(f'{config_file = }')
-            # logger.error(f'before remove {config_string = }')
-            if '[' + profile_name + ']' in config_string:
+            # logger.error(f'before remove {config_list = }')
+            if any(line.strip() == '[' + profile_name + ']' for line in config_list):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('[{}] profile found!\n\n'.format(profile_name))
                 config_list = remove_consecutive_empty_lines(config_string.split('\n'))

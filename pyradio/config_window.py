@@ -4674,7 +4674,8 @@ class PyRadioLocalized():
                 color_focused=curses.color_pair(9),
                 color=curses.color_pair(4),
                 bracket_color=curses.color_pair(5),
-                parent=self._win
+                parent=self._win,
+                pad=2
             )
             self._h_buttons.calculate_buttons_position()
             self._widgets[2], self._widgets[3] = self._h_buttons.buttons
@@ -4684,8 +4685,8 @@ class PyRadioLocalized():
             self._b_ok.focused = self._b_cancel.focused = False
         else:
             self._h_buttons.calculate_buttons_position(parent=self._win)
-
         self._win.refresh()
+
         for i in range(len(self._widgets)):
             try:
                 self._widgets[i].show(parent=self._parent)
@@ -4697,6 +4698,20 @@ class PyRadioLocalized():
                         pass
             except AttributeError:
                 pass
+        # if parent_Y - (self._widgets[-1].Y + 1) > 5:
+        #     logger.error('I can print help')
+        #     Y = self._widgets[-1].Y + 2
+        #     X = self._widgets[1].left_pad + 2
+        #     self._win.addstr(Y, X, self._widgets[1].active_width * '─', curses.color_pair(12))
+        #     self._win.addstr(Y, self._widgets[1].left_pad + int((self._widgets[1].active_width - len(' Help '))/2), ' Help ', curses.color_pair(4))
+        #     Y += 1
+        #     self._win.addstr(Y, X, 'asdasd ads asd as', curses.color_pair(5))
+        #     self._win.refresh()
+        #     for i in range(len(self._widgets)):
+        #         try:
+        #             self._widgets[i].show()
+        #         except:
+        #             pass
 
     def _update_focus(self):
         for i in range(len(self._widgets)):
@@ -4852,8 +4867,6 @@ class PyRadioLocalized():
             if self.editing:
                 letter = get_kb_letter()
                 if letter:
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('setting letter "{}": "{}"'.format(self._widgets[1].selected_letter, letter))
                     self._widgets[1].set_letter(letter)
                     # self._files[self._widgets[0].selection][-1] = self._widgets[1].letters_dict
                     self._set_ok_enabled()

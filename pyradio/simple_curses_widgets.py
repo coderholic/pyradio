@@ -3468,7 +3468,8 @@ class SimpleCursesHorizontalPushButtons():
                  bracket_color, constant_width=0,
                  parent = None,
                  focused=0,
-                 left_or_right_margin = 2):
+                 left_or_right_margin = 2,
+                 pad = 0):
         '''Initialize the wizard.
 
         Parameters
@@ -3499,6 +3500,7 @@ class SimpleCursesHorizontalPushButtons():
         '''
 
         self._buttons = []
+        self._pad = pad
         for n in captions:
             self._buttons.append(SimpleCursesPushButton(
                 Y=Y, X=0,
@@ -3556,7 +3558,7 @@ class SimpleCursesHorizontalPushButtons():
             X = self._X
             Y = self._Y + offY
             for n in self._buttons:
-                n.mvwin(Y, X, show)
+                n.mvwin(Y, X + self._pad, show)
                 X += n.width + 2
 
     def calculate_buttons_position(self, parent=None, orientation='center'):
