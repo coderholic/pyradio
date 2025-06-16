@@ -5,7 +5,7 @@ import curses.ascii
 from time import sleep
 import logging
 from sys import platform
-from os import path, remove, sep, access, X_OK, environ
+from os import path, remove, sep, access, X_OK, environ, makedirs
 from string import punctuation as string_punctuation
 try:
     # python 3
@@ -54,57 +54,73 @@ class PyRadioOpenDir(SimpleCursesMenu):
         self._cnf = config
 
         if self._cnf.xdg_compliant:
-            self._items = (
+            self._items = [
                     'Config Directory',
                     'Data Directory',
                     'State Directory',
                     'Cache Directory',
                     'Code Directory',
                     'Recordings Directory    ',
-            )
-            self._dir = (
+            ]
+            self._dir = [
                     self._cnf.stations_dir,
                     self._cnf.data_dir,
                     self._cnf.state_dir,
                     self._cnf.cache_dir,
                     path.dirname(__file__),
                     self._cnf.recording_dir
-            )
-            self._ord = (
+            ]
+            self._ord = [
                 ord('1'),
                 ord('2'),
                 ord('3'),
                 ord('4'),
                 ord('5'),
                 ord('6')
-            )
+            ]
         else:
-            self._items = (
+            self._items = [
                     'Config Directory',
                     'Data Directory',
                     'Cache Directory',
                     'Code Directory',
                     'Recordings Directory        ',
-            )
-            self._dir = (
+            ]
+            self._dir = [
                     self._cnf.stations_dir,
                     self._cnf.data_dir,
                     self._cnf.cache_dir,
                     path.dirname(__file__),
                     self._cnf.recording_dir
-            )
-            self._ord = (
+            ]
+            self._ord = [
                 ord('1'),
                 ord('2'),
                 ord('3'),
                 ord('4'),
                 ord('5')
-            )
+            ]
 
         # if logger.isEnabledFor(logging.DEBUG):
         #     logger.debug('Open Directory Window')
         #     for n in self._dir:
         #         logger.debug('dir: "{}"'.format(n))
+
+        # logger.error(self._cnf.profile_manager.config_files)
+        for a_player in self._cnf.AVAILABLE_PLAYERS:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(a_player.PLAYER_DISPLAY_NAME + ' player found')
+            try:
+                base = path.dirname(self._cnf.profile_manager.config_files[a_player.PLAYER_NAME][0])
+                # logger.error(f'{base = }')
+                makedirs(base, exist_ok=True)
+                self._items.append(a_player.PLAYER_DISPLAY_NAME + ' Config Directory')
+                self._dir.append(base)
+                self._ord.append( ord(str(int(chr(self._ord[-1]))+1)) )
+            except KeyError:
+                if logger.isEnabledFor(logging.ERROR):
+                    logger.error(a_player.PLAYER_DISPLAY_NAME + ' not in config')
+                pass
 
         SimpleCursesMenu.__init__(
             self,
@@ -122,6 +138,7 @@ class PyRadioOpenDir(SimpleCursesMenu):
             color_cursor_active=curses.color_pair(9),
             window_type=SimpleCursesMenu.CENTERED,
             margin=1,
+            max_height=11,
             global_functions=global_functions
         )
     # self._group_selection_window.show(parent=self.bodyWin)

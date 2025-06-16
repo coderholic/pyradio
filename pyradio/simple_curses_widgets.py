@@ -2337,6 +2337,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._maxY = items_max_Y = len(self._items)
             if self._maxY > Y - 2 * self._outer_margin:
                 self._maxY = Y - 2 * self._outer_margin
+                # logger.error(f'1 {self._maxY = }')
 
             # logger.error('max = {}'.format(max(len(x) for x in self._items)))
             self._maxX = items_max_X = max(cjklen(x) for x in self._items) + 2
@@ -2352,6 +2353,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._maxY = 10
             if self._maxX < 30:
                 self._maxX = 30
+            # logger.error(f'2 {self._maxY = }')
 
             aY, aX = self._parent.getbegyx()
             self._Y = aY + int((Y-self._maxY)/2)

@@ -5,6 +5,14 @@
     * fixing a crash that would occur when trying to use the external
       player before playing a station for the first time
     * fixing #294 Keypresses shows up as characters in the Pyradio window
+    * the "Open Directory" window now inclues options to open the config
+      directories of the installed players
+    * fixing a bug occurring when saving the volume of a station; the 
+      profle would not be found, resulting in creating duplicate profile
+      entries.
+
+      Users are strongly encouraged to open the players' config file and
+      manually remove any duplicate profiles
 
 2025-05-19 s-n-g
     * version 0.9.3.11.13 - 0.9.3.13-beta13

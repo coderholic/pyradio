@@ -2639,6 +2639,7 @@ class Player():
 class MpvPlayer(Player):
     '''Implementation of Player object for MPV'''
 
+    PLAYER_DISPLAY_NAME = 'MPV'
     PLAYER_NAME = 'mpv'
     PLAYER_CMD = 'mpv'
     WIN = False
@@ -3174,6 +3175,7 @@ class MpvPlayer(Player):
 class MpPlayer(Player):
     '''Implementation of Player object for MPlayer'''
 
+    PLAYER_DISPLAY_NAME = 'MPlayer'
     PLAYER_NAME = 'mplayer'
     PLAYER_CMD = 'mplayer'
     WIN = False
@@ -3513,7 +3515,8 @@ class MpPlayer(Player):
 
 class VlcPlayer(Player):
     '''Implementation of Player for VLC'''
-    PLAYER_NAME = "vlc"
+    PLAYER_DISPLAY_NAME = 'VLC'
+    PLAYER_NAME = 'vlc'
     WIN = False
     if platform.startswith('win'):
         WIN = True

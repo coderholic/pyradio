@@ -8017,9 +8017,9 @@ _____"|f|" to see the |free| keys you can use.
 
                 elif ret == self.ws.LOCALIZED_CONFIG_MODE:
                     ''' keyboard localized window '''
-                    # self._print_not_implemented_yet()
-                    self.ws.operation_mode = self.ws.LOCALIZED_CONFIG_MODE
-                    self._localized_init_config()
+                    self._print_not_implemented_yet()
+                    # self.ws.operation_mode = self.ws.LOCALIZED_CONFIG_MODE
+                    # self._localized_init_config()
                     return
 
                 else:

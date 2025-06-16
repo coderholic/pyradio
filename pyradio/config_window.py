@@ -4705,7 +4705,7 @@ class PyRadioLocalized():
         #     self._win.addstr(Y, X, self._widgets[1].active_width * '─', curses.color_pair(12))
         #     self._win.addstr(Y, self._widgets[1].left_pad + int((self._widgets[1].active_width - len(' Help '))/2), ' Help ', curses.color_pair(4))
         #     Y += 1
-        #     self._win.addstr(Y, X, 'asdasd ads asd as', curses.color_pair(5))
+        #     self._win.addstr(Y, X, 'test text', curses.color_pair(5))
         #     self._win.refresh()
         #     for i in range(len(self._widgets)):
         #         try:
