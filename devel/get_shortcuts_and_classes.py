@@ -367,7 +367,8 @@ def extract_global_functions_keys(file_path):
         for line in file:
             stripped_line = line.strip()
             # Detect the start of `_global_functions`
-            if stripped_line.startswith("self._global_functions = {"):
+            if stripped_line.startswith("self._global_functions = {") or \
+                    stripped_line.startswith("self._global_functions_template = {"):
                 inside_global_functions = True
             elif inside_global_functions:
                 # Detect the end of `_global_functions`
@@ -386,7 +387,8 @@ def extract_global_functions_keys(file_path):
         for line in file:
             stripped_line = line.strip()
             # Detect the start of `_local_functions`
-            if stripped_line.startswith("self._local_functions = {"):
+            if stripped_line.startswith("self._local_functions = {") or \
+                    stripped_line.startswith("self._local_functions_template = {"):
                 inside_local_functions = True
             elif inside_local_functions:
                 # Detect the end of `_local_functions`
