@@ -1606,6 +1606,40 @@ so you can resolve the issue and try again.
 '''
 ),
 
+    'M_LOC_HELP': ('Localized Shortcuts Help',
+r'''This window allows you to define or edit a keyboard layout that maps
+your local language characters to their English equivalents.
+
+__The purpose of this mapping is to ensure that PyRadio responds
+correctly to keyboard shortcuts even when your system keyboard layout
+is not English. For example, if your layout is Greek and you press
+the key corresponding to '|α|', the program will recognize it as the
+English '|a|' and trigger the appropriate action.
+
+To create or edit a layout:
+
+__• Select an existing layout to edit (press |{edit}|), or choose "|Define
+____|New Layout|" (or press |{add}|) to create one.
+__• Use the input grid to map each English letter (lowercase and
+____uppercase) to the corresponding character in your local language.
+__• When you type a lowercase character, its uppercase version is
+____auto-filled, but you can change it manually.
+
+__The |Display| option affects only the visual ordering of keys in the
+table (e.g., QWERTY, AZERTY) to help you locate them according to
+your physical keyboard. It does |not| affect the functionality or
+saved layout.
+
+|Note:|
+__• If you attempt to edit a default layout provided with the
+____program, you will be asked to use a new name.
+__• Your personalized layout will take priority during runtime.
+
+To set the default layout to use, just press |space|, |Enter|, |{l}| or
+the |Left Arror| while you are in the "|Available Layouts|" field.
+'''.replace('{add}', chr(kbkey['add'])).replace('{edit}', chr(kbkey['edit'])).replace('{l}', chr(kbkey['l']))
+),
+
     'M_LOC_READ_ONLY': ('Read-Only Warning',
 r'''You are attempting to edit a |read-only| layout.
 

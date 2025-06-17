@@ -6802,7 +6802,7 @@ and |remove the file manually|.
                 self.refreshBody()
             elif ret == 2:
                 # display help
-                pass
+                self._open_simple_message_by_key('M_LOC_HELP')
             elif ret == 3:
                 # edit read only
                 self._open_simple_message_by_key('M_LOC_READ_ONLY')
@@ -8017,9 +8017,9 @@ _____"|f|" to see the |free| keys you can use.
 
                 elif ret == self.ws.LOCALIZED_CONFIG_MODE:
                     ''' keyboard localized window '''
-                    self._print_not_implemented_yet()
-                    # self.ws.operation_mode = self.ws.LOCALIZED_CONFIG_MODE
-                    # self._localized_init_config()
+                    # self._print_not_implemented_yet()
+                    self.ws.operation_mode = self.ws.LOCALIZED_CONFIG_MODE
+                    self._localized_init_config()
                     return
 
                 else:

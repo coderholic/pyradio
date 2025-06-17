@@ -4499,15 +4499,6 @@ class PyRadioLocalized():
 
         # Sort and return the list of filenames
         self._files = [['Define New Layout', None, False, None], ['No Layout', None, False, None]] + sorted(filenames)
-        # self._files.append(['Item 1', None, False, None])
-        # self._files.append(['Item 2', None, False, None])
-        # self._files.append(['Item 3', None, False, None])
-        # self._files.append(['Item 4', None, False, None])
-        # self._files.append(['Item 5', None, False, None])
-        # self._files.append(['Item 6', None, False, None])
-        # self._files.append(['Item 7', None, False, None])
-        # self._files.append(['Item 8', None, False, None])
-        # self._files.append(['Item 9', None, False, None])
 
     def _read_layout_file(self, index):
         ''' read a layout file from disk
@@ -4830,6 +4821,10 @@ class PyRadioLocalized():
         l_char = None
         self._needs_update = False
         self._set_ok_enabled()
+
+        if self._focus != 1 and (char == kbkey['?'] or \
+                 check_localized(char, (kbkey['?'], ))):
+            return 2
 
         if char in (curses.KEY_EXIT, 27, ):
             self._win.nodelay(True)
