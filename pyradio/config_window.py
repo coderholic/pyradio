@@ -4338,6 +4338,12 @@ class PyRadioKeyboardConfig():
 class PyRadioLocalized():
     """  Read and write localized data """
 
+    ''' widget 0 posistion
+        0: active item
+        0: selection
+    '''
+    _pos = (0, 0)
+
     def __init__(
             self,
             config,
@@ -4569,11 +4575,8 @@ class PyRadioLocalized():
         pass
 
     def show(self, parent=None, reset=False):
-        self._old_widget_0_selection = -1
         if reset:
             # logger.error('\n\nRESET\n\n')
-            # if self._widgets[0] is not None:
-            #     self._old_widget_0_selection = self.layout
             # self._widgets[0] = None
             # self._widgets[1] = None
             pass
@@ -4644,9 +4647,8 @@ class PyRadioLocalized():
             self._widgets[0].enabled = True
             self._widgets[0].focused = True
             self._widgets[0]._id = 0
-            if self._old_widget_0_selection > -1:
-                self.layout = self._old_widget_0_selection
 
+            logger.error('\n\nitems = {}\n\n'.format(items))
         # widget 1: letters
         if self._widgets[1] is None:
             self._widgets[1] = LetterDisplay(
@@ -4790,6 +4792,7 @@ class PyRadioLocalized():
         self._widgets[1].show()
 
     def _cancel_editing_mode(self, index):
+        logger.error('\n\nself.layout = {}\n\n'.format(self.layout))
         self._read_layout_file(self.layout)
         self._widgets[1].letters_dict = self.layout_dict
         self.editing = None
@@ -4797,6 +4800,7 @@ class PyRadioLocalized():
         # self.show()
         if logger.isEnabledFor(logging.INFO):
             logger.info('canceling editing mode')
+        self._widgets[0].active, self._widgets[0].selection = self._pos
 
     def _set_ok_enabled(self):
         if self.editing:
@@ -4840,14 +4844,19 @@ class PyRadioLocalized():
                 char == kbkey['add'] or \
                 check_localized(char, (kbkey['add'], ))
         ):
+            self._focus = 0
+            self._pos = (self._widgets[0].active, self._widgets[0].selection)
+            self._widgets[0].active = self._widgets[0].selection = 0
             self._base_layout_name = None
-            self._old_widget_0_selection = self.layout
+            self._widgets[0].keypress(10)
+            self._needs_update = True
 
         elif not self.editing and (
                 char == kbkey['edit'] or \
                 check_localized(char, (kbkey['edit'], ))
         ):
             if self.layout > 1:
+                self._pos = (self._widgets[0].active, self._widgets[0].selection)
                 self._base_layout_name = self.layout_name
                 self._edit_layout(self.layout, self.layout_name)
                 if self.layout_read_olny:

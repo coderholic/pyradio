@@ -726,21 +726,24 @@ def get_unicode_and_cjk_char(win, char):
     return out
 
 def add_l10n_to_functions_dict(functions):
-    local_functions = functions.copy()
-    logger.error(local_functions)
+    # logger.error(local_functions)
     local_keys = get_lkbkey()
-    new_keys = {}
-    for key, value in local_functions.items():
-        logger.error(f'{key}: {value}')
-        for lkey, lvalue in local_keys.items():
-            if ord(lvalue) == key:
-                logger.error(f'    {lkey}: {lvalue}')
-                logger.error('      {} {}'.format(ord(lvalue), value))
-                new_keys[ord(lvalue)] = value
-                break
-    logger.error('\n\n{}'.format(new_keys))
-    for n in new_keys:
-        local_functions[n] = new_keys[n]
+    if local_keys is None:
+        return functions
+    else:
+        local_functions = functions.copy()
+        new_keys = {}
+        for key, value in local_functions.items():
+            logger.error(f'{key}: {value}')
+            for lkey, lvalue in local_keys.items():
+                if ord(lvalue) == key:
+                    logger.error(f'    {lkey}: {lvalue}')
+                    logger.error('      {} {}'.format(ord(lvalue), value))
+                    new_keys[ord(lvalue)] = value
+                    break
+        logger.error('\n\n{}'.format(new_keys))
+        for n in new_keys:
+            local_functions[n] = new_keys[n]
     return local_functions
 
 def remove_l10n_from_global_functions(global_functions, shortcut_names):
