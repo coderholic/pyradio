@@ -252,7 +252,7 @@ be asked again, or any other key to cancel
 kb2strL(r'''
 The configuration has been modified!
 
-Press "|{s}|" to save it, or "|{q}|" or "|ESC|" to
+Press "|{y}|" to save it, or "|{q}|" or "|ESC|" to
 disregard the changes, or any other key to
  remain in the |Configuration Editor|.
 

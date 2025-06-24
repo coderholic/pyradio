@@ -17,7 +17,6 @@ except ImportError:
 
 from collections import deque
 from threading import Lock
-# from .simple_curses_widgets import SimpleCursesLineEdit
 
 logger = logging.getLogger(__name__)
 
@@ -1239,8 +1238,6 @@ class LetterDisplay:
 
         self.show()
         return 0
-
-
 
 
 

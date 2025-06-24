@@ -2388,6 +2388,7 @@ class RadioBrowserConfigWindow():
 
         elif char in (ord('\t'), 9, kbkey['tab']) or \
                 check_localized(char, (kbkey['tab'], )):
+            # EDIT: fixed for H, L
             self._focus_next()
             self.calculate_dirty()
 
@@ -3332,12 +3333,23 @@ class RadioBrowserSearchWindow():
         elif char in (curses.KEY_NPAGE, ) and self._focus != len(self._widgets) -3:
             self._jump_history_down()
 
-        elif char in (ord('\t'), 9, kbkey['tab']) or \
-                check_localized(char, (kbkey['tab'], )):
+        elif char in (ord('\t'), 9):
+            # EDIT: fixed for H, L
             self._focus_next()
 
-        elif char in (curses.KEY_BTAB, kbkey['stab'] ) or \
-                check_localized(char, (kbkey['stab'], )):
+        elif class_name != 'SimpleCursesLineEdit' and (
+                char in (kbkey['tab'], ) or \
+                check_localized(char, (kbkey['tab'], ))
+        ):
+            self._focus_next()
+
+        elif char in (curses.KEY_BTAB, ):
+            self._focus_previous()
+
+        elif class_name != 'SimpleCursesLineEdit' and (
+                char in (kbkey['stab'], ) or \
+                check_localized(char, (kbkey['stab'], ))
+        ):
             self._focus_previous()
 
         elif (char in (kbkey['pause'], curses.KEY_ENTER, ord('\n'), ord('\r')) or \

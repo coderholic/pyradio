@@ -4300,6 +4300,7 @@ class PyRadioKeyboardConfig():
                     self._focus_previous()
             elif char in (ord('\t'), 9, kbkey['tab']) or \
                     check_localized(char, (kbkey['tab'], )):
+                # EDIT: fixed for H, L
                 self._focus_next()
             elif char in (curses.KEY_BTAB, kbkey['stab']) or \
                     check_localized(char, (kbkey['stab'], )):
@@ -4574,7 +4575,9 @@ class PyRadioLocalized():
     def _make_selection_visible(self):
         pass
 
-    def show(self, parent=None, reset=False):
+    def show(self, parent=None, reset=False, erase=False):
+        if erase:
+            self._win.touchwin()
         if reset:
             # logger.error('\n\nRESET\n\n')
             # self._widgets[0] = None
@@ -4783,24 +4786,28 @@ class PyRadioLocalized():
                 logger.info(f'layout set as default: "{self.localize}"')
 
     def _layout_changed(self):
-        # if logger.isEnabledFor(logging.DEBUG):
-        #     logger.debug('Layout changed to: {}, "{}"'.format(self.layout, self._widgets[0].item))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Layout changed to: {}, "{}"'.format(self.layout, self._widgets[0].item))
         self._read_layout_file(self.layout)
         self._widgets[1].letters_dict = self.layout_dict
-        # if logger.isEnabledFor(logging.DEBUG):
-        #     logger.debug(f'letters loaded: {self.layout_dict}')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'letters loaded: {self.layout_dict}')
         self._widgets[1].show()
 
     def _cancel_editing_mode(self, index):
-        logger.error('\n\nself.layout = {}\n\n'.format(self.layout))
-        self._read_layout_file(self.layout)
-        self._widgets[1].letters_dict = self.layout_dict
+        # logger.error('\n\nself.layout = {}\n\n'.format(self.layout))
+        # self._read_layout_file(self.layout)
+        # self._widgets[1].letters_dict = self.layout_dict
         self.editing = None
         self._widgets[2].enabled = True
         # self.show()
         if logger.isEnabledFor(logging.INFO):
             logger.info('canceling editing mode')
         self._widgets[0].active, self._widgets[0].selection = self._pos
+        self._widgets[1].letters_dict = self._files[self._pos[1]][3]
+        self._widgets[1].show()
+        self._focus = 1
+        self._focus_previous()
 
     def _set_ok_enabled(self):
         if self.editing:
@@ -4814,13 +4821,13 @@ class PyRadioLocalized():
     def keypress(self, char):
         ''' PyRadioLocalized keypress
             Returns:
-                -4: Show free keys
-                -3: Conflict exists (in self.existing_conflict)
                 -2: Error saving file
                 -1: Cancel
                  0: Done
                  1: Continue
                  2: Display help
+                 3: Read only message
+                 4: Ask for language name
         '''
         l_char = None
         self._needs_update = False
@@ -4850,6 +4857,7 @@ class PyRadioLocalized():
             self._base_layout_name = None
             self._widgets[0].keypress(10)
             self._needs_update = True
+            self._layout_changed()
 
         elif not self.editing and (
                 char == kbkey['edit'] or \
@@ -4862,6 +4870,7 @@ class PyRadioLocalized():
                 if self.layout_read_olny:
                     return 3
         elif char in (9, ord('\t'), kbkey['tab']):
+            # EDIT: fixed for H, L
             self._focus_next()
         elif char in (curses.KEY_BTAB, kbkey['stab']):
             self._focus_previous()
@@ -4882,6 +4891,13 @@ class PyRadioLocalized():
         elif self._focus == 2:
             # ok button
             if char in (ord('\n'), ord('\r'), ord(' ')):
+                if self.editing:
+                    # ask for languade name
+                    if self._widgets[0].selection > 1:
+                        self.lang = self._widgets[0].selected_item()
+                    else:
+                        self.lang = None
+                    return 4
                 return 1
         elif self._focus == 3:
             # cancel button

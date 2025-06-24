@@ -1004,12 +1004,23 @@ class PyRadioEditor():
                 self.new_station = None
                 self._reset_editors_modes()
                 ret = -1
-            elif char in (ord('\t'), 9, curses.KEY_DOWN, kbkey['tab']) or \
-                    check_localized(char, (kbkey['tab'], )):
+            elif char in (ord('\t'), 9, curses.KEY_DOWN):
+                # EDIT: fixed for H, L
                 self.focus +=1
                 self._reset_editors_escape_mode()
-            elif char in (curses.KEY_UP, curses.KEY_BTAB, kbkey['stab']) or \
-                    check_localized(char, (kbkey['stab'], )):
+            elif self._focus > 3 and (
+                    char in (kbkey['tab'], ) or \
+                    check_localized(char, (kbkey['tab'], ))
+            ):
+                self.focus +=1
+                self._reset_editors_escape_mode()
+            elif char in (curses.KEY_UP, curses.KEY_BTAB):
+                self.focus -= 1
+                self._reset_editors_escape_mode()
+            elif self._focus > 3 and (
+                    char in (kbkey['stab'], ) or \
+                    check_localized(char, (kbkey['stab'], ))
+            ):
                 self.focus -= 1
                 self._reset_editors_escape_mode()
             elif (char in (ord(' '), kbkey['l'], kbkey['h'], curses.KEY_LEFT, curses.KEY_RIGHT) or
@@ -1568,11 +1579,19 @@ class PyRadioRecordingDir():
                           self._focus == 1:
                 # check boxes
                 self._widgets[self._focus].toggle_checked()
-            elif char in (ord('\t'), 9, curses.KEY_DOWN, kbkey['tab']) or \
-                    check_localized(char, (kbkey['tab'], )):
+            elif char in (ord('\t'), 9, curses.KEY_DOWN):
+                # EDIT: fixed H, L
                 self._focus_next()
-            elif char in (curses.KEY_UP, curses.KEY_BTAB, kbkey['stab']) or \
-                    check_localized(char, (kbkey['stab'], )):
+            elif self._focus > 0 and (
+                char in (kbkey['tab'], ) or \
+                check_localized(char, (kbkey['tab'], ))
+            ):
+                self._focus_next()
+            elif char in (curses.KEY_UP, curses.KEY_BTAB):
+                self._focus_previous()
+            elif self._focus > 0 and (char in (kbkey['stab'], ) or \
+                    check_localized(char, (kbkey['stab'], ))
+            ):
                 self._focus_previous()
             elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
                 if self._focus == 0:
@@ -2009,11 +2028,20 @@ class PyRadioResourceOpener():
                     check_localized(char, (kbkey['?'], ))) and \
                     self.focus > 0:
                 return 4, None
-            elif char in (ord('\t'), 9, curses.KEY_DOWN, kbkey['tab']) or \
-                    check_localized(char, (kbkey['tab'], )):
+            elif char in (ord('\t'), 9, curses.KEY_DOWN):
+                # EDIT: fixed H, L
                 self._focus_next()
-            elif char in (curses.KEY_UP, curses.KEY_BTAB, kbkey['stab']) or \
-                    check_localized(char, (kbkey['stab'], )):
+            elif self._focus > 0 and (
+                    char in (kbkey['tab'], ) or \
+                    check_localized(char, (kbkey['tab'], ))
+                  ):
+                self._focus_next()
+            elif char in (curses.KEY_UP, curses.KEY_BTAB):
+                self._focus_previous()
+            elif self._focus > 0 and (
+                    char in (kbkey['stab'], ) or \
+                    check_localized(char, (kbkey['stab'], ))
+            ):
                 self._focus_previous()
             elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
                 if self._focus == 0:
@@ -2539,7 +2567,7 @@ class PyRadioRenameFile():
                 return -1, '', '', False, False, False
             return 0, '', '', False, False, False
         else:
-            logger.error('self.focus = {}'.format(self.focus))
+            # logger.error('self.focus = {}'.format(self.focus))
             if (char in (curses.KEY_EXIT, 27, kbkey['q']) or \
                     check_localized(char, (kbkey['q'], ))) and \
                     self.focus > 0:
@@ -2552,12 +2580,21 @@ class PyRadioRenameFile():
                 self._widgets[self._focus].toggle_checked()
                 if self._focus == 1 and self._opened_from_editor:
                     self._widgets[2].enabled = self._widgets[1].checked
-                logger.error('len widgets = {}'.format(len(self._widgets)))
-            elif char in (ord('\t'), 9, curses.KEY_DOWN, kbkey['tab']) or \
-                    check_localized(char, (kbkey['tab'], )):
+                # logger.error('len widgets = {}'.format(len(self._widgets)))
+            elif char in (ord('\t'), 9, curses.KEY_DOWN):
+                # EDIT: fixed for H, L
                 self._focus_next()
-            elif char in (curses.KEY_UP, curses.KEY_BTAB, kbkey['stab']) or \
-                    check_localized(char, (kbkey['stab'], )):
+            elif self._focus > 0 and (
+                    char in (kbkey['tab'], ) or \
+                    check_localized(char, (kbkey['tab'], ))
+            ):
+                self._focus_next()
+            elif char in (curses.KEY_UP, curses.KEY_BTAB):
+                self._focus_previous()
+            elif self._focus > 0 and (
+                    char in (kbkey['stab'], ) or \
+                    check_localized(char, (kbkey['stab'], ))
+            ):
                 self._focus_previous()
             elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
                 if self._focus == 0:
@@ -3132,3 +3169,149 @@ class PyRadioServerWindow():
             return -1
 
         return 1
+
+
+class GetLocalizedLang():
+
+    _lang = None
+    _filename = None
+    _parent = None
+    _Y = _X = 0
+    _width = 45
+    _height = 7
+    _win = None
+    _widgets = [None, None, None]
+    _h_buttons = None
+    _focus = 0
+
+    def __init__(
+        self,
+        config,
+        parent,
+        lang=None,
+        global_functions=None
+    ):
+        self._cnf = config
+        self._parent = parent
+        self._lang = lang
+        self._global_functions = global_functions
+
+    @property
+    def language(self):
+        return self._lang
+
+    @property
+    def filename(self):
+        return self._filename
+
+    def _create_win(self, parent=None):
+        if self._win is not None:
+            self._win.clear()
+        if parent is not None \
+                and parent != self._parent:
+            self._parent = parent
+        # self._clear_parent(2)
+        parentY, parentX = self._parent.getmaxyx()
+        self._X = int((parentX - self._width) / 2) + 2
+        self._win = curses.newwin(
+            self._height, self._width, 9, self._X
+        )
+        self._win.bkgd(' ', curses.color_pair(3))
+        self._win.erase()
+        self._win.box()
+        title = ' Layout Name '
+        self._win.addstr(0, int((self._width - len(title)) / 2), title, curses.color_pair(11))
+        self._win.refresh()
+
+    def show(self, parent=None):
+        if parent != self._parent:
+            self._create_win(parent)
+        if self._win is None:
+            self._create_win()
+        self._win.addstr(1, 2, 'Insert Layout name:', curses.color_pair(10))
+        self._win.refresh()
+
+        if self._widgets[0] is None:
+            self._widgets[0] = SimpleCursesLineEdit(
+                parent=self._win,
+                width=self._width-4,
+                begin_y=11,
+                begin_x=self._X+2,
+                boxed=False,
+                has_history=False,
+                caption='',
+                box_color=curses.color_pair(9),
+                caption_color=curses.color_pair(4),
+                edit_color=curses.color_pair(9),
+                cursor_color=curses.color_pair(8),
+                unfocused_color=curses.color_pair(10))
+            self._widgets[0].bracket = False
+            # self._widgets[0]._mode_changed = self._show_alternative_modes
+            self._widgets[0].use_paste_mode = False
+            self._widgets[0].set_global_functions(self._global_functions)
+            self._widgets[0].focused = True
+            self._widgets[0].string = self._lang if self._lang else 'nothing'
+            self._widgets[0].keep_restore_data()
+        else:
+            self._widgets[0].keep_restore_data()
+            self._widgets[0].move(self._win, 11, self._X+2)
+
+        if self._h_buttons is None:
+            self._h_buttons = SimpleCursesHorizontalPushButtons(
+                    Y=4, captions=('OK', 'Cancel'),
+                    color_focused=curses.color_pair(9),
+                    color=curses.color_pair(11),
+                    bracket_color=curses.color_pair(10),
+                    parent=self._win)
+            self._h_buttons.calculate_buttons_position()
+            self._widgets[1], self._widgets[2] = self._h_buttons.buttons
+            self._widgets[1].focused = self._widgets[2].focused = False
+        else:
+            self._h_buttons.calculate_buttons_position(parent=self._win)
+        self._widgets[1].id = 1
+        self._widgets[2].id = 2
+
+        # # for n in (0, 1):
+        # #     self._widgets[n].show()
+        # self._widgets[1].show()
+        # self._widgets[2].show()
+        self._widgets[0].show(self._win)
+        self._h_buttons.show()
+
+    def _uppdate_focus(self, move):
+        if move:
+            self._focus +=1
+            if self._focus > 2:
+                self._focus = 0
+        else:
+            self._focus -= 1
+            if self._focus < 0:
+                self._focus = 2
+        for n in range(0, 3):
+            self._widgets[n].focused = False
+        self._widgets[self._focus].focused = True
+        self._widgets[1].show()
+        self._widgets[2].show()
+
+    def keypress(self, char):
+        ''' GetLocalizedLang keypress
+
+            Returns:
+                -1:  cancel
+                 0:  ok, name in self._lang
+                 1:  continue
+        '''
+        if char in (ord('\t'), 9, curses.KEY_DOWN):
+            self._uppdate_focus(True)
+        elif char in (curses.KEY_UP, curses.KEY_BTAB):
+            self._uppdate_focus(False)
+        elif char in (curses.KEY_EXIT, 27):
+            return -1
+        elif (char == kbkey['q'] or \
+                check_localized(char, (kbkey['q'], ))) and \
+                self._focus > 0:
+            return -1
+        elif self._focus == 0:
+            self._widgets[0].keypress(self._win, char)
+        return 1
+

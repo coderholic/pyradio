@@ -4761,8 +4761,7 @@ class SimpleCursesLineEdit():
             if self._use_paste_mode and self._paste_mode:
                 self._disable_paste_mode = True
 
-        elif char in (9, kbkey['tab'] ) or \
-                check_localized(char, (kbkey['tab'], )):
+        elif char in (9, ):
             ''' TAB '''
             self._backslash_pressed = False
             if self._key_tab_function_handler is not None:
@@ -4776,8 +4775,7 @@ class SimpleCursesLineEdit():
             if self._use_paste_mode and self._paste_mode:
                 self._disable_paste_mode = True
 
-        elif char in (curses.KEY_BTAB, kbkey['stab'] ) or \
-                check_localized(char, (kbkey['stab'], )):
+        elif char in (curses.KEY_BTAB,):
             ''' Shift-TAB '''
             self._backslash_pressed = False
             if self._key_stab_function_handler is not None:

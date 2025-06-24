@@ -39,7 +39,8 @@ from .config_window import *
 from .log import Log, fix_chars
 from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, \
     PyRadioConnectionType, PyRadioServerWindow, PyRadioBuffering, \
-    PyRadioRecordingDir, PyRadioResourceOpener, PyRadioOpenDir
+    PyRadioRecordingDir, PyRadioResourceOpener, PyRadioOpenDir, \
+    GetLocalizedLang
 from .themes import *
 from .cjkwrap import cjklen, cjkcenter, cjkslices, is_wide
 from . import player
@@ -457,6 +458,7 @@ class PyRadio():
 
     # localized keys window
     _keyboard_localized_win  = None
+    _keyboard_loc_get_name  = None
 
     try:
         handled_signals = {
@@ -684,6 +686,7 @@ class PyRadio():
             self.ws.DELETE_PLAYLIST_MODE: self._ask_to_delete_playlist,
             self.ws.KEYBOARD_CONFIG_MODE: self._redisplay_keyboard_config,
             self.ws.LOCALIZED_CONFIG_MODE: self._redisplay_localized_config,
+            self.ws.LOCALIZED_GET_LANG_NAME: self._redisplay_loc_get_name,
             self.ws.EDIT_PROFILE_MODE: self._redisplay_profile_editor,
             self.ws.ASK_TO_SAVE_CONFIG: self._show_confirm_cancel_config_changes,
         }
@@ -5768,6 +5771,17 @@ and |remove the file manually|.
     def _redisplay_localized_config(self):
         self._keyboard_localized_win.show(parent=self.outerBodyWin, reset=True)
 
+    def _redisplay_loc_get_name(self, set_mode=False):
+        if self._keyboard_loc_get_name is None:
+            self._keyboard_loc_get_name = GetLocalizedLang(
+                config=self._cnf,
+                parent=self.outerBodyWin,
+                lang=self._keyboard_localized_win.lang
+            )
+        if set_mode:
+            self.ws.operation_mode = self.ws.LOCALIZED_GET_LANG_NAME
+        self._keyboard_loc_get_name.show(parent=self.outerBodyWin)
+
     def _browser_server_selection(self):
         if self._cnf._online_browser:
             self._cnf._online_browser.select_servers()
@@ -6806,6 +6820,18 @@ and |remove the file manually|.
             elif ret == 3:
                 # edit read only
                 self._open_simple_message_by_key('M_LOC_READ_ONLY')
+            elif ret == 4:
+                # ask for language name
+                self._redisplay_loc_get_name(set_mode=True)
+            return
+
+        if self.ws.operation_mode == self.ws.LOCALIZED_GET_LANG_NAME:
+            ret = self._keyboard_loc_get_name.keypress(char)
+            if ret == -1:
+                self._keyboard_loc_get_name = None
+                self.ws.close_window()
+                self._keyboard_localized_win.editing = False
+                self._keyboard_localized_win.show(erase=True)
             return
 
         if self.ws.operation_mode == self.ws.KEYBOARD_CONFIG_MODE and \
@@ -7714,8 +7740,8 @@ _____"|f|" to see the |free| keys you can use.
             self.refreshBody()
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_CONFIG:
-            if char in (kbkey['s'], ) or \
-                    check_localized(char, (kbkey['s'], )):
+            if char in (kbkey['y'], ) or \
+                    check_localized(char, (kbkey['y'], )):
                 self.ws.close_window()
                 # logger.error('==== save config accepted, go_save()')
                 # self._config_win.go_save()
@@ -8017,9 +8043,9 @@ _____"|f|" to see the |free| keys you can use.
 
                 elif ret == self.ws.LOCALIZED_CONFIG_MODE:
                     ''' keyboard localized window '''
-                    self._print_not_implemented_yet()
-                    # self.ws.operation_mode = self.ws.LOCALIZED_CONFIG_MODE
-                    # self._localized_init_config()
+                    # self._print_not_implemented_yet()
+                    self.ws.operation_mode = self.ws.LOCALIZED_CONFIG_MODE
+                    self._localized_init_config()
                     return
 
                 else:
@@ -8239,8 +8265,10 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE):
+            logger.error('\n\nchar = {}\n\n'.format(char))
             '''  Rename playlist '''
             ret, self.old_filename, self.new_filename, copy, open_file, pl_create = self._rename_playlist_dialog.keypress(char)
+            logger.error(f'{ret = }')
             # logger.error('DE\n\n **** ps.p {}\n\n'.format(self._cnf._ps._p))
             if ret not in (0, 2):
                 self._rename_playlist_dialog = None
