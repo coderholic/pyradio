@@ -3178,11 +3178,11 @@ class GetLocalizedLang():
     _parent = None
     _Y = _X = 0
     _width = 45
-    _height = 7
+    _height = 6
     _win = None
-    _widgets = [None, None, None]
     _h_buttons = None
     _focus = 0
+    force_redraw = False
 
     def __init__(
         self,
@@ -3191,6 +3191,7 @@ class GetLocalizedLang():
         lang=None,
         global_functions=None
     ):
+        self._widgets = [None, None, None]
         self._cnf = config
         self._parent = parent
         self._lang = lang
@@ -3204,6 +3205,14 @@ class GetLocalizedLang():
     def filename(self):
         return self._filename
 
+    def _force_redraw(self):
+        self._win.bkgd(' ', curses.color_pair(3))
+        self._win.erase()
+        self._win.box()
+        title = ' Layout Name '
+        self._win.addstr(0, int((self._width - len(title)) / 2), title, curses.color_pair(11))
+        self._win.refresh()
+
     def _create_win(self, parent=None):
         if self._win is not None:
             self._win.clear()
@@ -3216,18 +3225,16 @@ class GetLocalizedLang():
         self._win = curses.newwin(
             self._height, self._width, 9, self._X
         )
-        self._win.bkgd(' ', curses.color_pair(3))
-        self._win.erase()
-        self._win.box()
-        title = ' Layout Name '
-        self._win.addstr(0, int((self._width - len(title)) / 2), title, curses.color_pair(11))
-        self._win.refresh()
+        self._force_redraw()
 
     def show(self, parent=None):
         if parent != self._parent:
             self._create_win(parent)
         if self._win is None:
             self._create_win()
+        elif self.force_redraw:
+            self.force_redraw = False
+            self._force_redraw()
         self._win.addstr(1, 2, 'Insert Layout name:', curses.color_pair(10))
         self._win.refresh()
 
@@ -3250,7 +3257,7 @@ class GetLocalizedLang():
             self._widgets[0].use_paste_mode = False
             self._widgets[0].set_global_functions(self._global_functions)
             self._widgets[0].focused = True
-            self._widgets[0].string = self._lang if self._lang else 'nothing'
+            self._widgets[0].string = self._lang if self._lang else ''
             self._widgets[0].keep_restore_data()
         else:
             self._widgets[0].keep_restore_data()
@@ -3301,17 +3308,34 @@ class GetLocalizedLang():
                  0:  ok, name in self._lang
                  1:  continue
         '''
-        if char in (ord('\t'), 9, curses.KEY_DOWN):
+        l_char = None
+        if self._focus > 0 and (
+            char in self._global_functions or \
+            (l_char := check_localized(char, self._global_functions.keys(), True)) is not None
+        ):
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
+        elif char in (ord('\t'), 9, curses.KEY_DOWN):
             self._uppdate_focus(True)
         elif char in (curses.KEY_UP, curses.KEY_BTAB):
             self._uppdate_focus(False)
         elif char in (curses.KEY_EXIT, 27):
             return -1
-        elif (char == kbkey['q'] or \
-                check_localized(char, (kbkey['q'], ))) and \
-                self._focus > 0:
-            return -1
         elif self._focus == 0:
-            self._widgets[0].keypress(self._win, char)
+            ret =self._widgets[0].keypress(self._win, char)
+            if ret == 2:
+                return 2
+        elif self._focus == 1:
+            # ok
+            if char in (ord('\n'), ord('\r'), ord(' ')) and \
+                    self._widgets[0].string.strip():
+                self._lang = self._widgets[0].string.strip()
+                self._filename = path.join(self._cnf.data_dir, 'lkb_' + self._lang + '.json')
+                return 0
+        elif self._focus == 2:
+            # candel
+            if char in (ord('\n'), ord('\r'), ord(' ')):
+                return -1
         return 1
 

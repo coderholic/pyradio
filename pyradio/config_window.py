@@ -4373,14 +4373,7 @@ class PyRadioLocalized():
         self.localize = self._cnf.localize
         self._orig_localize = self.localize
         # self._read_keys()
-        self._read_file_list()
-        items=[x[0] for x in self._files]
-        if self.localize in items:
-            index = items.index(self.localize)
-        else:
-            index = 1
-        self._read_layout_file(index)
-        logger.error(f'===> {self._files = }')
+        self._update_layouts()
 
     @property
     def layout(self):
@@ -4482,8 +4475,8 @@ class PyRadioLocalized():
         '''
         # Directories to scan for JSON files
         directories = [
-            self._cnf.data_dir,
-            path.join(path.dirname(__file__), 'keyboard')
+            path.join(path.dirname(__file__), 'keyboard'),
+            self._cnf.data_dir
         ]
 
         # Collect all JSON filenames
@@ -4495,7 +4488,7 @@ class PyRadioLocalized():
                             file.endswith('.json'):
                         dict_filenames[file[4:-5]] = (
                             path.join(directory, file),
-                            True if i == 0 else False
+                            True if i == 1 else False
                         )
 
         # Prepare the list of filenames with metadata
@@ -4651,7 +4644,6 @@ class PyRadioLocalized():
             self._widgets[0].focused = True
             self._widgets[0]._id = 0
 
-            logger.error('\n\nitems = {}\n\n'.format(items))
         # widget 1: letters
         if self._widgets[1] is None:
             self._widgets[1] = LetterDisplay(
@@ -4818,6 +4810,61 @@ class PyRadioLocalized():
         else:
             self._widgets[2].enabled = True
 
+    def save_file(self, a_file):
+        # try to save file
+        try:
+            with open(a_file, 'w', encoding='utf-8') as f:
+                json.dump(
+                    self._widgets[1].letters_dict,
+                    f, ensure_ascii=False
+                    )
+        except Exception as e:
+            logger.error(f'error writing lkb file: {e}')
+            return e
+        return None
+
+    def _update_layouts(self):
+        ''' Read layout files found on disk
+            Also place the content of the default layout
+                in self._files[index][-1]
+
+            Returns:
+                index : the index in the following list of the
+                        default layout saved in config. If that
+                        does not exist, 1 is returned (No Layout
+                        in the visible list)
+                items : list of found layout files
+        '''
+        self._read_file_list()
+        items=[x[0] for x in self._files]
+        if self.localize in items:
+            index = items.index(self.localize)
+        else:
+            index = 1
+        self._read_layout_file(index)
+        return index, items
+
+    def update_layouts(self, layout_name=None):
+        ''' Update layouts and read default file from outside the class
+
+            Parameters
+                layout_name : the name of the layout that will be selected
+                              after the list is populated. If it does not exist
+                              the default one will be selected instead
+        '''
+        self._widgets[0].active, items = self._update_layouts()
+        self._widgets[0].set_items(items)
+        layout_to_find = layout_name if layout_name else self.localize
+        self._widgets[0].selection = self._widgets[0].items.index(layout_to_find)
+
+    def set_focus(self, val):
+        if val == 0:
+            self._focus = 1
+            self._focus_previous()
+        else:
+            self._focus = val - 1
+            self._focus_next()
+
     def keypress(self, char):
         ''' PyRadioLocalized keypress
             Returns:
@@ -4837,7 +4884,12 @@ class PyRadioLocalized():
                  check_localized(char, (kbkey['?'], ))):
             return 2
 
-        if char in (curses.KEY_EXIT, 27, ):
+        if char in self._global_functions or \
+            (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
+        elif char in (curses.KEY_EXIT, 27, ):
             self._win.nodelay(True)
             char = self._win.getch()
             self._win.nodelay(False)
@@ -4859,7 +4911,7 @@ class PyRadioLocalized():
             self._needs_update = True
             self._layout_changed()
 
-        elif not self.editing and (
+        elif not self.editing and self._focus == 0 and (
                 char == kbkey['edit'] or \
                 check_localized(char, (kbkey['edit'], ))
         ):
@@ -4867,8 +4919,8 @@ class PyRadioLocalized():
                 self._pos = (self._widgets[0].active, self._widgets[0].selection)
                 self._base_layout_name = self.layout_name
                 self._edit_layout(self.layout, self.layout_name)
-                if self.layout_read_olny:
-                    return 3
+                # if self.layout_read_olny:
+                return 3
         elif char in (9, ord('\t'), kbkey['tab']):
             # EDIT: fixed for H, L
             self._focus_next()
@@ -4890,6 +4942,9 @@ class PyRadioLocalized():
                 self._widgets[self._focus].keypress(char)
         elif self._focus == 2:
             # ok button
+            logger.error(f'{self.layout = }')
+            logger.error(f'{self.localize = }')
+            logger.error('\n\n{}\n\n'.format(self._widgets[1].letters_dict))
             if char in (ord('\n'), ord('\r'), ord(' ')):
                 if self.editing:
                     # ask for languade name
@@ -4898,6 +4953,8 @@ class PyRadioLocalized():
                     else:
                         self.lang = None
                     return 4
+                else:
+                    pass
                 return 1
         elif self._focus == 3:
             # cancel button
@@ -4906,11 +4963,6 @@ class PyRadioLocalized():
             else:
                 if char in (ord('\n'), ord('\r'), ord(' ')):
                     return -1
-        elif char in self._global_functions or \
-            (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
-            if l_char is None:
-                l_char = char
-            self._global_functions[l_char]()
 
         # Centralized UI update
         if self._needs_update:

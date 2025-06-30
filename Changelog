@@ -1,4 +1,7 @@
 2025-06-18 s-n-g
+    * version 0.9.3.11.16 - 0.9.3.12-beta16
+
+2025-06-18 s-n-g
     * version 0.9.3.11.15 - 0.9.3.12-beta15
     * fixing #295 - crash when no localized keys present
 

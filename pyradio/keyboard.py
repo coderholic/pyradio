@@ -952,9 +952,10 @@ class LetterDisplay:
 
     @letters_dict.setter
     def letters_dict(self, val):
-        self._letters_dict = {}
-        for n in val:
-            self._letters_dict[n] = val[n]
+        if val:
+            self._letters_dict = {}
+            for n in val:
+                self._letters_dict[n] = val[n]
 
     @property
     def editing(self):
@@ -1071,7 +1072,7 @@ class LetterDisplay:
     def _update_navigation_tables(self):
         """Calculate the dynamic height required for the window."""
         self._calculate_num_of_letters_per_line()
-        logger.debug(f'{self._num_letters_per_line = }')
+        # logger.debug(f'{self._num_letters_per_line = }')
 
         lowercase_indices = list(range(26))
         uppercase_indices = list(range(26, len(self._letters)))

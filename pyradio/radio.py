@@ -5776,7 +5776,8 @@ and |remove the file manually|.
             self._keyboard_loc_get_name = GetLocalizedLang(
                 config=self._cnf,
                 parent=self.outerBodyWin,
-                lang=self._keyboard_localized_win.lang
+                lang=self._keyboard_localized_win.lang,
+                global_functions=self._global_functions
             )
         if set_mode:
             self.ws.operation_mode = self.ws.LOCALIZED_GET_LANG_NAME
@@ -6807,6 +6808,7 @@ and |remove the file manually|.
 
         if self.ws.operation_mode == self.ws.LOCALIZED_CONFIG_MODE:
             ret = self._keyboard_localized_win.keypress(char)
+            # logger.error(f'self.ws.LOCALIZED_CONFIG_MODE {ret = }')
             if ret in (-1, 0):
                 if ret == 0:
                     # new shortcuts saved
@@ -6827,11 +6829,44 @@ and |remove the file manually|.
 
         if self.ws.operation_mode == self.ws.LOCALIZED_GET_LANG_NAME:
             ret = self._keyboard_loc_get_name.keypress(char)
+            # logger.error(f'self.ws.LOCALIZED_GET_LANG_NAME {ret = }')
             if ret == -1:
+                # cancel
                 self._keyboard_loc_get_name = None
                 self.ws.close_window()
-                self._keyboard_localized_win.editing = False
                 self._keyboard_localized_win.show(erase=True)
+            elif ret == 0:
+                # ok, save file
+                ret = self._keyboard_localized_win.save_file(
+                    self._keyboard_loc_get_name.filename
+                )
+                # logger.error(f'{self._keyboard_loc_get_name.language = }')
+                # logger.error(f'{self._keyboard_loc_get_name.filename = }')
+                # logger.error(f'{self._keyboard_localized_win._widgets[1].letters_dict = }')
+                if ret is None:
+                    # update layout list
+                    self._keyboard_localized_win.editing = False
+                    self._keyboard_localized_win.update_layouts(self._keyboard_loc_get_name.language)
+                    self._keyboard_loc_get_name = None
+                    self.ws.close_window()
+                    self._keyboard_localized_win.show(erase=True)
+                    self._show_notification_with_delay(
+                        txt='____File successfully saved___',
+                            mode_to_set=self.ws.operation_mode,
+                            callback_function=self._keyboard_localized_win.show)
+                    self._keyboard_localized_win.set_focus(0)
+                    self._keyboard_localized_win.show(erase=True)
+                else:
+                    self._show_notification_with_delay(
+                        txt='____Failed to save file!____\n__Reason: |{}|__'.format(ret),
+                            mode_to_set=self.ws.operation_mode,
+                            callback_function=self._keyboard_localized_win.show)
+                    self._keyboard_loc_get_name.force_redraw = True
+                    self._keyboard_loc_get_name.show()
+
+            elif ret == 2:
+                self._keyboard_loc_get_name.force_redraw = True
+                self._open_message_win_by_key('H_LINE_EDITOR')
             return
 
         if self.ws.operation_mode == self.ws.KEYBOARD_CONFIG_MODE and \

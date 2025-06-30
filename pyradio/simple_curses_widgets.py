@@ -2098,8 +2098,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
         self._maxY = self._max_height = max_height
         self._maxX = self._max_width = max_width
         # log_it('init maxX = {}\n'.format(self._maxX))
-        logger.error('init maxX = {}\n'.format(self._maxX))
-        logger.error('init maxY = {}\n'.format(self._maxY))
+        # logger.error('init maxX = {}\n'.format(self._maxX))
+        # logger.error('init maxY = {}\n'.format(self._maxY))
         self._minY = min_height
         self._minX = min_width
         self._auto_adjust_width = auto_adjust_width
