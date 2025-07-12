@@ -132,19 +132,17 @@ def calculate_fifteenth_color(colors, an_amount, inhibit_if_color15_exists=True)
     return tuple(y)
 
 class PyRadioTheme():
-    _colors = {}
-    _active_colors = {}
-    _read_colors = {}
-    _temp_colors = {}
 
     applied_theme_name = 'dark'
-
-    config_dir = ''
-
 
     def __init__(self, cnf):
         self._cnf = cnf
         # self._terminals_colors = tuple(curses.color_content(x) for x in range(0, 16))
+        self._colors = {}
+        self._active_colors = {}
+        self._read_colors = {}
+        self._temp_colors = {}
+        self.config_dir = ''
 
     def __del__(self):
         self._colors = None
@@ -607,9 +605,6 @@ class PyRadioTheme():
 
 class PyRadioThemeReadWrite():
 
-    _tmeme_name = ''
-    _theme_path = ''
-
     _param_to_color_id = {
         'Extra Func': (12, ),
         'PyRadio URL': (11, ),
@@ -625,6 +620,8 @@ class PyRadioThemeReadWrite():
 
     def __init__(self, config):
         self._cnf = config
+        self._tmeme_name = ''
+        self._theme_path = ''
 
     def read_theme(self, theme_name, theme_path):
         """ Opens a theme file and return its contents in self._temp_colors
@@ -899,36 +896,6 @@ transparency        0
 class PyRadioThemeSelector():
     """ Theme Selector Window """
     TITLE = ' Available Themes '
-    parent = None
-    _win = None
-    _width = _height = X = Y = 0
-    _selection = _start_pos = _items = 0
-
-    _themes = []
-    _title_ids = []
-
-    ''' display the 2 internal 8 color themes '''
-    _items = 2
-
-    ''' window background '''
-    _bg_pair = 0
-
-    ''' page up, down
-        when zero it will be _items / 2
-    '''
-    _page_jump = 0
-
-    jumpnr = ''
-
-    log = None
-    _log_file = ''
-
-    _max_title_width = 20
-    _categories = 1
-
-    _showed = False
-
-    changed_from_config = False
 
     def __init__(self, parent, config, theme,
                  applied_theme_name,
@@ -937,6 +904,36 @@ class PyRadioThemeSelector():
                  applied_color_pair, normal_color_pair,
                  cursor_color_pair, applied_cursor_color_pair,
                  is_watched, a_lock, log_file=''):
+        self._win = None
+        self._width = _height = X = Y = 0
+        self._selection = _start_pos = _items = 0
+
+        self._themes = []
+        self._title_ids = []
+
+        ''' display the 2 internal 8 color themes '''
+        self._items = 2
+
+        ''' window background '''
+        self._bg_pair = 0
+
+        ''' page up, down
+            when zero it will be _items / 2
+        '''
+        self._page_jump = 0
+
+        self.jumpnr = ''
+
+        self.log = None
+        self._log_file = ''
+
+        self._max_title_width = 20
+        self._categories = 1
+
+        self._showed = False
+
+        self.changed_from_config = False
+
         self.parent = parent
         self._cnf = config
         self._theme = theme
@@ -1501,11 +1498,6 @@ class PyRadioThemeSelector():
 
 
 class PyRadioThemeEditor():
-
-    theme_name = theme_path = ''
-    editing = False
-    _cnf = None
-    maxX = maxY = 0
 
     def __init__(self, theme_name, theme_path, editing, config, maxX, maxY):
         self.theme_name = theme_name

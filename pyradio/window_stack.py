@@ -252,9 +252,9 @@ class Window_Stack_Constants():
 
 
 class Window_Stack(Window_Stack_Constants):
-    _dq = deque()
 
     def __init__(self):
+        self._dq = deque()
         super(Window_Stack_Constants, self).__init__()
         self._dq.append([self.NORMAL_MODE, self.NORMAL_MODE])
 

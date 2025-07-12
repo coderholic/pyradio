@@ -17,18 +17,18 @@ logger = logging.getLogger(__name__)
 
 class MKVToolNix:
 
-    HAS_MKVTOOLNIX = False
-
-    mkvmerge = None
-    mkvinfo = None
-    mkvpropedit = None
-
-    _srt = False
-    _chapters = False
-    _cover_file = None
-    _remove_file = []
-
     def __init__(self, config):
+        self.HAS_MKVTOOLNIX = False
+
+        self.mkvmerge = None
+        self.mkvinfo = None
+        self.mkvpropedit = None
+
+        self._srt = False
+        self._chapters = False
+        self._cover_file = None
+        self._remove_file = []
+
         self._cnf = config
         self._look_for_mkvtoolnix()
 

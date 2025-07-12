@@ -308,50 +308,53 @@ class PyRadioSearch(SimpleCursesLineEdit):
 class PyRadioEditor():
     """ PyRadio stations editor """
 
-    _stations = []
-    _selection = _pos_to_insert = maxY = maxX = 0
-
-    _win = None
-    _parent_win = None
-    _old_parent_win = None
-
-    """ Adding a new station or editing an existing one """
-    _adding = True
-
-    """ Indicates that we append to the stations' list
-        Only valid when adding = True """
-    _append = False
-
-    _focus = 0
-    _old_focus = 0
-
-    _line_editor = [None, None, None, None]
-    _line_editor_yx = ((3, 2), (6, 2), (6, 2), (6,2))
-
-    _item = []
-    _orig_item = []
-
-    _dirty = False
-
-    # 0: show too small message
-    # 1: show widgets only
-    # 2: show half help
-    # 3: show all
-    _too_small = False
-
-    _global_functions = {}
-
     def __init__(self,
                  stations,
                  selection,
                  parent,
                  config_encoding,
+                 available_players,
                  global_functions=None,
                  adding=True):
+        self._stations = []
+        self._selection = 0
+        self._pos_to_insert = 0
+        self.maxY = 0
+        self.maxX = 0
+
+        _win = None
+        _parent_win = None
+        _old_parent_win = None
+
+        """ Adding a new station or editing an existing one """
+        self._adding = True
+
+        """ Indicates that we append to the stations' list
+            Only valid when adding = True """
+        self._append = False
+
+        self._focus = 0
+        self._old_focus = 0
+
+        self._line_editor = [None, None, None, None]
+        self._line_editor_yx = ((3, 2), (6, 2), (6, 2), (6,2))
+
+        self._item = []
+        self._orig_item = []
+
+        self._dirty = False
+
+        # 0: show too small message
+        # 1: show widgets only
+        # 2: show half help
+        # 3: show all
+        self._too_small = False
+
         self._stations = stations
         self._selection = selection
         self._pos_to_insert = selection + 1
         self._parent_win = parent
+        self._old_parent_win = None
         self._encoding = config_encoding
         self._old_encoding = config_encoding
         self._orig_encoding = config_encoding
@@ -368,6 +371,11 @@ class PyRadioEditor():
         self._orig_profile = ''
         self._http = 'False'
         self._orig_http = 'False'
+        self._orig_player = ''
+        self._player = ''
+        self._players = ['default'] + [x.PLAYER_NAME for x in available_players]
+        logger.error(f'{self._players = }')
+        self._player_id = 0
 
     @property
     def append(self):
@@ -396,11 +404,11 @@ class PyRadioEditor():
 
     @focus.setter
     def focus(self, val):
-        if val in range(0, 11):
+        if val in range(0, 12):
             self._focus = val
         else:
             if val < 0:
-                self._focus = 10
+                self._focus = 11
             else:
                 self._focus = 0
         self.show()
@@ -472,6 +480,14 @@ class PyRadioEditor():
         self._orig_http = self._http
         self._item = item
         self._orig_item = item
+        self._player = self._orig_player = item[Station.player]
+        self._get_player_id()
+
+    def _get_player_id(self):
+        try:
+            self._player_id = self._players.index(self._player)
+        except ValueError:
+            self._player_id = 0
 
     def _add_editors(self):
         for ed in range(0, 4):
@@ -757,7 +773,7 @@ class PyRadioEditor():
 
     def _show_extra_fields(self):
         if self._item:
-            col = [5, 5, 5, 5, 5]
+            col = [5, 5, 5, 5, 5, 5]
             sid = 4
             # if self._focus == sid:
             #     col = 9
@@ -782,11 +798,14 @@ class PyRadioEditor():
             self._win.addstr((self.maxX - x -1) * ' ', curses.color_pair(5))
             self._win.addstr(8, 2, 'Force http:', curses.color_pair(4))
             self._win.addstr(' ' + self._http + ' ', curses.color_pair(col[3]))
+            self._win.addstr('    Player:', curses.color_pair(4))
+            disp_player = self._player if self._player else 'default'
+            self._win.addstr(' ' + f'{disp_player:<7}' + ' ', curses.color_pair(col[4]))
             self._win.addstr('    Profile:', curses.color_pair(4))
             disp_profile = self._profile
             if disp_profile == '':
                 disp_profile = 'Default'
-            self._win.addstr(' ' + disp_profile + ' ', curses.color_pair(col[4]))
+            self._win.addstr(' ' + disp_profile + ' ', curses.color_pair(col[5]))
             # delete to end of line
             y, x = self._win.getyx()
             self._win.addstr((self.maxX - x -1) * ' ', curses.color_pair(5))
@@ -871,7 +890,7 @@ class PyRadioEditor():
         # self._refresh()
 
     def _show_buttons(self):
-        sid = 9
+        sid = 10
         if self._focus == sid:
             col = 9
         else:
@@ -880,7 +899,7 @@ class PyRadioEditor():
         self._win.addstr(' OK ', curses.color_pair(col))
         self._win.addstr(']  [', curses.color_pair(4))
 
-        sid = 10
+        sid = 11
         if self._focus == sid:
             col = 9
         else:
@@ -922,7 +941,8 @@ class PyRadioEditor():
                     buff,
                     '1' if self._http.strip() == 'True' else '',
                     '' if self._volume == '-1' else self._volume,
-                    self._line_editor[3].string.strip()
+                    self._line_editor[3].string.strip(),
+                    self._player
                 ]
             max_value = max(station.value for station in Station)
             while len(self.new_station) <= max_value:
@@ -972,6 +992,26 @@ class PyRadioEditor():
             if not self._is_valid_url(ref_url):
                 return -6
         return 1
+
+    def _get_next_player(self):
+        logger.error(f'{self._player_id = }')
+        self._player_id += 1
+        if self._player_id >= len(self._players):
+            self._player_id = 0
+        logger.error(f'{self._player_id = }')
+        self._player = self._players[self._player_id]
+        self._show_extra_fields()
+        self._win.refresh()
+
+    def _get_previous_player(self):
+        logger.error(f'{self._player_id = }')
+        self._player_id -= 1
+        if self._player_id < 0:
+            self._player_id = len(self._players) - 1
+        logger.error(f'{self._player_id = }')
+        self._player = self._players[self._player_id]
+        self._show_extra_fields()
+        self._win.refresh()
 
     def keypress(self, char):
         """ PyRadioEditor keypress
@@ -1028,13 +1068,27 @@ class PyRadioEditor():
                     self._focus == 6:
                 # encoding
                 return 3
+            elif char in (ord(' '), ord('\n'), ord('\r')) and \
+                    self._focus == 8:
+                # next player
+                self._get_next_player()
+            elif (char in (kbkey['l'],   curses.KEY_RIGHT) or \
+                  check_localized(char, (kbkey['l'], ))) and \
+                    self._focus == 8:
+                # next player
+                self._get_next_player()
+            elif (char in (kbkey['h'], curses.KEY_LEFT) or \
+                    check_localized(char, (kbkey['h'], ))) and \
+                    self._focus == 8:
+                # previous player
+                self._get_previous_player()
             elif (char in (ord(' '), kbkey['l'], kbkey['h'], curses.KEY_LEFT, curses.KEY_RIGHT) or
                     check_localized(char, (kbkey['l'], kbkey['h']))) and \
-                    self._focus == 8:
+                    self._focus == 9:
                 # profile
                 return 5
             elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')) \
-                    and self._focus != 8:
+                    and self._focus != 9:
                 if self._focus == 0:
                     # Name
                     self.focus += 1
@@ -1061,13 +1115,16 @@ class PyRadioEditor():
                     # force http
                     self.focus += 1
                 elif self._focus == 8:
-                    # profile
+                    # player
                     self.focus += 1
                 elif self._focus == 9:
+                    # profile
+                    self.focus += 1
+                elif self._focus == 10:
                     # ok
                     ret = self._return_station()
                     self.focus = abs(ret + 2)
-                elif self._focus == 10:
+                elif self._focus == 11:
                     # cancel
                     self.new_station = None
                     ret = -1
@@ -1147,6 +1204,9 @@ class PyRadioEditor():
                 self._show_extra_fields()
                 self._win.refresh()
             elif self._focus == 8 and \
+                    char in (curses.KEY_ENTER, ord('\n'), ord('\r'), ord(' ')):
+                pass
+            elif self._focus == 9 and \
                     char in (curses.KEY_ENTER, ord('\n'), ord('\r'), ord(' ')):
                 ret = 5
 
@@ -2659,14 +2719,15 @@ class PyRadioBuffering():
     _help_text = ' Help '
     _note_text = ' Note '
     _max_lines = 12
-    _cache_data  = None
-    _big_step = _min = 5
+    _big_step =5
+    _min = 5
     _max = 60
 
     def __init__(self,
                  buffering,
                  parent,
                  global_functions=None):
+        self._cache_data  = None
         logger.error('\n\nbuffering = {}\n\n'.format(buffering))
         self._buffering = buffering
         if '@' in buffering:
@@ -2959,10 +3020,6 @@ class PyRadioConnectionType():
 
 class PyRadioServerWindow():
 
-    _win = _editor = None
-
-    _nips = None
-
     def __init__(
             self,
             parent,
@@ -3173,16 +3230,8 @@ class PyRadioServerWindow():
 
 class GetLocalizedLang():
 
-    _lang = None
-    _filename = None
-    _parent = None
-    _Y = _X = 0
     _width = 45
     _height = 6
-    _win = None
-    _h_buttons = None
-    _focus = 0
-    force_redraw = False
 
     def __init__(
         self,
@@ -3191,6 +3240,15 @@ class GetLocalizedLang():
         lang=None,
         global_functions=None
     ):
+        self._Y = 0
+        self._X = 0
+        self._lang = None
+        self._filename = None
+        self._parent = None
+        self._h_buttons = None
+        self._win = None
+        self._focus = 0
+        self.force_redraw = False
         self._widgets = [None, None, None]
         self._cnf = config
         self._parent = parent

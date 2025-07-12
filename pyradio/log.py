@@ -231,49 +231,10 @@ class PyRadioTimer:
         with self.lock:  # Acquire lock before reading
             return self.current_time if self._timer_thread and self._timer_thread.is_alive() else ""
 
-
 class Log():
     ''' Log class that outputs text to a curses screen '''
-
-    old_window_title = None
     locked = False
-
-    msg = suffix = counter = cursesScreen = None
-
-    last_written_string = ''
-    last_written_suffix = ''
-    display_help_message = False
-
-    asked_to_stop = False
-
-    _color_change = False
-
-    lock = threading.Lock()
-
-    _player_stopped = True
-
-    _show_status_updates = _station_sent = False
-
-    _startup_title = None
-
-    icon_path = None
-
-    _notification_command = None
-    _desktop_notification_thread = None
-    _stop_desktop_notification_thread = False
-    _desktop_notification_lock = threading.Lock()
-    _song_title_lock = threading.Lock()
-    _song_title = ''
-    _station_that_is_playing_now = ''
-    _last = ['', '']
-
-    _add_chapter_function = None
-
-    can_display_help_msg = None
-
-    _check_start_time = None
-
-    _stop_using_buffering_msg = False
+    old_window_title = None
 
     def __init__(self,
                  config,
@@ -281,6 +242,48 @@ class Log():
                  active_player_id,
                  get_web_song_title
                  ):
+
+        self.msg = None
+        self.suffix = None
+        self.counter = None
+        self.cursesScreen = None
+
+        self.last_written_string = ''
+        self.last_written_suffix = ''
+        self.display_help_message = False
+
+        self.asked_to_stop = False
+
+        self._color_change = False
+
+        self.lock = threading.Lock()
+
+        self._player_stopped = True
+
+        self._show_status_updates = False
+        self._station_sent = False
+
+        self._startup_title = None
+
+        self.icon_path = None
+
+        self._notification_command = None
+        self._desktop_notification_thread = None
+        self._stop_desktop_notification_thread = False
+        self._desktop_notification_lock = threading.Lock()
+        self._song_title_lock = threading.Lock()
+        self._song_title = ''
+        self._station_that_is_playing_now = ''
+        self._last = ['', '']
+
+        self._add_chapter_function = None
+
+        self.can_display_help_msg = None
+
+        self._check_start_time = None
+
+        self._stop_using_buffering_msg = False
+
         if config.check_playlist:
             self._check_start_time = datetime.datetime.now()
             logger.error(f'{self._check_start_time = }')

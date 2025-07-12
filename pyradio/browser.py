@@ -120,17 +120,9 @@ class PyRadioStationsBrowser():
     '''
 
     BROWSER_NAME = 'PyRadioStationsBrowser'
-    BASE_URL = ''
-    AUTO_SAVE_CONFIG = False
-    TITLE = ''
-    _parent = _outer_parent = None
-    _raw_stations = []
-    _last_search = None
     _internal_header_height = 0
     _url_timeout = 3
     _search_timeout = 3
-    _vote_callback = None
-    _sort = _search_win = None
 
     # Normally outer boddy (holding box, header, internal header) is
     # 2 chars wider that the internal body (holding the stations)
@@ -161,6 +153,14 @@ class PyRadioStationsBrowser():
             Search parameters to be used instead of the default.
         '''
 
+        self.BASE_URL = ''
+        self.AUTO_SAVE_CONFIG = False
+        self.TITLE = ''
+        self._parent = _outer_parent = None
+        self._raw_stations = []
+        self._last_search = None
+        self._vote_callback = None
+        self._sort = _search_win = None
         self._page = 0
 
     def __del__(self):
@@ -300,20 +300,6 @@ class RadioBrowser(PyRadioStationsBrowser):
         'Content-Type': 'application/json'
     }
 
-    # the output format to use based on window width
-    # Default value: -1
-    # Possible values: 0..5
-    # Look at format_station_line() for info
-    _output_format = -1
-    _info_len = []
-    _info_name_len = 0
-
-    _raw_stations = []
-    _internal_header_height = 1
-
-    _search_history = []
-    _search_history_index = -1
-
     _columns_width = {
             'votes': 7,
             'clickcount': 7,
@@ -325,25 +311,6 @@ class RadioBrowser(PyRadioStationsBrowser):
             'codec': 5
             }
 
-    _server_selection_window = None
-    _dns_info = None
-
-    search_by = _old_search_by = None
-
-    _default_max_number_of_results = 100
-    _default_server = ''
-    _default_ping_count = 1
-    _default_ping_timeout = 1
-    _do_ping = False
-
-    keyboard_handler = None
-
-    ''' _search_history_index            - current item in this browser  -  corresponds to search window _history_id
-        _default_search_history_index    - autoload item in this browser  -  corresponds to search window _default_history_id
-    '''
-    _search_history_index = 1
-    _default_search_history_index = 1
-
     def __init__(self,
                  config,
                  session=None,
@@ -351,6 +318,40 @@ class RadioBrowser(PyRadioStationsBrowser):
                  search_return_function=None,
                  message_function=None,
                  cannot_delete_function=None):
+        # the output format to use based on window width
+        # Default value: -1
+        # Possible values: 0..5
+        # Look at format_station_line() for info
+        self._output_format = -1
+        self._info_len = []
+        self._info_name_len = 0
+
+        self._raw_stations = []
+        self._internal_header_height = 1
+
+        self._search_history = []
+        self._search_history_index = -1
+
+        self._server_selection_window = None
+        self._dns_info = None
+
+        self.search_by = None
+        self._old_search_by = None
+
+        self._default_max_number_of_results = 100
+        self._default_server = ''
+        self._default_ping_count = 1
+        self._default_ping_timeout = 1
+        self._do_ping = False
+
+        self.keyboard_handler = None
+
+        ''' _search_history_index            - current item in this browser  -  corresponds to search window _history_id
+            _default_search_history_index    - autoload item in this browser  -  corresponds to search window _default_history_id
+        '''
+        self._search_history_index = 1
+        self._default_search_history_index = 1
+
         '''
             When first_search is True, it means that we are opening
             the browser. If empty result is returned by the first
@@ -1582,16 +1583,16 @@ class RadioBrowserConfig():
             ping_count   : int (number of ping packages)
             terms        : list of dicts (the actual search paremeters)
     '''
-    auto_save = False
-    server = ''
-    default = 1
-    limit = '100'
-    terms = []
-    dirty = False
-    ping_count = 1
-    ping_timeout = 1
 
     def __init__(self, stations_dir, data_dir):
+        self.auto_save = False
+        self.server = ''
+        self.default = 1
+        self.limit = '100'
+        self.terms = []
+        self.dirty = False
+        self.ping_count = 1
+        self.ping_timeout = 1
         self.config_file = path.join(stations_dir, 'radio-browser.conf')
         self.search_terms_file = path.join(data_dir, 'radio-browser-search-terms')
 
@@ -1792,21 +1793,6 @@ class RadioBrowserConfigWindow():
 
     BROWSER_NAME = 'RadioBrowser'
     TITLE = ' RadioBrowser Config '
-    _win = _widgets = _config = _history = _dns = None
-    _server_selection_window = None
-    _default_history_id = _focus = 0
-    _auto_save =_showed = False
-    invalid = False
-    _widgets = None
-    _params = []
-    _focused = 0
-    _token = ''
-    server_window_from_config = False
-
-    keyboard_handler = None
-
-    enable_servers = True
-
     _wleft = (2, 5, 7, 8, 10, 14)
 
     def __init__(
@@ -1834,6 +1820,24 @@ class RadioBrowserConfigWindow():
                 1: current in browser window
                 2: from config
         '''
+        self._win = None
+        self._widgets = None
+        self._config = None
+        self._history = None
+        self._dns = None
+        self._server_selection_window = None
+        self._default_history_id = 0
+        self._focus = 0
+        self._auto_save =_showed = False
+        self.invalid = False
+        self._widgets = None
+        self._params = []
+        self._focused = 0
+        self._token = ''
+        self.server_window_from_config = False
+        self.keyboard_handler = None
+        self.enable_servers = True
+
         self._cannot_delete_function = cannot_delete_function
         if len(self._params) == 0:
             for _ in range(0, 3):
@@ -2465,8 +2469,6 @@ class RadioBrowserSearchWindow():
 
     NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION = 3
 
-    _cnf = None
-
     search_by_items = (
         'Votes',
         'Clicks',
@@ -2516,25 +2518,8 @@ class RadioBrowserSearchWindow():
     _middle_column = (7, 8, 13, 14, 18)
     _right_column = (2, 3, 9, 10, 16, 19)
 
-    ''' line editors ids '''
-    _line_editor_id = []
-
-    ''' columns widget ids '''
-    _columns_id = []
-
     ''' checkboxes ids to enable/disable columns widgets '''
     _checkbox_to_enable_widgets = (0, 4)
-
-    _default_limit = 100
-
-    ''' _selected_history_id  : current id in search window
-        _history_id           : current id (active in browser)    - corresponds in browser to _search_history_index
-        _default_history_id   : default id (autoload for service) - corresponds in browser to _default_search_history_index
-    '''
-    _history_id = _selected_history_id = _default_history_id = 1
-    _history = []
-
-    _global_functions = {}
 
     def __init__(self,
                  parent,
@@ -2544,6 +2529,21 @@ class RadioBrowserSearchWindow():
                  init=False,
                  global_functions=None
                  ):
+        ''' line editors ids '''
+        self._line_editor_id = []
+
+        ''' columns widget ids '''
+        self._columns_id = []
+
+        self._default_limit = 100
+
+        ''' _selected_history_id  : current id in search window
+            _history_id           : current id (active in browser)    - corresponds in browser to _search_history_index
+            _default_history_id   : default id (autoload for service) - corresponds in browser to _default_search_history_index
+        '''
+        self._history_id = _selected_history_id = _default_history_id = 1
+        self._history = []
+
         self._parent = parent
         self._cnf = config
         self._reset_page_function = reset_page_function
@@ -3656,14 +3656,13 @@ class RadioBrowserData():
             tags, countries(and states), codecs, languages
     '''
 
-    _data = {}
-    _connection_error = False
-    _lock = threading.Lock()
-    _stop_thread = False
-    _timeout = 3
-    data_thread = None
-
     def __init__(self, url, pyradio_info, timeout=3):
+        self._data = {}
+        self._connection_error = False
+        self._lock = threading.Lock()
+        self._stop_thread = False
+        self._timeout = 3
+        self.data_thread = None
         self._url = url
         self._timeout = timeout
         self._pyradio_info = pyradio_info
@@ -3847,11 +3846,9 @@ class RadioBrowserDns():
         gives the list of server names directly
         without reverse dns lookups '''
 
-    _urls = None
-    _countries = None
-
     def __init__(self):
-        pass
+        self._urls = None
+        self._countries = None
 
     @property
     def connected(self):
@@ -3966,9 +3963,8 @@ class RadioBrowserSort():
         'Tag': 'tags'
     })
 
-    _too_small = False
-
     def __init__(self, parent, search_by=None):
+        self._too_small = False
         self._parent = parent
         self.active = self.selection = 0
         if search_by:
@@ -4137,8 +4133,6 @@ class RadioBrowserServersSelect():
 
     TITLE = ' Server Selection '
 
-    return_value = 1
-
     def __init__(self,
                  parent,
                  servers,
@@ -4156,6 +4150,7 @@ class RadioBrowserServersSelect():
             If Y is None
               keypress returns 0 and self.server is set
         '''
+        self.return_value = 1
         self._too_small = False
         self._parent = parent
         self.items = list(servers)
@@ -4301,10 +4296,8 @@ class RadioBrowserServers():
         another widget
     '''
 
-    _too_small = False
-    from_config = False
-
     def __init__(self, parent, servers, current_server, show_random=False, global_functions=None):
+        self._too_small = False
         self._parent = parent
         self.items = list(servers)
         self.server = current_server
@@ -4458,17 +4451,6 @@ class RadioBrowserServers():
         return 1
 
 class RadioBrowserStationsStack():
-    pass_first_item_func=None
-    pass_last_item_func=None
-    no_items_func=None
-    play_from_history = False
-
-    ''' items: list of lists
-        [
-            [name, station name, station id],
-            ...
-        ]
-    '''
 
     def __init__(
         self,
@@ -4477,8 +4459,15 @@ class RadioBrowserStationsStack():
         pass_last_item_function=None,
         no_items_function=None
     ):
+        ''' items: list of lists
+            [
+                [name, station name, station id],
+                ...
+            ]
+        '''
         self.items = []
         self.item = -1
+        self.play_from_history = False
 
         ######## DEBUG START
         #self.items = [
@@ -4597,20 +4586,6 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
             change default item
             delete item
     """
-    parent = None
-    _win = None
-    _width = _height = _X = _Y = 0
-    _selection = 1
-
-    _items = []
-
-    _page_jump = 5
-
-    log = None
-    _log_file = ''
-
-    _showed = False
-
     def __init__(
         self,
         parent,
@@ -4630,6 +4605,23 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
                 change default term
                 delete terms
         """
+        self.parent = None
+        self._win = None
+        self._width = 0
+        self._height = 0
+        self._X = 0
+        self._Y = 0
+        self._selection = 1
+
+        self._items = []
+
+        self._page_jump = 5
+
+        self.log = None
+        self._log_file = ''
+
+        self._showed = False
+
         self._too_small = False
         self._ungetch = 0
         if log_file:

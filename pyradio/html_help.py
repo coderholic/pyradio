@@ -75,18 +75,18 @@ def is_graphical_environment_running():
 
 class HtmlHelp():
 
-    _files = ('index.html', 'radio-browser.html')
-
-    if platform.lower().startswith('win'):
-        _paths = (path.join(path.expandvars('%APPDATA%'), 'pyradio', 'help'), )
-    else:
-        _paths = (
-            '/usr/share/doc/pyradio',
-            '/usr/local/share/doc/pyradio',
-            path.join(path.expanduser('~'), '.local/share/doc/pyradio')
-        )
-
     def __init__(self):
+        self._files = ('index.html', 'radio-browser.html')
+
+        if platform.lower().startswith('win'):
+            self._paths = (path.join(path.expandvars('%APPDATA%'), 'pyradio', 'help'), )
+        else:
+            self._paths = (
+                '/usr/share/doc/pyradio',
+                '/usr/local/share/doc/pyradio',
+                path.join(path.expanduser('~'), '.local/share/doc/pyradio')
+            )
+
         for a_path in self._paths:
             if path.exists(a_path):
                 self._path = a_path

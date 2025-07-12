@@ -63,13 +63,10 @@ class DisabledWidget():
 
     To be used in complex dialogs
     '''
-    Y = X = width = height = 0
-    _enabled = False
-    focus = focused = False
-    checked = False
-
     def __init__(self):
-        pass
+        self.Y = self.X = self.width = self.height = 0
+        self._enabled = False
+        self.focus = self.focused = self.checked = False
 
     @property
     def enabled(self):
@@ -87,12 +84,22 @@ class DisabledWidget():
 
 class SimpleCursesWidget():
     '''An abstract widget class '''
-    _win = _parent = _callback_function = None
-    _focused = _showed = False
-    _enabled = True
-    _Y = _X = _width = _color_focused = _color = 0
-    _height = 1
-    _caption = _display_caption = ''
+
+    def __init__(self):
+        self._win = None
+        self._parent = None
+        self._callback_function = None
+        self._focused = False
+        self._showed = False
+        self._enabled = True
+        self._Y = 0
+        self._X = 0
+        self._width = 0
+        self._height = 1
+        self._color_focused = 0
+        self._color = 0
+        self._caption = ''
+        self._display_caption = ''
 
     @property
     def window(self):
@@ -330,6 +337,7 @@ class SimpleCursesString(SimpleCursesWidget):
         full_selection=None,
         max_selection=0
     ):
+        super().__init__()
         self._Y = Y
         self._X = X
         self._win = self._parent = parent
@@ -496,6 +504,7 @@ class SimpleCursesDate(SimpleCursesWidget):
         previous_widget_func=None,
         global_functions=None
     ):
+        super().__init__()
         # logger.error('   ---===***===---   ')
         self._Y = Y
         self._X = X
@@ -773,6 +782,7 @@ class SimpleCursesTime(SimpleCursesWidget):
         previous_widget_func=None,
         global_functions=None
     ):
+        super().__init__()
         # logger.error('   ---===***===---   ')
         self._Y = Y
         self._X = X
@@ -1191,6 +1201,7 @@ class SimpleCursesCounter(SimpleCursesWidget):
         number_length=3, string='{0}',
         full_selection=None
     ):
+        super().__init__()
         self._Y = Y
         self._X = X
         self._win = self._parent = window
@@ -1477,6 +1488,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                 A function to execute when cursor is at the last column and right
                 is pressed. The cursor will not move
         '''
+        super().__init__()
         self._Y = Y
         self._X = X
         self._win = window
@@ -2076,6 +2088,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 A function to execute when items have changed
                 (after adding, editing, deleting)
         '''
+        super().__init__()
         self._selection = 0
         self._start_pos = 0
         self._focused = self._enabled = True
@@ -3174,6 +3187,7 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
                 If False, only char uses the active color.
         '''
 
+        super().__init__()
         self._Y = Y
         self._X = X
         self._caption = caption
@@ -3351,6 +3365,7 @@ class SimpleCursesPushButton(SimpleCursesWidget):
             is "clicked". Default is None
         '''
 
+        super().__init__()
         self._Y = Y
         self._X = X
         self._caption = caption

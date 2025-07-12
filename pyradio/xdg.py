@@ -41,9 +41,9 @@ locale.setlocale(locale.LC_ALL, "")
 
 class XdgMigrate():
 
-    _verbose = False
 
     def __init__(self, config=None):
+        self._verbose = False
         self.home_dir = path.expanduser('~')
         self._desktop_file = path.join(self.home_dir, '.local', 'share', 'applications', 'pyradio.desktop')
         self.other_dir = path.join(self.home_dir, 'pyradio-not-migrated')
@@ -303,18 +303,6 @@ class XdgDirs():
     RECORDINGS = 6
     LOGOS = 7
 
-    _old_dirs = [None, None, None, None, None, None, None, None]
-    _new_dirs = [None, None, None, None, None, None, None, None]
-
-    ''' function to execute when the directory has been
-        moved inside the target directory, instead of
-        renaming it (because it's not empty)
-    '''
-    dir_fixed_function = None
-
-    titles_log_file = None
-    last_rec_dirs = None
-
     def __init__(self, config_dir=None, xdg_compliant=False, a_dir_fix_function=None):
         ''' Parameters
             ==========
@@ -327,6 +315,18 @@ class XdgDirs():
                     under the Configuration directory
                 If True, follow the Specification
         '''
+        self._old_dirs = [None, None, None, None, None, None, None, None]
+        self._new_dirs = [None, None, None, None, None, None, None, None]
+
+        ''' function to execute when the directory has been
+            moved inside the target directory, instead of
+            renaming it (because it's not empty)
+        '''
+        self.dir_fixed_function = None
+
+        self.titles_log_file = None
+        self.last_rec_dirs = None
+
         if config_dir is not None:
             self._xdg_compliant = False
             self._new_dirs[self.STATIONS] = self._old_dirs[self.STATIONS] = config_dir
@@ -670,11 +670,11 @@ class XdgDirs():
 
 
 class CheckDir():
-    _is_writable = False
-    _can_be_writable = False
-    _can_be_created = False
 
     def __init__(self, a_path, default=None, remove_after_validation=False):
+        self._is_writable = False
+        self._can_be_writable = False
+        self._can_be_created = False
         self._remove_after_validation = remove_after_validation
         # logger.error('++ remove_after_validation = {}'.format(remove_after_validation))
         self._is_writable = False

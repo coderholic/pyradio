@@ -16,22 +16,6 @@ logger = logging.getLogger(__name__)
 
 class PyRadioMessagesSystem():
 
-    _win = None
-    too_small = False
-    simple_dialog = False
-    _same_content = False
-    _same_parent = False
-    _can_scroll= True
-    _last_key = ''
-    _columns = {}
-    _max_lens = {}
-    _tokens = {}
-    _universal_message = None
-    _station_info_message = None
-    _db_info_message = None
-    _delayed_message = None
-    _rb_search_message = None
-    _external_line_editor = None
     ''' reset _columns and _tokens
         These keys will have non static content,
         so widths will have to be calculated every time
@@ -1734,6 +1718,22 @@ unintentionally disrupt functionality.
         self._txt = {}
 
     def __init__(self, config, op_mode, prev_op_mode):
+        self._win = None
+        self.too_small = False
+        self.simple_dialog = False
+        self._same_content = False
+        self._same_parent = False
+        self._can_scroll= True
+        self._last_key = ''
+        self._columns = {}
+        self._max_lens = {}
+        self._tokens = {}
+        self._universal_message = None
+        self._station_info_message = None
+        self._db_info_message = None
+        self._delayed_message = None
+        self._rb_search_message = None
+        self._external_line_editor = None
         self._main_win_width = 73
         self._columnX = 22
         self._cnf = config

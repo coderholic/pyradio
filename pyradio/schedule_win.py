@@ -18,15 +18,6 @@ locale.setlocale(locale.LC_ALL, '')    # set your locale
 logger = logging.getLogger(__name__)
 
 class PyRadioSimpleScheduleWindow():
-
-    _X = _Y = _maxY = maxX = 0
-    _widgets = _win = None
-    _global_functions = {}
-    _showed = False
-    _too_small = False
-    _stop = False
-    _thread_date = None
-    _error_num = 0
     _error_messages = {
         3: '_______Entry is |invalid|!\n__|No |Start| or |Stop| time specified!',
         6: '___Entry is |invalid|!\n__Start time| is in the |past|!',
@@ -47,13 +38,9 @@ class PyRadioSimpleScheduleWindow():
         'Sunday'
     )
 
-    _max_repeat_len = max([len(x) for x in _repeat])
-    _repeat_index = 0
-
     '''     0  1  2   3  4  5   6   7  8  9  10 11 12 13 14  15  16  17  18  19  20  21  22 '''
     _up = (22, 0, 1, 19, 2, 3, 20, 21, 4, 5, 8, 9, 6, 7, 10, 14, 11, 15, 17, 16, 12, 13, 18)
 
-    lock = threading.Lock()
     _tips = (
         'The playlist to open',
         'The stations to play',
@@ -90,6 +77,21 @@ class PyRadioSimpleScheduleWindow():
             schedule_item=None,
             global_functions={}
     ):
+        self._X = 0
+        self._Y = 0
+        self._maxY = 0
+        self.maxX = 0
+        self._widgets = None
+        self._win = None
+        self._global_functions = {}
+        self._showed = False
+        self._too_small = False
+        self._stop = False
+        self._thread_date = None
+        self._error_num = 0
+        self._max_repeat_len = max([len(x) for x in _repeat])
+        self._repeat_index = 0
+        self.lock = threading.Lock()
         self._entry = None
         self._exit = False
         self._my_op_mode = my_op_mode

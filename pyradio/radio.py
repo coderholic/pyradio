@@ -147,8 +147,6 @@ def calc_can_change_colors(config):
 
 class SelectPlayer():
 
-    X = Y = maxX = maxY = 0
-    _win = _parent = None
 
 
     def __init__(self, active_player, parent, recording, vlc_no_recording):
@@ -157,6 +155,8 @@ class SelectPlayer():
             'mplayer': '  MPlayer Media Player',
             'vlc': '  VLC Media Player',
         }
+        self.X = self.Y = self.maxX = self.maxY = 0
+        self._win = self._parent = None
         self._selected = 0
         self._active_player = active_player
         self._recording = recording
@@ -1243,6 +1243,17 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         #         update_functions=(self.log.write_time, )
         #     )
         ''' For the time being, supported players are mpv, mplayer and vlc. '''
+        self.player = player.probePlayer(
+            config=self._cnf,
+            requested_player=self.requested_player)(
+                self._cnf,
+                self.log,
+                self.playbackTimeoutCounter,
+                self.connectionFailed,
+                self._show_station_info_from_thread,
+                self._add_station_to_stations_history,
+                self._recording_lock
+            )
         try:
             self.player = player.probePlayer(
                 config=self._cnf,
@@ -5423,6 +5434,10 @@ and |remove the file manually|.
                 else:
                     ret, self.number_of_items = self._cnf.insert_station(self._unnamed_register, self.selection + 1)
                 self.stations = self._cnf.stations
+                logger.error('\n\n')
+                for n in self.stations:
+                    logger.error(n)
+                logger.error('\n\n')
                 self.selection += 1
                 if self.selection >= self.startPos + self.bodyMaxY:
                     self.startPos += 1
@@ -7474,6 +7489,7 @@ _____"|f|" to see the |free| keys you can use.
             ch = chr(char).lower()
             if char in (ord('\n'), ord('\r'), curses.KEY_ENTER):
                 self._unnamed_register = self.stations[self.selection]
+                logger.info(f'{self._unnamed_register =  }')
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('saving to unnamed register: {}'.format(self._unnamed_register))
                 self._show_notification_with_delay(
@@ -9918,6 +9934,7 @@ _____"|f|" to see the |free| keys you can use.
                             self.selection,
                             self.outerBodyWin,
                             self._cnf.default_encoding,
+                            self._cnf.AVAILABLE_PLAYERS,
                             global_functions=self._global_functions)
                         if char == kbkey['append'] or \
                                 check_localized(char, (kbkey['append'], )):
@@ -9981,6 +9998,7 @@ _____"|f|" to see the |free| keys you can use.
                         self.selection,
                         self.outerBodyWin,
                         self._cnf.default_encoding,
+                        self._cnf.AVAILABLE_PLAYERS,
                         global_functions=self._global_functions,
                         adding=False)
                     self._station_editor.show(self.stations[self.selection])

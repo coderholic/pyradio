@@ -786,10 +786,9 @@ class LetterProvider:
     navigate through available layouts, retrieve layout sequences, and add new custom layouts.
     """
 
-    index = 1
-
     def __init__(self):
         # Predefined layouts
+        self.index = 1
         self._layouts = {
             "Alphabetical": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
             "QWERTY": "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM",
@@ -895,15 +894,15 @@ class LetterProvider:
 
 class LetterDisplay:
 
-    _active_widget = 0
-    _editing = None
-    _focused = False
-    _letter_width = 7
-    _layout = "QWERTY"
-    _provider = LetterProvider()
-    _left_pad = 0
-
     def __init__(self, parent, focused=False, start_line=0):
+        self._active_widget = 0
+        self._editing = None
+        self._focused = False
+        self._letter_width = 7
+        self._layout = "QWERTY"
+        self._provider = LetterProvider()
+        self._left_pad = 0
+
         self._win = None
         self._parent = parent
         self._focused = focused

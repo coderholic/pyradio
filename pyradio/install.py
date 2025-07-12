@@ -510,7 +510,6 @@ def open_cache_dir():
 
 class PyRadioCache():
 
-    _files = []
     _gits = (
         'pyradio-master.zip',
         'pyradio-devel.zip',
@@ -534,6 +533,7 @@ class PyRadioCache():
             cache_dir
                 cache dir = cache_dir
         '''
+        _files = []
         if platform.system().lower().startswith('win'):
             self._cache_dir = os.path.join(
                 os.path.expanduser('APPDATA'),
@@ -718,9 +718,6 @@ class PythonExecutable():
     ''' A class to verify that python is installed
         and in the PATH
     '''
-    is_debian = False
-    _python = [None, None]
-    requested_python_version = 3
 
     def __init__(
             self,
@@ -734,6 +731,9 @@ class PythonExecutable():
                 If True, the program will terminate if python
                 is not found (default is False)
         '''
+        self.is_debian = False
+        self._python = [None, None]
+        self.requested_python_version = 3
         self._terminate_if_not_found = terminate_if_not_found
         if not platform.system().lower().startswith('win'):
             self._check_if_is_debian_based()
@@ -826,35 +826,34 @@ class PyRadioUpdate():
             3   -   official devel
     '''
 
-    ZIP_URL = ['https://github.com/coderholic/pyradio/archive/',
-               'https://github.com/s-n-g/pyradio/archive/master.zip',
-               'https://github.com/s-n-g/pyradio/archive/devel.zip',
-               'https://github.com/coderholic/pyradio/archive/devel.zip',
-               'https://github.com/coderholic/pyradio/archive/master.zip',
-               ]
-
-    ZIP_DIR  = ['pyradio-',
-                'pyradio-master',
-                'pyradio-devel',
-                'pyradio-devel',
-                'pyradio-master'
-                ]
-
-    install = False
-    user = True
-
-    _python_exec = None
-
-    _delete_dir_limit = 0
-
-    _get_cache = False
-
     def __init__(self,
                  package=0,
                  user=True,
                  github_long_description=None,
                  pix_isolated=False
                  ):
+        self.ZIP_URL = ['https://github.com/coderholic/pyradio/archive/',
+                   'https://github.com/s-n-g/pyradio/archive/master.zip',
+                   'https://github.com/s-n-g/pyradio/archive/devel.zip',
+                   'https://github.com/coderholic/pyradio/archive/devel.zip',
+                   'https://github.com/coderholic/pyradio/archive/master.zip',
+                   ]
+        self.ZIP_DIR  = ['pyradio-',
+                    'pyradio-master',
+                    'pyradio-devel',
+                    'pyradio-devel',
+                    'pyradio-master'
+                    ]
+
+        self.install = False
+        self.user = True
+
+        self._python_exec = None
+
+        self._delete_dir_limit = 0
+
+        self._get_cache = False
+
         if platform.system().lower().startswith('win'):
             raise RuntimeError('This is a linux only class...')
         self._dir = self._install_dir = ''

@@ -35,6 +35,7 @@ class Station(IntEnum):
     http = 6
     volume = 7
     referer = 8
+    player = 9
 
 M_STRINGS = {
 	'checking-playlist': ' (Checking Playlist)',
@@ -263,75 +264,9 @@ class StationsChanges():
     #                                                                       #
     #########################################################################
     '''
-    version_changed = None
-
-    '''
-    versions = {
-        (0, 9, 2):                       # 0.9.2 version
-        [
-            [...........],                 # added
-            [x, [...........]],            # changed
-            [...........],                 # deleted
-        ],
-        (0, 9, 1):                       # 0.9.1 version
-        [
-            [...........],                 # added
-            [x, [...........]],            # changed
-            [...........],                 # deleted
-        ]
-    ]
-    '''
-    versions = {
-        (0, 9, 2):
-        [
-            [
-                ['Groove Salad Classic (Early 2000s Ambient)', 'https://somafm.com/gsclassic.pls'],
-                ['n5MD Radio (Ambient and Experimental)', 'https://somafm.com/n5md.pls'],
-                ['Vaporwaves [SomaFM]', 'https://somafm.com/vaporwaves.pls'],
-                ['The Trip: [SomaFM]', 'https://somafm.com/thetrip.pls'],
-                ['Heavyweight Reggae', 'https://somafm.com/reggae.pls'],
-                ['Metal Detector', 'https://somafm.com/metal.pls'],
-                ['Synphaera Radio (Space Music)', 'https://somafm.com/synphaera.pls']
-            ], # added
-
-            [
-                [0, ['Reggae Dancehall (Ragga Kings)', 'https://raggakings.radio:8443/stream.ogg']]
-            ], # changed
-
-            [] # deleted
-        ],
-
-        (0, 9, 3):
-        [
-            [
-                ['Radio Levač (Serbian Folk & Country)', 'http://213.239.205.210:8046/stream'],
-                ['Radio 35 (Serbian and English Pop, Folk, Country & Hits)', 'http://stream.radio035.net:8010/listen.pls']
-            ], # added
-            [], # changed
-            [], # deleted
-        ],
-
-        (0, 9, 3, 11, 5):
-        [
-            [], # added
-            [
-				['DanceUK', 'http://uk2.internet-radio.com:8024/listen.pls'],
-				['JazzGroove', r'http://199.180.72.2:8015/listen.pls\?sid\=1'],
-				['Metal Detector' 'http://somafm.com/metal.pls'],
-            ], # changed
-            [
-				['Beyond Metal (Progressive - Symphonic)', 'http://streamingV2.shoutcast.com/BeyondMetal'],
-				['Vox Noctem: Rock-Goth', 'http://r2d2.voxnoctem.de:8000/voxnoctem.mp3'],
-            ], # deleted
-        ],
-    }
-
-    keys = None
-    _stations = None
-    _stations_file = None
-    _playlist_version = 0
 
     def __init__(self, config):
+        self._init_vars()
         self._cnf = config
         self._last_sync_file = join(self._cnf.state_dir, 'last-sync')
         self._asked_sync_file = join(self._cnf.state_dir, 'asked-sync')
@@ -340,6 +275,75 @@ class StationsChanges():
         self.PLAYLIST_HAS_NAME_URL_ENCODING = 1
         self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON = 2
         self.counts = [0, 0, 0]
+
+    def _init_vars(self):
+        self.version_changed = None
+
+        '''
+        versions = {
+            (0, 9, 2):                       # 0.9.2 version
+            [
+                [...........],                 # added
+                [x, [...........]],            # changed
+                [...........],                 # deleted
+            ],
+            (0, 9, 1):                       # 0.9.1 version
+            [
+                [...........],                 # added
+                [x, [...........]],            # changed
+                [...........],                 # deleted
+            ]
+        ]
+        '''
+        self.versions = {
+            (0, 9, 2):
+            [
+                [
+                    ['Groove Salad Classic (Early 2000s Ambient)', 'https://somafm.com/gsclassic.pls'],
+                    ['n5MD Radio (Ambient and Experimental)', 'https://somafm.com/n5md.pls'],
+                    ['Vaporwaves [SomaFM]', 'https://somafm.com/vaporwaves.pls'],
+                    ['The Trip: [SomaFM]', 'https://somafm.com/thetrip.pls'],
+                    ['Heavyweight Reggae', 'https://somafm.com/reggae.pls'],
+                    ['Metal Detector', 'https://somafm.com/metal.pls'],
+                    ['Synphaera Radio (Space Music)', 'https://somafm.com/synphaera.pls']
+                ], # added
+
+                [
+                    [0, ['Reggae Dancehall (Ragga Kings)', 'https://raggakings.radio:8443/stream.ogg']]
+                ], # changed
+
+                [] # deleted
+            ],
+
+            (0, 9, 3):
+            [
+                [
+                    ['Radio Levač (Serbian Folk & Country)', 'http://213.239.205.210:8046/stream'],
+                    ['Radio 35 (Serbian and English Pop, Folk, Country & Hits)', 'http://stream.radio035.net:8010/listen.pls']
+                ], # added
+                [], # changed
+                [], # deleted
+            ],
+
+            (0, 9, 3, 11, 5):
+            [
+                [], # added
+                [
+                    ['DanceUK', 'http://uk2.internet-radio.com:8024/listen.pls'],
+                    ['JazzGroove', r'http://199.180.72.2:8015/listen.pls\?sid\=1'],
+                    ['Metal Detector' 'http://somafm.com/metal.pls'],
+                ], # changed
+                [
+                    ['Beyond Metal (Progressive - Symphonic)', 'http://streamingV2.shoutcast.com/BeyondMetal'],
+                    ['Vox Noctem: Rock-Goth', 'http://r2d2.voxnoctem.de:8000/voxnoctem.mp3'],
+                ], # deleted
+            ],
+        }
+
+        self.keys = None
+        self._stations = None
+        self._stations_file = None
+        self._playlist_version = 0
 
     def _read_version(self):
         the_file = join(dirname(__file__), '__init__.py')
@@ -641,12 +645,11 @@ and write in it
 
 class CsvReadWrite():
     ''' A base class to read and write a PyRadio playlist '''
-    _items = None
-    _version = Station.url
-
-    encoding_to_remove = None
 
     def __init__(self, a_file=None):
+        self._items = None
+        self._version = Station.url
+        self.encoding_to_remove = None
         self._file = a_file
 
     @property
@@ -691,7 +694,7 @@ class CsvReadWrite():
 
                         # logger.error(f'{row = }')
                         # Initialize variables with default values
-                        name = url = enc = icon = volume = http = referer = profile = buffering = ''
+                        name = url = enc = icon = volume = http = referer = profile = buffering = player = ''
                         this_row_version = Station.url
                         # Assign values based on the length of the row
                         row_length = len(row)
@@ -718,6 +721,13 @@ class CsvReadWrite():
                         if row_length > Station.referer:
                             referer = row[Station.referer].strip()
                             this_row_version = Station.referer
+                        if row_length > Station.player:
+                            player = row[Station.player].strip()
+                            this_row_version = Station.player
+                        if name == "WKHR":
+                            logger.error(f'{row_length = }')
+                            logger.error(f'{row = }')
+                            logger.error('\n\nstation player = {}\n\n'.format(player))
 
                         if buffering:
                             if '@' not in buffering:
@@ -732,7 +742,7 @@ class CsvReadWrite():
                         # Append the parsed values to the reading stations list
                         station_info = [
                             name, url, enc, {'image': icon} if icon else '',
-                            profile, buffering, http, volume, referer
+                            profile, buffering, http, volume, referer, player
                         ]
 
                         self._items.append(station_info)
@@ -798,7 +808,7 @@ class CsvReadWrite():
                 writter.writerow(
                     ['# name', 'url', 'encoding', 'icon',
                      'profile', 'buffering', 'force-http',
-                     'volume', 'referer'])
+                     'volume', 'referer', 'player'])
                 for a_station in out_items:
                     writter.writerow(self._format_playlist_row(a_station))
         except (IOError, OSError, UnicodeEncodeError) as e:
@@ -816,10 +826,8 @@ class CsvReadWrite():
 
 class ProfileManager():
 
-    _config_file = None
-
     def __init__(self):
-        pass
+        self._config_file = None
 
     @property
     def config_files(self):

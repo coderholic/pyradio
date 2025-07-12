@@ -101,16 +101,15 @@ class PyRadioScheduleTimeType():
 
 class PyRadioScheduleList():
 
-    _list = []              # initial list of dicts
-    _schedule_list = []     # lisr of PyRadioScheduleItem
-    _sorted = []            # list (sorted) of tasks (dicts)
-    _info = False
-
     def __init__(self, a_file, a_list=None):
         '''
             a_file : file to read
             a_list : list of dicts of (as output of self._read_list)
         '''
+        self._list = []              # initial list of dicts
+        self._schedule_list = []     # lisr of PyRadioScheduleItem
+        self._sorted = []            # list (sorted) of tasks (dicts)
+        self._info = False
         self._json_file = a_file
         self._a_list = a_list
         self._read_list()

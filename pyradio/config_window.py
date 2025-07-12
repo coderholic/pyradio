@@ -29,22 +29,8 @@ locale.setlocale(locale.LC_ALL, '')    # set your locale
 logger = logging.getLogger(__name__)
 
 class PyRadioConfigWindow():
-    _win = None
-
     _title = 'PyRadio Configuration'
 
-    __selection = 1
-
-    ''' Keep a copy of saved values for theme and transparency
-        Work-around for 'T' auto save (trasnsparency), and
-        's'/Space them saving
-    '''
-    _old_use_transparency = False
-    _old_theme = ''
-
-    _headers = []
-
-    _num_of_help_lines = 0
     _help_text = []
     _help_text.append(None)
     _help_text.append(['Specify the player to use with PyRadio, or the player detection order.', '|',
@@ -110,12 +96,6 @@ class PyRadioConfigWindow():
     _help_text.append(None)
     _help_text.append(['This options will open the configuration window for the RadioBrowser Online Stations Directory.',])
 
-    _config_options = None
-
-    load_default_or_saved_parameters = False
-
-    cancel_confirmed = False
-
     def __init__(
             self,
             parent,
@@ -131,6 +111,20 @@ class PyRadioConfigWindow():
             show_confirm_cancel_config_changes=None,
             global_functions=None
             ):
+        self._win = None
+        self.__selection = 1
+        ''' Keep a copy of saved values for theme and transparency
+            Work-around for 'T' auto save (trasnsparency), and
+            's'/Space them saving
+        '''
+        self._old_use_transparency = False
+        self._old_theme = ''
+        self._headers = []
+        self._num_of_help_lines = 0
+        self._config_options = None
+        self.load_default_or_saved_parameters = False
+        self.cancel_confirmed = False
+
 
         self._show_confirm_cancel_config_changes = show_confirm_cancel_config_changes
         self._is_recording = recording_function
@@ -2135,19 +2129,8 @@ class PyRadioSelectPlayer():
 
     maxY = 14
     maxX = 72
-    selection = 0
 
     _title = ' Player Selection '
-
-    _win = None
-    _extra = None
-
-    _working_players = [[], []]
-
-    ''' mlength is the length of the longest item in the
-        players list, which is '[ ] mplayer ' = 14
-    '''
-    mlength = 13
 
     def __init__(
             self,
@@ -2157,6 +2140,16 @@ class PyRadioSelectPlayer():
             parameters_editing_error_function=None,
             global_functions=None
             ):
+        self.selection = 0
+        self._win = None
+        self._extra = None
+
+        self._working_players = [[], []]
+
+        ''' mlength is the length of the longest item in the
+            players list, which is '[ ] mplayer ' = 14
+        '''
+        self.mlength = 13
         self._parameters_editing_error_function=parameters_editing_error_function
         self._char = ' [X] ' if platform.lower().startswith('win') else ' [✔] '
         if logger.isEnabledFor(logging.DEBUG):
@@ -2514,25 +2507,22 @@ class PyRadioSelectPlayer():
 
 
 class PyRadioSelectEncodings():
-    max_enc_len = 15
-
-    _win = None
-
     _title = ' Encoding Selection '
-
-    _num_of_columns = 4
-    maxY = maxX = 10
-    _column = _row = 0
-
-    _encodings = []
-    list_maxY = 0
-    startPos = 0
-    selection = 0
-
-    _invalid = []
+    max_enc_len = 15
 
     def __init__(self, maxY, maxX, encoding, config_encoding,
                  global_functions=None, show_default=False):
+        self._win = None
+        self._encodings = []
+        self._invalid = []
+        self.maxY = 10
+        self.maxX = 10
+        self._num_of_columns = 4
+        self._column = 0
+        self._row = 0
+        self.list_maxY = 0
+        self.startPos = 0
+        self.selection = 0
         self._parent_maxY = maxY
         self._parent_maxX = maxX
         self.encoding = encoding
@@ -2890,27 +2880,8 @@ class PyRadioSelectEncodings():
 
 
 class PyRadioSelectPlaylist():
-    _win = None
 
     _title = ' Playlist Selection '
-
-    maxY = maxX = _parent_maxY = _parent_maxX = 0
-
-    _items = []
-    _registers_path = None
-
-    startPos = 0
-    selection = 0
-    _selected_playlist_id = 0
-
-    _select_playlist_error = -2
-
-    pageChange = 5
-    jumpnr = ''
-
-    ''' offset to current item for padding calculation '''
-    pad_adjustment = 0
-
     def __init__(self,
                  parent,
                  config_path,
@@ -2931,6 +2902,25 @@ class PyRadioSelectPlaylist():
         default_playlist is removed from the list.
         Returns: state, playlist/register path
         '''
+        self._win = None
+        self.maxY = 0
+        self.maxX = 0
+
+        self._items = []
+        self._registers_path = None
+
+        self.startPos = 0
+        self.selection = 0
+        self._selected_playlist_id = 0
+
+        self._select_playlist_error = -2
+
+        self.pageChange = 5
+        self.jumpnr = ''
+
+        ''' offset to current item for padding calculation '''
+        self.pad_adjustment = 0
+
         self._parent_maxY, self._parent_maxX = parent.getmaxyx()
         try:
             self._parent_Y, _ = parent.getbegyx()
@@ -3343,8 +3333,6 @@ class PyRadioSelectPlaylist():
 
 class PyRadioSelectStation(PyRadioSelectPlaylist):
 
-    _default_playlist = ''
-
     def __init__(
             self,
             parent,
@@ -3524,33 +3512,32 @@ class PyRadioServerConfig():
 
 
 class PyRadioKeyboardConfig():
-
-    _focus = 0
-    _widget = None
-    _b_ok = None
-    _b_cancel = None
-    _dirty_config = False
-    _too_small = False
-    _editing = False
-    maxY = 0
-    maxX = 0
-    _start_line = 0
-    _end_line = 0
-    _number_of_lines = 0
-    _start = 0
-    _selection = 1
-
-    # titles for search function
-    _titles = None
-
-    message = None
-
     def __init__(
             self,
             config,
             parent,
             distro='None',
             global_functions=None):
+        self._focus = 0
+        self._widget = None
+        self._b_ok = None
+        self._b_cancel = None
+        self._dirty_config = False
+        self._too_small = False
+        self._editing = False
+        self.maxY = 0
+        self.maxX = 0
+        self._start_line = 0
+        self._end_line = 0
+        self._number_of_lines = 0
+        self._start = 0
+        self._selection = 1
+
+        # titles for search function
+        self._titles = None
+
+        self.message = None
+
         self._cnf = config
         self._parent = parent
         self._distro=distro
@@ -4339,18 +4326,18 @@ class PyRadioKeyboardConfig():
 class PyRadioLocalized():
     """  Read and write localized data """
 
-    ''' widget 0 posistion
-        0: active item
-        0: selection
-    '''
-    _pos = (0, 0)
-
     def __init__(
             self,
             config,
             parent,
             distro='None',
             global_functions=None):
+        ''' widget 0 posistion
+            0: active item
+            0: selection
+        '''
+        self._pos = (0, 0)
+
         self._focus = 0
         self._widgets = [None, None, None, None]
         self._b_ok = None

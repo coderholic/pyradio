@@ -96,25 +96,6 @@ def to_ip_port(string):
 
 class PyRadioStations():
     ''' PyRadio stations file management '''
-    #station_path = ''
-    #station_file_name = ''
-    #station_title = ''
-    foreign_title = ''
-    previous_station_path = ''
-
-    ''' this is always on users config dir '''
-    # stations_dir = ''
-    # registers_dir = ''
-
-    ''' True if playlist not in config dir '''
-    foreign_file = False
-
-    stations = []
-    _reading_stations = []
-    playlists = []
-
-    selected_playlist = -1
-    number_of_stations = -1
 
     ''' playlist_version:
             2: 4 columns (name,URL,encoding,online browser)
@@ -128,46 +109,8 @@ class PyRadioStations():
     PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP = 4
     PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP_REF = 5
 
-    _playlist_version = Station.url
-    _read_playlist_version = Station.url
-
-    dirty_playlist = False
-
-    playlist_recovery_result = 0
-
-    _open_string_id = 0
-
-    jump_tag = -1
-
-    ''' station directory service object '''
-    _online_browser = None
-
-    _register_to_open = None
-    _open_register_list = False
-
-    _registers_lock = threading.Lock()
-
-    ''' set to True if a stations.csv is found in user's folder '''
-    _user_csv_found = False
-
-    ''' the playlist saved as last playlist (name only) '''
-    _last_opened_playlist_name = ''
-
-    ''' last opened playlist splitted on , '''
-    last_playlist_to_open = []
-
-    station_history = None
-    play_from_history = False
-
-    normal_stations_history = None
-
-    show_no_themes_message = True
-
-    renamed_stations = []
-
-    favorites = None
-
     def __init__(self, stationFile='', user_config_dir=None):
+        self._init_my_vars()
         if platform.startswith('win'):
             self._open_string_id = 1
 
@@ -204,6 +147,60 @@ class PyRadioStations():
             if path.exists(rb_config):
                 new_rb_config = path.join(self.stations_dir, 'radio-browser.conf')
                 rename(rb_config, new_rb_config)
+
+    def _init_my_vars(self):
+        self.foreign_title = ''
+        self.previous_station_path = ''
+
+        ''' True if playlist not in config dir '''
+        self.foreign_file = False
+
+        self.stations = []
+        self._reading_stations = []
+        self.playlists = []
+
+        self.selected_playlist = -1
+        self.number_of_stations = -1
+
+        self._playlist_version = Station.url
+        self._read_playlist_version = Station.url
+
+        self.dirty_playlist = False
+
+        self.playlist_recovery_result = 0
+
+        self._open_string_id = 0
+
+        self.jump_tag = -1
+
+        ''' station directory service object '''
+        self._online_browser = None
+
+        logger.error('here')
+        self._register_to_open = None
+        self._open_register_list = False
+
+        self._registers_lock = threading.Lock()
+
+        ''' set to True if a stations.csv is found in user's folder '''
+        self._user_csv_found = False
+
+        ''' the playlist saved as last playlist (name only) '''
+        self._last_opened_playlist_name = ''
+
+        ''' last opened playlist splitted on , '''
+        self.last_playlist_to_open = []
+
+        self.station_history = None
+        self.play_from_history = False
+
+        self.normal_stations_history = None
+
+        self.show_no_themes_message = True
+
+        self.renamed_stations = []
+
+        self.favorites = None
 
     def add_to_favorites(self, an_item):
         if self.favorites is None:
@@ -1035,6 +1032,7 @@ class PyRadioStations():
         return ret, self.number_of_stations
 
     def insert_station(self, station, target):
+        logger.error(f'{station = }')
         ''' Insert a station in the list at index target
         It is inserted ABOVE old target (old target becomes old target + 1)'''
         # logger.error('DE target= {0}, number_of_stations = {1}'.format(target, self.number_of_stations))
@@ -1232,194 +1230,199 @@ class PyRadioStations():
 class PyRadioConfig(PyRadioStations):
     ''' PyRadio Config Class '''
 
-    check_playlist = False
-
-    ''' if degub is on, this will tell the logger to
-            0:  not log input from the player
-            1:  input accepted input from the player
-            2:  input raw input from the player
-
-        It applies to the updateStatus, updateMPVStatus and
-            updateWinVLCStatus functions
-    '''
-    debug_log_player_input = 0
-
-    localize = None
-    _old_localize = None
-
-    EXTERNAL_PLAYER_OPTS = None
-
-    ''' I will get this when a player is selected
-        It will be used when command line parameters are evaluated
-    '''
-    SUPPORTED_PLAYERS = ('mpv', 'mplayer', 'vlc')
-    AVAILABLE_PLAYERS = None
-
-    PLAYER_NAME = None
-
-    fallback_theme = ''
-    use_themes = True
-    terminal_is_blacklisted = False
-    no_themes_notification_shown = False
-    no_themes_from_command_line = False
-
-    theme_not_supported = False
-    theme_has_error = False
-    theme_download_failed = False
-    theme_not_supported_notification_shown = False
-
-    log_degub = False
-
-    ''' Title logging '''
-    _current_log_title = _current_log_station = ''
-    _old_log_title = _old_log_station = ''
-    _last_liked_title = ''
-    _current_notification_message = ''
-    _notification_command = None
-
-    show_recording_start_message = True
-
-    ''' True if lock file exists '''
-    locked = False
-
-    ''' this is used to inhibit opening the search window
-        currently used by:
-            - PyRadioKeyboardConfig when editing
-    '''
-    inhibit_search = False
-
-    _distro = 'None'
-    opts = collections.OrderedDict()
-    opts['general_title'] = ['General Options', '']
-    opts['player'] = ['Player: ', '']
-    opts['open_last_playlist'] = ['Open last playlist: ', False]
-    opts['default_playlist'] = ['Def. playlist: ', 'stations']
-    opts['default_station'] = ['Def. station: ', 'False']
-    opts['default_encoding'] = ['Def. encoding: ', 'utf-8']
-    opts['continuous_playback'] = ['Continuous playback: ', False]
-    opts['recording_dir'] = ['Recordings dir: ', '']
-    opts['resource_opener'] = ['Resource Opener: ', 'auto']
-    opts['log_titles'] = ['Log titles: ', False]
-    opts['playlist_manngement_title'] = ['Playlist Management Options', '']
-    opts['confirm_station_deletion'] = ['Confirm station deletion: ', True]
-    opts['confirm_playlist_reload'] = ['Confirm playlist reload: ', True]
-    opts['auto_save_playlist'] = ['Auto save playlist: ', False]
-    opts['conn_title'] = ['Connection Options', '']
-    opts['connection_timeout'] = ['Connection timeout: ', '10']
-    opts['force_http'] = ['Force http connections: ', False]
-    opts['buffering'] = ['Buffering (seconds): ', '20']
-    opts['mplayer_save_br'] = ['MPlayer auto save br: ', False]
-    opts['notification'] = ['Notifications', '']
-    opts['enable_notifications'] = ['Enable notifications: ', '-1']
-    opts['use_station_icon'] = ['  Use station icon: ', True]
-    opts['remove_station_icons'] = ['  Remove cached icons: ', True]
-    opts['clock_title'] = ['Clock', '']
-    opts['enable_clock'] = ['Display on startup: ', False]
-    opts['time_format'] = ['Time format: ', '1']
-    opts['theme_title'] = ['Theme Options', '']
-    opts['theme'] = ['Theme: ', 'dark']
-    opts['use_transparency'] = ['Use transparency: ', False]
-    opts['force_transparency'] = ['  Force transparency: ', False]
-    opts['calculated_color_factor'] = ['Calculated color: ', '0']
-    opts['console_theme'] = ['Console theme: ', 'dark']
-    opts['mouse_options'] = ['Mouse Support', '']
-    opts['enable_mouse'] = ['Enable mouse support: ', False]
-    opts['wheel_adjusts_volume'] = ['  Reverse wheel: ', False]
-    opts['remote'] = ['Remote Control Server', '']
-    opts['remote_control_server_ip'] = ['Server IP: ', 'localhost']
-    opts['remote_control_server_port'] = ['Server Port: ', '9998']
-    opts['remote_control_server_auto_start'] = ['Auto-start Server: ', False]
-    opts['shortcuts'] = ['Keyboard Shortcuts', '']
-    opts['shortcuts_keys'] = ['Shortcuts', '-']
-    opts['localized_keys'] = ['Localized Shortcuts', '-']
-    opts['online_header'] = ['Online services', '']
-    opts['radiobrowser'] = ['RadioBrowser', '-']
-    opts['requested_player'] = ['', '']
-    opts['dirty_config'] = ['', False]
-
-    '''
-    Keep several config options when no themes mode is enabled
-    '''
-    bck_opts = {}
-
-    if platform == 'win32':
-        th_path = path.join(getenv('APPDATA'), 'pyradio', 'themes', 'auto.pyradio-themes')
-    else:
-        th_path = path.join(path.expanduser('~'), '.config', 'pyradio', 'themes', 'auto.pyradio-themes')
-    opts['auto_update_theme'] = ['',  False]
-
-    original_mousemask = (0, 0)
-
-    ''' parameters used by the program
-        may get modified by "Z" command
-        but will not be saved to file
-    '''
-    params = {
-        'mpv': [1, 'profile:pyradio'],
-        'mplayer': [1, 'profile:pyradio'],
-        'vlc': [1, 'Do not use any extra player parameters']
-    }
-    ''' parameters read from config file
-        can only be modified from config window
-    '''
-    saved_params = deepcopy(params)
-
-    params_changed = False
-
-    ''' number of user specified (-pp) extra
-        player parameter parameter id
-    '''
-    user_param_id = 0
-
-    PROGRAM_UPDATE = False
-    current_pyradio_version = None
-
-    ''' Windows manage players trigger '''
-    WIN_MANAGE_PLAYERS = False
-
-    ''' Windows print EXE location trigger '''
-    WIN_PRINT_PATHS = False
-
-    ''' Windows Uninstall trigger '''
-    WIN_UNINSTALL = False
-
-
     internal_themes = (
         'dark', 'light', 'dark_16_colors',
         'light_16_colors', 'black_on_white', 'bow',
         'white_on_black', 'wob'
     )
 
-    use_calculated_colors = False
-    enable_calculated_colors = True
-    has_border_background  = False
+    def _init_vars(self):
+        self.check_playlist = False
 
-    start_colors_at = 0
+        ''' if degub is on, this will tell the logger to
+                0:  not log input from the player
+                1:  input accepted input from the player
+                2:  input raw input from the player
 
-    buffering_data = []
-    buffering_enabled = True
+            It applies to the updateStatus, updateMPVStatus and
+                updateWinVLCStatus functions
+        '''
+        self.debug_log_player_input = 0
 
-    _fixed_recording_dir = None
+        self.localize = None
+        self._old_localize = None
 
-    _linux_resource_opener = None
+        self.EXTERNAL_PLAYER_OPTS = None
 
-    need_to_fix_desktop_file_icon = False
+        ''' I will get this when a player is selected
+            It will be used when command line parameters are evaluated
+        '''
+        self.SUPPORTED_PLAYERS = ('mpv', 'mplayer', 'vlc')
+        self.AVAILABLE_PLAYERS = None
 
-    notification_image_file = None
+        self.PLAYER_NAME = None
 
-    _last_station_checked = None
-    _last_station_checked_id = -1
-    _check_output_folder = None
-    _check_output_file = None
+        self.fallback_theme = ''
+        self.use_themes = True
+        self.terminal_is_blacklisted = False
+        self.no_themes_notification_shown = False
+        self.no_themes_from_command_line = False
 
-    profile_manager = None
+        self.theme_not_supported = False
+        self.theme_has_error = False
+        self.theme_download_failed = False
+        self.theme_not_supported_notification_shown = False
+
+        self.log_degub = False
+
+        ''' Title logging '''
+        self._current_log_title = self._current_log_station = ''
+        self._old_log_title = self._old_log_station = ''
+        self._last_liked_title = ''
+        self._current_notification_message = ''
+        self._notification_command = None
+
+        self.show_recording_start_message = True
+
+        ''' True if lock file exists '''
+        self.locked = False
+
+        ''' this is used to inhibit opening the search window
+            currently used by:
+                - PyRadioKeyboardConfig when editing
+        '''
+        self.inhibit_search = False
+
+        self._distro = 'None'
+        self.opts = collections.OrderedDict()
+        self.opts['general_title'] = ['General Options', '']
+        self.opts['player'] = ['Player: ', '']
+        self.opts['open_last_playlist'] = ['Open last playlist: ', False]
+        self.opts['default_playlist'] = ['Def. playlist: ', 'stations']
+        self.opts['default_station'] = ['Def. station: ', 'False']
+        self.opts['default_encoding'] = ['Def. encoding: ', 'utf-8']
+        self.opts['continuous_playback'] = ['Continuous playback: ', False]
+        self.opts['recording_dir'] = ['Recordings dir: ', '']
+        self.opts['resource_opener'] = ['Resource Opener: ', 'auto']
+        self.opts['log_titles'] = ['Log titles: ', False]
+        self.opts['playlist_manngement_title'] = ['Playlist Management Options', '']
+        self.opts['confirm_station_deletion'] = ['Confirm station deletion: ', True]
+        self.opts['confirm_playlist_reload'] = ['Confirm playlist reload: ', True]
+        self.opts['auto_save_playlist'] = ['Auto save playlist: ', False]
+        self.opts['conn_title'] = ['Connection Options', '']
+        self.opts['connection_timeout'] = ['Connection timeout: ', '10']
+        self.opts['force_http'] = ['Force http connections: ', False]
+        self.opts['buffering'] = ['Buffering (seconds): ', '20']
+        self.opts['mplayer_save_br'] = ['MPlayer auto save br: ', False]
+        self.opts['notification'] = ['Notifications', '']
+        self.opts['enable_notifications'] = ['Enable notifications: ', '-1']
+        self.opts['use_station_icon'] = ['  Use station icon: ', True]
+        self.opts['remove_station_icons'] = ['  Remove cached icons: ', True]
+        self.opts['clock_title'] = ['Clock', '']
+        self.opts['enable_clock'] = ['Display on startup: ', False]
+        self.opts['time_format'] = ['Time format: ', '1']
+        self.opts['theme_title'] = ['Theme Options', '']
+        self.opts['theme'] = ['Theme: ', 'dark']
+        self.opts['use_transparency'] = ['Use transparency: ', False]
+        self.opts['force_transparency'] = ['  Force transparency: ', False]
+        self.opts['calculated_color_factor'] = ['Calculated color: ', '0']
+        self.opts['console_theme'] = ['Console theme: ', 'dark']
+        self.opts['mouse_options'] = ['Mouse Support', '']
+        self.opts['enable_mouse'] = ['Enable mouse support: ', False]
+        self.opts['wheel_adjusts_volume'] = ['  Reverse wheel: ', False]
+        self.opts['remote'] = ['Remote Control Server', '']
+        self.opts['remote_control_server_ip'] = ['Server IP: ', 'localhost']
+        self.opts['remote_control_server_port'] = ['Server Port: ', '9998']
+        self.opts['remote_control_server_auto_start'] = ['Auto-start Server: ', False]
+        self.opts['shortcuts'] = ['Keyboard Shortcuts', '']
+        self.opts['shortcuts_keys'] = ['Shortcuts', '-']
+        self.opts['localized_keys'] = ['Localized Shortcuts', '-']
+        self.opts['online_header'] = ['Online services', '']
+        self.opts['radiobrowser'] = ['RadioBrowser', '-']
+        self.opts['requested_player'] = ['', '']
+        self.opts['dirty_config'] = ['', False]
+
+        '''
+        Keep several config options when no themes mode is enabled
+        '''
+        self.bck_opts = {}
+
+        if platform == 'win32':
+            self.th_path = path.join(getenv('APPDATA'), 'pyradio', 'themes', 'auto.pyradio-themes')
+        else:
+            self.th_path = path.join(path.expanduser('~'), '.config', 'pyradio', 'themes', 'auto.pyradio-themes')
+        self.opts['auto_update_theme'] = ['',  False]
+
+        self.original_mousemask = (0, 0)
+
+        ''' parameters used by the program
+            may get modified by "Z" command
+            but will not be saved to file
+        '''
+        self.params = {
+            'mpv': [1, 'profile:pyradio'],
+            'mplayer': [1, 'profile:pyradio'],
+            'vlc': [1, 'Do not use any extra player parameters']
+        }
+        ''' parameters read from config file
+            can only be modified from config window
+        '''
+        self.saved_params = deepcopy(self.params)
+
+        self.params_changed = False
+
+        ''' number of user specified (-pp) extra
+            player parameter parameter id
+        '''
+        self.user_param_id = 0
+
+        self.PROGRAM_UPDATE = False
+        self.current_pyradio_version = None
+
+        ''' Windows manage players trigger '''
+        self.WIN_MANAGE_PLAYERS = False
+
+        ''' Windows print EXE location trigger '''
+        self.WIN_PRINT_PATHS = False
+
+        ''' Windows Uninstall trigger '''
+        self.WIN_UNINSTALL = False
+
+        self.enable_calculated_colors = True
+        self.has_border_background  = False
+
+        self.start_colors_at = 0
+
+        self.buffering_data = []
+        self.buffering_enabled = True
+
+        self._fixed_recording_dir = None
+
+        self._linux_resource_opener = None
+
+        self.need_to_fix_desktop_file_icon = False
+
+        self.notification_image_file = None
+
+        self._last_station_checked = None
+        self._last_station_checked_id = -1
+        self._check_output_folder = None
+        self._check_output_file = None
+
+        self.profile_manager = None
+        self.use_calculated_colors = False
 
     def __init__(self, user_config_dir=None, headless=False):
-        # keep old recording / new recording dir
         self._user_config_dir = user_config_dir
+        self._headless = headless
+        self.xdg = XdgDirs(
+                a_dir_fix_function=self._save_config_from_fixed_rec_dir
+                )
+        self._init_vars()
+        super().__init__()
+        # keep old recording / new recording dir
         self.rec_dirs = ()
         self._first_read = True
-        self._headless = headless
         self.backup_player_params = None
         self.player = ''
         self.requested_player = ''
@@ -1434,9 +1437,6 @@ class PyRadioConfig(PyRadioStations):
         self.theme = 'dark'
         self.active_transparency = False
         self._distro = 'None'
-        self.xdg = XdgDirs(
-                a_dir_fix_function=self._save_config_from_fixed_rec_dir
-                )
         self.dirty_config = True if self.params_changed else False
         ''' True if player changed by config window '''
         self.player_changed = False
@@ -3161,24 +3161,22 @@ class PyRadioConfig(PyRadioStations):
 
 class PyRadioPlaylistStack():
 
-    _p = []
-
-    _id = {'station_path': 0,
-           'path': 0,
-           'station_file_name': 1,
-           'file_name': 1,
-           'filename': 1,
-           'station_title': 2,
-           'title': 2,
-           'startPos': 3,
-           'selection': 4,
-           'playing' : 5,
-           'is_register': 6,
-           'browsing_station_service': 7,
-           }
-
     def __init__(self):
-        pass
+        self._p = []
+
+        self._id = {'station_path': 0,
+               'path': 0,
+               'station_file_name': 1,
+               'file_name': 1,
+               'filename': 1,
+               'station_title': 2,
+               'title': 2,
+               'startPos': 3,
+               'selection': 4,
+               'playing' : 5,
+               'is_register': 6,
+               'browsing_station_service': 7,
+               }
 
     def __len__(self):
         return len(self._p)
@@ -3418,17 +3416,6 @@ class PyRadioPlaylistStack():
 
 
 class PyRadioStationsStack():
-    pass_first_item_func=None
-    pass_last_item_func=None
-    no_items_func=None
-    play_from_history = False
-
-    ''' items: list of lists
-        [
-            [playlist name, station name, station id],
-            ...
-        ]
-    '''
 
     def __init__(
         self,
@@ -3437,19 +3424,27 @@ class PyRadioStationsStack():
         pass_last_item_function=None,
         no_items_function=None
     ):
+        self.play_from_history = False
+
+        ''' items: list of lists
+            [
+                [playlist name, station name, station id],
+                ...
+            ]
+        '''
         self.items = []
         self.item = -1
 
-        ######## DEBUG START
-        self.items = [
-            ['reversed', 'Lounge (Illinois Street Lounge - SomaFM)', 10],
-            ['reversed', 'Folk (Folk Forward - SomaFM)', 17],
-            ['Κέρκυρα', 'Ράδιο Επτάνησα 98,8', 11]
-        ]
-        self.item = 0
-        self.play_from_history = True
-        self.clear()
-        ######## DEBUG END
+        # ######## DEBUG START
+        # self.items = [
+        #     ['reversed', 'Lounge (Illinois Street Lounge - SomaFM)', 10],
+        #     ['reversed', 'Folk (Folk Forward - SomaFM)', 17],
+        #     ['Κέρκυρα', 'Ράδιο Επτάνησα 98,8', 11]
+        # ]
+        # self.item = 0
+        # self.play_from_history = True
+        # self.clear()
+        # ######## DEBUG END
 
         self.execute_func = execute_function
         self.pass_first_item_func = pass_first_item_function
@@ -3574,11 +3569,11 @@ class PyRadioLog():
     PATTERN = '%(asctime)s - %(name)s:%(funcName)s():%(lineno)d - %(levelname)s: %(message)s'
     PATTERN_TITLE = '%(asctime)s | %(message)s'
 
-    log_titles = log_debug = False
-
-    titles_handler = debug_handler = None
-
     def __init__(self, pyradio_config):
+        self.log_titles = False
+        self.log_debug = False
+        self.titles_handler = False
+        self.debug_handler = None
         self._cnf = pyradio_config
         self._stations_dir = pyradio_config.stations_dir
 
@@ -3715,31 +3710,31 @@ class PyRadioBase16Themes():
         'variation',
         'variation-alt'
     )
-    ''' last used theme name (no "base16-", no extension) '''
-    _last_used_theme = None
     '''  link to last used base16 theme '''
     _ln = path.join(path.expanduser('~'), '.config/base16-project/base16_shell_theme')
-    ''' pyradio base16 file for auto download '''
-    _default_theme_file = None
-    ''' the default base16 file, without path and extension '''
-    default_filename_only = 'base16-pyradio'
-    ''' pyradio base16 them for download '''
-    _custom_theme_file = None
-
-    ''' working parameters'''
-    ''' applied name
-        to be used by download()
-    '''
-    theme_id = 0
-    ''' applied theme filename (if autoloaed, = _default_theme_file)
-        to be used by download()
-    '''
-    theme_file_name = _default_theme_file
-    # applied theme url
-    theme_url = None
-
 
     def __init__(self, config):
+        ''' last used theme name (no "base16-", no extension) '''
+        self._last_used_theme = None
+        ''' pyradio base16 file for auto download '''
+        self._default_theme_file = None
+        ''' the default base16 file, without path and extension '''
+        self.default_filename_only = 'base16-pyradio'
+        ''' pyradio base16 them for download '''
+        self._custom_theme_file = None
+
+        ''' working parameters'''
+        ''' applied name
+            to be used by download()
+        '''
+        self.theme_id = 0
+        ''' applied theme filename (if autoloaed, = _default_theme_file)
+            to be used by download()
+        '''
+        self.theme_file_name = self._default_theme_file
+        # applied theme url
+        self.theme_url = None
+
         self._cnf = config
         self._themes_dir = config.themes_dir
         ''' base16 autoload filename '''
@@ -3881,6 +3876,7 @@ class PyRadioPyWalThemes(PyRadioBase16Themes):
     _ln = path.join(path.expanduser('~'), '.cache', 'wal', 'colors.json')
 
     def __init__(self, config):
+        super().__init__(config)
         self._cnf = config
         self._themes_dir = config.themes_dir
         self._custom_theme_file = path.join(self._themes_dir, self.THEME[self.theme_id] + '.pyradio-theme')
@@ -4045,6 +4041,7 @@ class PyRadioThemesShThemes(PyRadioBase16Themes):
     '''  link to last used base16 theme '''
 
     def __init__(self, config):
+        super().__init__(config)
         self._cnf = config
         self._themes_dir = config.themes_dir
         self._custom_theme_file = path.join(self._themes_dir, self.THEME[self.theme_id] + '.pyradio-theme')

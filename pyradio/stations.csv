@@ -1,6 +1,6 @@
 
 # PyRadio Playlist File - Format:
-# name,url,encoding,icon,profile,buffering,force-http,volume,referer
+# name,url,encoding,icon,profile,buffering,force-http,volume,referer,player
 Alternative (BAGeL Radio),https://ais-sa3.cdnstream1.com/2606_128.aac
 Alternative (The Alternative Project),http://c9.prod.playlists.ihrhls.com/4447/playlist.m3u8
 American Roots (Boot Liquor - SomaFM),http://somafm.com/bootliquor.pls
