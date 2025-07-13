@@ -934,6 +934,9 @@ Restricted Commands (Main mode only)
         '/perm_html': '<div class="alert alert-danger">Operation not permitted (not in <b>Main Mode</b>)</div>',
     }
 
+    # sel = 0
+    # _selected = -1
+
     def __init__(self, bind_ip, bind_port, config, player, commands):
         self.has_netifaces = HAS_NETIFACES
         if not self.has_netifaces:
@@ -1367,6 +1370,7 @@ Restricted Commands (Main mode only)
                 self._path.startswith('/stations/'):
             if self.can_send_command():
                 ret = self._parse()
+                logger.error('\n\n1 _parse returned {}\n\n'.format(ret))
                 if ret is None:
                     self._send_text(self._text['/error'])
                 else:
@@ -1389,14 +1393,21 @@ Restricted Commands (Main mode only)
                         except (ValueError, TypeError):
                             self._send_text(self._text['/error'])
                             has_error = True
+                        if isinstance(ret, int):
+                            if ret >= len(self.lists()[0][-1]):
+                                ret = len(self.lists()[0][-1])
+                        logger.error(f' 1 {ret = }')
                         if not has_error:
                             # ret = ret -1 if ret > 0 else 0
                             if ret < 0:
                                 ret = 0
+                            logger.error(f' 2 {ret = }')
                             if self._is_html:
                                 self._commands['/jump'](ret)
                                 self._send_raw('<div class="alert alert-success">Playing <b>{}</b></div>'.format(self.lists()[0][-1][ret-1][0]))
                             else:
+                                logger.error(f' 3 {ret = }')
+                                logger.error(f'{self.lists() = }')
                                 self._send_text(' Playing station: "{}"'.format(self.lists()[0][-1][ret-1][0]))
                                 self._commands['/jump'](ret)
                     has_error = False
@@ -1708,6 +1719,7 @@ Restricted Commands (Main mode only)
                         self._send_text(self._text['/perm'])
                 else:
                     ret = self._parse()
+                    logger.error('\n\n2 _parse returned {}\n\n'.format(ret))
                     if ret is None:
                         self._send_text(self._text['/error'])
 
@@ -1912,6 +1924,7 @@ Content-Length: {}
                         int(sp[1])
                     except ValueError:
                         return None
+                    logger.error('\n\nsong number = {}\n\n'.format(sp[1]))
                     return sp[1]
             elif sp[0] in ('playlists', 'pl'):
                 ''' do i have a number? '''
