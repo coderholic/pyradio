@@ -176,7 +176,6 @@ class PyRadioStations():
         ''' station directory service object '''
         self._online_browser = None
 
-        logger.error('here')
         self._register_to_open = None
         self._open_register_list = False
 
@@ -1032,7 +1031,6 @@ class PyRadioStations():
         return ret, self.number_of_stations
 
     def insert_station(self, station, target):
-        logger.error(f'{station = }')
         ''' Insert a station in the list at index target
         It is inserted ABOVE old target (old target becomes old target + 1)'''
         # logger.error('DE target= {0}, number_of_stations = {1}'.format(target, self.number_of_stations))
@@ -1253,6 +1251,8 @@ class PyRadioConfig(PyRadioStations):
         self._old_localize = None
 
         self.EXTERNAL_PLAYER_OPTS = None
+        self.USE_EXTERNAL_PLAYER = False
+
 
         ''' I will get this when a player is selected
             It will be used when command line parameters are evaluated

@@ -503,7 +503,6 @@ class PyRadio():
             in log.write, if _current_player_id != _active_player_id
                     do not display any message
         '''
-        self._set_playing = True
         # player data
         self._default_player_name = None
 
@@ -1296,8 +1295,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self._cnf.buffering_enabled = True
             self._update_config_buffering_data()
             self._default_player_name = self.player.PLAYER_NAME
-            logger.error(f'{ self._default_player_name =  }')
-            logger.error(f'{ self.active_player_name =  }')
         except:
             ''' no player '''
             self.ws.operation_mode = self.ws.NO_PLAYER_ERROR_MODE
@@ -2198,7 +2195,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     if self.play.replace('-', '').isdigit():
                         num = int(self.play) - 1
                 if num < self.number_of_items:
-                    logger.error('1 setStation')
                     self.setStation(num)
                     if self.number_of_items > 0:
                         self.playSelection()
@@ -2213,7 +2209,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
             elif self._pre_select != 'False':
                 if self._pre_select < self.number_of_items:
-                    logger.error('2 setStation')
                     self.setStation(self._pre_select)
                     self._put_selection_in_the_middle(force=True)
                     self.refreshBody()
@@ -2259,7 +2254,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 #
 ############################################################################
 '''.format(a_player.PLAYER_NAME))
-                    logger.error('1 _activate+player')
                     self._activate_player(a_player.PLAYER_NAME)
                     self._cnf.check_output_file = path.join(
                         self._cnf.check_output_folder,
@@ -2270,12 +2264,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     while cur_id < end_id:
                         if cur_id != old_id:
                             logger.error(f'working on {old_id = }, {cur_id = }')
-                            logger.error('3 setStation')
                             self.setStation(cur_id)
                             self.playSelection()
                             self.refreshBody()
                             # self.log.write(msg_id=STATES.RESET, msg=M_STRINGS['wait_for_player_'] + self.player.PLAYER_NAME, help_msg=True)
-                            logger.error('1')
+                            # logger.error('1')
                             # ret = self._loop_wait_for_next_station()
                             # logger.error('2')
                             # if ret is not None:
@@ -2283,11 +2276,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                             # logger.error('3')
                             sleep(1)
                             old_id = cur_id
-                        logger.error('4')
-                        logger.error(f'brefore {old_id = }, {cur_id = }')
+                        # logger.error('4')
+                        # logger.error(f'brefore {old_id = }, {cur_id = }')
                         cur_id, old_id, exit_players_loop = self._loop_check_playlist(cur_id, old_id, end_id)
-                        logger.error(f' after {old_id = }, {cur_id = }')
-                        logger.error('5')
+                        # logger.error(f' after {old_id = }, {cur_id = }')
+                        # logger.error('5')
                     self._write_accumulated_errors()
                     if exit_players_loop:
                         break
@@ -2580,7 +2573,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             number = 0
 
         self.selection = number
-        logger.error(f'1 {self.selection = }')
 
         if self.selection - self.startPos >= self.bodyMaxY:
             self.startPos = self.selection - self.bodyMaxY + 1
@@ -2590,7 +2582,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self._force_print_all_lines = self.startPos != old_start_pos
         self._update_history_positions_in_list()
         # logger.error('de setStation: selection = {}'.format(self.selection))
-        logger.error(f'2 {self.selection = }')
 
     def playSelectionBrowser(self, a_url=None):
         self.log.display_help_message = False
@@ -2638,20 +2629,18 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     rmtree(self._cnf.logos_dir, ignore_errors=True)
 
     def _what_is_the_station_player(self):
-        logger.error(f'{self.selection = }')
         station_player = self.stations[self.selection][Station.player]
         if station_player == '':
             station_player = self._default_player_name
         if station_player not in [x.PLAYER_NAME for x in self._cnf.AVAILABLE_PLAYERS]:
             station_player = self._default_player_name
-        logger.error('\n\n')
-        logger.error('station_player = {}'.format(station_player))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'{station_player = }')
         return station_player
 
     def _get_the_stations_player(self, station_player):
         if station_player != self.active_player_name:
             sel = self.selection
-            logger.error('2 _activate+player')
             self._activate_player(station_player)
             self.selection = sel
 
@@ -2672,14 +2661,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         stream_url = ''
         self.log.display_help_message = False
         station_player = self._what_is_the_station_player()
-        logger.error(f'{station_player = }')
 
         if restart:
-            logger.error('1 get')
             self._get_the_stations_player(station_player)
-            logger.error(f'{ self._default_player_name =  }')
-            logger.error(f'{ self.active_player_name =  }')
-            logger.error('\n\n')
             stream_url = self._last_played_station[1]
             enc = self._last_played_station[2]
             if invalid_encoding(enc):
@@ -2687,11 +2671,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             # logger.error('setting playing to {}'.format(self._last_played_station_id))
             self.playing = self._last_played_station_id
         else:
-            logger.error('2 get')
             self._get_the_stations_player(station_player)
-            logger.error(f'{ self._default_player_name =  }')
-            logger.error(f'{ self.active_player_name =  }')
-            logger.error('\n\n')
             self._remove_station_images()
             self._cnf.notification_image_file = None
             if self._cnf.enable_notifications and \
@@ -4062,7 +4042,6 @@ ____Using |fallback| theme.''')
                 if self.playing > -1:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Setting playing station at {}'.format(self.playing))
-                    logger.error('4 setStation')
                     self.setStation(self.playing)
                     self._last_played_playlist = self._cnf.station_title
                 else:
@@ -4075,7 +4054,6 @@ ____Using |fallback| theme.''')
                             self.startPos = 0
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Setting selection station at {}'.format(self.selection))
-                    logger.error('5 setStation')
                     self.setStation(self.selection)
 
         if self.selection < 0:
@@ -4240,6 +4218,16 @@ and |remove the file manually|.
                     self.player.write_chapters()
             else:
                 self.outerBodyWin.refresh()
+
+        if self.player.isPlaying() and \
+                self._default_player_name != self.active_player_name:
+            self.outerBodyWin.addstr(
+                self.bodyWinEndY-2, 1, '[', curses.color_pair(13)
+            )
+            self.outerBodyWin.addstr(self.player.PLAYER_NAME, curses.color_pair(4))
+            self.outerBodyWin.addstr(']', curses.color_pair(13))
+
+
 
     def _open_playlist(self, a_url=None):
         ''' open playlist
@@ -4818,7 +4806,6 @@ and |remove the file manually|.
                 rnd = random.randint(0, len(self.stations) - 1)
                 if self.stations[rnd][1] != '-':
                     break
-            logger.error('6 setStation')
             self.setStation(rnd)
             self.playSelection()
             self._put_selection_in_the_middle(force=True)
@@ -5202,7 +5189,6 @@ and |remove the file manually|.
 
     def _apply_search_result(self, ret, reapply=False):
         def _apply_main_windows(ret):
-            logger.error('7 setStation')
             self.setStation(ret)
             self._put_selection_in_the_middle(force=True)
         if reapply:
@@ -5280,7 +5266,6 @@ and |remove the file manually|.
             elif self.playing == target:
                 self.playing = source - 1
             self.selection = target
-            logger.error('8 setStation')
             self.setStation(self.selection)
             self.refreshBody()
         return ret
@@ -5488,10 +5473,10 @@ and |remove the file manually|.
                 else:
                     ret, self.number_of_items = self._cnf.insert_station(self._unnamed_register, self.selection + 1)
                 self.stations = self._cnf.stations
-                logger.error('\n\n')
-                for n in self.stations:
-                    logger.error(n)
-                logger.error('\n\n')
+                # logger.error('\n\n')
+                # for n in self.stations:
+                #     logger.error(n)
+                # logger.error('\n\n')
                 self.selection += 1
                 if self.selection >= self.startPos + self.bodyMaxY:
                     self.startPos += 1
@@ -5549,7 +5534,6 @@ and |remove the file manually|.
             sel = self.selection - self.pageChange
             if sel < 0 and self.selection > 0:
                 sel = 0
-            logger.error('9 setStation')
             self.setStation(sel)
             self._handle_cursor_move_up()
 
@@ -5561,7 +5545,6 @@ and |remove the file manually|.
                 sel = 0
             elif sel >= len(self.stations):
                 sel = len(self.stations) - 1
-            logger.error('10 setStation')
             self.setStation(sel)
             self._handle_cursor_move_down()
 
@@ -6018,14 +6001,12 @@ and |remove the file manually|.
     def _move_cursor_one_up(self):
         self._reset_status_bar_right()
         if self.number_of_items > 0:
-            logger.error('11 setStation')
             self.setStation(self.selection - 1)
             self._handle_cursor_move_up()
 
     def _move_cursor_one_down(self):
         self._reset_status_bar_right()
         if self.number_of_items > 0:
-            logger.error('12 setStation')
             self.setStation(self.selection + 1)
             self._handle_cursor_move_down()
 
@@ -6499,7 +6480,6 @@ and |remove the file manually|.
             return '<div class="alert alert-success">Playing <b>{}</b>!</div>'.format(self.stations[self.selection][0])
 
     def _stations_history_previous(self):
-        self._set_playing = False
         self._update_status_bar_right(status_suffix='')
         if int(self._cnf.connection_timeout_int) == 0:
             self._show_stations_history_notification(0)
@@ -6511,7 +6491,6 @@ and |remove the file manually|.
             else:
                 self._cnf.play_from_history = True
                 self._cnf.stations_history.play_previous()
-        self._set_playing = True
 
     def _html_is_player_stopped(self):
         if self.player.isPlaying() and \
@@ -6541,7 +6520,6 @@ and |remove the file manually|.
             return '<div class="alert alert-success">Playing <b>{}</b>!</div>'.format(self.stations[self.selection][0])
 
     def _stations_history_next(self):
-        self._set_playing = False
         self._update_status_bar_right(status_suffix='')
         if int(self._cnf.connection_timeout_int) == 0:
             self._show_stations_history_notification(0)
@@ -6553,7 +6531,6 @@ and |remove the file manually|.
             else:
                 self._cnf.play_from_history = True
                 self._cnf.stations_history.play_next()
-        self._set_playing = True
 
     def _show_remote_control_server_active(self):
         self._open_simple_message_by_key_and_mode(
@@ -6724,8 +6701,6 @@ and |remove the file manually|.
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('selected player = {}'.format(player_name))
         self._change_player = None
-        to_play = self.playing if self._set_playing else -1
-        logger.error('\n******\nto_play = {}\n******\n'.format(to_play))
         to_record = self.player.recording
         if self.player.isPlaying():
             self.stopPlayer()
@@ -6767,14 +6742,10 @@ and |remove the file manually|.
                 self.player.recording = to_record
         self._update_config_buffering_data()
         self.log.display_help_message = False
-        logger.error(f'Player activated: ' + player_name)
+        if logger.isEnabledFor(logging.INFO):
+            logger.info(f'**** Player activated: ' + player_name)
         self.log.write(msg_id=STATES.PLAYER_ACTIVATED, msg=player_name + M_STRINGS['player-acivated_'], help_msg=False, suffix='')
         self.player.volume = -1
-        if to_play > -1:
-            if to_play != self.selections:
-                logger.error('13 setStation')
-                self.setStation(to_play)
-            self.playSelection()
 
     def is_edit_keys_restriction_valid(self, char):
         ''' check if self._chars_to_bypass_for_search should be
@@ -7554,7 +7525,7 @@ _____"|f|" to see the |free| keys you can use.
             ch = chr(char).lower()
             if char in (ord('\n'), ord('\r'), curses.KEY_ENTER):
                 self._unnamed_register = self.stations[self.selection]
-                logger.info(f'{self._unnamed_register =  }')
+                # logger.info(f'{self._unnamed_register =  }')
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('saving to unnamed register: {}'.format(self._unnamed_register))
                 self._show_notification_with_delay(
@@ -7661,14 +7632,13 @@ _____"|f|" to see the |free| keys you can use.
                 self.refreshBody()
             elif ret != '':
                 # set player
-                logger.error('\n\nplayer = {}\n\n'.format(ret))
                 self.ws.close_window()
-                logger.error('3 _activate+player')
+                playing = self.player.isPlaying()
                 self._activate_player(ret)
+                if playing:
+                    self.playSelection()
                 self.refreshBody()
                 self._change_player = None
-                logger.error(f'{ self._default_player_name =  }')
-                logger.error(f'{ self.active_player_name =  }')
 
         elif self.ws.operation_mode == self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE:
             if char == kbkey['s'] or \
@@ -7725,7 +7695,6 @@ _____"|f|" to see the |free| keys you can use.
             self._reset_status_bar_right()
             if self.number_of_items > 0:
                 if self.number_of_items < self.bodyMaxY:
-                    logger.error('14 setStation')
                     self.setStation(-1)
                 else:
                     self.selection = self.startPos + self.bodyMaxY - 1
@@ -7830,7 +7799,6 @@ _____"|f|" to see the |free| keys you can use.
                     )
                 self._schedule_station_select_win.init_window(read_items=False)
                 self._schedule_station_select_win.refresh_win()
-                logger.error('15 setStation')
                 self._schedule_station_select_win.setStation(self._simple_schedule.station)
             elif ret in (3, 6, 7, 8):
                 self._open_simple_message_by_key(
@@ -7966,7 +7934,6 @@ _____"|f|" to see the |free| keys you can use.
                     self._station_select_win.update_playlist_and_station(self._config_win._config_options['default_playlist'][1], self._config_win._config_options['default_station'][1])
                 self._station_select_win.init_window()
                 self._station_select_win.refresh_win()
-                logger.error('16 setStation')
                 self._station_select_win.setStation(self._config_win._config_options['default_station'][1])
 
             elif ret >= 0:
@@ -9352,7 +9319,6 @@ _____"|f|" to see the |free| keys you can use.
             if ret <= 0:
                 if ret == 0:
                     ret = self._groups[self._group_selection_window.selection][0]
-                    logger.error('17 setStation')
                     self.setStation(ret)
                     self._put_selection_in_the_middle(force=True)
                     self.refreshBody()
@@ -9715,7 +9681,6 @@ _____"|f|" to see the |free| keys you can use.
             if char in (curses.KEY_END, ):
                 self._update_status_bar_right()
                 if self.number_of_items > 0:
-                    logger.error('18 setStation')
                     self.setStation(-1)
                     self.refreshBody()
                 return
@@ -9741,7 +9706,6 @@ _____"|f|" to see the |free| keys you can use.
             if char in (kbkey['g'], curses.KEY_HOME) or \
                     check_localized(char, (kbkey['g'], )):
                 self._update_status_bar_right()
-                logger.error('19 setStation')
                 self.setStation(0)
                 self.refreshBody()
                 return
@@ -9842,16 +9806,20 @@ _____"|f|" to see the |free| keys you can use.
                     if self.stations[self.selection][1] == '-':
                         ''' this is a group '''
                         return
-                    self.player.USE_EXTERNAL_PLAYER = True
+                    self._cnf.USE_EXTERNAL_PLAYER = True
                     stream_url = self.stations[self.selection][1]
                     logger.error('\n====\n====\nself.stations[self.selection] = {}\n====\n====\n'.format(self.stations[self.selection]))
+                    logger.error('\n\n\n')
                     self._set_active_stations()
                     self.playing = self.selection
                     self.selections[0][2] = self.playing
                     self._click_station()
                     self._add_station_to_stations_history()
+                    station_player = self._what_is_the_station_player()
+                    self._get_the_stations_player(station_player)
                     self._cnf.EXTERNAL_PLAYER_OPTS = self.player.play(
-                        self._last_played_station if self._last_played_station else self.stations[self.selection],
+                        # self._last_played_station if self._last_played_station else self.stations[self.selection],
+                        self.stations[self.selection],
                         stop_player=None,
                         detect_if_player_exited=None,
                         enable_crash_detection_function=None,
@@ -9960,7 +9928,6 @@ _____"|f|" to see the |free| keys you can use.
                                     callback_function=self.refreshBody)
                             ind = -1
                         if ind != -1:
-                            logger.error('20 setStation')
                             self.setStation(ind)
                             self._put_selection_in_the_middle(force=True)
                             self.refreshBody()
@@ -10472,22 +10439,16 @@ _____"|f|" to see the |free| keys you can use.
             if self.jumpnr == '':
                 if char == kbkey['G'] or \
                         check_localized(char, (kbkey['G'],)):
-                    logger.error('21 setStation')
                     self.setStation(-1)
                 else:
-                    logger.error('22 setStation')
                     self.setStation(0)
             else:
                 force_center = False
                 jumpto = min(int(self.jumpnr) - 1, len(self.stations) - 1)
-                logger.error(f'1 {jumpto =  }')
                 jumpto = max(0, jumpto)
-                logger.error(f'2 {jumpto =  }')
                 if jumpto < self.startPos - 1 or \
                         jumpto > self.startPos + self.bodyMaxY:
                     force_center = True
-                logger.error(f'3 {jumpto =  }')
-                logger.error('23 setStation')
                 self.setStation(jumpto)
                 self._put_selection_in_the_middle(force=force_center)
                 self.jumpnr = ''
@@ -11992,11 +11953,7 @@ _____"|f|" to see the |free| keys you can use.
             self.outerBodyWin.box()
             self._print_body_header()
             # self.outerBodyWin.refresh()
-        logger.error('3 get')
 
-        station_player = self._what_is_the_station_player()
-        self._get_the_stations_player(station_player)
-        logger.error('***** playSelection')
         self.playSelection()
         self._set_active_stations()
         self._get_playlists_data_from_playlist_name(h_item[0])
