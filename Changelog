@@ -1,5 +1,11 @@
 2025-06-18 s-n-g
     * version 0.9.3.11.16 - 0.9.3.12-beta16
+    * heavy refactoring - expect bugs!
+    * adding player field (optional) to station's definition
+    * fixing a potential Remote Control Server crash
+    * fixing a couple of minor bugs
+    * updating mpv download link for windows
+    * updating docs
 
 2025-06-18 s-n-g
     * version 0.9.3.11.15 - 0.9.3.12-beta15

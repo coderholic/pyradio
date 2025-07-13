@@ -374,7 +374,6 @@ class PyRadioEditor():
         self._orig_player = ''
         self._player = ''
         self._players = ['default'] + [x.PLAYER_NAME for x in available_players]
-        logger.error(f'{self._players = }')
         self._player_id = 0
 
     @property
@@ -994,21 +993,17 @@ class PyRadioEditor():
         return 1
 
     def _get_next_player(self):
-        logger.error(f'{self._player_id = }')
         self._player_id += 1
         if self._player_id >= len(self._players):
             self._player_id = 0
-        logger.error(f'{self._player_id = }')
         self._player = self._players[self._player_id]
         self._show_extra_fields()
         self._win.refresh()
 
     def _get_previous_player(self):
-        logger.error(f'{self._player_id = }')
         self._player_id -= 1
         if self._player_id < 0:
             self._player_id = len(self._players) - 1
-        logger.error(f'{self._player_id = }')
         self._player = self._players[self._player_id]
         self._show_extra_fields()
         self._win.refresh()

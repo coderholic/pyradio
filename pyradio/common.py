@@ -724,10 +724,6 @@ class CsvReadWrite():
                         if row_length > Station.player:
                             player = row[Station.player].strip()
                             this_row_version = Station.player
-                        if name == "WKHR":
-                            logger.error(f'{row_length = }')
-                            logger.error(f'{row = }')
-                            logger.error('\n\nstation player = {}\n\n'.format(player))
 
                         if buffering:
                             if '@' not in buffering:

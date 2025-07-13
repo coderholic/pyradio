@@ -2,7 +2,7 @@
 .\" Copyright (C) 2018-2025 Spiros Georgaras <sng@hellug.gr>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH pyradio 1 "May 2025" pyradio
+.TH pyradio 1 "July 2025" pyradio
 
 .SH Name
 .PP
@@ -404,7 +404,10 @@ The seventh column will determine whether the station will be forced to be using
 .IP - 3
 The eighth column defines the \fBVolume\fR value to be used (more on this at \fIStation volume\fR).
 .IP - 3
-The last column will define the \fBReferer\fR to be used (more on this at \fISpecifying a station's Referer URL\fR).
+The ninth column will define the \fBReferer\fR to be used (more on this at \fISpecifying a station's Referer URL\fR).
+.IP - 3
+The last column will define the \fBPlayer\fR to be used (more on this at \fISpecifying a station's preferred station\fR).
+
 .PP
 The following table presents the \fBStation's fields\fR and the current level of support.
 .PP
@@ -423,6 +426,7 @@ _
 \fIForce HTTP\fR       0.9.3.11.6                   0.9.3.11.10
 \fIVolume\fR           0.9.3.11.10                  0.9.3.11.5
 \fIReferer URL\fR      <0.9.3.11.5                  0.9.3.11.10
+\fIPlayer\fR           0.9.3.11.16                  0.9.3.11.16
 .TE
 
 .PP
@@ -861,6 +865,18 @@ will instruct \fBpyradio\fR to look for VLC, then MPlayer and finaly for MPV and
 .IP \fBNote\fR
 The default player to use can also be set in \fBpyradio\fR’s configuration file, parameter \fIplayer\fR (default value is \fImpv, mplayer, vlc\fR).
 
+.P
+\fBSpecifying a station's preferred player\fR
+.RS 4
+Some stations may perform better —offering more stable playback, faster starts, or improved compatibility— when played with a specific audio player.
+
+\fBpyradio\fR allows you to define a \fIpreferred player\fR for individual stations \fBdirectly within\fR the playlist file.
+
+When such a preference is set, \fBpyradio\fR will automatically activate the specified player and use it to start playback for that station. If the player in not installed, the default player will be used instead.
+
+.IP \fBNote\fR
+A station with a defined player will \fBalways\fR use that player, regardless of the session's default player or any player changes made during the session.
+.RE
 
 .P
 \fBChanging player mid-session\fR

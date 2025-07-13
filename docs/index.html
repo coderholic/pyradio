@@ -88,7 +88,10 @@ a:visited{color: SaddleBrown;}
 </ul></li>
 <li><a href="#player-detection-/-selection">Player detection / selection</a>
 <ul>
-<li><a href="#changing-player-mid-session">Changing player mid-session</a></li>
+<li><a href="#changing-player-mid-session">Changing player mid-session</a>
+<ul>
+<li><a href="#specifying-a-stations-preferred-player">Specifying a station’s preferred player</a></li>
+</ul></li>
 <li><a href="#specifying-a-stations-referer-url">Specifying a station’s Referer URL</a>
 <ul>
 <li><a href="#note-about-mplayer">Note about MPlayer</a></li>
@@ -192,6 +195,12 @@ a:visited{color: SaddleBrown;}
 
 2025-06-18 s-n-g
     * version 0.9.3.11.16 - 0.9.3.12-beta16
+    * heavy refactoring - expect bugs!
+    * adding player field (optional) to station's definition
+    * fixing a potential Remote Control Server crash
+    * fixing a couple of minor bugs
+    * updating mpv download link for windows
+    * updating docs
 
 2025-06-18 s-n-g
     * version 0.9.3.11.15 - 0.9.3.12-beta15
@@ -1739,7 +1748,8 @@ If a profile is set for the station, a “<strong>[P]</strong>” will be displa
 <li><p>The sixth column will determine whether <strong>Buffering</strong> will be used (more on this at <a href="#buffering">Buffering</a>).</p></li>
 <li><p>The seventh column will determine whether the station will be forced to be using <strong>http</strong> instead of https (more on this at <a href="#player-connection-protocol">Player connection protocol</a>).</p></li>
 <li><p>The eight column defines the <strong>Volume</strong> value to be used (more on this at <a href="#station-volume">Station volume</a>).</p></li>
-<li><p>The last column will define the <strong>Referer</strong> to be used (more on this at <a href="#specifying-a-stations-referer-url">Specifying a station’s Referer URL</a>).</p></li>
+<li><p>The ninth column will define the <strong>Referer</strong> to be used (more on this at <a href="#specifying-a-stations-referer-url">Specifying a station’s Referer URL</a>).</p></li>
+<li><p>The last column will define the <strong>Player</strong> to be used (more on this at <a href="#specifying-a-stations-preferred-player">Specifying a station’s preferred station</a>).</p></li>
 </ul>
 <p>The following table presents the <strong>Station’s fields</strong> and the current level of support.</p>
 <table>
@@ -1800,6 +1810,11 @@ If a profile is set for the station, a “<strong>[P]</strong>” will be displa
 <td>Referer URL</td>
 <td>&lt;0.9.3.11.5</td>
 <td>0.9.3.11.10</td>
+</tr>
+<tr>
+<td>Player</td>
+<td>0.9.3.11.16</td>
+<td>0.9.3.11.16</td>
 </tr>
 </tbody>
 </table>
@@ -2003,6 +2018,11 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p>Pressing “<strong>\m</strong>” will bring up the “<em>Switch Media Player</em>” window, where a different player can be activated.</p>
 <p>If <strong>recording is on</strong> while using the previously activated player, it will remain on with the newly activated one. This actually means that the recording will stop when the old player is stopped and resumed when the new player is activated (creating a new recorder file). There is just one exception to that; selecting <strong>VLC</strong> is not possible on <strong>Windows</strong>, since <strong>VLC</strong> does not support recording on this platform.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The activated player will not be saved; <strong>PyRadio</strong> will still use the player defined at its config next time it is executed.</p>
+<h4 id="specifying-a-stations-preferred-player">Specifying a station’s preferred player</h4>
+<p>Some stations may perform better —offering more stable playback, faster starts, or improved compatibility— when played with a specific audio player.</p>
+<p><strong>PyRadio</strong> allows you to define a <strong>preferred player</strong> for individual stations <strong>directly within</strong> the playlist file.</p>
+<p>When such a preference is set, <strong>PyRadio</strong> will automatically activate the specified player and use it to start playback for that station. If the player in not installed, the default player will be used instead.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> A station with a defined player will <strong>always</strong> use that player, regardless of the session’s default player or any player changes made during the session.</p>
 <h3 id="specifying-a-stations-referer-url">Specifying a station’s Referer URL</h3>
 <p>Although <strong>PyRadio</strong> is meant to be a radio station player, it can also be used to listen to video stations transmitting m3u8 playlists (HTTP Live Streaming or HLS).</p>
 <p>The thing with these transmissions is that usually a <strong>Referer URL</strong> has to be provided so that the connection does not fail.</p>

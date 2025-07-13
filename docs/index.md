@@ -39,6 +39,7 @@ Command line internet radio player.
     * [Global encoding declaration](#global-encoding-declaration)
 * [Player detection / selection](#player-detection-/-selection)
     * [Changing player mid-session](#changing-player-mid-session)
+        * [Specifying a station's preferred player](#specifying-a-stations-preferred-player)
     * [Specifying a station's Referer URL](#specifying-a-stations-referer-url)
         * [Note about MPlayer](#note-about-mplayer)
         * [Referer support in the playlist](#referer-support-in-the-playlist)
@@ -436,7 +437,9 @@ If a profile is set for the station, a "**[P]**" will be displayed at the left t
 
 - The eight column defines the **Volume** value to be used (more on this at [Station volume](#station-volume)).
 
-- The last column will define the **Referer** to be used (more on this at [Specifying a station's Referer URL](#specifying-a-stations-referer-url)).
+- The ninth column will define the **Referer** to be used (more on this at [Specifying a station's Referer URL](#specifying-a-stations-referer-url)).
+
+- The last column will define the **Player** to be used (more on this at [Specifying a station's preferred station](#specifying-a-stations-preferred-player)).
 
 The following table presents the **Station's fields** and the current level of support.
 
@@ -451,6 +454,7 @@ The following table presents the **Station's fields** and the current level of s
 | Force HTTP      | 0.9.3.11.6                | 0.9.3.11.10              |
 | Volume          | 0.9.3.11.10               | 0.9.3.11.5               |
 | Referer URL     | <0.9.3.11.5               | 0.9.3.11.10              |
+| Player          | 0.9.3.11.16               | 0.9.3.11.16              |
 
 
 **PyRadio** will by default load the user's stations file (e.g. *~/.config/pyradio/stations.csv*) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.
@@ -760,6 +764,16 @@ Pressing "**\\m**" will bring up the "*Switch Media Player*" window, where a dif
 If **recording is on** while using the previously activated player, it will remain on with the newly activated one. This actually means that the recording will stop when the old player is stopped and resumed when the new player is activated (creating a new recorder file). There is just one exception to that; selecting **VLC** is not possible on **Windows**, since **VLC** does not support recording on this platform.
 
 **Note:** The activated player will not be saved; **PyRadio** will still use the player defined at its config next time it is executed.
+
+#### Specifying a station's preferred player
+
+Some stations may perform better —offering more stable playback, faster starts, or improved compatibility— when played with a specific audio player.
+
+**PyRadio** allows you to define a **preferred player** for individual stations **directly within** the playlist file.
+
+When such a preference is set, **PyRadio** will automatically activate the specified player and use it to start playback for that station. If the player in not installed, the default player will be used instead.
+
+**Note:** A station with a defined player will **always** use that player, regardless of the session's default player or any player changes made during the session.
 
 ### Specifying a station's Referer URL
 

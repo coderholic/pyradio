@@ -503,7 +503,6 @@ class PyRadio():
             in log.write, if _current_player_id != _active_player_id
                     do not display any message
         '''
-        self._set_playing = True
         # player data
         self._default_player_name = None
 
@@ -1296,8 +1295,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self._cnf.buffering_enabled = True
             self._update_config_buffering_data()
             self._default_player_name = self.player.PLAYER_NAME
-            logger.error(f'{ self._default_player_name =  }')
-            logger.error(f'{ self.active_player_name =  }')
         except:
             ''' no player '''
             self.ws.operation_mode = self.ws.NO_PLAYER_ERROR_MODE
@@ -2275,7 +2272,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                             self.playSelection()
                             self.refreshBody()
                             # self.log.write(msg_id=STATES.RESET, msg=M_STRINGS['wait_for_player_'] + self.player.PLAYER_NAME, help_msg=True)
-                            logger.error('1')
+                            # logger.error('1')
                             # ret = self._loop_wait_for_next_station()
                             # logger.error('2')
                             # if ret is not None:
@@ -2283,11 +2280,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                             # logger.error('3')
                             sleep(1)
                             old_id = cur_id
-                        logger.error('4')
-                        logger.error(f'brefore {old_id = }, {cur_id = }')
+                        # logger.error('4')
+                        # logger.error(f'brefore {old_id = }, {cur_id = }')
                         cur_id, old_id, exit_players_loop = self._loop_check_playlist(cur_id, old_id, end_id)
-                        logger.error(f' after {old_id = }, {cur_id = }')
-                        logger.error('5')
+                        # logger.error(f' after {old_id = }, {cur_id = }')
+                        # logger.error('5')
                     self._write_accumulated_errors()
                     if exit_players_loop:
                         break
@@ -2655,6 +2652,22 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self._activate_player(station_player)
             self.selection = sel
 
+    def _what_is_the_station_player(self):
+        station_player = self.stations[self.selection][Station.player]
+        if station_player == '':
+            station_player = self._default_player_name
+        if station_player not in [x.PLAYER_NAME for x in self._cnf.AVAILABLE_PLAYERS]:
+            station_player = self._default_player_name
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'{station_player = }')
+        return station_player
+
+    def _get_the_stations_player(self, station_player):
+        if station_player != self.active_player_name:
+            sel = self.selection
+            self._activate_player(station_player)
+            self.selection = sel
+
     def playSelection(self, restart=False):
         ''' start playback using current selection
             if restart = True, start the station that has
@@ -2672,14 +2685,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         stream_url = ''
         self.log.display_help_message = False
         station_player = self._what_is_the_station_player()
-        logger.error(f'{station_player = }')
 
         if restart:
-            logger.error('1 get')
             self._get_the_stations_player(station_player)
-            logger.error(f'{ self._default_player_name =  }')
-            logger.error(f'{ self.active_player_name =  }')
-            logger.error('\n\n')
             stream_url = self._last_played_station[1]
             enc = self._last_played_station[2]
             if invalid_encoding(enc):
@@ -2687,11 +2695,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             # logger.error('setting playing to {}'.format(self._last_played_station_id))
             self.playing = self._last_played_station_id
         else:
-            logger.error('2 get')
             self._get_the_stations_player(station_player)
-            logger.error(f'{ self._default_player_name =  }')
-            logger.error(f'{ self.active_player_name =  }')
-            logger.error('\n\n')
             self._remove_station_images()
             self._cnf.notification_image_file = None
             if self._cnf.enable_notifications and \
@@ -4241,6 +4245,16 @@ and |remove the file manually|.
             else:
                 self.outerBodyWin.refresh()
 
+        if self.player.isPlaying() and \
+                self._default_player_name != self.active_player_name:
+            self.outerBodyWin.addstr(
+                self.bodyWinEndY-2, 1, '[', curses.color_pair(13)
+            )
+            self.outerBodyWin.addstr(self.player.PLAYER_NAME, curses.color_pair(4))
+            self.outerBodyWin.addstr(']', curses.color_pair(13))
+
+
+
     def _open_playlist(self, a_url=None):
         ''' open playlist
 
@@ -5488,10 +5502,10 @@ and |remove the file manually|.
                 else:
                     ret, self.number_of_items = self._cnf.insert_station(self._unnamed_register, self.selection + 1)
                 self.stations = self._cnf.stations
-                logger.error('\n\n')
-                for n in self.stations:
-                    logger.error(n)
-                logger.error('\n\n')
+                # logger.error('\n\n')
+                # for n in self.stations:
+                #     logger.error(n)
+                # logger.error('\n\n')
                 self.selection += 1
                 if self.selection >= self.startPos + self.bodyMaxY:
                     self.startPos += 1
@@ -6724,8 +6738,6 @@ and |remove the file manually|.
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('selected player = {}'.format(player_name))
         self._change_player = None
-        to_play = self.playing if self._set_playing else -1
-        logger.error('\n******\nto_play = {}\n******\n'.format(to_play))
         to_record = self.player.recording
         if self.player.isPlaying():
             self.stopPlayer()
@@ -6767,14 +6779,10 @@ and |remove the file manually|.
                 self.player.recording = to_record
         self._update_config_buffering_data()
         self.log.display_help_message = False
-        logger.error(f'Player activated: ' + player_name)
+        if logger.isEnabledFor(logging.INFO):
+            logger.info(f'**** Player activated: ' + player_name)
         self.log.write(msg_id=STATES.PLAYER_ACTIVATED, msg=player_name + M_STRINGS['player-acivated_'], help_msg=False, suffix='')
         self.player.volume = -1
-        if to_play > -1:
-            if to_play != self.selections:
-                logger.error('13 setStation')
-                self.setStation(to_play)
-            self.playSelection()
 
     def is_edit_keys_restriction_valid(self, char):
         ''' check if self._chars_to_bypass_for_search should be
@@ -7554,7 +7562,7 @@ _____"|f|" to see the |free| keys you can use.
             ch = chr(char).lower()
             if char in (ord('\n'), ord('\r'), curses.KEY_ENTER):
                 self._unnamed_register = self.stations[self.selection]
-                logger.info(f'{self._unnamed_register =  }')
+                # logger.info(f'{self._unnamed_register =  }')
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('saving to unnamed register: {}'.format(self._unnamed_register))
                 self._show_notification_with_delay(
@@ -7663,13 +7671,12 @@ _____"|f|" to see the |free| keys you can use.
                 # set player
                 logger.error('\n\nplayer = {}\n\n'.format(ret))
                 self.ws.close_window()
-                logger.error('3 _activate+player')
+                playing = self.player.isPlaying()
                 self._activate_player(ret)
+                if playing:
+                    self.playSelection()
                 self.refreshBody()
                 self._change_player = None
-                logger.error(f'{ self._default_player_name =  }')
-                logger.error(f'{ self.active_player_name =  }')
-
         elif self.ws.operation_mode == self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE:
             if char == kbkey['s'] or \
                     check_localized(char, (kbkey['s'],)):
@@ -9842,7 +9849,7 @@ _____"|f|" to see the |free| keys you can use.
                     if self.stations[self.selection][1] == '-':
                         ''' this is a group '''
                         return
-                    self.player.USE_EXTERNAL_PLAYER = True
+                    self._cnf.USE_EXTERNAL_PLAYER = True
                     stream_url = self.stations[self.selection][1]
                     logger.error('\n====\n====\nself.stations[self.selection] = {}\n====\n====\n'.format(self.stations[self.selection]))
                     self._set_active_stations()
@@ -9850,8 +9857,11 @@ _____"|f|" to see the |free| keys you can use.
                     self.selections[0][2] = self.playing
                     self._click_station()
                     self._add_station_to_stations_history()
+                    station_player = self._what_is_the_station_player()
+                    self._get_the_stations_player(station_player)
                     self._cnf.EXTERNAL_PLAYER_OPTS = self.player.play(
-                        self._last_played_station if self._last_played_station else self.stations[self.selection],
+                        # self._last_played_station if self._last_played_station else self.stations[self.selection],
+                        self.stations[self.selection],
                         stop_player=None,
                         detect_if_player_exited=None,
                         enable_crash_detection_function=None,
@@ -11992,11 +12002,6 @@ _____"|f|" to see the |free| keys you can use.
             self.outerBodyWin.box()
             self._print_body_header()
             # self.outerBodyWin.refresh()
-        logger.error('3 get')
-
-        station_player = self._what_is_the_station_player()
-        self._get_the_stations_player(station_player)
-        logger.error('***** playSelection')
         self.playSelection()
         self._set_active_stations()
         self._get_playlists_data_from_playlist_name(h_item[0])
