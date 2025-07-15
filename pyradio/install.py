@@ -689,11 +689,6 @@ class PyRadioCache():
 
 class MyArgParser(ArgumentParser):
 
-    def __init(self):
-        super(MyArgParser, self).__init__(
-            description = description
-        )
-
     def print_usage(self, file=None):
         if file is None:
             file = sys.stdout

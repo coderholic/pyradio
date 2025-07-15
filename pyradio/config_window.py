@@ -4109,7 +4109,7 @@ class PyRadioKeyboardConfig():
         try:
             with open(self._cnf.keyboard_file, 'w', encoding='utf-8') as json_file:
                 json.dump(out_dict, json_file)
-        except (FileNotFoundError, TypeError, ValueError, IOError) as e:
+        except (FileNotFoundError, TypeError, ValueError, IOError):
             # file save failure
             return -2
         read_keyboard_shortcuts(self._cnf.keyboard_file, reset=True)

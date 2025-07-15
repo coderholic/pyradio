@@ -17,12 +17,11 @@ import random
 import signal
 from copy import deepcopy
 from sys import version as python_version, platform
-from os.path import join, basename, getmtime, getsize, exists, isdir
-from os import remove, rename, makedirs
+from os.path import join, basename, getmtime, getsize, exists
+from os import remove, rename
 from platform import uname
 from time import sleep
 from datetime import datetime
-from tempfile import gettempdir
 import glob
 import requests
 try:
@@ -503,6 +502,7 @@ class PyRadio():
             in log.write, if _current_player_id != _active_player_id
                     do not display any message
         '''
+        self.player = None
         # player data
         self._default_player_name = None
 
@@ -1924,7 +1924,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
     def _format_group_line(self, lineNum, pad, station):
         old_disp = ' ' + station[0] + ' '
-        old_len = cjklen(old_disp)
         # if cjklen(to_disp) < self.maxX - (pad + 6):
         to_disp = cjkcenter(old_disp + '──', self.bodyMaxX, '─')
         # logger.error('cjklen = {0}, old cjklen = {1}'.format(cjklen(to_disp), old_len))
@@ -2018,7 +2017,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             logger.debug('File watch thread started on: {}'.format(a_file))
 
         showed = False
-        while not path.exists(a_file):
+        while not exists(a_file):
             if logger.isEnabledFor(logging.DEBUG) and not showed:
                 logger.debug('Waiting for watched file to appear: {}'.format(a_file))
                 showed = True
@@ -2035,7 +2034,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         st_time = cur_time = getmtime(a_file)
         st_size = cur_size = getsize(a_file)
         while True:
-            if path.exists(a_file):
+            if exists(a_file):
                 for n in range(0, 5):
                     sleep(.15)
                     if stop():
@@ -2630,7 +2629,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 self._cnf.remove_station_icons and \
                 not platform.startswith('win'):
             if self._cnf.logos_dir:
-                if path.exists(self._cnf.logos_dir):
+                if exists(self._cnf.logos_dir):
                     from shutil import rmtree
                     rmtree(self._cnf.logos_dir, ignore_errors=True)
 
@@ -6780,7 +6779,7 @@ and |remove the file manually|.
         self._update_config_buffering_data()
         self.log.display_help_message = False
         if logger.isEnabledFor(logging.INFO):
-            logger.info(f'**** Player activated: ' + player_name)
+            logger.info(f'**** Player activated: {player_name}')
         self.log.write(msg_id=STATES.PLAYER_ACTIVATED, msg=player_name + M_STRINGS['player-acivated_'], help_msg=False, suffix='')
         self.player.volume = -1
 

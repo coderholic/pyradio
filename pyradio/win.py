@@ -3,12 +3,11 @@ import locale
 import sys
 import subprocess
 from os.path import join, exists, isdir, basename, dirname
-from os import environ, makedirs, listdir, replace, remove, sep, getenv, chdir
+from os import environ, makedirs, listdir, replace, remove, sep, getenv, chdir, startfile, path
 from time import sleep
 import site
 from shutil import rmtree
 from msvcrt import getwch
-from os import sep, startfile, path
 from urllib.request import urlretrieve
 import glob
 import threading
@@ -609,7 +608,7 @@ def install_pylnk(a_path, do_not_exit=False):
             r = session.get('https://github.com/strayge/pylnk/archive/refs/heads/master.zip')
             r.raise_for_status()
             break
-        except requests.exceptions.RequestException as e:
+        except requests.exceptions.RequestException:
             if count < 5:
                 print('      Download failed. Retrying [magenta]{}[/magenta]/[red]5[/red]'.format(count+1))
             else:
@@ -627,7 +626,7 @@ def install_pylnk(a_path, do_not_exit=False):
         sys.exit(1)
 
     print('    Installing [green]pylnk...[/green]')
-    ret = subprocess.call('python -m pip install ' + join(a_path, 'pylnk.zip'),
+    subprocess.call('python -m pip install ' + join(a_path, 'pylnk.zip'),
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL)
 
@@ -712,8 +711,8 @@ def create_pyradio_link():
         install_pylnk(workdir)
     pylnk_exe = get_pylnk()
     # print('pylnk_exe = "{}"'.format(pylnk_exe))
-    cmd = pylnk_exe + ' c --icon ' + icon + ' --workdir ' + workdir \
-        + ' ' + pyradio_exe + ' ' + link_path
+    # cmd = pylnk_exe + ' c --icon ' + icon + ' --workdir ' + workdir \
+    #     + ' ' + pyradio_exe + ' ' + link_path
     # print('cmd = "{}"'.format(cmd))
     subprocess.Popen(
         [pylnk_exe, 'c', '--icon', icon, '--workdir', workdir, pyradio_exe, link_path],

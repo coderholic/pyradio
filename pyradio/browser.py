@@ -156,11 +156,13 @@ class PyRadioStationsBrowser():
         self.BASE_URL = ''
         self.AUTO_SAVE_CONFIG = False
         self.TITLE = ''
-        self._parent = _outer_parent = None
+        self._parent = None
+        self._outer_parent = None
         self._raw_stations = []
         self._last_search = None
         self._vote_callback = None
-        self._sort = _search_win = None
+        self._sort = None
+        self._search_win = None
         self._page = 0
 
     def __del__(self):
@@ -318,6 +320,17 @@ class RadioBrowser(PyRadioStationsBrowser):
                  search_return_function=None,
                  message_function=None,
                  cannot_delete_function=None):
+        super().__init__(
+            config=config,
+            config_encoding='utf-8',
+            session=session,
+            search=search,
+            pyradio_info=None,
+            search_return_function=search_return_function,
+            message_function=message_function,
+            cannot_delete_function=cannot_delete_function
+        )
+
         # the output format to use based on window width
         # Default value: -1
         # Possible values: 0..5
@@ -776,7 +789,7 @@ class RadioBrowser(PyRadioStationsBrowser):
         '''
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('_get_search_elements() :search term is\n\t"{}"'.format(a_search))
-        a_term = a_search['term']
+        # a_term = a_search['term']
         p_data = a_search['post_data']
         self.search_by = None
         self.reverse = False
@@ -2566,11 +2579,6 @@ class RadioBrowserSearchWindow():
             if kbkey['t'] in self._global_functions.keys():
                 del self._global_functions[kbkey['t']]
 
-    def __del__(self):
-        for a_widget in self._widgets:
-            # logger.error('DE deleting: {}'.format(a_widget))
-            a_widget = None
-
     @property
     def parent(self):
         return self._parent
@@ -2763,6 +2771,7 @@ class RadioBrowserSearchWindow():
 
     def _order_to_term(self, ret):
         if self._widgets[2].active > 0:
+            order_part = None
             for key in RADIO_BROWSER_SEARCH_SORT_TERMS.items():
                 if key[1] == self._widgets[2].active:
                     order_part = key[0]

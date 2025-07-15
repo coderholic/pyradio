@@ -101,7 +101,7 @@ Command line internet radio player.
 and much more...
 
 ## Requirements
-* python 3.7+
+* python 3.8+
     - setuptools
     - wheel
     - requests

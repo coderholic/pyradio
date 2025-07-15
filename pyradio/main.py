@@ -17,7 +17,7 @@ from .radio import PyRadio
 from .config import PyRadioConfig
 from .install import PyRadioUpdate, PyRadioUpdateOnWindows, PyRadioCache, \
     is_pyradio_user_installed, version_string_to_list, get_github_tag
-from .cjkwrap import cjklen, cjkslices, fill
+from .cjkwrap import cjklen, cjkslices
 from .log import Log
 from .common import StationsChanges, M_STRINGS
 from .schedule import PyRadioScheduleList
@@ -214,7 +214,6 @@ sleep 2
         pass
 
 def shell():
-    version_too_old = False
     if sys.version_info[0] == 2 or \
             (sys.version_info.major == 3 and sys.version_info < (3, 7)):
         print('PyRadio requires python 3.7+...')

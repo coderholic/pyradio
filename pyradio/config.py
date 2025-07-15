@@ -20,7 +20,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.align import Align
 from rich import print
-from pyradio import version, stations_updated
+from pyradio import version
 from .common import validate_resource_opener_path, is_rasberrypi, Station, describe_playlist, CsvReadWrite, ProfileManager
 from .keyboard import kbkey, lkbkey, read_keyboard_shortcuts, read_localized_keyboard, get_lkbkey, set_lkbkey, check_localized
 from .browser import probeBrowsers

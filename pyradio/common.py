@@ -666,7 +666,7 @@ class CsvReadWrite():
 
     @version.setter
     def version(self, value):
-        delf._version = value
+        self._version = value
 
     @property
     def groups(self):
@@ -747,7 +747,7 @@ class CsvReadWrite():
                         if this_row_version > current_version:
                             current_version = this_row_version
                         self._version = current_version
-                except (csv.Error, ValueError):
+                except (csv.Error, ValueError) as e:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug(f'Playlist is malformed: {e}')
                     self._items = []
@@ -813,7 +813,7 @@ class CsvReadWrite():
             return -1
         try:
             move(txt_out_file, out_file)
-        except (shutil.Error, FileNotFoundError, PermissionError) as e:
+        except (shutil_Error, FileNotFoundError, PermissionError) as e:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'Cannot rename playlist file: {e}...')
             return -2
@@ -833,7 +833,7 @@ class ProfileManager():
 
     @config_files.setter
     def config_files(self, value):
-        self._config_files = vlaue
+        self._config_files = value
 
     def reread_files(self):
         self._config_file = None
@@ -932,7 +932,7 @@ class ProfileManager():
         try:
             with open(config_file, 'r', encoding='utf-8') as file:
                 ret = [line.lstrip() if line.strip() else line for line in file.readlines()]
-        except Exception as e:
+        except Exception:
             ret = []
         return ret
 
@@ -1193,7 +1193,7 @@ class ProfileManager():
         if ret:
             return new_profile
         else:
-            logger.error(f"Error saving {player_name} config: {str(e)}")
+            logger.error(f"Error saving {player_name} config")
             return None
 
 

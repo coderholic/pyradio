@@ -1628,7 +1628,7 @@ Restricted Commands (Main mode only)
                 else:
                     sp = self._path.split('/')
                     if ',' not in sp [-1]:
-                        self._send_text(self._text['/error'], alert-danger)
+                        self._send_text(self._text['/error'])
                     else:
                         if sp[1] not in ('playlists', 'pl'):
                             self._send_text(self._text['/error'])

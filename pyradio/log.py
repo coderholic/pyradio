@@ -470,7 +470,7 @@ class Log():
                     else:
                         if p_time is None:
                             if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug(f'refusing to print message from previous player id')
+                                logger.debug('refusing to print message from previous player id')
                         return
 
                 ''' display time '''
@@ -508,7 +508,6 @@ class Log():
                     ''' Refuse to print anything if "Playback stopped"
                         was the last message printed
                     '''
-                    do_empty_msg = True
                     if msg_id not in (
                             STATES.ANY, STATES.RESET, STATES.CONNECT, STATES.CONNECT_ERROR,
                             STATES.PLAYER_ACTIVATED, STATES.BUFFER, STATES.BUFF_MSG

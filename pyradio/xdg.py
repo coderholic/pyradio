@@ -234,9 +234,9 @@ class XdgMigrate():
                     lines = d.readlines()
             except:
                 return
-            for i, l in enumerate(lines):
-                if l.startswith('Icon='):
-                    sp = l.split('=')
+            for i, a_line in enumerate(lines):
+                if a_line.startswith('Icon='):
+                    sp = a_line.split('=')
                     if sp[1].strip() != self._icon_location:
                         lines[i] = 'Icon=' + self._icon_location + '\n'
                         with open(self._desktop_file, 'w', encoding='utf-8') as d:

@@ -8,18 +8,18 @@ import json
 import logging
 import locale
 import string
+import curses
 from os.path import join, exists, dirname
-locale.setlocale(locale.LC_ALL, '')    # set your locale
+from collections import deque
+from threading import Lock
 try:
     from .cjkwrap import is_wide
 except ImportError:
     pass
 
-from collections import deque
-from threading import Lock
+locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
-
 
 input_queue = deque()
 queue_lock = Lock()
@@ -502,8 +502,6 @@ def letter_to_ctrl_code(letter):
 
     # Return None if not a valid letter or not found
     return None
-
-import curses
 
 def is_valid_char(char, win):
     """

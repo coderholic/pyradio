@@ -8,7 +8,6 @@ from shutil import copyfile
 from copy import deepcopy
 from math import sqrt
 import colorsys
-from .log import Log
 from .common import *
 from .keyboard import kbkey, check_localized, remove_l10n_from_global_functions
 
@@ -213,7 +212,7 @@ class PyRadioTheme():
                 self._cnf.use_calculated_colors = self._cnf.enable_calculated_colors
                 if not self._cnf.enable_calculated_colors:
                     if logger.isEnabledFor(logging.INFO):
-                        logger.debug(f'Setting use_calculated_colors = False due to enable_calculated_colors')
+                        logger.debug('Setting use_calculated_colors = False due to enable_calculated_colors')
 
             if self._cnf.use_calculated_colors or \
                    self._cnf.has_border_background:

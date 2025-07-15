@@ -26,7 +26,9 @@ try:
 except:
     pass
 if platform.startswith('win'):
-    import win32pipe, win32file, pywintypes
+    import win32pipe
+    import win32file
+    import pywintypes
 try:
     from urllib import unquote
 except:
@@ -214,7 +216,7 @@ def info_dict_to_list(info, fix_highlight, max_width, win_width):
 
     # logger.info(f'{max_width = }, {win_width = }')
     # logger.error(f'{info = }')
-    max_str = max([len(l[0]) + len(l[1]) + 2 for l in info.items()])
+    max_str = max([len(item[0]) + len(item[1]) + 2 for item in info.items()])
     # # logger.error(f'{max_str = }')
     # # max_str = max([len(l[1]) + 2 for l in info.items()])
     # logger.info(f'{max_str = }, {max_width = }, {win_width = }')
@@ -638,8 +640,8 @@ class Player():
 
     def icy_data_available(self):
         with self.status_update_lock:
-            l = len(self._icy_data)
-        if l == 0:
+            length = len(self._icy_data)
+        if length == 0:
             return False
         return True
 
@@ -747,7 +749,6 @@ class Player():
             ''' change volume '''
             if (logger.isEnabledFor(logging.DEBUG)):
                 logger.debug(log_strings[1].format(self.volume))
-            profile_found = False
             config_file = self.config_files[0]
             ret_string = ret_strings[1].format(str(self.volume))
             if self.PLAYER_NAME == 'vlc':
@@ -776,7 +777,6 @@ class Player():
                                     '\n'.join(lines_no_profile) + \
                                     '\n'.join(lines_with_profile)
                                 )
-                            volume = self.volume
                             # self.volume = -1
                             self.PROFILE_FROM_USER = False
                             return ret_strings[1].format(str(self.volume))
@@ -2412,9 +2412,9 @@ class Player():
             # Write the command to the process's standard input
             a_process.stdin.write(command.encode('utf-8', 'replace'))
             a_process.stdin.flush()
-        except Exception as e:
+        except Exception:
             if logger.isEnabledFor(logging.ERROR):
-                logger.error("Error while sending Command: {}".format(command).strip(), exc_info=True)
+                logger.error("Error while sending Command: {}".format(command).strip())
 
     def close_from_windows(self):
         ''' kill player instance when window console is closed '''

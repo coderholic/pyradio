@@ -14,8 +14,6 @@ except:
     from urlparse import urlparse
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesCheckBox, \
         SimpleCursesHorizontalPushButtons, SimpleCursesMenu, DisabledWidget
-from .player import PlayerCache
-from .log import Log
 from .server import IPsWithNumbers
 from .cjkwrap import cjkslices
 from .xdg import CheckDir
@@ -3022,6 +3020,7 @@ class PyRadioServerWindow():
             port_number_error_message=None,
             global_functions=None
     ):
+        self._editor = None
         self._nips = IPsWithNumbers()
         self._cnf = config
         self._parent = parent
@@ -3035,7 +3034,6 @@ class PyRadioServerWindow():
         self._the_ip = self._nips.validate_ip(self._cnf.active_remote_control_server_ip)
         self._nips.set(self._the_ip)
         self._the_port = self._cnf.active_remote_control_server_port
-        self._editor = None
         self._port_number_error_message = port_number_error_message
 
     def show(self, parent=None):

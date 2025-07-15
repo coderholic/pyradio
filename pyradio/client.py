@@ -6,7 +6,7 @@ import re
 from sys import platform
 from rich import print
 import requests
-from .common import STATES, M_STRINGS
+from .common import M_STRINGS
 
 def format_list(a_string):
     print(a_string.replace(
@@ -291,7 +291,7 @@ def client():
     args = parser.parse_args()
     # sys.stdout.flush()
 
-    timeout = float(args.timeout)
+    # timeout = float(args.timeout)
 
     if args.address:
         x = PyRadioClient()
