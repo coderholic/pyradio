@@ -52,7 +52,7 @@ class PyRadioConfigWindow():
     _help_text.append(['This is a Linux (et al) only parameter. It has no effect on Windows or MacOS.', '|',
                        'Default value is "auto", in which case, PyRadio will try to use xdg-open, gio, mimeopen, mimeo or handlr, in that order of detection.  If none if found, the requested file will simply not open.'
                        ])
-    _help_text.append(['If this option is True, PyRadio will start logging song titles to a log file at program startup, provided that the station playing does provide title data.', '|', 'This is the same as using the -lt command line option, or pressing "' + to_str('t_tag') +  '" while the program is running.', '|', 'Please keep in mind that this option will only affect ptogram startup.', '|', 'Default value: False'])
+    _help_text.append(['If this option is True, PyRadio will start logging song titles to a log file at program startup, provided that the station playing does provide title data.', '|', 'This is the same as using the -lt command line option, or pressing "' + to_str('t_tag') +  '" while the program is running.', '|', 'Please keep in mind that this option will only affect program startup.', '|', 'Default value: False'])
     _help_text.append(None)
     _help_text.append(['Specify whether you will be asked to confirm every station deletion action.', '|', 'Default value: True'])
     _help_text.append(['Specify whether you will be asked to confirm playlist reloading, when the playlist has not been modified within PyRadio.', '|', 'Default value: True'])
