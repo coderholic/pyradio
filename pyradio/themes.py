@@ -906,6 +906,7 @@ class PyRadioThemeSelector():
         self._win = None
         self._width = _height = X = Y = 0
         self._selection = _start_pos = _items = 0
+        self._start_pos = 0
 
         self._themes = []
         self._title_ids = []

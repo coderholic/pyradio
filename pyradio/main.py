@@ -6,7 +6,7 @@ import logging
 import logging.handlers
 import shutil
 from argparse import ArgumentParser, SUPPRESS as SUPPRESS, REMAINDER
-from os import path, getenv, environ, remove, chmod, makedirs, rmdir
+from os import path, getenv, environ, remove, chmod, makedirs, rmdir, access, R_OK
 from sys import platform
 from contextlib import contextmanager
 from platform import system
@@ -19,11 +19,31 @@ from .install import PyRadioUpdate, PyRadioUpdateOnWindows, PyRadioCache, \
     is_pyradio_user_installed, version_string_to_list, get_github_tag
 from .cjkwrap import cjklen, cjkslices
 from .log import Log
-from .common import StationsChanges, M_STRINGS
+from .common import StationsChanges, M_STRINGS, CsvReadWrite, list_to_m3u, parse_m3u
 from .schedule import PyRadioScheduleList
 from .install import get_a_linux_resource_opener
 from .html_help import is_graphical_environment_running
 from .client import client
+
+try:
+    # Windows
+    import msvcrt
+    def _getch():
+        return msvcrt.getch().decode()
+except ImportError:
+    # Unix (Linux/Mac)
+    import tty
+    import termios
+    def _getch():
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+
 locale.setlocale(locale.LC_ALL, "")
 
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -380,6 +400,24 @@ If nothing else works, try the following command:
         gr_headless.add_argument('--free-dead-remote-control-server', action='store_true', help=SUPPRESS)
         # gr_headless.add_argument('-gss', '--generate-systemd-service-files', action='store_true',
         #                          help='Create systemd service files to enable / disable headless operation using tmux or screen.')
+
+    gr_m3u = parser.add_argument_group('• m3u playlist handling')
+    gr_m3u.add_argument('-cvt', '--convert', default='',
+                        help='Convert CSV (PyRadio playlist) to m3u and vise-versa, based on the file extension of CONVERT. '
+                        'If there\'s no file extension, .csv is assumed. '
+                        'Accepts -y, -o (general options). With -o: provides '
+                        'the output file for the CSV to m3u conversion. '
+                        'If not specified, the same path (including the name) '
+                        'as the CONVERT parameter is used, replacing .csv with .m3u. '
+                        'The file extension .m3u will be automatically added if not specified.'
+                        )
+
+    gr_general = parser.add_argument_group('• options')
+    gr_general.add_argument('-o', '--output', default='',
+                        help='Output file path (see specific commands for default behavior)')
+    gr_general.add_argument('-y', '--yes', '--force', action='store_true',
+                        help='Assume yes to all prompts (dangerous: overwrites files without confirmation, etc.)')
+
     args = parser.parse_args()
     sys.stdout.flush()
 
@@ -396,6 +434,88 @@ If nothing else works, try the following command:
 
     with pyradio_config_file(user_config_dir, args.headless) as pyradio_config:
         read_config(pyradio_config, args.check_playlist)
+
+        if args.convert:
+            # Determine conversion direction and validate input file
+            csv_to_m3u = False
+            in_file = args.convert  # Let's say args.convert is "reversed"
+
+            # Add extension if missing
+            if not in_file.lower().endswith(('.m3u', '.csv')):
+                args.convert += '.csv'  # Now args.convert = "reversed.csv"
+                in_file = args.convert  # Now in_file = "reversed.csv"
+                csv_to_m3u = True
+
+            # First check - try exact path (could be full path or relative)
+            if not path.exists(in_file):
+                # Fallback - try in config directory with basename
+                config_path = path.join(pyradio_config.stations_dir, path.basename(in_file))
+                if path.exists(config_path):
+                    in_file = config_path
+                else:
+                    print(f'[red]Error:[/red] File "{in_file}" does not exist')
+                    sys.exit(1)
+
+            # Check file permissions
+            if not path.isfile(in_file):
+                print(f'[red]Error:[/red] "{in_file}" is not a file')
+                sys.exit(1)
+            if not access(in_file, R_OK):
+                print(f'[red]Error:[/red] "{in_file}" is not readable')
+                sys.exit(1)
+
+            # Determine output file
+            if args.output:
+                out_file = args.output
+                if csv_to_m3u and not out_file.lower().endswith('.m3u'):
+                    out_file += '.m3u'
+                elif not csv_to_m3u and not out_file.lower().endswith('.csv'):
+                    out_file += '.csv'
+            else:
+                if csv_to_m3u:
+                    out_file = path.splitext(in_file)[0] + '.m3u'
+                else:
+                    out_file = path.splitext(in_file)[0] + '.csv'
+
+            if path.exists(out_file) and not args.yes:
+                print(rf'File "{out_file}" exists. Overwrite? \[y/N] ', end='', flush=True)
+                try:
+                    key = _getch().lower()
+                    sys.stderr.write('\n')  # Move to new line
+                    if key != 'y':
+                        print('Operation cancelled', file=sys.stderr)
+                        sys.exit(1)
+                except Exception as e:
+                    print(f'\nError reading input: {e}', file=sys.stderr)
+                    sys.exit(1)
+
+            # Perform conversion
+            csv_handler = CsvReadWrite()
+            if csv_to_m3u:
+                if not csv_handler.read(in_file):
+                    print(f'[red]Error:[/red] Cannot read CSV file "{in_file}"')
+                    sys.exit(1)
+
+                result = list_to_m3u(csv_handler.items, out_file)
+                if result is not None:  # Returns None on success, error message on failure
+                    print(result)
+                    sys.exit(1)
+
+                print(f'[green]Success:[/green] Created M3U file: "{out_file}"')
+            else:
+                stations, error = parse_m3u(in_file)
+                if error:
+                    print(f'[red]Error:[/red] {error}')
+                    sys.exit(1)
+
+                ret = csv_handler.write(a_file=out_file, items=stations)
+                if ret < 0:
+                    print(f'[red]Error:[/red] Cannot write CSV file "{out_file}"')
+                    sys.exit(1)
+
+                print(f'[green]Success:[/green] Created CSV file: "{out_file}"')
+
+            sys.exit(0)
 
         if args.check_playlist:
             pyradio_config.check_playlist = args.check_playlist
@@ -599,7 +719,9 @@ If nothing else works, try the following command:
 
         if platform.startswith('win'):
             if args.exe:
-                print_exe_paths()
+                from .win import win_print_exe_paths
+                print('')
+                win_print_exe_paths()
                 return
 
         # if args.show_schedule_items:

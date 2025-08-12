@@ -1,15 +1,19 @@
 # -*- coding: utf-8 -*-
+import sys
 import logging
 import locale
 import io
 import csv
 import curses
+import re
 from os import rename, remove, access, X_OK, getenv, makedirs
-from os.path import exists, dirname, join, expanduser
+from os.path import exists, dirname, join, expanduser, splitext
 from shutil import which, move, Error as shutil_Error
 from rich import print
 from enum import IntEnum
 from sys import platform
+from html import unescape
+from charset_normalizer import detect
 
 logger = logging.getLogger(__name__)
 
@@ -948,7 +952,9 @@ class ProfileManager():
         except (FileNotFoundError, PermissionError, IsADirectoryError,
                 UnicodeEncodeError, OSError, IOError):
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Error writing profile [{}] in "{}"'.format(profile_name, config_file))
+                if a_list:
+                    a_string='\n'.join(a_list)
+                logger.debug('Error writing profile string\n{}\nin "{}"'.format(a_string, config_file))
             return False
 
     def save_volume(self, player_name, profile_name, volume):
@@ -1211,3 +1217,170 @@ def validate_resource_opener_path(a_file):
         return None
     # Return the validated path
     return a_file
+
+##############################################################################
+#
+#                               m3u functions
+#
+##############################################################################
+
+def parse_attributes(line):
+    """Parse EXTINF attributes with HTML entity handling"""
+    if not hasattr(parse_attributes, '_compiled_pattern'):
+        parse_attributes._compiled_pattern = re.compile(
+            r'([a-zA-Z0-9-]+)='  # Key
+            r'(?:"([^"]*)"|'     # Double-quoted value
+            r"'([^']*)'|"        # Single-quoted value
+            r'([^ ,]+))'         # Unquoted value
+        )
+
+    attrs = {}
+    for match in parse_attributes._compiled_pattern.finditer(line.split(',', 1)[0]):
+        key, dq, sq, uq = match.groups()
+        value = dq or sq or uq or ""
+        if '&' in value:
+            value = unescape(value)
+        attrs[key] = value
+    return attrs
+
+def detect_file_encoding(file_path):
+    """Detect encoding with fallback to common encodings"""
+    try:
+        with io.open(file_path, 'rb') as f:
+            raw_data = f.read(10000)
+            result = detect(raw_data)
+            encoding = result.get('encoding') if result else None
+
+            # Try common encodings if detection fails
+            for enc in [encoding, 'utf-8', 'latin-1', 'cp1252']:
+                if enc:
+                    try:
+                        raw_data.decode(enc)
+                        return enc
+                    except UnicodeDecodeError:
+                        continue
+            return 'utf-8'  # Final fallback
+    except Exception:
+        return 'utf-8'
+
+def parse_m3u(m3u_path):
+    """Convert M3U to PyRadio playlist with robust encoding handling"""
+    try:
+        encoding = detect_file_encoding(m3u_path)
+        ungrouped = []
+        groups = {}
+        current_group = None
+
+        with io.open(m3u_path, 'r', encoding=encoding, errors='replace') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#EXTM3U"):
+                    continue
+
+                if line.startswith("#EXTGRP:"):
+                    current_group = line.split(':', 1)[1].strip()
+                    if '&' in current_group:
+                        current_group = unescape(current_group)
+                    continue
+
+                if line.startswith("#EXTINF"):
+                    station = [""] * len(Station)
+                    if ',' in line:
+                        name = line.split(',', 1)[1].strip()
+                        if '&' in name:
+                            name = unescape(name)
+                        station[Station.name] = name
+
+                    attrs = parse_attributes(line)
+                    if "group-title" in attrs:
+                        current_group = attrs["group-title"]
+                    if "tvg-logo" in attrs:
+                        station[Station.icon] = attrs["tvg-logo"]
+
+                    url = next(f, "").strip()
+                    if url and url.startswith(('http://', 'https://')):
+                        station[Station.url] = url
+                        if current_group:
+                            if current_group not in groups:
+                                groups[current_group] = []
+                            groups[current_group].append(station)
+                        else:
+                            ungrouped.append(station)
+
+        playlist = []
+        playlist.extend(ungrouped)
+        for group_name in sorted(groups):
+            playlist.append([group_name, "-"])
+            playlist.extend(groups[group_name])
+
+        return playlist, None
+
+    except Exception as e:
+        return None, f"Error parsing {m3u_path}: {str(e)}"
+
+def escape_m3u_string(text):
+    """Escape special characters for M3U format"""
+    if not text:
+        return ""
+    if ',' in text or '"' in text:
+        return f'"{text.replace('"', '\\"')}"'
+    return text
+
+def list_to_m3u(stations, out_file):
+    """Write PyRadio stations to M3U file with error handling"""
+    if not stations:
+        return '[red]Error:[/red] No stations to write'
+
+    try:
+        # Create directory if it doesn't exist
+        out_dir = dirname(out_file)
+        if out_dir and not exists(out_dir):
+            makedirs(out_dir)
+
+        with io.open(out_file, 'w', encoding='utf-8') as f:
+            f.write("#EXTM3U\n")
+            current_group = None
+
+            for entry in stations:
+                # Handle group headers
+                if len(entry) >= 2 and entry[1] == "-":
+                    current_group = entry[0]
+                    continue
+
+                # Skip invalid stations
+                if len(entry) <= Station.url or not entry[Station.url]:
+                    continue
+
+                # Write group header if exists
+                if current_group:
+                    f.write(f"#EXTGRP:{current_group}\n")
+
+                # Make sure icon is a string
+                logo = entry[Station.icon]
+                if isinstance(entry[Station.icon], dict):
+                    logo = entry[Station.icon]['image']
+
+                # Write icon if exists
+                if len(entry) > Station.icon and logo:
+                    f.write(f"#EXTIMG:{logo}\n")
+
+                # Build EXTINF line
+                name = entry[Station.name] if len(entry) > Station.name else f"Station {len(stations)}"
+                extinf_parts = ["#EXTINF:-1"]
+
+                if len(entry) > Station.icon and entry[Station.icon]:
+                    extinf_parts.append(f'tvg-logo="{logo}"')
+
+                if current_group:
+                    extinf_parts.append(f'group-title="{current_group}"')
+
+                extinf_parts.append(escape_m3u_string(name))
+                f.write(f"{' '.join(extinf_parts)}\n")
+
+                # Write URL
+                f.write(f"{entry[Station.url]}\n")
+
+            return None
+
+    except Exception as e:
+        return f"[red]Error writing M3U: {e}[/red]"
