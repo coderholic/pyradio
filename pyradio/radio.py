@@ -10358,6 +10358,25 @@ _____"|f|" to see the |free| keys you can use.
                             logger.debug('Loading playlist: "{}"'.format(self.stations[self.selection][-1]))
                         playlist_to_try_to_open = self.stations[self.selection][-1]
                         logger.error('\n\nplaylist_to_try_to_open = "{}"\n\n'.format(playlist_to_try_to_open))
+                        if playlist_to_try_to_open.lower().endswith('.m3u'):
+                            logger.error('****** Need to convert M3U to CSV ******')
+                            # TODO: display message
+                            stations, error = parse_m3u(playlist_to_try_to_open)
+                            logger.error(f'{stations = }')
+                            if error:
+                                # TODO: display m3u conversion error
+                                return
+                            csv_file_to_save = playlist_to_try_to_open[:-3] + 'csv'
+                            ret = self.saveCurrentPlaylist(csv_file_to_save)
+                            logger.error(f'{ret = }')
+                            if ret == 0:
+                                playlist_to_try_to_open = csv_file_to_save
+
+
+                        logger.error('\n\n')
+                        logger.error(f'{self.selections = }')
+                        logger.error(f'{self.playlist_selections = }')
+                        logger.error('\n\n')
                         ret = self._cnf.read_playlist_file(stationFile=playlist_to_try_to_open)
                         logger.error('DE playlist_selections = {}'.format(playlist_to_try_to_open))
 

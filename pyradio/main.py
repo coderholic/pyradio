@@ -444,7 +444,6 @@ If nothing else works, try the following command:
             if not in_file.lower().endswith(('.m3u', '.csv')):
                 args.convert += '.csv'  # Now args.convert = "reversed.csv"
                 in_file = args.convert  # Now in_file = "reversed.csv"
-                csv_to_m3u = True
 
             # First check - try exact path (could be full path or relative)
             if not path.exists(in_file):
@@ -464,6 +463,7 @@ If nothing else works, try the following command:
                 print(f'[red]Error:[/red] "{in_file}" is not readable')
                 sys.exit(1)
 
+            csv_to_m3u = in_file.lower().endswith('.csv')
             # Determine output file
             if args.output:
                 out_file = args.output
@@ -472,6 +472,7 @@ If nothing else works, try the following command:
                 elif not csv_to_m3u and not out_file.lower().endswith('.csv'):
                     out_file += '.csv'
             else:
+                csv_to_m3u = in_file.lower().endswith('.csv')
                 if csv_to_m3u:
                     out_file = path.splitext(in_file)[0] + '.m3u'
                 else:
@@ -504,6 +505,7 @@ If nothing else works, try the following command:
                 print(f'[green]Success:[/green] Created M3U file: "{out_file}"')
             else:
                 stations, error = parse_m3u(in_file)
+                print(stations)
                 if error:
                     print(f'[red]Error:[/red] {error}')
                     sys.exit(1)

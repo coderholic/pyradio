@@ -8,7 +8,7 @@ import curses
 import collections
 import json
 # import socket
-from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, getpid, listdir
+from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, getpid, listdir, access, R_OK
 from sys import platform
 from time import ctime, sleep
 from datetime import datetime
@@ -1103,19 +1103,31 @@ class PyRadioStations():
         return True, self.number_of_stations
 
     def registers_exist(self):
-        return True if glob.glob(path.join(self.registers_dir, '*.csv')) else False
+        return True if glob.glob(path.join(self.registers_dir, '*.[Cc][Ss][Vv]')) else False
 
     def just_read_playlists(self):
-        self.playlists = glob.glob(path.join(self.stations_dir, '*.csv'))
+        self.playlists = [
+            f for f in glob.glob(path.join(self.stations_dir, '*.[Cc][Ss][Vv]'))
+            if path.isfile(f)  # Exclude directories accidentally named *.CSV
+        ]
 
     def read_playlists(self):
         self.playlists = []
         self.selected_playlist = -1
+        files = []
+        m3u_files = []
         if self._open_register_list:
-            files = glob.glob(path.join(self.registers_dir, '*.csv'))
+            files = glob.glob(path.join(self.registers_dir, '*.[Cc][Ss][Vv]'))
         else:
-            files = glob.glob(path.join(self.stations_dir, '*.csv'))
-        if len(files) == 0:
+            files = glob.glob(path.join(self.stations_dir, '*.[Cc][Ss][Vv]'))
+            m3u_files = glob.glob(path.join(self.stations_dir, '*.[Mm][3][Uu]'))
+            # Filter M3U files:
+            m3u_files = [f for f in m3u_files
+                        if path.getsize(f) > 0
+                        and access(f, R_OK)
+                        and not any(path.splitext(path.basename(f))[0] == path.splitext(path.basename(csv))[0] for csv in files)]
+
+        if len(files) == 0 and len(m3u_files) == 0:
             return 0, -1
         else:
             for a_file in files:
@@ -1123,7 +1135,20 @@ class PyRadioStations():
                 a_file_size = self._bytes_to_human(path.getsize(a_file))
                 a_file_time = ctime(path.getmtime(a_file))
                 self.playlists.append([a_file_name, a_file_time, a_file_size, a_file])
+
+        if m3u_files:
+            for a_file in m3u_files:
+                a_file_name = ''.join(path.basename(a_file).split('.')[:-1])
+                a_file_size = self._bytes_to_human(path.getsize(a_file))
+                a_file_time = ctime(path.getmtime(a_file))
+                self.playlists.append([a_file_name + ' (m3u)', a_file_time, a_file_size, a_file])
         self.playlists.sort()
+
+        logger.error('\n\n')
+        for n in self.playlists:
+            logger.error(f'{n}')
+        logger.error('\n\n')
+
         ''' get already loaded playlist id '''
         for i, a_playlist in enumerate(self.playlists):
             if a_playlist[-1] == self.station_path:

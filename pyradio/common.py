@@ -6,6 +6,7 @@ import io
 import csv
 import curses
 import re
+import functools
 from os import rename, remove, access, X_OK, getenv, makedirs
 from os.path import exists, dirname, join, expanduser, splitext
 from shutil import which, move, Error as shutil_Error
@@ -14,6 +15,7 @@ from enum import IntEnum
 from sys import platform
 from html import unescape
 from charset_normalizer import detect
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
@@ -1224,23 +1226,38 @@ def validate_resource_opener_path(a_file):
 #
 ##############################################################################
 
+# M3U CHARACTER SUBSTITUTION RULES (ORIGINAL_CHAR → REPLACEMENT_CHAR)
+# USE EMPTY STRING AS REPLACEMENT TO DISABLE A SUBSTITUTION
+# NOTE: FIRST MATCH WINS, PROCESS IN ORDER OF PRIORITY
+# POSSIBLE COMMA OPTIONS:
+#   "﹐" (SMALL COMMA U+FE50) - BEST BALANCE
+#   "ʼ" (MODIFIER LETTER COMMA U+02BC) - MORE SUBTLE
+#   "·" (MIDDLE DOT U+00B7)
+#   ""  (GREEK ANO TELEIA U+0387)
+M3U_SUBSTITUTIONS = (
+    (",", " · "),     # MIDDLE DOT (U+00B7) - BEST FOR CSV ROUND-TRIP
+    ("-", "–"),      # EN DASH (U+2013) WITH SPACES
+    ('"', "'"),     # STRAIGHT QUOTES TO CURLY QUOTES
+)
+
 def parse_attributes(line):
-    """Parse EXTINF attributes with HTML entity handling"""
+    """Parse EXTINF attributes with robust quote handling"""
     if not hasattr(parse_attributes, '_compiled_pattern'):
         parse_attributes._compiled_pattern = re.compile(
-            r'([a-zA-Z0-9-]+)='  # Key
-            r'(?:"([^"]*)"|'     # Double-quoted value
-            r"'([^']*)'|"        # Single-quoted value
-            r'([^ ,]+))'         # Unquoted value
+            r'([a-zA-Z0-9-]+)='          # Key
+            r'(?:"((?:[^"\\]|\\.)*)"|'   # Double-quoted with escapes
+            r"'((?:[^'\\]|\\.)*)'|"      # Single-quoted with escapes
+            r'([^ ,]+))'                 # Unquoted
         )
 
     attrs = {}
     for match in parse_attributes._compiled_pattern.finditer(line.split(',', 1)[0]):
         key, dq, sq, uq = match.groups()
-        value = dq or sq or uq or ""
+        value = (dq or sq or uq or "").replace('\\"', '\u0001').replace('"', '\\"').replace('\u0001', '\\"')
         if '&' in value:
             value = unescape(value)
-        attrs[key] = value
+        # Preserve escaped quotes in values
+        attrs[key] = value.replace('\\"', '"').replace("\\'", "'")
     return attrs
 
 def detect_file_encoding(file_path):
@@ -1263,6 +1280,31 @@ def detect_file_encoding(file_path):
     except Exception:
         return 'utf-8'
 
+def generate_reverse_subs():
+    """Creates reverse mappings with smart space handling"""
+    reverse = {}
+    for orig, sub in reversed(M3U_SUBSTITUTIONS):
+        if orig.endswith(' '):  # Handle space-preserving substitutions
+            reverse[sub] = orig
+        else:
+            reverse[sub] = orig
+    # Special case: Ensure middle dot becomes comma+space
+    if " · " in reverse:
+        reverse[" · "] = ", "
+    return reverse
+
+@functools.lru_cache(maxsize=1)
+def get_reverse_subs():
+    return generate_reverse_subs()
+
+def reverse_substitutions(text):
+    if not text:
+        return text
+    subs = get_reverse_subs()
+    for sub, orig in subs.items():
+        text = text.replace(sub, orig)
+    return text
+
 def parse_m3u(m3u_path):
     """Convert M3U to PyRadio playlist with robust encoding handling"""
     try:
@@ -1271,9 +1313,12 @@ def parse_m3u(m3u_path):
         groups = {}
         current_group = None
 
+        REVERSE_SUBSTITUTIONS = generate_reverse_subs()
+
         with io.open(m3u_path, 'r', encoding=encoding, errors='replace') as f:
             for line in f:
                 line = line.strip()
+                print(f'{line = }')
                 if not line or line.startswith("#EXTM3U"):
                     continue
 
@@ -1287,18 +1332,23 @@ def parse_m3u(m3u_path):
                     station = [""] * len(Station)
                     if ',' in line:
                         name = line.split(',', 1)[1].strip()
-                        if '&' in name:
-                            name = unescape(name)
-                        station[Station.name] = name
+                        name = unescape(name) if '&' in name else name
+                        name = name.replace(r'\\"', '"').replace(r'\"', '"')
+                        # Add this line to handle player display:
+                        name = name.replace("&quot;", '"')
+                        station[Station.name] = reverse_substitutions(name)
 
                     attrs = parse_attributes(line)
                     if "group-title" in attrs:
-                        current_group = attrs["group-title"]
+                        if attrs["group-title"].strip():
+                            current_group = attrs["group-title"]
+                        else:
+                            current_group = None
                     if "tvg-logo" in attrs:
                         station[Station.icon] = attrs["tvg-logo"]
 
                     url = next(f, "").strip()
-                    if url and url.startswith(('http://', 'https://')):
+                    if url and urlparse(url).scheme in ('http', 'https'):
                         station[Station.url] = url
                         if current_group:
                             if current_group not in groups:
@@ -1312,19 +1362,26 @@ def parse_m3u(m3u_path):
         for group_name in sorted(groups):
             playlist.append([group_name, "-"])
             playlist.extend(groups[group_name])
-
+        print(playlist)
         return playlist, None
 
     except Exception as e:
         return None, f"Error parsing {m3u_path}: {str(e)}"
 
 def escape_m3u_string(text):
-    """Escape special characters for M3U format"""
     if not text:
         return ""
-    if ',' in text or '"' in text:
-        return f'"{text.replace('"', '\\"')}"'
-    return text
+
+    processed = str(text)
+
+    processed = processed.replace('\\\\', '\u0002').replace('\\"', '\u0001')
+    # Only replace raw quotes, not already encoded ones:
+    processed = processed.replace('"', '&quot;')
+    processed = processed.replace('\u0001', '\\"').replace('\u0002', '\\\\')
+
+    if any(c in processed for c in (',', '"', '-')):
+        return f'"{processed}"'
+    return ' '.join(processed.strip().split())
 
 def list_to_m3u(stations, out_file):
     """Write PyRadio stations to M3U file with error handling"""
@@ -1343,9 +1400,11 @@ def list_to_m3u(stations, out_file):
 
             for entry in stations:
                 # Handle group headers
+                # Skip empty group names entirely
                 if len(entry) >= 2 and entry[1] == "-":
-                    current_group = entry[0]
-                    continue
+                    if entry[0].strip():  # Only process non-empty names
+                        current_group = entry[0].strip()
+                    continue  # Skip regardless to avoid empty groups
 
                 # Skip invalid stations
                 if len(entry) <= Station.url or not entry[Station.url]:
@@ -1366,21 +1425,24 @@ def list_to_m3u(stations, out_file):
 
                 # Build EXTINF line
                 name = entry[Station.name] if len(entry) > Station.name else f"Station {len(stations)}"
-                extinf_parts = ["#EXTINF:-1"]
-
+                for n in M3U_SUBSTITUTIONS:
+                    name = name.replace(*n)
+                # Replace hyphen with en dash, for vlc
+                attrs = []
                 if len(entry) > Station.icon and entry[Station.icon]:
-                    extinf_parts.append(f'tvg-logo="{logo}"')
-
+                    attrs.append(f'tvg-logo="{logo}"')
                 if current_group:
-                    extinf_parts.append(f'group-title="{current_group}"')
+                    attrs.append(f'group-title="{current_group}"')
 
-                extinf_parts.append(escape_m3u_string(name))
-                f.write(f"{' '.join(extinf_parts)}\n")
+                if attrs:
+                    string = f"#EXTINF:-1 {' '.join(attrs)} ,{escape_m3u_string(name)}"
+                else:
+                    string = f"#EXTINF:-1,{escape_m3u_string(name)}"
 
-                # Write URL
-                f.write(f"{entry[Station.url]}\n")
+                f.write(f"{string}\n{entry[Station.url]}\n")
 
             return None
 
     except Exception as e:
         return f"[red]Error writing M3U: {e}[/red]"
+
