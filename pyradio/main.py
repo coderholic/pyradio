@@ -505,7 +505,6 @@ If nothing else works, try the following command:
                 print(f'[green]Success:[/green] Created M3U file: "{out_file}"')
             else:
                 stations, error = parse_m3u(in_file)
-                print(stations)
                 if error:
                     print(f'[red]Error:[/red] {error}')
                     sys.exit(1)

@@ -18,6 +18,8 @@ logger = logging.getLogger(__name__)
 class MKVToolNix:
 
     def __init__(self, config):
+        self.playlist = None
+        self._srt_file = None
         self.HAS_MKVTOOLNIX = False
 
         self.mkvmerge = None

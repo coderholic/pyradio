@@ -2090,10 +2090,15 @@ class SimpleCursesMenu(SimpleCursesWidget):
         '''
         super().__init__()
         self._selection = 0
+        self._old_selection = 0
         self._start_pos = 0
+        self._old_start_pos = 0
         self._focused = self._enabled = True
         self._bordered = bordered
+        self._old_active = 0
+        self._active = 0
         self._too_small = False
+        self._item_max_width = 0
         self._showed = False
         self._window_type = window_type
         self._title = title

@@ -938,6 +938,22 @@ Restricted Commands (Main mode only)
     # _selected = -1
 
     def __init__(self, bind_ip, bind_port, config, player, commands):
+        self._is_html = False
+        self.client_socket = None
+        self.error = None
+        self.muted = False
+        self.lock = None
+        self.config = None
+        self.report_file = None
+        self.lists = None
+        self.playlist_in_editor = None
+        self.can_send_command = None
+        self.rb_html_search_strings = None
+        self.song_title = None
+        self.sel = 0
+        self._selected = -1
+
+        self._path = ''
         self.has_netifaces = HAS_NETIFACES
         if not self.has_netifaces:
             return

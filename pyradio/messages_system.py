@@ -1718,7 +1718,26 @@ unintentionally disrupt functionality.
         self._txt = {}
 
     def __init__(self, config, op_mode, prev_op_mode):
+        self._args = None
+        self._txt = None
+        self._active_token = None
+        self.col_txt = None
+        self.col_box = None
+        self.col_highlight = None
+        self._parent = None
+        self.active_message_key = None
+        self.active_message_key = None
+        self._caption = None
+        self._maxY = 0
+        self._maxX = 0
+        self._winY = 0
+        self._winX = 0
+        self._lines_count = 0
+        self._pad_pos = 0
+        self._pad_refresh = None
+
         self._win = None
+        self._pad = None
         self.too_small = False
         self.simple_dialog = False
         self._same_content = False

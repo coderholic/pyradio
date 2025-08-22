@@ -242,6 +242,12 @@ class Log():
                  active_player_id,
                  get_web_song_title
                  ):
+        self.program_restart = False
+        self.error_msg = False
+        self._active_width = 0
+        self._desktop_notification_title = None
+        self._desktop_notification_message = None
+        self._repeat_notification = None
 
         self.msg = None
         self.suffix = None

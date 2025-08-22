@@ -77,6 +77,7 @@ class PyRadioSimpleScheduleWindow():
             schedule_item=None,
             global_functions={}
     ):
+        self._info_result = None
         self._X = 0
         self._Y = 0
         self._maxY = 0

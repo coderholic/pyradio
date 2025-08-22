@@ -49,6 +49,7 @@ def find_executable_basename(file_path):
 class PyRadioOpenDir(SimpleCursesMenu):
 
     def __init__(self, config, parent, global_functions):
+        self.dir = None
         self._cnf = config
 
         if self._cnf.xdg_compliant:
@@ -165,6 +166,7 @@ class PyRadioSearch(SimpleCursesLineEdit):
     _caption = 'Search'
 
     def __init__(self, parent, width, begin_y, begin_x, **kwargs):
+        self.parent_win = parent
         SimpleCursesLineEdit.__init__(
             self, parent, width, begin_y, begin_x,
             key_up_function_handler=self._get_history_previous,
@@ -320,9 +322,10 @@ class PyRadioEditor():
         self.maxY = 0
         self.maxX = 0
 
-        _win = None
-        _parent_win = None
-        _old_parent_win = None
+        self._win = None
+        self._parent_win = None
+        self._old_parent_win = None
+        self.new_station = None
 
         """ Adding a new station or editing an existing one """
         self._adding = True
@@ -1258,6 +1261,7 @@ class PyRadioRecordingDir():
     """ PyRadio insert recording dir dialog """
 
     def __init__(self, dir_path, parent, global_functions=None):
+        self._h_buttons = None
         self._invalid_chars = '<>|:"*\\/\''.replace(sep, '')
         if platform.startswith('win'):
             self._invalid_chars = self._invalid_chars.replace(':', '')
@@ -1711,6 +1715,7 @@ class PyRadioResourceOpener():
     """ PyRadio insert resource opener dialog """
 
     def __init__(self, opener, parent, global_functions=None):
+        self._h_buttons = None
         self._invalid_chars = '<>|:"*\\/\''.replace(sep, '')
         if platform.startswith('win'):
             self._invalid_chars = self._invalid_chars.replace(':', '')
@@ -2154,6 +2159,8 @@ class PyRadioRenameFile():
                  open_afterwards=True, title='',
                  opened_from_editor=False,
                  global_functions=None):
+        self._h_buttons = None
+        self.new_file_name = None
         self._invalid_chars = '<>|:"\\/?*'
         self.maxY = self.maxX = 0
         self._win = self._parent_win = self._line_editor = None
@@ -2720,6 +2727,8 @@ class PyRadioBuffering():
                  buffering,
                  parent,
                  global_functions=None):
+        self.maxX = 0
+        self._win = None
         self._cache_data  = None
         logger.error('\n\nbuffering = {}\n\n'.format(buffering))
         self._buffering = buffering
@@ -2765,9 +2774,9 @@ class PyRadioBuffering():
         y, x = self._parent.getmaxyx()
         new_y = int((y - self._max_lines) / 2) + 1
         new_x = int((x - len(self._text) - 9 - 4) / 2)
-        self.MaxX = len(self._text) + 9 + 4
+        self.maxX = len(self._text) + 9 + 4
         self._win = None
-        if y < self._max_lines + 2 or x < self.MaxX + 2:
+        if y < self._max_lines + 2 or x < self.maxX + 2:
             self._win = curses.newwin(3, 20, int((y-2)/2), int((x - 20) / 2))
             self._win.bkgdset(' ', curses.color_pair(3))
             self._win.erase()
@@ -2775,13 +2784,13 @@ class PyRadioBuffering():
             self._win.addstr(1, 2, 'Window too small', curses.color_pair(10))
         else:
 
-            self._win = curses.newwin(self._max_lines, self.MaxX, new_y, new_x)
+            self._win = curses.newwin(self._max_lines, self.maxX, new_y, new_x)
             self._win.bkgdset(' ', curses.color_pair(3))
             self._win.erase()
             self._win.box()
 
             # show title
-            x = int((self.MaxX - len(self._title)) / 2)
+            x = int((self.maxX - len(self._title)) / 2)
             self._win.addstr(0, x, self._title, curses.color_pair(11))
 
             # show content
@@ -2790,10 +2799,10 @@ class PyRadioBuffering():
 
             # show help
             try:
-                self._win.addstr(4, 2, '─' * (self.MaxX - 4), curses.color_pair(3))
+                self._win.addstr(4, 2, '─' * (self.maxX - 4), curses.color_pair(3))
             except:
-                self._win.addstr(4, 2, '─'.encode('utf-8') * (self.MaxX - 6), curses.color_pair(3))
-            self._win.addstr(4, int((self.MaxX - len(self._help_text))/2), self._help_text, curses.color_pair(3))
+                self._win.addstr(4, 2, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
+            self._win.addstr(4, int((self.maxX - len(self._help_text))/2), self._help_text, curses.color_pair(3))
             self._win.addstr(5, 2, kb2str('{j} {k} Up Down'), curses.color_pair(11))
             self._win.addstr(6, 2, 'PgUp PgDown', curses.color_pair(11))
             self._win.addstr('     Adjust value', curses.color_pair(10))
@@ -2917,6 +2926,8 @@ class PyRadioConnectionType():
     def __init__(self, parent, connection_type, global_functions=None):
         self._parent = parent
         self._global_functions = global_functions
+        self.maxX = 0
+        self._win = None
         if self._global_functions is None:
             self._global_functions = {}
         self.connection_type = connection_type
@@ -2927,9 +2938,9 @@ class PyRadioConnectionType():
         y, x = self._parent.getmaxyx()
         new_y = int((y - self._max_lines) / 2) + 1
         new_x = int((x - len(self._text) - 9 - 4) / 2)
-        self.MaxX = len(self._text) + 9 + 4
+        self.maxX = len(self._text) + 9 + 4
         self._win = None
-        if y < self._max_lines + 2 or x < self.MaxX + 2:
+        if y < self._max_lines + 2 or x < self.maxX + 2:
             self._win = curses.newwin(3, 20, int((y-2)/2), int((x - 20) / 2))
             self._win.bkgdset(' ', curses.color_pair(3))
             self._win.erase()
@@ -2937,13 +2948,13 @@ class PyRadioConnectionType():
             self._win.addstr(1, 2, 'Window too small', curses.color_pair(10))
         else:
 
-            self._win = curses.newwin(self._max_lines, self.MaxX, new_y, new_x)
+            self._win = curses.newwin(self._max_lines, self.maxX, new_y, new_x)
             self._win.bkgdset(' ', curses.color_pair(3))
             self._win.erase()
             self._win.box()
 
             # show title
-            x = int((self.MaxX - len(self._title)) / 2)
+            x = int((self.maxX - len(self._title)) / 2)
             self._win.addstr(0, x, self._title, curses.color_pair(11))
 
             # show content
@@ -2952,10 +2963,10 @@ class PyRadioConnectionType():
 
             # show help
             try:
-                self._win.addstr(4, 2, '─' * (self.MaxX - 4), curses.color_pair(3))
+                self._win.addstr(4, 2, '─' * (self.maxX - 4), curses.color_pair(3))
             except:
-                self._win.addstr(4, 2, '─'.encode('utf-8') * (self.MaxX - 6), curses.color_pair(3))
-            self._win.addstr(4, int((self.MaxX - len(self._help_text))/2), self._help_text, curses.color_pair(3))
+                self._win.addstr(4, 2, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
+            self._win.addstr(4, int((self.maxX - len(self._help_text))/2), self._help_text, curses.color_pair(3))
 
 
 
@@ -2969,10 +2980,10 @@ class PyRadioConnectionType():
 
             # show note
             try:
-                self._win.addstr(10, 2, '─' * (self.MaxX - 4), curses.color_pair(3))
+                self._win.addstr(10, 2, '─' * (self.maxX - 4), curses.color_pair(3))
             except:
-                self._win.addstr(10, 2, '─'.encode('utf-8') * (self.MaxX - 6), curses.color_pair(3))
-            self._win.addstr(10, int((self.MaxX - len(self._note_text))/2), self._note_text, curses.color_pair(3))
+                self._win.addstr(10, 2, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
+            self._win.addstr(10, int((self.maxX - len(self._note_text))/2), self._note_text, curses.color_pair(3))
 
             self._win.addstr(11, 4, 'Changes made here will not be', curses.color_pair(10))
             self._win.addstr(12, 3, 'saved in the configuration file', curses.color_pair(10))

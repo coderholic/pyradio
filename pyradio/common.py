@@ -1,21 +1,15 @@
 # -*- coding: utf-8 -*-
-import sys
 import logging
 import locale
 import io
 import csv
 import curses
-import re
-import functools
 from os import rename, remove, access, X_OK, getenv, makedirs
-from os.path import exists, dirname, join, expanduser, splitext
+from os.path import exists, dirname, join, expanduser
 from shutil import which, move, Error as shutil_Error
-from rich import print
 from enum import IntEnum
 from sys import platform
-from html import unescape
-from charset_normalizer import detect
-from urllib.parse import urlparse
+from rich import print
 
 logger = logging.getLogger(__name__)
 
@@ -272,19 +266,6 @@ class StationsChanges():
     '''
 
     def __init__(self, config):
-        self._init_vars()
-        self._cnf = config
-        self._last_sync_file = join(self._cnf.state_dir, 'last-sync')
-        self._asked_sync_file = join(self._cnf.state_dir, 'asked-sync')
-
-        self.PLAYLIST_HAS_NAME_URL = 0
-        self.PLAYLIST_HAS_NAME_URL_ENCODING = 1
-        self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON = 2
-        self.counts = [0, 0, 0]
-
-    def _init_vars(self):
-        self.version_changed = None
-
         '''
         versions = {
             (0, 9, 2):                       # 0.9.2 version
@@ -345,11 +326,23 @@ class StationsChanges():
                 ], # deleted
             ],
         }
-
+        self.version_changed = None
         self.keys = None
         self._stations = None
         self._stations_file = None
         self._playlist_version = 0
+        self._cnf = config
+        self._last_sync_file = join(self._cnf.state_dir, 'last-sync')
+        self._asked_sync_file = join(self._cnf.state_dir, 'asked-sync')
+        self.PLAYLIST_HAS_NAME_URL = 0
+        self.PLAYLIST_HAS_NAME_URL_ENCODING = 1
+        self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON = 2
+        self.counts = [0, 0, 0]
+        self._out_stations_file = None
+        self._bck_stations_file = None
+        self.asked_sync = None
+        self.last_sync = None
+        self.version_to_write = None
 
     def _read_version(self):
         the_file = join(dirname(__file__), '__init__.py')
@@ -746,7 +739,6 @@ class CsvReadWrite():
                             name, url, enc, {'image': icon} if icon else '',
                             profile, buffering, http, volume, referer, player
                         ]
-
                         self._items.append(station_info)
 
                         # Update playlist version based on the presence of optional fields
@@ -1054,7 +1046,7 @@ class ProfileManager():
                 None                : if failure
 
         '''
-        for i, config_file in enumerate(self.config_files[player_name]):
+        for config_file in self.config_files[player_name]:
             if exists(config_file):
                 config_string = self._read_a_config_file(config_file)
                 if '[' + profile_name + ']' in config_string:
@@ -1219,373 +1211,4 @@ def validate_resource_opener_path(a_file):
         return None
     # Return the validated path
     return a_file
-
-##############################################################################
-#
-#                               m3u functions
-#
-##############################################################################
-
-# M3U CHARACTER SUBSTITUTION RULES (ORIGINAL_CHAR → REPLACEMENT_CHAR)
-# USE EMPTY STRING AS REPLACEMENT TO DISABLE A SUBSTITUTION
-# NOTE: FIRST MATCH WINS, PROCESS IN ORDER OF PRIORITY
-# POSSIBLE COMMA OPTIONS:
-#   "﹐" (SMALL COMMA U+FE50) - BEST BALANCE
-#   "ʼ" (MODIFIER LETTER COMMA U+02BC) - MORE SUBTLE
-#   "·" (MIDDLE DOT U+00B7)
-#   ""  (GREEK ANO TELEIA U+0387)
-M3U_SUBSTITUTIONS = (
-    (",", " · "),   # MIDDLE DOT (U+00B7) - BEST FOR CSV ROUND-TRIP
-    ("-", "–"),     # EN DASH (U+2013) WITH SPACES
-    ('"', "”"),     # RIGHT DOUBLE QUOTATION MARK (U+201D)
-)
-
-def clean_name(name):
-    """Remove control characters and sanitize names"""
-    if not name:
-        return ""
-    # Keep Greek letters, common symbols and basic punctuation
-    name = re.sub(r'[\x00-\x1F\x7F]', '', name)  # Remove control chars
-    name = re.sub(r'[^\w\s\-.,:;!?&\'"α-ωΑ-Ω]', '', name, flags=re.IGNORECASE)
-    return name[:255]  # Limit length
-##############################################################################
-#
-#                                 m3u to csv
-#
-##############################################################################
-def parse_attributes(line):
-    """Parse EXTINF attributes with robust quote handling"""
-    if not hasattr(parse_attributes, '_compiled_pattern'):
-        parse_attributes._compiled_pattern = re.compile(
-            r'([a-zA-Z0-9-]+)='          # Key
-            r'(?:"((?:[^"\\]|\\.)*)"|'   # Double-quoted with escapes
-            r"'((?:[^'\\]|\\.)*)'|"      # Single-quoted with escapes
-            r'([^ ,]+))'                 # Unquoted
-        )
-
-    attrs = {}
-    for match in parse_attributes._compiled_pattern.finditer(line.split(',', 1)[0]):
-        key = match.group(1).lower()  # Case-insensitive keys
-        if key not in ('tvg-logo', 'group-title'):  # Μόνο επιτρεπόμενα attributes
-            continue
-
-        # Handle value ONLY if key is allowed
-        dq, sq, uq = match.group(2), match.group(3), match.group(4)
-        value = (dq or sq or uq or "").replace('\\"', '\u0001').replace('"', '\\"').replace('\u0001', '\\"')
-        if '&' in value:
-            value = unescape(value)
-        attrs[key] = value.replace('\\"', '"').replace("\\'", "'")
-    return attrs
-
-def detect_file_encoding(file_path):
-    """Detect encoding with fallback to common encodings"""
-    try:
-        with io.open(file_path, 'rb') as f:
-            raw_data = f.read(10000)
-            result = detect(raw_data)
-            encoding = result.get('encoding') if result else None
-
-            # Try common encodings if detection fails
-            for enc in [encoding, 'utf-8', 'latin-1', 'cp1252']:
-                if enc:
-                    try:
-                        raw_data.decode(enc)
-                        return enc
-                    except UnicodeDecodeError:
-                        continue
-            return 'utf-8'  # Final fallback
-    except Exception:
-        return 'utf-8'
-
-def generate_reverse_subs():
-    """Creates reverse mappings with smart space handling"""
-    reverse = {}
-    for orig, sub in reversed(M3U_SUBSTITUTIONS):
-        if orig.endswith(' '):  # Handle space-preserving substitutions
-            reverse[sub] = orig
-        else:
-            reverse[sub] = orig
-    # Special case: Ensure middle dot becomes comma+space
-    if " · " in reverse:
-        reverse[" · "] = ", "
-    return reverse
-
-@functools.lru_cache(maxsize=1)
-def get_reverse_subs():
-    return generate_reverse_subs()
-
-def reverse_substitutions(text):
-    if not text:
-        return text
-    subs = get_reverse_subs()
-    for sub, orig in subs.items():
-        text = text.replace(sub, orig)
-    return text
-
-def html_entities_to_unicode_chars(text: str) -> str:
-    """
-    Convert HTML entities to Unicode characters with special handling for M3U-specific cases.
-    Focuses on non-standard entities and characters that need visual improvement for display.
-    """
-    custom_entities = {
-        # Common problematic entities in M3U files
-        '&quot;': '”',      # RIGHT DOUBLE QUOTATION MARK (U+201D) - better visual appearance
-        '&#039;': "'",     # Apostrophe (both with and without semicolon)
-        '&#39;': "'",
-        '&apos;': "'",     # HTML apostrophe (redundant but ensures consistency)
-
-        # Numeric entities for special characters
-        '&#225;': 'á',     # a with acute
-        '&#233;': 'é',     # e with acute
-        '&#237;': 'í',     # i with acute
-        '&#243;': 'ó',     # o with acute
-        '&#250;': 'ú',     # u with acute
-        '&#241;': 'ñ',     # n with tilde
-        '&#231;': 'ç',     # c with cedilla
-
-        # German umlauts and special characters
-        '&#228;': 'ä',     # a with umlaut
-        '&#246;': 'ö',     # o with umlaut
-        '&#252;': 'ü',     # u with umlaut
-        '&#223;': 'ß',     # sharp s
-        '&#196;': 'Ä',     # A with umlaut
-        '&#214;': 'Ö',     # O with umlaut
-        '&#220;': 'Ü',     # U with umlaut
-
-        # Other common European characters
-        '&#224;': 'à',     # a with grave
-        '&#232;': 'è',     # e with grave
-        '&#236;': 'ì',     # i with grave
-        '&#242;': 'ò',     # o with grave
-        '&#249;': 'ù',     # u with grave
-        '&#226;': 'â',     # a with circumflex
-        '&#234;': 'ê',     # e with circumflex
-        '&#238;': 'î',     # i with circumflex
-        '&#244;': 'ô',     # o with circumflex
-        '&#251;': 'û',     # u with circumflex
-
-        # Special symbols and punctuation
-        '&#8211;': '–',    # EN DASH (U+2013)
-        '&#8212;': '—',    # EM DASH (U+2014)
-        '&#8216;': '‘',    # LEFT SINGLE QUOTATION MARK
-        '&#8217;': '’',    # RIGHT SINGLE QUOTATION MARK
-        '&#8220;': '“',    # LEFT DOUBLE QUOTATION MARK
-        '&#8221;': '”',    # RIGHT DOUBLE QUOTATION MARK (consistent with M3U_SUBSTITUTIONS)
-
-        # Non-standard hex entities (common in IPTV systems)
-        '&#xe1;': 'á',
-        '&#xe9;': 'é',
-        '&#xed;': 'í',
-        '&#xf3;': 'ó',
-        '&#xfa;': 'ú',
-        '&#xf1;': 'ñ',
-        '&#xe4;': 'ä',
-        '&#xf6;': 'ö',
-        '&#xfc;': 'ü',
-        '&#xc4;': 'Ä',
-        '&#xd6;': 'Ö',
-        '&#xdc;': 'Ü',
-
-        # Slash and bracket characters (avoid parsing issues)
-        '&#47;': '/',
-        '&#92;': '\\',
-        '&#93;': ']',
-        '&#91;': '[',
-    }
-
-    # First pass: Handle custom entities
-    for entity, char in custom_entities.items():
-        text = text.replace(entity, char)
-
-    # Second pass: Use standard HTML unescape for remaining entities
-    from html import unescape
-    text = unescape(text)
-
-    return text
-
-def is_valid_url(url):
-    """Strict URL validation for M3U files"""
-    try:
-        parsed = urlparse(url)
-        return (parsed.scheme in ('http', 'https', 'rtsp', 'udp', 'rtmp', 'mms') and
-                parsed.netloc and
-                not any(c in url for c in (' ', '\n', '\t', '\r', '"', "'")) and
-                len(url) <= 2048 and
-                url.isprintable())
-    except ValueError:
-        return False
-
-def parse_m3u(m3u_path, max_entries=10000):
-    """Convert M3U to playlist with enhanced safety checks"""
-    try:
-        encoding = detect_file_encoding(m3u_path)
-        ungrouped = []
-        groups = {}
-        current_group = None
-        entry_count = 0
-
-        with io.open(m3u_path, 'r', encoding=encoding, errors='replace') as f:
-            for line in f:
-                # Safety checks
-                if len(line.encode('utf-8')) > 4096:
-                    continue
-                line = line.strip()
-                if not line or line.startswith("#EXTM3U"):
-                    continue
-
-                # Handle group headers
-                if line.startswith("#EXTGRP:"):
-                    current_group = clean_name(line.split(':', 1)[1].strip()[:100])
-                    continue
-
-                if line.startswith("#EXTINF"):
-                    if entry_count >= max_entries:
-                        return None, f"Maximum entries ({max_entries}) reached"
-
-                    station = [""] * len(Station)
-                    if ',' in line:
-                        name = clean_name(line.split(',', 1)[1].strip())[:255]
-                        name = html_entities_to_unicode_chars(name)
-                        station[Station.name] = reverse_substitutions(name)
-
-                    # Parse attributes
-                    attrs = parse_attributes(line)
-                    if "group-title" in attrs:
-                        current_group = clean_name(attrs["group-title"])[:100])
-                    if "tvg-logo" in attrs:
-                        station[Station.icon] = attrs["tvg-logo"][:500]
-
-                    # Process URL
-                    url = next(f, "").strip()
-                    if is_valid_url(url):
-                        if ';' in url:  # Remove ICY metadata
-                            url = url.split(';')[0]
-                        station[Station.url] = url
-                        entry_count += 1
-
-                        if current_group:
-                            groups.setdefault(current_group, []).append(station)
-                        else:
-                            ungrouped.append(station)
-
-        # Build playlist
-        playlist = []
-        playlist.extend(ungrouped)
-        for group in sorted(groups):
-            playlist.append([group, "-"])
-            playlist.extend(groups[group])
-
-        return playlist, None
-
-    except Exception as e:
-        return None, f"Error parsing {m3u_path}: {str(e)}"
-
-##############################################################################
-#
-#                                 csv to m3u
-#
-##############################################################################
-def escape_m3u_string(text):
-    if not text:
-        return ""
-
-    processed = str(text)
-
-    processed = processed.replace('\\\\', '\u0002').replace('\\"', '\u0001')
-    # Only replace raw quotes, not already encoded ones:
-    processed = processed.replace('"', '&quot;')
-    processed = processed.replace('\u0001', '\\"').replace('\u0002', '\\\\')
-
-    if any(c in processed for c in (',', '"', '-')):
-        return f'"{processed}"'
-    return ' '.join(processed.strip().split())
-
-def unicode_chars_to_m3u_safe(text):
-    """
-    Convert Unicode characters back to M3U-safe representations.
-    Only reverses CRITICAL substitutions that affect M3U parsing or player compatibility.
-    """
-    if not text:
-        return ""
-
-    # Critical substitutions (must be reversed)
-    reverse_mappings = {
-        '’': '&apos;',    # RIGHT SINGLE QUOTATION MARK → HTML entity
-    }
-
-    # Handle critical substitutions
-    for char, replacement in reverse_mappings.items():
-        text = text.replace(char, replacement)
-
-    # Optional: Fallback for any remaining non-ASCII characters
-    text = text.encode('ascii', 'xmlcharrefreplace').decode('ascii')
-
-    return text
-
-def list_to_m3u(stations, out_file):
-    """Write PyRadio stations to M3U file with error handling"""
-    if not stations:
-        return '[red]Error:[/red] No stations to write'
-
-    try:
-        # Create directory if it doesn't exist
-        out_dir = dirname(out_file)
-        if out_dir and not exists(out_dir):
-            makedirs(out_dir)
-
-        with io.open(out_file, 'w', encoding='utf-8') as f:
-            f.write("#EXTM3U\n")
-            current_group = None
-
-            for entry in stations:
-                # Handle group headers
-                # Skip empty group names entirely
-                if len(entry) >= 2 and entry[1] == "-":
-                    if entry[0].strip():  # Only process non-empty names
-                        current_group = unicode_chars_to_m3u_safe(entry[0].strip())
-                    continue  # Skip regardless to avoid empty groups
-
-                # Skip invalid stations
-                if not entry[Station.url] or not urlparse(entry[Station.url]).scheme:
-                    continue
-
-                # Write group header if exists
-                if current_group:
-                    f.write(f"#EXTGRP:{current_group}\n")
-
-                # Make sure icon is a string
-                logo = entry[Station.icon]
-                if isinstance(entry[Station.icon], dict):
-                    logo = entry[Station.icon]['image']
-
-                # Write icon if exists
-                if len(entry) > Station.icon and logo:
-                    f.write(f"#EXTIMG:{logo}\n")
-
-                # Build EXTINF line
-                name = entry[Station.name] if entry[Station.name] else f"Station {len(stations)}"
-                name = unicode_chars_to_m3u_safe(name)
-                for n in M3U_SUBSTITUTIONS:
-                    name = name.replace(*n)
-                # Replace hyphen with en dash, for vlc
-                attrs = []
-                if len(entry) > Station.icon and entry[Station.icon]:
-                    attrs.append(f'tvg-logo="{logo}"')
-                if current_group:
-                    attrs.append(f'group-title="{current_group}"')
-
-                if attrs:
-                    string = f"#EXTINF:-1 {' '.join(attrs)} ,{escape_m3u_string(name)}"
-                else:
-                    string = f"#EXTINF:-1,{escape_m3u_string(name)}"
-
-                f.write(f"{string}\n{entry[Station.url]}\n")
-
-            return None
-
-    except (IOError, OSError) as e:
-        return f"[red]File error: {e}[/red]"
-
-    except Exception as e:
-        return f"[red]Error writing M3U: {e}[/red]"
 

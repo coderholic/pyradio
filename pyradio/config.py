@@ -110,47 +110,13 @@ class PyRadioStations():
     PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP_REF = 5
 
     def __init__(self, stationFile='', user_config_dir=None):
-        self._init_my_vars()
-        if platform.startswith('win'):
-            self._open_string_id = 1
-
-        if user_config_dir is not None:
-            self.stations_dir = user_config_dir
-            self.xdg.build_paths()
-        self.xdg.ensure_paths_exist()
-        self.root_path = path.join(path.dirname(__file__), 'stations.csv')
-        self.themes_dir = path.join(self.stations_dir, 'themes')
-        self.favorites_path = path.join(self.stations_dir, 'favorites.csv')
-        try:
-            makedirs(self.themes_dir, exist_ok = True)
-        except:
-            try:
-                makedirs(self.themes_dir)
-            except:
-                pass
-
-        self._ps = PyRadioPlaylistStack()
-
-        if not self.locked and not self.headless:
-            ''' If a station.csv file exitst, which is wrong,
-                we rename it to stations.csv '''
-            if path.exists(path.join(self.stations_dir, 'station.csv')):
-                copyfile(path.join(self.stations_dir, 'station.csv'),
-                         path.join(self.stations_dir, 'stations.csv'))
-                remove(path.join(self.stations_dir, 'station.csv'))
-
-            self._move_old_csv(self.stations_dir)
-            self._check_stations_csv(self.stations_dir, self.root_path)
-            self._move_to_data()
-            ''' rename radio browser config '''
-            rb_config = path.join(self.stations_dir, 'radio-browser-config')
-            if path.exists(rb_config):
-                new_rb_config = path.join(self.stations_dir, 'radio-browser.conf')
-                rename(rb_config, new_rb_config)
-
-    def _init_my_vars(self):
         self.foreign_title = ''
         self.previous_station_path = ''
+        self.stations_history = None
+        self.foreign_copy_asked = False
+        self.added_stations = 0
+        self._is_register = False
+        self.check_playlist = None
 
         ''' True if playlist not in config dir '''
         self.foreign_file = False
@@ -200,6 +166,43 @@ class PyRadioStations():
         self.renamed_stations = []
 
         self.favorites = None
+
+        if platform.startswith('win'):
+            self._open_string_id = 1
+
+        if user_config_dir is not None:
+            self.stations_dir = user_config_dir
+            self.xdg.build_paths()
+        self.xdg.ensure_paths_exist()
+        self.root_path = path.join(path.dirname(__file__), 'stations.csv')
+        self.themes_dir = path.join(self.stations_dir, 'themes')
+        self.favorites_path = path.join(self.stations_dir, 'favorites.csv')
+        try:
+            makedirs(self.themes_dir, exist_ok = True)
+        except:
+            try:
+                makedirs(self.themes_dir)
+            except:
+                pass
+
+        self._ps = PyRadioPlaylistStack()
+
+        if not self.locked and not self.headless:
+            ''' If a station.csv file exitst, which is wrong,
+                we rename it to stations.csv '''
+            if path.exists(path.join(self.stations_dir, 'station.csv')):
+                copyfile(path.join(self.stations_dir, 'station.csv'),
+                         path.join(self.stations_dir, 'stations.csv'))
+                remove(path.join(self.stations_dir, 'station.csv'))
+
+            self._move_old_csv(self.stations_dir)
+            self._check_stations_csv(self.stations_dir, self.root_path)
+            self._move_to_data()
+            ''' rename radio browser config '''
+            rb_config = path.join(self.stations_dir, 'radio-browser-config')
+            if path.exists(rb_config):
+                new_rb_config = path.join(self.stations_dir, 'radio-browser.conf')
+                rename(rb_config, new_rb_config)
 
     def add_to_favorites(self, an_item):
         if self.favorites is None:
@@ -1262,7 +1265,7 @@ class PyRadioConfig(PyRadioStations):
     def _init_vars(self):
         self.check_playlist = False
 
-        ''' if degub is on, this will tell the logger to
+        ''' if debug is on, this will tell the logger to
                 0:  not log input from the player
                 1:  input accepted input from the player
                 2:  input raw input from the player
@@ -1298,7 +1301,7 @@ class PyRadioConfig(PyRadioStations):
         self.theme_download_failed = False
         self.theme_not_supported_notification_shown = False
 
-        self.log_degub = False
+        self.log_debug = False
 
         ''' Title logging '''
         self._current_log_title = self._current_log_station = ''
@@ -1438,6 +1441,31 @@ class PyRadioConfig(PyRadioStations):
         self.use_calculated_colors = False
 
     def __init__(self, user_config_dir=None, headless=False):
+        self.localize = None
+        self._old_localize = None
+        self.terminal_is_blacklisted = False
+        self.no_themes_from_command_line = False
+        self.show_recording_start_message = False
+        self.locked = False
+        self.params = None
+        self.saved_params = None
+        self.params_changed = False
+        self.current_pyradio_version = None
+        self._fixed_recording_dir = None
+        self._linux_resource_opener = None
+        self.need_to_fix_desktop_file_icon = False
+        self.use_calculated_colors = False
+        self.user_agent_string = None
+        self.info = None
+        self._show_colors_cannot_change = None
+        self.config_opts = None
+        self.__dirty_config = False
+        self.player_params_file = None
+        self.schedule_file = None
+        self.keyboard_file = None
+        self.active_enable_clock = False
+        self.log_debug = False
+
         self._user_config_dir = user_config_dir
         self._headless = headless
         self.xdg = XdgDirs(
@@ -3631,7 +3659,7 @@ class PyRadioLog():
                 logger.addHandler(self.debug_handler)
 
                 # inform config
-                self.log_degub = True
+                self.log_debug = True
 
             if titles and not self.log_titles:
                 if logger.isEnabledFor(logging.INFO):
@@ -3739,6 +3767,9 @@ class PyRadioBase16Themes():
     _ln = path.join(path.expanduser('~'), '.config/base16-project/base16_shell_theme')
 
     def __init__(self, config):
+        self.theme = None
+        self.status = None
+
         ''' last used theme name (no "base16-", no extension) '''
         self._last_used_theme = None
         ''' pyradio base16 file for auto download '''

@@ -533,7 +533,7 @@ class PyRadioCache():
             cache_dir
                 cache dir = cache_dir
         '''
-        _files = []
+        self._files = []
         if platform.system().lower().startswith('win'):
             self._cache_dir = os.path.join(
                 os.path.expanduser('APPDATA'),

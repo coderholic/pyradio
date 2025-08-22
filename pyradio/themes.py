@@ -139,9 +139,12 @@ class PyRadioTheme():
         # self._terminals_colors = tuple(curses.color_content(x) for x in range(0, 16))
         self._colors = {}
         self._active_colors = {}
+        self._curses_colors = {}
+        self._temp_colors = None
         self._read_colors = {}
         self._temp_colors = {}
         self.config_dir = ''
+        self._theme_name = ''
 
     def __del__(self):
         self._colors = None
@@ -619,8 +622,9 @@ class PyRadioThemeReadWrite():
 
     def __init__(self, config):
         self._cnf = config
-        self._tmeme_name = ''
+        self._theme_name = ''
         self._theme_path = ''
+        self._temp_colors = None
 
     def read_theme(self, theme_name, theme_path):
         """ Opens a theme file and return its contents in self._temp_colors
@@ -904,12 +908,17 @@ class PyRadioThemeSelector():
                  cursor_color_pair, applied_cursor_color_pair,
                  is_watched, a_lock, log_file=''):
         self._win = None
-        self._width = _height = X = Y = 0
-        self._selection = _start_pos = _items = 0
+        self._global_functions = None
+        self._width = self._height = self.X = self.Y = 0
+        self._selection = self._start_pos = self._items = 0
         self._start_pos = 0
+        self._first_theme_to_watch = 0
+        self._applied_theme = -1
 
         self._themes = []
         self._title_ids = []
+        self._too_small = False
+        self._config_theme = -1
 
         ''' display the 2 internal 8 color themes '''
         self._items = 2

@@ -111,6 +111,16 @@ class PyRadioConfigWindow():
             show_confirm_cancel_config_changes=None,
             global_functions=None
             ):
+        self._max_start = 0
+        self._column = 0
+        self._column = 0
+        self._line = 0
+        self._help_lines = None
+        self._max_number_of_help_lines = 0
+        self.need_to_update_theme = False
+        self._move_in_config_win_Y = 0
+        self._move_in_config_win_Y = 0
+
         self._win = None
         self.__selection = 1
         ''' Keep a copy of saved values for theme and transparency
@@ -1173,6 +1183,8 @@ class PyRadioExtraParams():
         self._note_line1 = 'Changes made here wil not be'
         self._note_line2 = 'saved in the configuration file'
         self._extra = None
+        self._move_in_config_win_Y = 0
+        self._move_in_config_win_Y = 0
         self._cnf = config
         self._parent = parent
         self._win = None
@@ -1276,6 +1288,7 @@ class ExtraParametersEditor():
                  config,
                  string='',
                  global_functions=None):
+        self._count = 0
         self._parent = parent
         self._cnf = config
         self.edit_string = string
@@ -1575,6 +1588,12 @@ class ExtraParameters():
                  entry_cannot_be_edited_function=None,
                  entry_cannot_be_deleted_function=None,
                  global_functions=None):
+        self._offsetY = 0
+        self._offsetX = 0
+        self._global_functions = None
+        self._too_small = True
+        self._error_win = None
+
         self._list = None
         self._cnf = config
         self._orig_params = deepcopy(self._cnf.params)
@@ -2512,6 +2531,8 @@ class PyRadioSelectEncodings():
 
     def __init__(self, maxY, maxX, encoding, config_encoding,
                  global_functions=None, show_default=False):
+        self._global_functions = None
+        self._too_small = False
         self._win = None
         self._encodings = []
         self._invalid = []
@@ -2902,6 +2923,10 @@ class PyRadioSelectPlaylist():
         default_playlist is removed from the list.
         Returns: state, playlist/register path
         '''
+        self._error_win = None
+        self._max_len = 0
+        self._num_of_items = 0
+
         self._win = None
         self.maxY = 0
         self.maxX = 0
@@ -3518,6 +3543,11 @@ class PyRadioKeyboardConfig():
             parent,
             distro='None',
             global_functions=None):
+        self._h_buttons = None
+        self._win = None
+        self.existing_conflict = None
+        self._old_key_value = None
+        self.keys_string = None
         self._focus = 0
         self._widget = None
         self._b_ok = None
@@ -4336,7 +4366,14 @@ class PyRadioLocalized():
             0: active item
             0: selection
         '''
+        self._h_buttons = None
+        self._keys = None
+        self._files = None
         self._pos = (0, 0)
+        self.too_small = False
+        self._win = None
+        self._needs_update = False
+        self.lang = None
 
         self._focus = 0
         self._widgets = [None, None, None, None]
@@ -4436,7 +4473,7 @@ class PyRadioLocalized():
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'reading localized file: {target_file}')
             with open(target_file, 'r', encoding='utf-8') as f:
-                self._keys= json.load(f)
+                self._keys = json.load(f)
         except Exception as e:
             # set default _keys
             if logger.isEnabledFor(logging.DEBUG):

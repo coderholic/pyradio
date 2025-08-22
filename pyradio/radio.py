@@ -51,6 +51,7 @@ from .simple_curses_widgets import SimpleCursesMenu
 from .messages_system import PyRadioMessagesSystem
 from .server import PyRadioServer, HAS_NETIFACES
 from .keyboard import kbkey, get_lkbkey, chk_key, get_unicode_and_cjk_char, dequeue_input, input_queue, get_kb_letter, set_kb_letter, check_localized, to_str, ctrl_code_to_string, add_l10n_to_functions_dict, set_kb_cjk
+from .m3u import parse_m3u
 
 CAN_CHECK_FOR_UPDATES = True
 try:
@@ -505,6 +506,10 @@ class PyRadio():
         self.player = None
         # player data
         self._default_player_name = None
+        self._global_letter = None
+        self._accumulated_errors = None
+        self._set_playing = False
+        self._active_player = None
 
         self._current_player_id = 0
         self._next_current_player_id = 1

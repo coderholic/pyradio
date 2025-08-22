@@ -893,6 +893,9 @@ class LetterProvider:
 class LetterDisplay:
 
     def __init__(self, parent, focused=False, start_line=0):
+        self._num_letters_per_line = 0
+        self._width = 0
+        self._height = 0
         self._active_widget = 0
         self._editing = None
         self._focused = False

@@ -347,6 +347,13 @@ class Player():
                  info_display_handler,
                  history_add_function,
                  recording_lock):
+        self.PROFILE_FROM_USER = False
+        self.volume = -1
+        self.station_volume = -1
+        self._chapter_time = None
+        self.stop_timeout_counter_thread = False
+        self._request_mpv_info_data_counter = 0
+        self.detect_if_player_exited = False
         self.outputStream = outputStream
         self._cnf = config
         self.stations_history_add_function = history_add_function
@@ -2214,7 +2221,6 @@ class Player():
                         self._cnf.state_dir,
                         lambda: self.recording
                         )
-                x.enabled = True
                 x.delay = delay
                 self._buffering_data = x.cache[:]
                 x = None
@@ -3237,6 +3243,10 @@ class MpPlayer(Player):
             history_add_function,
             recording_lock
         )
+        self.volume = -1
+        self._detected_icon_url = None
+        self._thrededreq_thread = None
+        self._vlc_url = None
         self.config_files = self.all_config_files['mplayer']
         if platform.startswith('win') and \
                 int(platform_uname().release) < 10:
@@ -3608,6 +3618,9 @@ class VlcPlayer(Player):
             recording_lock
         )
         # self.config_files = self.all_config_files['vlc']
+        self._thrededreq_thread = None
+        self._vlc_url = None
+        self._unmuted_volume = -1
         self._config_volume = -1
         self._read_config()
         self.config_files = self.all_config_files['vlc']
@@ -4152,6 +4165,7 @@ class PyRadioChapters():
             encoding='urf-8'
             ):
         # cover_dir is the data dir
+        self._tag_file = None
         self._mkvmerge_is_done = False
         self._cnf = config
         self._playlist = os.path.basename(self._cnf.station_path)[:-4]
