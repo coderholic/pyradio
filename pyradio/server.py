@@ -1012,19 +1012,19 @@ Restricted Commands (Main mode only)
             server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             server.bind((self._bind_ip, self._bind_port))
         except (OSError, socket.error) as e:
-            logger.error('Remote Control Server start error: "{}"'.format(e))
+            logger.error(f'Remote Control Server start error: "{e}"')
             server.close()
             error_func(e)
             return
         try:
             server.listen()  # max backlog of connections
         except (OSError, socket.error) as e:
-            logger.error('Remote Control Server error: "{}"'.format(e))
+            logger.error(f'Remote Control Server error: "{e}"')
             server.close()
             error_func(e)
             return
         if logger.isEnabledFor(logging.INFO):
-            logger.info('Remote Control Server listening on {}:{}'.format(self._bind_ip, self._bind_port))
+            logger.info(f'Remote Control Server listening on {self._bind_ip}:{self._bind_port}')
 
         self._create_report_file()
         while True:
@@ -1055,7 +1055,7 @@ Restricted Commands (Main mode only)
     def _create_report_file(self):
         try:
             with open(self.report_file, 'w', encoding='utf-8') as f:
-                f.write('{0}:{1}'.format(self._bind_ip, self._bind_port))
+                f.write(f'{self._bind_ip}:{self._bind_port}')
         except:
             pass
 
@@ -1085,7 +1085,7 @@ Restricted Commands (Main mode only)
         except IndexError:
             self._path = ''
         if logger.isEnabledFor(logging.INFO):
-            logger.info('Accepted connection from {0}:{1} -> {2}'.format(address[0], address[1], self._path))
+            logger.info(f'Accepted connection from {address[0]}:{address[1]} -> {self._path}')
 
         # self._is_html = True if self._path.startswith('/html') else False
         if self._path.startswith('/html'):
@@ -1386,7 +1386,7 @@ Restricted Commands (Main mode only)
                 self._path.startswith('/stations/'):
             if self.can_send_command():
                 ret = self._parse()
-                logger.error('\n\n1 _parse returned {}\n\n'.format(ret))
+                logger.error(f'\n\n1 _parse returned {ret}\n\n')
                 if ret is None:
                     self._send_text(self._text['/error'])
                 else:
@@ -1420,11 +1420,11 @@ Restricted Commands (Main mode only)
                             logger.error(f' 2 {ret = }')
                             if self._is_html:
                                 self._commands['/jump'](ret)
-                                self._send_raw('<div class="alert alert-success">Playing <b>{}</b></div>'.format(self.lists()[0][-1][ret-1][0]))
+                                self._send_raw(f'<div class="alert alert-success">Playing <b>{self.lists()[0][-1][ret - 1][0]}</b></div>')
                             else:
                                 logger.error(f' 3 {ret = }')
                                 logger.error(f'{self.lists() = }')
-                                self._send_text(' Playing station: "{}"'.format(self.lists()[0][-1][ret-1][0]))
+                                self._send_text(f' Playing station: "{self.lists()[0][-1][ret - 1][0]}"')
                                 self._commands['/jump'](ret)
                     has_error = False
             else:
@@ -1658,7 +1658,7 @@ Restricted Commands (Main mode only)
                                 try:
                                     playlist_name = self.lists()[1][-1][pl][0]
                                 except IndexError:
-                                    self._send_text('Error: Playlist not found (id={})'.format(pl+1))
+                                    self._send_text(f'Error: Playlist not found (id={pl + 1})')
                                     go_on = False
                                 if go_on:
                                     p_name = basename(self.playlist_in_editor()[:-4])
@@ -1693,7 +1693,7 @@ Restricted Commands (Main mode only)
                                                 if st < len(playlist_stations):
                                                     item = [playlist_name, playlist_stations[st], st]
                                                     if logger.isEnabledFor(logging.DEBUG):
-                                                        logger.debug('item = {}'.format(item))
+                                                        logger.debug(f'item = {item}')
                                                     # radio.py 8762
                                                     if self._is_html:
                                                         self._commands['open_history'](in_file, item)
@@ -1735,7 +1735,7 @@ Restricted Commands (Main mode only)
                         self._send_text(self._text['/perm'])
                 else:
                     ret = self._parse()
-                    logger.error('\n\n2 _parse returned {}\n\n'.format(ret))
+                    logger.error(f'\n\n2 _parse returned {ret}\n\n')
                     if ret is None:
                         self._send_text(self._text['/error'])
 
@@ -1777,7 +1777,7 @@ Restricted Commands (Main mode only)
                             try:
                                 playlist_name = self.lists()[2][-1][ret][0]
                             except IndexError:
-                                self._send_text('Error: Playlist not found (id={})'.format(ret+1))
+                                self._send_text(f'Error: Playlist not found (id={ret + 1})')
                                 go_on = False
                             if go_on:
                                 in_file, out = self.config().read_playlist_for_server(
@@ -1798,9 +1798,9 @@ Restricted Commands (Main mode only)
                                         )
                                 else:
                                     if self._is_html:
-                                        self._send_raw('<div class="alert txt-center alert-danger">Error reading playlist: <b>{}</b></div>'.format(playlist_name))
+                                        self._send_raw(f'<div class="alert txt-center alert-danger">Error reading playlist: <b>{playlist_name}</b></div>')
                                     else:
-                                        self._send_text('Error reading playlist: "{}"'.format(playlist_name))
+                                        self._send_text(f'Error reading playlist: "{playlist_name}"')
         else:
             self._send_text(self._text['/error'])
 
@@ -1818,14 +1818,14 @@ Restricted Commands (Main mode only)
             d_msg = msg
         f_msg = 'retry: 150\nevent: /html/title\ndata: <b>' + d_msg + '</b>\n\n'
         b_msg = f_msg.encode('utf-8')
-        txt = '''HTTP/1.1 200 OK
+        txt = f'''HTTP/1.1 200 OK
 Content-Type: text/event-stream; charset=UTF-8
 Cache-Control: no-cache
 Connection: keep-alive, Keep-Alive
 Keep-Alive: timeout=1, max=1000
-Content-Length: {}
+Content-Length: {len(b_msg)}
 
-'''.format(len(b_msg)).encode('utf-8')
+'''.encode('utf-8')
         with self.lock:
             try:
                 self.client_socket.sendall(txt + b_msg)
@@ -1842,13 +1842,13 @@ Content-Length: {}
             return
         f_msg = msg + '\n'
         b_msg = f_msg.encode('utf-8')
-        txt = '''HTTP/1.1 200 OK
+        txt = f'''HTTP/1.1 200 OK
 Content-Type: text/txt; charset=UTF-8
 Connection: keep-alive, Keep-Alive
 Keep-Alive: timeout=1, max=1000
-Content-Length: {}
+Content-Length: {len(b_msg)}
 
-'''.format(len(b_msg)).encode('utf-8')
+'''.encode('utf-8')
         with self.lock:
             try:
                 self.client_socket.sendall(txt + b_msg)
@@ -1867,13 +1867,13 @@ Content-Length: {}
             return
         f_msg = msg + '\n'
         b_msg = f_msg.encode('utf-8')
-        txt = '''HTTP/1.1 200 OK
+        txt = f'''HTTP/1.1 200 OK
 Content-Type: text/txt; charset=UTF-8
 Connection: keep-alive, Keep-Alive
 Keep-Alive: timeout=1, max=1000
-Content-Length: {}
+Content-Length: {len(b_msg)}
 
-'''.format(len(b_msg)).encode('utf-8')
+'''.encode('utf-8')
         with self.lock:
             try:
                 self.client_socket.sendall(txt + b_msg)
@@ -1885,13 +1885,13 @@ Content-Length: {}
         if put_script:
             f_msg = self._insert_html_script(f_msg)
         b_msg = f_msg.encode('utf-8')
-        txt = '''HTTP/1.1 200 OK
+        txt = f'''HTTP/1.1 200 OK
 Content-Type: text/html; charset=UTF-8
 Connection: keep-alive, Keep-Alive
 Keep-Alive: timeout=1, max=1000
-Content-Length: {}
+Content-Length: {len(b_msg)}
 
-'''.format(len(b_msg)).encode('utf-8')
+'''.encode('utf-8')
         with self.lock:
             try:
                 self.client_socket.sendall(txt + b_msg)
@@ -1900,7 +1900,7 @@ Content-Length: {}
 
     def _get_numbers(self, comma):
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('parsing: "{}"'.format(comma))
+            logger.debug(f'parsing: "{comma}"')
         sp = comma.split(',')
         for i in (0,1):
             try:
@@ -1940,7 +1940,7 @@ Content-Length: {}
                         int(sp[1])
                     except ValueError:
                         return None
-                    logger.error('\n\nsong number = {}\n\n'.format(sp[1]))
+                    logger.error(f'\n\nsong number = {sp[1]}\n\n')
                     return sp[1]
             elif sp[0] in ('playlists', 'pl'):
                 ''' do i have a number? '''
@@ -2117,7 +2117,7 @@ Content-Length: {}
         head_captions = [
             'Stations (current playlist)',
             'Playlists',
-            'Stations from Playlist: "{}"'.format(self.lists()[1][-1][playlist_index][0]) if playlist_index is not None else '',
+            'Stations from Playlist: "{}"'.format(self.lists()[1][-1][playlist_index][0] if playlist_index is not None else ''),
             'RadioBrowser Search Items'
         ]
         url = ['/html/st/{}', '/html/pl/{}', '/html/pl/{0},{1}', '/html/srb/{}']
@@ -2147,9 +2147,9 @@ Content-Length: {}
                 else:
                     out.append('                            <tr>')
                 if sel == i:
-                    out.append('                                <td id="n{0}" class="text-right" style="color: white;">{1}</td>'.format(i+1, i+1))
+                    out.append(f'                                <td id="n{i + 1}" class="text-right" style="color: white;">{i + 1}</td>')
                 else:
-                    out.append('                                <td id="n{0}" class="text-right">{1}</td>'.format(i+1, i+1))
+                    out.append(f'                                <td id="n{i + 1}" class="text-right">{i + 1}</td>')
             if header:
                 out.append('                               <td id="n' + str(i+1) + '" class="text-center group-header" colspan="2">' + n + '</td>')
             else:

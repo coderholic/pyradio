@@ -59,4 +59,5 @@ if __name__ == "__main__":
         -1: error
     '''
     print(msg)
-    print('Ping response: {}'.format(ping('www.google.com', count=20, timeout_in_seconds=3)))
+    ping_result = ping('www.google.com', count=20, timeout_in_seconds=3)
+    print(f'Ping response: {ping_result}')

@@ -54,7 +54,6 @@ def win_press_any_key_to_unintall():
     print('to remove [magenta]PyRadio[/magenta] from your system.')
     print('')
     print('After you are done, you can delete the folder it resides in.')
-    from .win import press_any_key_to_continue
     print('\nPress any key to exit...', end='', flush=True)
     getwch()
     #print('\nPress any key to exit...', end='', flush=True)
@@ -68,16 +67,15 @@ def win_print_exe_paths():
     exe = fix_pyradio_win_exe()
     if exe[0] and exe[1]:
         print('[magenta]PyRadio[/magenta] EXE files:')
-        print('  System:\n    [red]{}[/red]'.format(exe[0]))
-        print('  User:\n    [green]{}[/green]'.format(exe[1]))
+        print(f'  System:\n    [red]{exe[0]}[/red]')
+        print(f'  User:\n    [green]{exe[1]}[/green]')
     else:
         print('[magenta]PyRadio[/magenta] EXE file:')
         if exe[0]:
-            print('  [green]{}[/green]'.format(exe[0]))
+            print(f'  [green]{exe[0]}[/green]')
         else:
-            print('  [green]{}[/green]'.format(exe[1]))
+            print(f'  [green]{exe[1]}[/green]')
     # doing it this way so that python2 does not break (#153)
-    from .win import press_any_key_to_continue
     print('\nPress any key to exit...', end='', flush=True)
     getwch()
 
@@ -97,7 +95,7 @@ def install_module(a_module, do_not_exit=False, print_msg=True):
         else:
             if count < 5:
                 if print_msg:
-                    print('  Download failed. Retrying [magenta]{}[/magenta]/[red]5[/red]'.format(count+1))
+                    print(f'  Download failed. Retrying [magenta]{count + 1}[/magenta]/[red]5[/red]')
             else:
                 if print_msg:
                     print('Failed to download module...\nPlease check your internet connection and try again...')
@@ -168,7 +166,7 @@ def _get_output_folder(package, output_folder=None, do_not_exit=False):
             # create dir
             makedirs(output_folder, exist_ok=True)
             if not exists(output_folder):
-                print('Failed to create folder: "[magenta]{}[/magenta]"'.format(output_folder))
+                print(f'Failed to create folder: "[magenta]{output_folder}[/magenta]"')
                 if do_not_exit:
                     return None
                 sys.exit(1)
@@ -177,11 +175,11 @@ def _get_output_folder(package, output_folder=None, do_not_exit=False):
 def _get_out_file(output_folder, package=1):
     count = 0
     p_name=('mpv-latest', 'mplayer-latest')
-    out_file = join(output_folder, '{}.7z'.format(p_name[package]))
+    out_file = join(output_folder, f'{p_name[package]}.7z')
     while True:
         if exists(out_file):
             count += 1
-            out_file = join(output_folder, '{0}-{1}.7z'.format(p_name[package], count))
+            out_file = join(output_folder, f'{p_name[package]}-{count}.7z')
         else:
             break
     return join(output_folder, out_file)
@@ -295,8 +293,8 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
         chdir(join(output_folder, 'mpv'))
         startfile('updater.bat')
     else:
-        print('    from  "[plum4]{}[plum4]"'.format(purl[package]))
-        print('    into  "[magenta]{}[/magenta]"'.format(output_folder))
+        print(f'    from  "[plum4]{purl[package]}[plum4]"')
+        print(f'    into  "[magenta]{output_folder}[/magenta]"')
 
         out_file = _get_out_file(output_folder, package)
         session = requests.Session()
@@ -307,13 +305,13 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
                 break
             except requests.exceptions.RequestException:
                 if count < 5:
-                    print('  Download failed. Retrying [magenta]{}[/magenta]/[red]5[/red]'.format(count+1))
+                    print(f'  Download failed. Retrying [magenta]{count + 1}[/magenta]/[red]5[/red]')
                 else:
                     print('[red]Failed to download player...[/red]\nPlease check your internet connection and try again...')
                     if do_not_exit:
                         return False
                     sys.exit(1)
-        print('  Saving: "{}"'.format(out_file))
+        print(f'  Saving: "{out_file}"')
         try:
             with open(out_file, 'wb') as f:
                 f.write(r.content)
@@ -353,12 +351,12 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
         except:
             file_only = basename(out_file)
             player_name = 'mpv' if package == 0 else 'mplayer'
-            print('''Failed to extract the archive...
+            print(f'''Failed to extract the archive...
 
     You will have to install the player [red]MANUALLY[/red]!!!
 
     PyRadio's configuration folder will open now,
-    along with the archive named "{0}".'''.format(basename(out_file)))
+    along with the archive named "{basename(out_file)}".''')
             if player_name == 'mpv':
                 if exists(join(output_folder, 'mpv')):
                     print('''    Please extract the archive in the "[red]mpv[/red]" folder
@@ -478,21 +476,21 @@ def _post_download(package, output_folder, do_not_exit):
                     try:
                         rmtree(mplayer_old_dir)
                     except OSError:
-                        print('Failed to remove "[green]{}[/green]"\nPlease close all programs and try again...'.format(mplayer_old_dir))
+                        print(f'Failed to remove "[green]{mplayer_old_dir}[/green]"\nPlease close all programs and try again...')
                         if do_not_exit:
                             return False
                         sys.exit(1)
                 try:
                     replace(mplayer_final_dir, mplayer_old_dir)
                 except:
-                    print('Failed to rename folder "[green]{0}[/green]"\n      to "[magenta]{1}[/magenta]"...\nPlease close all open programs and try again...'.format(mplayer_final_dir, mplayer_old_dir))
+                    print(f'Failed to rename folder "[green]{mplayer_final_dir}[/green]"\n      to "[magenta]{mplayer_old_dir}[/magenta]"...\nPlease close all open programs and try again...')
                     if do_not_exit:
                         return False
                     sys.exit(1)
             try:
                 replace(join(output_folder, extracted_dirname), join(output_folder, 'mplayer'))
             except:
-                print('Failed to rename folder "[green]{0}[/green]" to\n      "[magenta]{1}[/magenta]"...\nPlease close all open programs and try again...'.format(extracted_dirname, mplayer_final_dir))
+                print(f'Failed to rename folder "[green]{extracted_dirname}[/green]" to\n      "[magenta]{mplayer_final_dir}[/magenta]"...\nPlease close all open programs and try again...')
                 if do_not_exit:
                     return False
                 sys.exit(1)
@@ -512,7 +510,7 @@ def install_player(output_folder=None, package=0, do_not_exit=False):
         for n in range(0, 2):
             in_path[n] = _is_player_in_path(n)
             if in_path[n]:
-                to_do[n] = '[bold red]{}[/bold red]. Update'.format(n+1)
+                to_do[n] = f'[bold red]{n + 1}[/bold red]. Update'
                 from_path[n] = ' (found in [magenat]PATH[/magenta])'
         if in_path[0] is None:
             in_path[0] = find_mpv_on_windows()
@@ -526,7 +524,7 @@ def install_player(output_folder=None, package=0, do_not_exit=False):
 
         for n in range(0, 2):
             if in_path[n]:
-                to_do[n] = '[bold red]{}[/bold red]. Update'.format(n+1)
+                to_do[n] = f'[bold red]{n + 1}[/bold red]. Update'
         if find_vlc_on_windows():
             to_do[2] = '[green]VLC[/green] media player is already installed.\n[bold red]      It is not recommended to be used!!![/bold red]'
         #print(in_path)
@@ -610,7 +608,7 @@ def install_pylnk(a_path, do_not_exit=False):
             break
         except requests.exceptions.RequestException:
             if count < 5:
-                print('      Download failed. Retrying [magenta]{}[/magenta]/[red]5[/red]'.format(count+1))
+                print(f'      Download failed. Retrying [magenta]{count + 1}[/magenta]/[red]5[/red]')
             else:
                 print('    Failed to download [green]pylnk[/green]...\nPlease check your internet connection and try again...')
                 if do_not_exit:

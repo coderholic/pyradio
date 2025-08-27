@@ -15,10 +15,11 @@ import logging
 import os
 import random
 import signal
+import csv
 from copy import deepcopy
 from sys import version as python_version, platform
 from os.path import join, basename, getmtime, getsize, exists
-from os import remove, rename
+from os import path, remove, rename
 from platform import uname
 from time import sleep
 from datetime import datetime
@@ -31,16 +32,18 @@ except:
     HAVE_PSUTIL = False
 
 from .player import PlayerCache
-from .config import HAS_REQUESTS, HAS_DNSPYTHON
-from .common import *
+from .config import HAS_REQUESTS, HAS_DNSPYTHON, Station
+from .common import StationsChanges, STATES, M_STRINGS, player_start_stop_token
 from .window_stack import Window_Stack
-from .config_window import *
+from .config_window import PyRadioConfigWindow, PyRadioExtraParams, \
+    PyRadioKeyboardConfig, PyRadioLocalized, PyRadioSelectEncodings, \
+    PyRadioSelectPlayer, PyRadioSelectPlaylist, PyRadioSelectStation
 from .log import Log, fix_chars
 from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, \
     PyRadioConnectionType, PyRadioServerWindow, PyRadioBuffering, \
     PyRadioRecordingDir, PyRadioResourceOpener, PyRadioOpenDir, \
     GetLocalizedLang
-from .themes import *
+from .themes import PyRadioTheme, PyRadioThemeSelector
 from .cjkwrap import cjklen, cjkcenter, cjkslices, is_wide
 from . import player
 from .install import version_string_to_list, get_github_tag, fix_pyradio_win_exe, get_a_linux_resource_opener
@@ -50,13 +53,13 @@ from .schedule_win import PyRadioSimpleScheduleWindow
 from .simple_curses_widgets import SimpleCursesMenu
 from .messages_system import PyRadioMessagesSystem
 from .server import PyRadioServer, HAS_NETIFACES
-from .keyboard import kbkey, get_lkbkey, chk_key, get_unicode_and_cjk_char, dequeue_input, input_queue, get_kb_letter, set_kb_letter, check_localized, to_str, ctrl_code_to_string, add_l10n_to_functions_dict, set_kb_cjk
+from .keyboard import kbkey, get_lkbkey, get_unicode_and_cjk_char, dequeue_input, input_queue, set_kb_letter, check_localized, add_l10n_to_functions_dict, set_kb_cjk
 from .m3u import parse_m3u
 
 CAN_CHECK_FOR_UPDATES = True
 try:
     from urllib.request import urlopen
-except:
+except ImportError:
     CAN_CHECK_FOR_UPDATES = False
 
 locale.setlocale(locale.LC_ALL, "")
@@ -139,10 +142,10 @@ def calc_can_change_colors(config):
     if not ret:
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('curses.can_change_color() : {}'.format(curses.can_change_color()))
-            logger.debug('curses.COLORS: {}'.format(curses.COLORS))
-            logger.debug('config.is_blacklisted_terminal(): {}'.format(blacklisted_terminal))
+            logger.debug(f'curses.COLORS: {curses.COLORS}')
+            logger.debug(f'config.is_blacklisted_terminal(): {blacklisted_terminal}')
         if logger.isEnabledFor(logging.INFO):
-            logger.info('Terminal can change colors: {}'.format(ret))
+            logger.info(f'Terminal can change colors: {ret}')
     return ret
 
 class SelectPlayer():
@@ -166,8 +169,8 @@ class SelectPlayer():
             self._no_vlc = True
         self._available_players = [x.PLAYER_NAME for x in player.available_players if x.PLAYER_NAME != self._active_player]
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('available players = {}'.format(player.available_players))
-            logger.debug('players: active = {0}, available = {1}'.format(self._active_player, self._available_players))
+            logger.debug(f'available players = {player.available_players}')
+            logger.debug(f'players: active = {self._active_player}, available = {self._available_players}')
         self.maxX = 45
         self.hline = 36
         self.maxY = 8 + len(self._available_players)
@@ -476,7 +479,7 @@ class PyRadio():
 
     def ll(self, msg):
         logger.error('DE ==========')
-        logger.error('DE ===> {}'.format(msg))
+        logger.error(f'DE ===> {msg}')
         logger.error('DE NORMAL_MODE: {0}, {1}, {2}'.format(*self.selections[0]))
         logger.error('DE PLAYLIST_MODE: {0}, {1}, {2}'.format(*self.selections[1]))
         logger.error('DE REGISTER_MODE: {0}, {1}, {2}'.format(*self.selections[2]))
@@ -912,21 +915,21 @@ class PyRadio():
 
     def _text_info(self):
         out = []
-        out.append('PyRadio {0}{1}'.format(self._cnf.current_pyradio_version, ' (headless)' if self._cnf.headless else ''))
-        out.append('  Player: {}'.format(self.player.PLAYER_NAME))
+        out.append('PyRadio {}{}'.format(self._cnf.current_pyradio_version, ' (headless)' if self._cnf.headless else ''))
+        out.append(f'  Player: {self.player.PLAYER_NAME}')
         if self._cnf.browsing_station_service:
             out.append('  Service: ' + self._cnf.online_browser.TITLE)
             out.append('    Search: ' + self._cnf.online_browser.get_current_history_string())
             if self._cnf._online_browser.page > 0:
-                out.append('    Results page: {}'.format(self._cnf._online_browser.page+1))
+                out.append('    Results page: {}'.format(self._cnf._online_browser.page + 1))
         else:
-            out.append('  Playlist: "{}"'.format(basename(self._playlist_in_editor)[:-4]))
+            out.append('  Playlist: "{}'.format(basename(self._playlist_in_editor)[:-4]))
         if self.player.isPlaying():
             out.append('  Status: In playback{0} {1}'.format(
                 ', recording' if self.player.currently_recording else '',
                 '(muted)' if self.player.muted else '')
                 )
-            out.append('    Station (id={0}): "{1}"'.format(self.playing+1, self.stations[self.playing][0]))
+            out.append('    Station (id={}): {}'.format(self.playing + 1, self.stations[self.playing][0]))
             # logger.error('============================')
             # logger.error('self.stations[self.playing][0]: {}'.format(self.stations[self.playing][0]))
             # logger.error('self.log.song_title: {}'.format(self.log.song_title))
@@ -935,7 +938,7 @@ class PyRadio():
                 out.append('    ' + M_STRINGS['title_'] + '"{}"'.format(fix_chars(self.log.song_title)))
         else:
             out.append('  Status: Idle')
-        out.append('  Selection (id={0}): "{1}"'.format(self.selection+1, self.stations[self.selection][0]))
+        out.append('  Selection (id={}): "{}"'.format(self.selection + 1, self.stations[self.selection][0]))
         if self.ws.operation_mode != self.ws.NORMAL_MODE:
             if self._cnf.headless:
                 out.append(
@@ -957,8 +960,8 @@ class PyRadio():
         transformed_pairs = []
 
         for pair in pairs:
-            key, value = pair.split(':')
-            transformed_pairs.append('<span style="color: Green;">{}</span>: {}'.format(key.strip(), value.strip()))
+            key, value = [x.strip() for x in pair.split(':', 1)]
+            transformed_pairs.append(f'<span style="color: Green;">{key}</span>: {value}')
 
         output_string = ', '.join(transformed_pairs)
         return output_string
@@ -968,25 +971,26 @@ class PyRadio():
         out.append('<div class="alert alert-info">')
         out.append('<table id="infot"><tbody>')
         out.append('<tr><td colspan="2" style="padding-left: 0; text-align: left; font-weight: bold;">PyRadio {0}{1}</span>'.format(self._cnf.current_pyradio_version, ' (<span style="color: Green;">headless</span>)</td></tr>' if self._cnf.headless else '</td></tr>'))
-        out.append('<tr><td>Player:</td><td>{}</span></td></tr>'.format(self.player.PLAYER_NAME))
+        out.append(f'<tr><td>Player:</td><td>{self.player.PLAYER_NAME}</span></td></tr>')
         if self._cnf.browsing_station_service:
-            out.append('<tr><td>Service:</td><td>{}</span></td></tr>'.format(self._cnf.online_browser.TITLE))
+            out.append(f'<tr><td>Service:</td><td>{self._cnf.online_browser.TITLE}</span></td></tr>')
             out.append('<tr><td>Search:</td><td>{}</span></td></tr>'.format(
                 self._transform_search_string(self._cnf.online_browser.get_current_history_string())
                 ))
             if self._cnf._online_browser.page > 0:
-                out.append('<tr><td>Page:</td><td>{}</span></td></tr>'.format(self._cnf._online_browser.page+1))
+                out.append(f'<tr><td>Page:</td><td>{self._cnf._online_browser.page + 1}</span></td></tr>')
         else:
-            out.append('<tr><td>Playlist:</td><td>{}</span></td></tr>'.format(basename(self._playlist_in_editor)[:-4]))
+            tmp = basename(self._playlist_in_editor)[:-4]
+            out.append(f'<tr><td>Playlist:</td><td>{tmp}</span></td></tr>')
         if self.player.isPlaying():
             out.append('<tr><td>Status:</td><td>In playback{0} {1}</span></td></tr>'.format(
                 ', recording' if self.player.currently_recording else '',
                 '(muted)' if self.player.muted else '')
                 )
-            out.append('<tr><td>Station:</td><td>{}</span></td></tr>'.format(self.stations[self.playing][0]))
+            out.append(f'<tr><td>Station:</td><td>{self.stations[self.playing][0]}</span></td></tr>')
         else:
             out.append('<tr><td>Status:</td><td>Idle</span></td></tr>')
-            out.append('<tr><td>Selection:</td><td>{}</span></td></tr>'.format(self.stations[self.selection][0]))
+            out.append(f'<tr><td>Selection:</td><td>{self.stations[self.selection][0]}</span></td></tr>')
         out.append('</tbody></table>')
         if self.ws.operation_mode != self.ws.NORMAL_MODE:
             if self._cnf.headless:
@@ -1042,7 +1046,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             # self._remote_control_server._send_text('Volume set!')
             self.player.set_volume(vol)
             sleep(.1)
-            return 'Volume set to: {}'.format(vol)
+            return f'Volume set to: {vol}'
         else:
             if self.player.muted:
                 return 'Player is Muted!'
@@ -1056,7 +1060,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             if self.player.PLAYER_NAME == 'vlc':
                 return 'Volume: {}'.format(int(round(100*int(self.player.volume)/self.player.max_volume)))
             else:
-                return 'Volume: {}'.format(self.player.volume)
+                return f'Volume: {self.player.volume}'
         else:
             if self.player.muted:
                 return 'Player is Muted!'
@@ -1203,7 +1207,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             if curses.COLORS > 32:
                 self._cnf.start_colors_at = 15
             if logger.isEnabledFor(logging.INFO):
-                logger.info('Terminal supports {0} colors (first color to define = {1})'.format(curses.COLORS, self._cnf.start_colors_at))
+                logger.info(f'Terminal supports {curses.COLORS} colors (first color to define = {self._cnf.start_colors_at})')
         self.stdscr = stdscr
 
         try:
@@ -1393,7 +1397,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.bodyWinStartY = 2 + self._cnf.internal_header_height
             self.bodyWinEndY = self.maxY - 1
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('body starts at line {0}, ends at line {1}'.format(self.bodyWinStartY, self.bodyWinEndY))
+                logger.debug(f'body starts at line {self.bodyWinStartY}, ends at line {self.bodyWinEndY}')
             self.bodyWin = self.outerBodyWin.subwin(
                 self.maxY - 4 - self._cnf.internal_header_height,
                 self.maxX - 2,
@@ -1536,7 +1540,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         #self.bodyWin.timeout(100)
         #self.bodyWin.keypad(1)
         self.bodyMaxY, self.bodyMaxX = self.bodyWin.getmaxyx()
-        logger.debug('maxY = {0}, maxX = {1}'.format(self.bodyMaxY, self.bodyMaxX))
+        logger.debug(f'maxY = {self.bodyMaxY}, maxX = {self.bodyMaxX}')
         self.outerBodyMaxY, self.outerBodyMaxX = self.outerBodyWin.getmaxyx()
         self.bodyWin.noutrefresh()
         self.outerBodyWin.noutrefresh()
@@ -1666,7 +1670,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         else:
             with self._update_stations_lock:
                 if self._need_to_update_stations_csv == 2:
-                    logger.error('\n\nstations title = "{0}"\ndirty = {1}\n\n'.format(self._cnf.station_title, self._cnf.dirty_playlist))
+                    logger.error(f'\n\nstations title = "{self._cnf.station_title}"\ndirty = {self._cnf.dirty_playlist}\n\n')
                     if self._cnf.station_title == 'stations' and \
                             self._cnf.dirty_playlist:
                         if logger.isEnabledFor(logging.DEBUG):
@@ -2019,22 +2023,22 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 logger.debug('Wathcing a non project theme: ' + theme)
 
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('File watch thread started on: {}'.format(a_file))
+            logger.debug(f'File watch thread started on: {a_file}')
 
         showed = False
         while not exists(a_file):
             if logger.isEnabledFor(logging.DEBUG) and not showed:
-                logger.debug('Waiting for watched file to appear: {}'.format(a_file))
+                logger.debug(f'Waiting for watched file to appear: {a_file}')
                 showed = True
             for _ in range(0, 5):
                 sleep(.15)
                 if stop():
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('File watch thread stopped on: {}'.format(a_file))
+                        logger.debug(f'File watch thread stopped on: {a_file}')
                     return
 
         if logger.isEnabledFor(logging.DEBUG) and showed:
-            logger.debug('Watched file appeared: {}'.format(a_file))
+            logger.debug(f'Watched file appeared: {a_file}')
             showed = False
         st_time = cur_time = getmtime(a_file)
         st_size = cur_size = getsize(a_file)
@@ -2049,7 +2053,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     showed = False
                 except:
                     if logger.isEnabledFor(logging.DEBUG) and not showed:
-                        logger.debug('Watched file disappeared: {}'.format(a_file))
+                        logger.debug(f'Watched file disappeared: {a_file}')
                         showed = True
                 if st_time != cur_time:
                     if stop():
@@ -2060,7 +2064,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                         showed = False
                     except:
                         if logger.isEnabledFor(logging.DEBUG) and not showed:
-                            logger.debug('Watched file disappeared: {}'.format(a_file))
+                            logger.debug(f'Watched file disappeared: {a_file}')
                             showed = True
                     if stop():
                         break
@@ -2074,7 +2078,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     showed = False
                 except:
                     if logger.isEnabledFor(logging.DEBUG) and not showed:
-                        logger.debug('Watched file disappeared: {}'.format(a_file))
+                        logger.debug(f'Watched file disappeared: {a_file}')
                         showed = True
                 if st_size != cur_size:
                     if stop():
@@ -2090,29 +2094,29 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     break
             else:
                 if logger.isEnabledFor(logging.DEBUG) and not showed:
-                    logger.debug('File watched does not exist: {}'.format(a_file))
+                    logger.debug(f'File watched does not exist: {a_file}')
                     showed = True
                 for n in range(0, 5):
                     sleep(.15)
                     if stop():
                         if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('File watch thread stopped on: {}'.format(a_file))
+                            logger.debug(f'File watch thread stopped on: {a_file}')
                         return
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('File watch thread stopped on: {}'.format(a_file))
+            logger.debug(f'File watch thread stopped on: {a_file}')
 
     def run(self):
         if logger.isEnabledFor(logging.INFO):
             from .keyboard import to_str, ctrl_code_to_string
-            logger.info('Keyboard Shortcuts Codes:\n{}'.format(kbkey))
+            logger.info(f'Keyboard Shortcuts Codes:\n{kbkey}')
             out = {}
             for n in kbkey:
                 if kbkey[n] < 33:
                     out[n] = ctrl_code_to_string(kbkey[n])
                 else:
                     out[n] = to_str(n)
-            logger.info('Keyboard Shortcuts resolved:\n{}'.format(out))
-            logger.info('Localized Keyboard Shortcuts: "{}"\n{}'.format(self._cnf.localize, get_lkbkey()))
+            logger.info(f'Keyboard Shortcuts resolved:\n{out}')
+            logger.info(f'Localized Keyboard Shortcuts: "{self._cnf.localize}"\n{get_lkbkey()}')
         # self._watch_theme()
         self._register_signals_handlers()
         if self.ws.operation_mode == self.ws.DEPENDENCY_ERROR:
@@ -2124,9 +2128,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         elif self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
             if self.requested_player:
                 if ',' in self.requested_player:
-                    self.log.write(msg_id=STATES.ANY, msg='None of "{}" players is available. Press any key to exit....'.format(self.requested_player), error_msg=True)
+                    self.log.write(msg_id=STATES.ANY, msg=f'None of "{self.requested_player}" players is available. Press any key to exit....', error_msg=True)
                 else:
-                    self.log.write(msg_id=STATES.ANY, msg='Player "{}" not available. Press any key to exit....'.format(self.requested_player), error_msg=True)
+                    self.log.write(msg_id=STATES.ANY, msg=f'Player "{self.requested_player}" not available. Press any key to exit....', error_msg=True)
             else:
                 self.log.write(msg_id=STATES.ANY, msg="No player available. Press any key to exit....", error_msg=True)
             self.log.stop_timer()
@@ -2267,7 +2271,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                         self.player.PLAYER_NAME + '-' + self._cnf.station_title + '.csv'
                     )
                     self._write_check_output('write_header')
-                    logger.error('\n\nself._cnf.check_output_file\n{}\n\n'.format(self._cnf.check_output_file))
+                    logger.error(f'\n\nself._cnf.check_output_file\n{self._cnf.check_output_file}\n\n')
                     while cur_id < end_id:
                         if cur_id != old_id:
                             logger.error(f'working on {old_id = }, {cur_id = }')
@@ -2353,7 +2357,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                         if ret == -1:
                             return
                     # if logger.isEnabledFor(logging.DEBUG):
-                    #     logger.debug(f'{get_kb_letter() = }')
+                    #     logger.debug('{}'.format(get_kb_letter()))
                     # Replay input_queue into curses' input buffer
                     while input_queue:
                         # Re-insert input in reverse order
@@ -2646,7 +2650,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         if station_player not in [x.PLAYER_NAME for x in self._cnf.AVAILABLE_PLAYERS]:
             station_player = self._default_player_name
         logger.error('\n\n')
-        logger.error('station_player = {}'.format(station_player))
+        logger.error(f'station_player = {station_player}')
         return station_player
 
     def _get_the_stations_player(self, station_player):
@@ -2707,7 +2711,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     not platform.startswith('win'):
                 if 'image' in self.stations[self.selection][3]:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('+++ need to download icon: "{}"'.format(self.stations[self.selection][3]['image']))
+                        logger.debug(f'+++ need to download icon: "{self.stations[self.selection][3]["image"]}"')
                     self.log.write(msg_id=STATES.RESET, msg=M_STRINGS['down-icon'])
                     self._download_station_image(
                         self.stations[self.selection][3]['image'],
@@ -2722,11 +2726,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self._last_played_station = self.stations[self.selection]
             self._last_played_station_id = self.selection
             self._last_played_playlist = self._cnf.station_title
-            logger.error('\n\nself._last_played_playlist = {}\n\n'.format(self._last_played_playlist))
+            logger.error(f'\n\nself._last_played_playlist = {self._last_played_playlist}\n\n')
             with self._check_lock:
                 self._station_to_check_id = self.selection
                 if logger.isEnabledFor(logging.INFO):
-                    logger.info('\n*********\nstarting id = {}\n:{}\n********\n'.format(self._station_to_check_id, self.stations[self._station_to_check_id]))
+                    logger.info(f'\n*********\nstarting id = {self._station_to_check_id}\n:{self.stations[self._station_to_check_id]}\n********\n')
             # logger.error('setting playing to {}'.format(self.selection))
             self.playing = self.selection
             if not stream_url:
@@ -2741,10 +2745,10 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self._active_player_id = self._current_player_id
         self.log.write(msg_id=STATES.RESET, msg=player_start_stop_token[0] + self._last_played_station[0])
         self.detect_if_player_exited = True
-        logger.error('DE \n\nself.detect_if_player_exited = {}\n\n'.format(self.detect_if_player_exited))
+        logger.error(f'DE \n\nself.detect_if_player_exited = {self.detect_if_player_exited}\n\n')
         # if self._random_requested:
         #     self.detect_if_player_exited = False
-        logger.error('\n====\n====\nself._last_played_station = {}\n====\n====\n'.format(self._last_played_station))
+        logger.error(f'\n====\n====\nself._last_played_station = {self._last_played_station}\n====\n====\n')
         try:
             self.player.play(
                 self._last_played_station,
@@ -2797,7 +2801,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 if stop():
                     return
                 self.log.write(msg_id=STATES.CONNECT, msg=M_STRINGS['connecting_'] + station_name)
-                self.log.write(msg_id=STATES.ANY, counter='{}'.format(n))
+                self.log.write(msg_id=STATES.ANY, counter=f'{n}')
             else:
                 if stop():
                     return
@@ -2854,7 +2858,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             for the status update thread.
         '''
         am_i_playing_random = self._random_requested
-        logger.error('stopPlayerOnConnectionFailed called with http_error = {}'.format(http_error))
+        logger.error(f'stopPlayerOnConnectionFailed called with http_error = {http_error}')
         self.player.stop_mpv_status_update_thread = True
         self.player.stop_update_notification_thread = True
         self.player.stop_win_vlc_status_update_thread = True
@@ -2968,7 +2972,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         if path.exists(a_name):
             self._cnf.notification_image_file = a_name
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Notification image: "{}"'.format(self._cnf.notification_image_file))
+                logger.debug(f'Notification image: "{self._cnf.notification_image_file}"')
         else:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Notification image is invalid; reverting to default...')
@@ -2998,7 +3002,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 response = requests.get(url)
             except requests.exceptions.RequestException as e:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('+++ icon download failed: {}'.format(e))
+                    logger.debug(f'+++ icon download failed: {e}')
                 return
             if stop():
                 if logger.isEnabledFor(logging.DEBUG):
@@ -3095,7 +3099,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                  self._cnf.station_path.replace('.csv', '.txt')
                  )
         if ret < 0 and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Error saving playlist: "{}"'.format(self._cnf.station_path))
+            logger.debug(f'Error saving playlist: "{self._cnf.station_path}"')
         return ret
 
     def reloadCurrentPlaylist(self, mode):
@@ -3112,7 +3116,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.refreshBody()
             self._open_simple_message_by_key('M_PLAYLIST_RELOAD_ERROR')
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Error reloading playlist: "{}"'.format(self._cnf.station_path))
+                logger.debug(f'Error reloading playlist: "{self._cnf.station_path}"')
         else:
             self.number_of_items = ret
             self._align_stations_and_refresh(self.ws.NORMAL_MODE)
@@ -3193,16 +3197,19 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
     def _format_playlist_line(self, lineNum, pad, station):
         ''' format playlist line so that if fills self.maxX '''
-        pl_line = "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0])
+        pl_line = "{}. {}".format(
+            str(lineNum + self.startPos + 1).rjust(pad),
+            station[0]
+        )
         if self._cnf.open_register_list:
             line = pl_line.replace('register_', 'Register: ')
         else:
             line = pl_line
-        f_data = ' [{0}, {1}]'.format(station[2], station[1])
+        f_data = f' [{station[2]}, {station[1]}]'
         if cjklen(line) + cjklen(f_data) > self.bodyMaxX:
             ''' this is too long, try to shorten it
                 by removing file size '''
-            f_data = ' [{0}]'.format(station[1])
+            f_data = f' [{station[1]}]'
         if cjklen(line) + cjklen(f_data) > self.bodyMaxX:
             ''' still too long. start removing chars '''
             while cjklen(line) + cjklen(f_data) > self.bodyMaxX - 1:
@@ -3383,7 +3390,7 @@ ____Using |fallback| theme.''')
         '''
         exe = fix_pyradio_win_exe()
         if exe[0] and exe[1]:
-            add_msg = '|PyRadio EXE files:\n__|System:\n____{0}\n__|User:\n____{1}'.format(exe[0], exe[1])
+            add_msg = f'|PyRadio EXE files:\n__|System:\n____{exe[0]}\n__|User:\n____{exe[1]}'
         else:
             add_msg = '|PyRadio EXE file:\n__{}'.format(exe[0] if exe[0] else exe[1])
 
@@ -3607,7 +3614,7 @@ ____Using |fallback| theme.''')
 
     def _print_change_player_one_player_error(self):
         players = [x.PLAYER_NAME for x in player.Player.__subclasses__() if x.PLAYER_NAME != self.player.PLAYER_NAME]
-        logger.error('players = {}'.format(players))
+        logger.error(f'{players = }')
         self._open_simple_message_by_key(
                 'M_CHANGE_PLAYER_ONE_ERROR',
                 players[0],
@@ -4025,7 +4032,7 @@ ____Using |fallback| theme.''')
                                 ''' ok, self.playing found, just find selection '''
                                 self.selection = self._get_station_id(self.active_stations[0][0])
                                 if logger.isEnabledFor(logging.DEBUG):
-                                    logger.debug('** Selected station is {0} at {1}'.format(self.stations[self.selection], self.selection))
+                                    logger.debug(f'** Selected station is {self.stations[self.selection]} at {self.selection}')
                             else:
                                 ''' station playing id changed, try previous station '''
                                 self.playing -= 1
@@ -4035,7 +4042,7 @@ ____Using |fallback| theme.''')
                                     ''' ok, self.playing found, just find selection '''
                                     self.selection = self._get_station_id(self.active_stations[0][0])
                                     if logger.isEnabledFor(logging.DEBUG):
-                                        logger.debug('** Selection station is {0} at {1}'.format(self.stations[self.playing], self.playing))
+                                        logger.debug(f'** Selection station is {self.stations[self.playing]} at {self.playing}')
                                 else:
                                     ''' self.playing still not found, have to scan playlist '''
                                     need_to_scan_playlist = True
@@ -4050,10 +4057,10 @@ ____Using |fallback| theme.''')
                 self.detect_if_player_exited = False
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Scanning playlist for stations...')
-                logger.error('DE \n\n{}\n\n'.format(self.active_stations))
-                logger.error('DE \n\n{}\n\n'.format(self._last_played_station))
-                logger.error('DE \n\n{}\n\n'.format(self._last_played_playlist))
-                logger.error('\n\nself.playing = {}, self._cnf.continuous_playback = {}\n\n'.format(self.playing, self._cnf.continuous_playback))
+                logger.error(f'DE \n\n{self.active_stations}\n\n')
+                logger.error(f'DE \n\n{self._last_played_station}\n\n')
+                logger.error(f'DE \n\n{self._last_played_playlist}\n\n')
+                logger.error(f'\n\n{self.playing = }, {self._cnf.continuous_playback = }\n\n')
                 self.selection, self.playing = self._get_stations_ids((
                     self.active_stations[0][0],
                     self.active_stations[1][0]))
@@ -4069,7 +4076,7 @@ ____Using |fallback| theme.''')
                 # if self.player.isPlaying():
                 if self.playing > -1:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Setting playing station at {}'.format(self.playing))
+                        logger.debug(f'Setting playing station at {self.playing}')
                     logger.error('4 setStation')
                     self.setStation(self.playing)
                     self._last_played_playlist = self._cnf.station_title
@@ -4082,7 +4089,7 @@ ____Using |fallback| theme.''')
                             self.selection = 0
                             self.startPos = 0
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Setting selection station at {}'.format(self.selection))
+                        logger.debug(f'Setting selection station at {self.selection}')
                     logger.error('5 setStation')
                     self.setStation(self.selection)
 
@@ -4100,7 +4107,7 @@ ____Using |fallback| theme.''')
             self.startPos = 0
 
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('self.selection = {0}, self.playing = {1}, self.startPos = {2}'.format(self.selection, self.playing, self.startPos))
+            logger.debug(f'{self.selection = }, {self.playing = }, {self.startPos = }')
         if self._cnf.is_register:
             self.selections[self.ws.REGISTER_MODE] = [self.selection, self.startPos, self.playing, self._cnf.stations]
         else:
@@ -4148,7 +4155,7 @@ ____Using |fallback| theme.''')
         self.stations[self.selection][Station.referer] = referer
         self._cnf.dirty_playlist = True
         self._cnf.playlist_version = self._cnf.PLAYLIST_HAS_NAME_URL_ENCODING_ICON_VOL_HTTP_REF
-        logger.error('\n\nself.handle_old_referer : {} - {}\n\n'.format(referer, self.stations[self.selection][Station.referer]))
+        logger.error(f'\n\nself.handle_old_referer : {referer} - {self.stations[self.selection][Station.referer]}\n\n')
         try:
             remove(referer_file)
             msg = '''
@@ -4162,18 +4169,18 @@ Please |save the playlist| after this window is closed.
 
 '''
         except:
-            msg = '''
+            msg = f'''
 The old method of providing a referer for this
 stations has been used!
 
 |PyRadio| has updated the station, marking the playlist
 as changed, but filed to remove the referer file:
-|__{}__|
+|__{referer_file}__|
 
 Please |save the playlist| after this window is closed
 and |remove the file manually|.
 
-'''.format(referer_file)
+'''
         self._messaging_win.set_a_message(
                 'UNIVERSAL', (
                     'Playlist Changed',
@@ -4339,7 +4346,7 @@ and |remove the file manually|.
                 logger.debug('opening register: ' + self._cnf.register_to_open)
             self._playlist_error_message = ''
             self.number_of_items = self._cnf.read_playlist_file(is_register=True)
-            logger.error('DE number of items = {}'.format(self.number_of_items))
+            logger.error(f'DE {self.number_of_items = }')
             # self.ll('before opening a register')
             self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
             self._align_stations_and_refresh(self.ws.PLAYLIST_MODE)
@@ -4428,7 +4435,7 @@ and |remove the file manually|.
 
         # self._number_of_radio_browser_search_results = ret[1]
         if ret[1] == 0 and not self._cnf._online_browser.first_search:
-            logger.error('DE --== no items found ==--\noperating mode = {}'.format(self.ws.operation_mode))
+            logger.error(f'DE --== no items found ==--\noperating mode = {self.ws.operation_mode}')
             ''' display no results message '''
             if self._cnf._online_browser.page > 0:
                 self._cnf._online_browser._page -= 1
@@ -4539,7 +4546,7 @@ and |remove the file manually|.
                         'disabled' if self.player.recording == 0 else 'enabled'
                         )
             else:
-                return 'Recording in now {}'.format('disabled' if self.player.recording == 0 else 'enabled')
+                return "Recording in now {}".format('disabled' if self.player.recording == 0 else 'enabled')
 
     def _previous_page_rb(self):
         if self._cnf.browsing_station_service:
@@ -4551,7 +4558,8 @@ and |remove the file manually|.
 
     def _get_rb_page(self):
         if self._cnf.browsing_station_service:
-            return 'RadioBrowser is on page: {}'.format(self._cnf._online_browser.page+1)
+            page_num = self._cnf._online_browser.page + 1
+            return f'RadioBrowser is on page: {page_num}'
         return 'RadioBrowser is not active'
 
     def _get_rb_search_strings(self):
@@ -4631,7 +4639,7 @@ and |remove the file manually|.
                     removed_playlist_history_item = self._cnf.history_item(-1)
                 else:
                     removed_playlist_history_item = self._cnf.remove_from_playlist_history()
-            err_string = '"|{}|"'.format(self._cnf.station_title)
+            err_string = f'"|{self._cnf.station_title}|"'
 
             # logger.error('DE {}'.format(self._cnf._ps._p))
 
@@ -4654,7 +4662,7 @@ and |remove the file manually|.
                     '''.format(err_string.center(48, '_'))
                 self._print_playlist_load_error()
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Error loading playlist: "{}"'.format(self.stations[self.selection][-1]))
+                    logger.debug(f'Error loading playlist: "{self.stations[self.selection][-1]}"')
                 result = False
             elif ret == -2:
                 #self.stations = self._cnf.playlists
@@ -4667,7 +4675,7 @@ and |remove the file manually|.
                     '''.format(err_string.center(48, '_'))
                 self._print_playlist_not_found_error()
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Playlist not found: "{}"'.format(self.stations[self.selection][-1]))
+                    logger.debug(f'Playlist not found: "{self.stations[self.selection][-1]}"')
                 result = False
             elif ret == -7:
                 self._cnf.add_to_playlist_history(*removed_playlist_history_item)
@@ -4750,7 +4758,7 @@ and |remove the file manually|.
         return -1
 
     def _get_stations_ids(self, find):
-        logger.error('\n\nfind = "{}"\n\n'.format(find))
+        logger.error(f'\n\nfind = "{find}"\n\n')
         ch = -2
         i_find = [-1, -1]
         debug_str = ('selection', 'playing')
@@ -4758,9 +4766,9 @@ and |remove the file manually|.
             if a_find.strip():
                 if logger.isEnabledFor(logging.DEBUG):
                     try:
-                        logger.debug('** Looking for {0} station: "{1}"'.format(debug_str[j], a_find))
+                        logger.debug(f'** Looking for {debug_str[j]} station: "{a_find}"')
                     except:
-                        logger.debug('** Looking for {0} station: "{1}"'.format(debug_str[j], a_find.encode('utf-8', 'replace')))
+                        logger.debug(f"** Looking for {debug_str[j]} station: \"{a_find.encode('utf-8', 'replace')}\"")
 
                 for i, a_station in enumerate(self.stations):
                     if i_find[j] == -1:
@@ -4768,7 +4776,7 @@ and |remove the file manually|.
                             ''' No need to scan again for the same station '''
                             i_find[1] = i_find[0]
                             if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug('** Got it at {}'.format(i_find[0]))
+                                logger.debug(f'** Got it at {i_find[0]}')
                             break
                         ''' python 2 fix
                             a_find may be unicode under python 2, so convert to str
@@ -4780,7 +4788,7 @@ and |remove the file manually|.
                         if a_station[0] == a_find_str:
                             i_find[j] = i
                             if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug('** Found at {}'.format(i))
+                                logger.debug(f'** Found at {i}')
                             ch += 1
                             if ch == 0:
                                 break
@@ -4803,7 +4811,7 @@ and |remove the file manually|.
                     self.active_stations = [
                             ['', self.selection],
                             ['', -1]]
-        logger.error('DE active_stations = \n\n{}\n\n'.format(self.active_stations))
+        logger.error(f'DE active_stations = \n\n{self.active_stations}\n\n')
 
     def _set_rename_stations(self):
         if self.stations:
@@ -4867,9 +4875,9 @@ and |remove the file manually|.
         if not self._cnf.use_themes:
             self._show_colors_cannot_change()
             return
-        logger.error('\n==========================\nself._cnf.use_transparency = {}'.format(self._cnf.use_transparency))
-        logger.error('force_value = {}'.format(force_value))
-        logger.error('self._cnf.use_transparency = {}'.format(self._cnf.use_transparency))
+        logger.error(f'\n==========================\nself._cnf.use_transparency = {self._cnf.use_transparency}')
+        logger.error(f'force_value = {force_value}')
+        logger.error(f'self._cnf.use_transparency = {self._cnf.use_transparency}')
         if calculate_transparency_function is None:
             toggle_it = True
             if self._config_win:
@@ -4880,10 +4888,10 @@ and |remove the file manually|.
             self._theme.restoreActiveTheme()
         else:
             self._theme.restoreActiveTheme(calculate_transparency_function)
-        logger.error('self._cnf.use_transparency = {}'.format(self._cnf.use_transparency))
+        logger.error(f'self._cnf.use_transparency = {self._cnf.use_transparency}')
         if self.ws.operation_mode == self.ws.THEME_MODE:
             self._theme_selector.transparent = self._cnf.use_transparency
-            logger.error('self._theme_selector.transparent = {}\n=========================='.format(self._theme_selector.transparent))
+            logger.error(f'self._theme_selector.transparent = {self._theme_selector.transparent}\n==========================')
         if not self._limited_height_mode and \
                 not self._limited_width_mode:
             self.headWin.refresh()
@@ -4952,7 +4960,7 @@ and |remove the file manually|.
             self.ws.STATION_INFO_MODE,
                 self.ws.STATION_INFO_ERROR_MODE):
             if self.ws.operation_mode in (
-                self.ws.STATION_INFO_ERROR_MODE
+                self.ws.STATION_INFO_ERROR_MODE,
             ):
                 self.ws.close_window()
             # logger.error('\n\nself._show_station_info() from thread\n\n')
@@ -5096,7 +5104,7 @@ and |remove the file manually|.
         connection_fail_count = 0
         ran = 5
         if logger.isEnabledFor(logging.INFO):
-            logger.info('detectUpdateThread: Will check in {} seconds'.format(ran))
+            logger.info(f'detectUpdateThread: Will check in {ran} seconds')
         delay(ran, stop)
         if stop():
             if logger.isEnabledFor(logging.DEBUG):
@@ -5122,7 +5130,7 @@ and |remove the file manually|.
                     if check_days - delta == 1:
                         logger.info('detectUpdateThread: PyRadio is up to date. Will check again tomorrow...')
                     else:
-                        logger.info('detectUpdateThread: PyRadio is up to date. Will check again in {} days...'.format(check_days - delta))
+                        logger.info(f'detectUpdateThread: PyRadio is up to date. Will check again in {check_days - delta} days...')
                 return
 
         if logger.isEnabledFor(logging.INFO):
@@ -5146,18 +5154,18 @@ and |remove the file manually|.
             if last_tag:
                 connection_fail_count = 0
                 if logger.isEnabledFor(logging.INFO):
-                    logger.info('detectUpdateThread: Upstream version found: {}'.format(last_tag))
+                    logger.info(f'detectUpdateThread: Upstream version found: {last_tag}')
                 if this_version == last_tag:
                     clean_date_files(files, -1)
                     create_todays_date_file(a_path)
                     if logger.isEnabledFor(logging.INFO):
-                        logger.info('detectUpdateThread: No update found. Will check again in {} days. Terminating...'.format(check_days))
+                        logger.info(f'detectUpdateThread: No update found. Will check again in {check_days} days. Terminating...')
                     break
                 else:
                     existing_version = version_string_to_list(this_version)
                     new_version = version_string_to_list(last_tag)
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('current version = {0}, upstream version = {1}'.format(existing_version, new_version))
+                        logger.debug(f'current version = {existing_version}, upstream version = {new_version}')
                     if existing_version < new_version:
                         if stop():
                             if logger.isEnabledFor(logging.DEBUG):
@@ -5171,7 +5179,7 @@ and |remove the file manually|.
                             break
                         ''' set new version '''
                         if logger.isEnabledFor(logging.INFO):
-                            logger.info('detectUpdateThread: Update available: {}'.format(last_tag))
+                            logger.info(f'detectUpdateThread: Update available: {last_tag}')
                         a_lock.acquire()
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('detectUpdateThread: Update notification sent!!!')
@@ -5194,12 +5202,12 @@ and |remove the file manually|.
                                 ''' create today's date file '''
                                 create_todays_date_file(a_path)
                                 if logger.isEnabledFor(logging.INFO):
-                                    logger.info('detectUpdateThread: Terminating after notification issued... I will check again in {} days'.format(check_days))
+                                    logger.info(f'detectUpdateThread: Terminating after notification issued... I will check again in {check_days} days')
                                 return
                             a_lock.release()
                     else:
                         if logger.isEnabledFor(logging.ERROR):
-                            logger.error('detectUpdateThread: Ahead of upstream? (current version: {0}, upstream version: {1})'.format(this_version, last_tag))
+                            logger.error(f'detectUpdateThread: Ahead of upstream? (current version: {this_version}, upstream version: {last_tag})')
                         break
 
             else:
@@ -5520,7 +5528,7 @@ and |remove the file manually|.
             else:
                 ''' paste to playlist / register file '''
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('pasting to "{}"'.format(playlist))
+                    logger.debug(f'pasting to "{playlist}"')
                 ret = self._cnf.paste_station_to_named_playlist(
                     self._unnamed_register,
                     playlist
@@ -5729,9 +5737,9 @@ and |remove the file manually|.
                         self.detect_if_player_exited = False
                         if logger.isEnabledFor(logging.DEBUG):
                             if a_button & curses.BUTTON1_DOUBLE_CLICKED:
-                                logger.debug('Mouse button 1 double click on line {0} with start pos {1}, selection {2} and playing = {3}'.format(my, self.startPos, self.selection, self.playing))
+                                logger.debug(f'Mouse button 1 double click on line {my} with start pos {self.startPos}, selection {self.selection} and playing = {self.playing}')
                             else:
-                                logger.debug('Mouse button 1 triple click on line {0} with start pos {1}, selection {2} and playing = {3}'.format(my, self.startPos, self.selection, self.playing))
+                                logger.debug(f'Mouse button 1 triple click on line {my} with start pos {self.startPos}, selection {self.selection} and playing = {self.playing}')
                         if self.player.isPlaying() and self.selection == self.playing:
                             self.stopPlayer(show_message=True)
                         else:
@@ -5740,7 +5748,7 @@ and |remove the file manually|.
                     elif a_button & curses.BUTTON1_CLICKED \
                             or a_button & curses.BUTTON1_RELEASED:
                         if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('Mouse button 1 click on line {0} with start pos {1} and selection {2}'.format(my, self.startPos, self.selection))
+                            logger.debug(f'Mouse button 1 click on line {my} with start pos {self.startPos} and selection {self.selection}')
                     return True, do_update
                 else:
                     if logger.isEnabledFor(logging.DEBUG):
@@ -5790,7 +5798,7 @@ and |remove the file manually|.
     def _localized_init_config(self, parent=None):
         if parent is None:
             parent = self.outerBodyWin
-        logger.error('self._keyboard_localized_win is None: {}'.format(self._keyboard_localized_win is None))
+        logger.error(f'self._keyboard_localized_win is None: {self._keyboard_localized_win is None}')
         if self._keyboard_localized_win is None:
             self._keyboard_localized_win = PyRadioLocalized(
                     config=self._cnf,
@@ -5805,7 +5813,7 @@ and |remove the file manually|.
             profiles = ['Default'] + self._cnf.profile_manager.all_profiles()
             profile = self._station_editor.profile
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Default station profile: "{}"'.format(profile))
+                logger.debug(f'Default station profile: "{profile}"')
             if profile:
                 selection = [i for i, x in enumerate(profiles) if self._station_editor.profile in x ][0]
             else:
@@ -6063,7 +6071,7 @@ and |remove the file manually|.
             self._move_cursor_one_down()
             self.playSelection()
             self.refreshBody()
-            return '<div class="alert alert-success">Playing <b>{}</b>!</div>'.format(self.stations[self.selection][0])
+            return f'<div class="alert alert-success">Playing <b>{self.stations[self.selection][0]}</b>!</div>'
 
     def _play_next_station(self):
         self._reset_status_bar_right()
@@ -6091,7 +6099,7 @@ and |remove the file manually|.
             self._move_cursor_one_up()
             self.playSelection()
             self.refreshBody()
-            return '<div class="alert alert-success">Playing <b>{}</b>!</div>'.format(self.stations[self.selection][0])
+            return f'<div class="alert alert-success">Playing <b>{self.stations[self.selection][0]}</b>!</div>'
 
     def _play_previous_station(self):
         self._reset_status_bar_right()
@@ -6150,9 +6158,9 @@ and |remove the file manually|.
             -6 : Cannot write last_synced file
         '''
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('stations update result = {}'.format(self._need_to_update_stations_csv))
+            logger.debug(f'stations update result = {self._need_to_update_stations_csv}')
             try:
-                logger.debug('stations update counter = {}'.format(self._update_stations_error_count))
+                logger.debug(f'stations update counter = {self._update_stations_error_count}')
             except:
                 pass
         if self._need_to_update_stations_csv == 1:
@@ -6216,7 +6224,7 @@ and |remove the file manually|.
                      '''
         elif self._need_to_update_stations_csv == -5 and \
                 self._update_stations_error_count < 6:
-            caption = ' Error writing file ({}/5) '.format(self._update_stations_error_count)
+            caption = f' Error writing file ({self._update_stations_error_count}/5) '
             txt = '''
                 |PyRadio| cannot write the "|asked_sync|" file.
                 This means that you will be asked to sync the
@@ -6244,7 +6252,7 @@ and |remove the file manually|.
             txt = self._cls_update_stations_message
         elif self._need_to_update_stations_csv == -6 and \
                 self._update_stations_error_count < 6:
-            caption = ' Error writing file ({}/5) '.format(self._update_stations_error_count)
+            caption = f' Error writing file ({self._update_stations_error_count}/5) '
             txt = '''
                 |PyRadio| cannot write the "|last_sync|" file.
                 This means that although stations have been synced,
@@ -6423,7 +6431,7 @@ and |remove the file manually|.
                         pass
                 if not path.exists(self._cnf.recording_dir):
                     if logger.isEnabledFor(logging.ERROR):
-                        logger.error('cannot like title; directory "{}" does not exist'.format(self._cnf.recording_dir))
+                        logger.error(f'cannot like title; directory "{self._cnf.recording_dir}" does not exist')
                     if text:
                         return 'Error: Recodring dir does not exist!'
                     elif html:
@@ -6514,7 +6522,7 @@ and |remove the file manually|.
                 return '<div class="alert alert-danger">Already at <b>first</b> item!</div>'
             self._cnf.play_from_history = True
             self._cnf.stations_history.play_previous()
-            return '<div class="alert alert-success">Playing <b>{}</b>!</div>'.format(self.stations[self.selection][0])
+            return f'<div class="alert alert-success">Playing <b>{self.stations[self.selection][0]}</b>!</div>'
 
     def _stations_history_previous(self):
         self._set_playing = False
@@ -6556,7 +6564,7 @@ and |remove the file manually|.
                 return '<div class="alert alert-danger">Already at <b>last</b> item!</div>'
             self._cnf.play_from_history = True
             self._cnf.stations_history.play_next()
-            return '<div class="alert alert-success">Playing <b>{}</b>!</div>'.format(self.stations[self.selection][0])
+            return f'<div class="alert alert-success">Playing <b>{self.stations[self.selection][0]}</b>!</div>'
 
     def _stations_history_next(self):
         self._set_playing = False
@@ -6624,7 +6632,7 @@ and |remove the file manually|.
         self._set_active_stations()
         deleted_station, self.number_of_items = self._cnf.remove_station(self.selection)
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Deleted station: "{}"'.format(deleted_station[0]))
+            logger.debug(f'Deleted station: "{deleted_station[0]}"')
         self.ws.close_window()
         self._align_stations_and_refresh(self.ws.REMOVE_STATION_MODE)
         if not self._cnf.locked and (char == kbkey['Y'] or \
@@ -6660,7 +6668,7 @@ and |remove the file manually|.
             else:
                 active = selection = [i for i, x in enumerate(self._groups) if self.selection>=x[0]][-1]
                 logger.error(active)
-            logger.error('active = {}'.format(active))
+            logger.error(f'active = {active}')
             self.ws.operation_mode = self.ws.GROUP_SELECTION_MODE
             self._group_selection_window = SimpleCursesMenu(
                 Y = -1, X = -1,
@@ -6724,7 +6732,7 @@ and |remove the file manually|.
         #if self._cnf.headless and self._cnf.online_browser:
         if self._cnf.online_browser:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Performing RabioBrowser headles search with index {}'.format(index))
+                logger.debug(f'Performing RabioBrowser headles search with index {index}')
             if index is None:
                 index = self._cnf._online_browser._default_search_history_index
             self._cnf.online_browser.search_by_index(
@@ -6740,7 +6748,7 @@ and |remove the file manually|.
 
     def _activate_player(self, player_name):
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('selected player = {}'.format(player_name))
+            logger.debug(f'selected player = {player_name}')
         self._change_player = None
         to_record = self.player.recording
         if self.player.isPlaying():
@@ -6950,7 +6958,7 @@ and |remove the file manually|.
                     self._keyboard_localized_win.show(erase=True)
                 else:
                     self._show_notification_with_delay(
-                        txt='____Failed to save file!____\n__Reason: |{}|__'.format(ret),
+                        txt=f'____Failed to save file!____\n__Reason: |{ret}|__',
                             mode_to_set=self.ws.operation_mode,
                             callback_function=self._keyboard_localized_win.show)
                     self._keyboard_loc_get_name.force_redraw = True
@@ -7132,7 +7140,7 @@ _____"|f|" to see the |free| keys you can use.
         ):
             ''' if no player or config error, don't serve keyboard '''
             if logger.isEnabledFor(logging.INFO):
-                logger.info('*** terminating due to op. mode: {}'.format(self.ws.MODE_NAMES[self.ws.operation_mode]))
+                logger.info(f'*** terminating due to op. mode: {self.ws.MODE_NAMES[self.ws.operation_mode]}')
             return -1
 
         elif (self.jumpnr or self._cnf.jump_tag > -1) and \
@@ -7178,7 +7186,7 @@ _____"|f|" to see the |free| keys you can use.
                     check_localized(char, (kbkey['open_regs'],)):
                 self._set_active_stations()
                 self.saved_active_stations = self.active_stations[:]
-                logger.error('self.saved_active_stations = {}'.format(self.saved_active_stations))
+                logger.error(f'self.saved_active_stations = {self.saved_active_stations}')
                 self._status_suffix = chr(kbkey['open_regs'])
                 self._update_status_bar_right(status_suffix=chr(kbkey['open_regs']))
                 self._cnf.open_register_list = True
@@ -7237,9 +7245,9 @@ _____"|f|" to see the |free| keys you can use.
                             ret_string = 'Station Volume: NOT saved (Error writing file)'
                         else:
                             if (logger.isEnabledFor(logging.DEBUG)):
-                                logger.debug('Volume is {}%. Saving...'.format(self.player.volume))
+                                logger.debug(f'Volume is {self.player.volume}%. Saving...')
                             if self.stations[self.selection][Station.volume] != self.player.volume:
-                                ret_string = 'Station Volume: {}% saved'.format(self.player.volume)
+                                ret_string = f'Station Volume: {self.player.volume}% saved'
                                 self.stations[self.selection][Station.volume] = self.player.volume
                                 self._cnf.dirty_playlist = True
                                 self.saveCurrentPlaylist(report_success=False)
@@ -7568,7 +7576,7 @@ _____"|f|" to see the |free| keys you can use.
                 self._unnamed_register = self.stations[self.selection]
                 # logger.info(f'{self._unnamed_register =  }')
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('saving to unnamed register: {}'.format(self._unnamed_register))
+                    logger.debug(f'saving to unnamed register: {self._unnamed_register}')
                 self._show_notification_with_delay(
                         txt='___Station copied to unnamed register!!!___',
                         mode_to_set=self.ws.NORMAL_MODE,
@@ -7576,7 +7584,7 @@ _____"|f|" to see the |free| keys you can use.
             elif char in range(48, 58) or char in range(97, 123):
                 self._unnamed_register = self.stations[self.selection]
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('saving to register: {0} - {1}'.format(ch,self.stations[self.selection]))
+                    logger.debug(f'saving to register: {ch} - {self.stations[self.selection]}')
                 if ch == self._cnf.station_title[-1] and self._cnf.is_register:
                     self._paste()
                 else:
@@ -7585,7 +7593,7 @@ _____"|f|" to see the |free| keys you can use.
                         self._print_register_save_error()
                     else:
                         self._show_notification_with_delay(
-                                txt='___Station copied to register: {}___'.format(ch),
+                                txt=f'___Station copied to register: {ch}___',
                                 mode_to_set=self.ws.NORMAL_MODE,
                                 callback_function=self.refreshBody)
             return
@@ -7617,7 +7625,7 @@ _____"|f|" to see the |free| keys you can use.
                     while True:
                         ret = self._need_to_update_stations_csv = self._cls_update_stations.write_synced_version()
                         if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('stations update result = {}'.format(self._need_to_update_stations_csv))
+                            logger.debug(f'stations update result = {self._need_to_update_stations_csv}')
                         if self._need_to_update_stations_csv == -6:
                             self._update_stations_error_count += 1
                             if self._update_stations_error_count > 4:
@@ -7641,7 +7649,7 @@ _____"|f|" to see the |free| keys you can use.
                     ret = self._need_to_update_stations_csv = self._cls_update_stations.write_synced_version(asked=True)
                     # logger.error('\n\nret = self._need_to_update_stations_csv = {}\n\n'.format(self._need_to_update_stations_csv))
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('stations update result = {}'.format(self._need_to_update_stations_csv))
+                        logger.debug(f'stations update result = {self._need_to_update_stations_csv}')
                     if self._need_to_update_stations_csv == -5:
                         self._update_stations_error_count += 1
                         if self._update_stations_error_count > 4:
@@ -7658,7 +7666,7 @@ _____"|f|" to see the |free| keys you can use.
             if ret == -1:
                 self._need_to_update_stations_csv = -4        # next time
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('stations update result = {}'.format(self._need_to_update_stations_csv))
+                logger.debug(f'stations update result = {self._need_to_update_stations_csv}')
             self._open_simple_message_by_key(
                     'M_UPDATE_STATIONS_RESULT',
                     self._update_stations_result
@@ -7673,7 +7681,7 @@ _____"|f|" to see the |free| keys you can use.
                 self.refreshBody()
             elif ret != '':
                 # set player
-                logger.error('\n\nplayer = {}\n\n'.format(ret))
+                logger.error(f'\n\nplayer = {ret}\n\n')
                 self.ws.close_window()
                 playing = self.player.isPlaying()
                 self._activate_player(ret)
@@ -8032,9 +8040,9 @@ _____"|f|" to see the |free| keys you can use.
                         else:
                             self.log.stop_timer()
                         if logger.isEnabledFor(logging.INFO):
-                            logger.info('\nConfSaved    old rec dir: "{}"'.format(self._config_win._old_recording_dir))
-                            logger.info('\nConfSaved    config options recording_dir : "{}"'.format(self._config_win._config_options['recording_dir'][1]))
-                            logger.info('\nConfSaved    saved config options recording_dir : "{}"'.format(self._config_win._saved_config_options['recording_dir'][1]))
+                            logger.info(f'\nConfSaved    old rec dir: "{self._config_win._old_recording_dir}"')
+                            logger.info(f"\nConfSaved    config options recording_dir : \"{self._config_win._config_options['recording_dir'][1]}\"")
+                            logger.info(f"\nConfSaved    saved config options recording_dir : \"{self._config_win._saved_config_options['recording_dir'][1]}\"")
 
                         ''' sync backup parameters '''
                         old_id = self._cnf.backup_player_params[1][0]
@@ -8098,7 +8106,7 @@ _____"|f|" to see the |free| keys you can use.
                             self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS] = self._cnf.rec_dirs[1]
                             if self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS] != self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]:
                                 if logger.isEnabledFor(logging.INFO):
-                                    logger.info('I need to move the directory: "{}'.format(self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS]))
+                                    logger.info(f'I need to move the directory: "{self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS]}')
                                 self._open_simple_message_by_key('M_REC_DIR_MOVE')
                                 rret = self._cnf.xdg.set_recording_dir(
                                         new_dir=None,
@@ -8125,7 +8133,7 @@ _____"|f|" to see the |free| keys you can use.
                                     self._show_moving_recordings_dir_error()
                             else:
                                 if logger.isEnabledFor(logging.DEBUG):
-                                    logger.debug('Asked to move recordings but source and target are the same\nsource: {0}\ntarget: {1}'.format(self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS], self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]))
+                                    logger.debug(f'Asked to move recordings but source and target are the same\nsource: {self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS]}\ntarget: {self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]}')
 
                             # update buffering data
                             if self._cnf.buffering == '0':
@@ -8226,7 +8234,7 @@ _____"|f|" to see the |free| keys you can use.
             if ret >= 0:
                 if ret == 0:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('new_players = {}'.format(self._player_select_win.player))
+                        logger.debug(f'new_players = {self._player_select_win.player}')
                     self._config_win._config_options['player'][1] = self._player_select_win.player
                     self.ws.close_window()
                     self._config_win.refresh_config_win()
@@ -8260,7 +8268,7 @@ _____"|f|" to see the |free| keys you can use.
             if ret >= 0:
                 if ret == 0:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('new station encoding = {}'.format(ret_encoding))
+                        logger.debug(f'new station encoding = {ret_encoding}')
                     ''' save encoding and playlist '''
                     if self._old_station_encoding == self._cnf.default_encoding:
                         self._old_station_encoding = ''
@@ -8387,7 +8395,7 @@ _____"|f|" to see the |free| keys you can use.
                     self._cnf.default_encoding,
                     show_default=True
                 )
-                logger.error('{}'.format(self._station_editor._encoding))
+                logger.error(f'{self._station_editor._encoding}')
                 self._encoding_select_win.set_reduced_global_functions(self._global_functions)
                 self._encoding_select_win.init_window()
                 self._encoding_select_win.refresh_win()
@@ -8398,7 +8406,7 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE):
-            logger.error('\n\nchar = {}\n\n'.format(char))
+            logger.error(f'\n\nchar = {char}\n\n')
             '''  Rename playlist '''
             ret, self.old_filename, self.new_filename, copy, open_file, pl_create = self._rename_playlist_dialog.keypress(char)
             logger.error(f'{ret = }')
@@ -8428,8 +8436,8 @@ _____"|f|" to see the |free| keys you can use.
                 last_history[2] = path.basename(self.new_filename).replace('.csv', '')
                 ''' not a register, no online browser '''
                 last_history[-2:] = False, False
-                logger.error('DE\n\n **** ps.p {}\n\n'.format(self._cnf._ps._p))
-                logger.error('DE last_history = {}'.format(last_history))
+                logger.error(f'DE\n\n **** ps.p {self._cnf._ps._p}\n\n')
+                logger.error(f'DE last_history = {last_history}')
                 # logger.error('DE last_history = {}'.format(last_history))
                 if self.ws.window_mode == self.ws.NORMAL_MODE:
                     ''' rename the playlist on editor '''
@@ -8482,14 +8490,14 @@ _____"|f|" to see the |free| keys you can use.
             if ret in (-1, 0):
                 if ret == 0:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Selected profile for station: "{}"'.format(self._station_profile_editor.item))
+                        logger.debug(f'Selected profile for station: "{self._station_profile_editor.item}"')
                     profile = self._station_profile_editor.item.split(': ')[-1]
                     if profile == 'Default':
                         self._station_editor.profile = ''
                     else:
                         self._station_editor.profile = profile
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('New station profile: "{}"'.format(self._station_editor.profile))
+                        logger.debug(f'New station profile: "{self._station_editor.profile}"')
                 self._station_profile_editor = None
                 self.ws.close_window()
                 self._station_editor.show()
@@ -8548,11 +8556,11 @@ _____"|f|" to see the |free| keys you can use.
                     return
                 if self.selection < len(self.stations) - 1:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('deleting playlist {0}: {1}'.format(self.selection, self.stations[self.selection]))
+                        logger.debug(f'deleting playlist {self.selection}: {self.stations[self.selection]}')
                     self.stations.pop(self.selection)
                 else:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('deleting last playlist {0}: {1}'.format(self.selection, self.stations[self.selection]))
+                        logger.debug(f'deleting last playlist {self.selection}: {self.stations[self.selection]}')
                     self.stations.pop()
                     self.selection -= 1
                     if self.selection == len(self.stations) - 1:
@@ -8776,7 +8784,7 @@ _____"|f|" to see the |free| keys you can use.
             if ret >= 0:
                 if ret == 0:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('new encoding = {}'.format(ret_encoding))
+                        logger.debug(f'new encoding = {ret_encoding}')
                     self._config_win._config_options['default_encoding'][1] = ret_encoding
                 self.ws.close_window()
                 self._config_win.refresh_config_win()
@@ -8821,7 +8829,7 @@ _____"|f|" to see the |free| keys you can use.
             if ret >= 0:
                 if ret == 0:
                     if logger.isEnabledFor(logging.INFO):
-                        logger.info('New default station = "{}"'.format(ret_station))
+                        logger.info(f'New default station = "{ret_station}"')
                     self._simple_schedule.station = ret_station
                     self._schedule_station_select_win = None
                     self.ws.close_window()
@@ -8845,7 +8853,7 @@ _____"|f|" to see the |free| keys you can use.
                     else:
                         self._config_win._config_options['default_station'][1] = 'False'
                     if logger.isEnabledFor(logging.INFO):
-                        logger.info('New default_playlist = "{0}", New default station = "{1}"'.format(ret_playlist, self._config_win._config_options['default_station'][1]))
+                        logger.info(f"New default_playlist = \"{ret_playlist}\", New default station = \"{self._config_win._config_options['default_station'][1]}\"")
                 self.ws.close_window()
                 self._config_win.refresh_config_win()
             return
@@ -8858,7 +8866,7 @@ _____"|f|" to see the |free| keys you can use.
             if ret >= 0:
                 if ret == 0:
                     if logger.isEnabledFor(logging.INFO):
-                        logger.info('New default station = "{}"'.format(ret_station))
+                        logger.info(f'New default station = "{ret_station}"')
                     self._config_win._config_options['default_station'][1] = ret_station
                 self.ws.close_window()
                 self._config_win.refresh_config_win()
@@ -8959,7 +8967,7 @@ _____"|f|" to see the |free| keys you can use.
                     self._config_win._config_options['theme'][1] = self._theme_name
                     self._config_win._saved_config_options['theme'][1] = self._theme_name
                 if logger.isEnabledFor(logging.INFO):
-                    logger.info('Activating theme: {}'.format(self._theme_name))
+                    logger.info(f'Activating theme: {self._theme_name}')
                 ret, ret_theme_name = self._theme.readAndApplyTheme(
                     self._theme_name,
                     theme_path=self._theme_selector._themes[theme_id][1]
@@ -8992,7 +9000,7 @@ _____"|f|" to see the |free| keys you can use.
                 if save_theme:
                     self._cnf.theme = self._theme_name
                     if logger.isEnabledFor(logging.INFO):
-                        logger.info('Setting default theme: {}'.format(self._theme_name))
+                        logger.info(f'Setting default theme: {self._theme_name}')
                     if self._theme_selector.theme_is_watched:
                         self._cnf.opts['auto_update_theme'][1] = True
                         self._watch_theme(self._theme_selector.theme_path(theme_id))
@@ -9615,7 +9623,7 @@ _____"|f|" to see the |free| keys you can use.
                 restart = False if force_http == self.player.force_http else True
                 self.player.force_http = force_http
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('force http connections = {}'.format(self.player.force_http))
+                    logger.debug(f'force http connections = {self.player.force_http}')
                 self.ws.close_window()
                 self._connection_type_edit = None
                 if restart:
@@ -9855,7 +9863,7 @@ _____"|f|" to see the |free| keys you can use.
                         return
                     self._cnf.USE_EXTERNAL_PLAYER = True
                     stream_url = self.stations[self.selection][1]
-                    logger.error('\n====\n====\nself.stations[self.selection] = {}\n====\n====\n'.format(self.stations[self.selection]))
+                    logger.error(f'\n====\n====\n{self.stations[self.selection] = }\n====\n====\n')
                     self._set_active_stations()
                     self.playing = self.selection
                     self.selections[0][2] = self.playing
@@ -9873,7 +9881,8 @@ _____"|f|" to see the |free| keys you can use.
                         referer=self.stations[self.selection][Station.referer]
                     )
                     if logger.isEnabledFor(logging.INFO):
-                        logger.info('Launching external player: {}'.format(' '.join(self._cnf.EXTERNAL_PLAYER_OPTS)))
+                        tmp = ' '.join(self._cnf.EXTERNAL_PLAYER_OPTS)
+                        logger.info(f"Launching external player: {tmp}")
                     self._cnf.EXTERNAL_PLAYER_OPTS = [self.stations[self.selection][0]] + self._cnf.EXTERNAL_PLAYER_OPTS
                     self.log.asked_to_stop = True
                     self.ctrl_c_handler(0,0)
@@ -10126,7 +10135,7 @@ _____"|f|" to see the |free| keys you can use.
                     if self._old_station_encoding == '':
                         self._old_station_encoding = self._cnf.default_encoding
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.info('encoding = {}'.format(self._old_station_encoding))
+                        logger.info(f'encoding = {self._old_station_encoding}')
                     self.ws.operation_mode = self.ws.SELECT_STATION_ENCODING_MODE
                     self._encoding_select_win = PyRadioSelectEncodings(
                         self.outerBodyMaxY,
@@ -10360,9 +10369,9 @@ _____"|f|" to see the |free| keys you can use.
                     if self.number_of_items > 0:
                         ''' return to stations view '''
                         if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('Loading playlist: "{}"'.format(self.stations[self.selection][-1]))
+                            logger.debug(f'Loading playlist: "{self.stations[self.selection][-1]}"')
                         playlist_to_try_to_open = self.stations[self.selection][-1]
-                        logger.error('\n\nplaylist_to_try_to_open = "{}"\n\n'.format(playlist_to_try_to_open))
+                        logger.error(f'\n\nplaylist_to_try_to_open = "{playlist_to_try_to_open}"\n\n')
                         if playlist_to_try_to_open.lower().endswith('.m3u'):
                             logger.error('****** Need to convert M3U to CSV ******')
                             # TODO: display message
@@ -10383,25 +10392,25 @@ _____"|f|" to see the |free| keys you can use.
                         logger.error(f'{self.playlist_selections = }')
                         logger.error('\n\n')
                         ret = self._cnf.read_playlist_file(stationFile=playlist_to_try_to_open)
-                        logger.error('DE playlist_selections = {}'.format(playlist_to_try_to_open))
+                        logger.error(f'DE playlist_selections = {playlist_to_try_to_open}')
 
                         if ret == -1:
                             self.stations = self._cnf.playlists
                             self._print_playlist_load_error()
                             if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug('Error loading playlist: "{}"'.format(self.stations[self.selection][-1]))
+                                logger.debug(f'Error loading playlist: "{self.stations[self.selection][-1]}"')
                         elif ret == -2:
                             self.stations = self._cnf.playlists
                             self._print_playlist_not_found_error()
                             if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug('Playlist not found: "{}"'.format(self.stations[self.selection][-1]))
+                                logger.debug(f'Playlist not found: "{self.stations[self.selection][-1]}"')
                         elif ret == -7:
                             self._print_playlist_recovery_error()
                         else:
                             self._playlist_in_editor = playlist_to_try_to_open
                             self._playlist_error_message = ''
                             self.number_of_items = ret
-                            logger.error('self._playlist_in_editor = {0}\nself.number_of_items = {1}'.format(self._playlist_in_editor, self.number_of_items))
+                            logger.error(f'self._playlist_in_editor = {self._playlist_in_editor}\nself.number_of_items = {self.number_of_items}')
                             # logger.error('self.selcctions\n{0}\nself.playlist_selections\n{1}'.format(self.selections, self.playlist_selections))
                             self.ll('selecctions')
                             if self._cnf.open_register_list:
@@ -10416,7 +10425,7 @@ _____"|f|" to see the |free| keys you can use.
                             if self.saved_active_stations != [['', 0], ['', -1]]:
                                 self.active_stations = self.saved_active_stations[:]
                                 self.saved_active_stations = [['', 0], ['', -1]]
-                            logger.error('self.saved_active_stations = {}'.format(self.saved_active_stations))
+                            logger.error(f'self.saved_active_stations = {self.saved_active_stations}')
                             self._align_stations_and_refresh(self.ws.PLAYLIST_MODE)
                             self._set_active_stations()
                             self._give_me_a_search_class(self.ws.operation_mode)
@@ -10488,14 +10497,14 @@ _____"|f|" to see the |free| keys you can use.
         self._i_am_resizing = False
 
     def _jump_and_play_selection(self, jumpnr=None):
-        logger.error('\n\n 1 _jump = {}\n\n'.format(jumpnr))
+        logger.error(f'\n\n 1 _jump = {jumpnr}\n\n')
         self._jump_to_jumpnr('', jumpnr)
         self.playSelection()
         self.refreshBody()
         self._reset_status_bar_right()
 
     def _jump_to_jumpnr(self, char='', jumpnr=None):
-        logger.error('\n\n 2 _jump = {}\n\n'.format(jumpnr))
+        logger.error(f'\n\n 2 _jump = {jumpnr}\n\n')
 
         if jumpnr is not None:
             self.jumpnr = jumpnr
@@ -10548,7 +10557,7 @@ _____"|f|" to see the |free| keys you can use.
             return ret
         if self.number_of_items > 0:
             self._start_player(mode='text')
-            return 'Playing "{}"!'.format(self.stations[self.selection][0])
+            return f'Playing "{self.stations[self.selection][0]}"!'
         return 'No stations in Playlist!!'
 
     def _html_start_player(self):
@@ -10560,7 +10569,7 @@ _____"|f|" to see the |free| keys you can use.
             return ret
         if self.number_of_items > 0:
             self._start_player(mode='html')
-            return '<div class="alert alert-success">Playing <b>{}</b>!</div>'.format(self.stations[self.selection][0])
+            return f'<div class="alert alert-success">Playing <b>{self.stations[self.selection][0]}</b>!</div>'
         return '<div class="alert alert-danger"><b>No stations in Playlist!</b>!</div>'
 
     def _start_player(self, mode=None):
@@ -10818,7 +10827,7 @@ _____"|f|" to see the |free| keys you can use.
         it = self._search_sublist_last_item(
             self._cnf.playlists,
             self.new_filename)
-        logger.error('DE it = {}'.format(it))
+        logger.error(f'DE it = {it}')
         if it > -1:
             self.selection = it
             self.selections[self.ws.PLAYLIST_MODE][0] = it
@@ -10873,7 +10882,7 @@ _____"|f|" to see the |free| keys you can use.
         # logger.error('DE self._playlist_in_editor = {}'.format(self._playlist_in_editor))
         if open_file:
             ret_it, ret_id, rev_ret_id = self._cnf.find_history_by_station_path(self.new_filename)
-            logger.error('DE ret_it = {0}, ret_id = {1}, rev_ret_id = {2}'.format(ret_it, ret_id, rev_ret_id))
+            logger.error(f'DE ret_it = {ret_it}, ret_id = {ret_id}, rev_ret_id = {rev_ret_id}')
             self.ws.close_window()
             if rev_ret_id == 0:
                 ''' return to opened playlist '''
@@ -10889,20 +10898,20 @@ _____"|f|" to see the |free| keys you can use.
                 if ret_id >= 0:
                     item = self._cnf.get_playlist_history_item(ret_id)
                     self._cnf.add_to_playlist_history(*item)
-                    logger.error('DE\n\n **** after adding playlist to history ps.p {}\n\n'.format(self._cnf._ps._p))
+                    logger.error(f'DE\n\n **** after adding playlist to history ps.p {self._cnf._ps._p}\n\n')
                     self._open_playlist_from_history(from_rename_action=True)
                     if self.playing > -1:
                         self.selection = self.playing
                         self._put_selection_in_the_middle()
-                    logger.error('DE playlist found: {0} at {1}'.format(item, ret_id))
+                    logger.error(f'DE playlist found: {item} at {ret_id}')
                     self.refreshBody()
                     #self.active_stations = self.rename_stations
                     self._set_active_stations()
                     self._set_rename_stations()
-                    logger.error('DE\n\n **** after open playlist from history ps.p {}\n\n'.format(self._cnf._ps._p))
+                    logger.error(f'DE\n\n **** after open playlist from history ps.p {self._cnf._ps._p}\n\n')
                 else:
                     self._cnf.add_to_playlist_history(*last_history)
-                    logger.error('DE\n\n **** after addig playlist to history ps.p {}\n\n'.format(self._cnf._ps._p))
+                    logger.error(f'DE\n\n **** after addig playlist to history ps.p {self._cnf._ps._p}\n\n')
                     self._open_playlist_from_history(from_rename_action=True)
                     if self.playing > -1:
                         self.selection = self.playing
@@ -10948,7 +10957,7 @@ _____"|f|" to see the |free| keys you can use.
             self.selections[self.ws.PLAYLIST_MODE][-1] = self._cnf.playlists
             self._reload_playlists(refresh=False)
         it = self._search_sublist_last_item(self._cnf.playlists, self.new_filename)
-        logger.error('DE it = {}'.format(it))
+        logger.error(f'DE it = {it}')
         if it > -1:
             self.selections[self.ws.PLAYLIST_MODE][0] = it
             self.playlist_selections[self.ws.PLAYLIST_MODE][0] = it
@@ -10969,7 +10978,7 @@ _____"|f|" to see the |free| keys you can use.
 
             self.ws.close_window()
             self.active_stations = self.rename_stations
-            logger.error('DE\n\n **** before open playlist from history ps.p {}\n\n'.format(self._cnf._ps._p))
+            logger.error(f'DE\n\n **** before open playlist from history ps.p {self._cnf._ps._p}\n\n')
             self._open_playlist_from_history(from_rename_action=True)
             if self.playing > -1:
                 self.selection = self.playing
@@ -10992,7 +11001,7 @@ _____"|f|" to see the |free| keys you can use.
             self._cnf.remove_from_playlist_history()
             self._cnf.add_to_playlist_history(*last_history)
         # self.ll('before return')
-        logger.error('DE\n\n **** ps.p {}\n\n'.format(self._cnf._ps._p))
+        logger.error(f'DE\n\n **** ps.p {self._cnf._ps._p}\n\n')
         #self.refreshBody()
 
     def _rename_playlist_from_normal_mode(self, copy, open_file, create, last_history):
@@ -11214,11 +11223,11 @@ _____"|f|" to see the |free| keys you can use.
             #    search_file = new_file
 
         # self.ll('_find_playlists_after_rename(): common')
-        logger.error('DE playlist_selection = {}'.format(self.playlist_selections))
+        logger.error(f'DE playlist_selection = {self.playlist_selections}')
         ''' set playlist selections for ' action '''
         self.playlist_selections[self.ws.PLAYLIST_MODE] = self.selections[self.ws.PLAYLIST_MODE][:-1][:]
         self.playlist_selections[self.ws.REGISTER_MODE] = self.selections[self.ws.REGISTER_MODE][:-1][:]
-        logger.error('DE playlist_selection = {}'.format(self.playlist_selections))
+        logger.error(f'DE playlist_selection = {self.playlist_selections}')
 
         ''' Go on and fix playlists' selections '''
         self._find_renamed_selection(self.ws.PLAYLIST_MODE, search_path, search_file)
@@ -11330,7 +11339,7 @@ _____"|f|" to see the |free| keys you can use.
                         break
                     else:
                         if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('clearing window from line {} to end.'.format(i))
+                            logger.debug(f'clearing window from line {i} to end.')
                         try:
                             self.bodyWin.move(i, 0)
                             self.bodyWin.clrtobot()
@@ -11445,7 +11454,7 @@ _____"|f|" to see the |free| keys you can use.
 
     def _redisplay_ask_to_create_new_theme(self):
         if logger.isEnabledFor(logging.ERROR):
-            logger.error('DE self.ws.previous_operation_mode = {}'.format(self.ws.previous_operation_mode))
+            logger.error(f'DE self.ws.previous_operation_mode = {self.ws.previous_operation_mode}')
         self._theme_selector.parent = self.outerBodyWin
         if self.ws.previous_operation_mode == self.ws.CONFIG_MODE:
             self._show_theme_selector_from_config()
@@ -11457,17 +11466,17 @@ _____"|f|" to see the |free| keys you can use.
 
     def _load_renamed_playlist(self, a_file, old_file, is_copy):
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Opening renamed playlist: "{}"'.format(a_file))
+            logger.debug(f'Opening renamed playlist: "{a_file}"')
         ret = self._cnf.read_playlist_file(stationFile=a_file)
         if ret == -1:
             self._print_playlist_load_error()
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Error loading playlist: "{}"'.format(self.stations[self.selection][-1]))
+                logger.debug(f'Error loading playlist: "{self.stations[self.selection][-1]}"')
             return
         elif ret == -2:
             self._print_playlist_not_found_error()
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Playlist not found: "{}"'.format(self.stations[self.selection][-1]))
+                logger.debug(f'Playlist not found: "{self.stations[self.selection][-1]}"')
             return
         elif ret == -7:
             self._print_playlist_recovery_error()
@@ -11529,7 +11538,7 @@ _____"|f|" to see the |free| keys you can use.
         else:
             self._cnf.backup_player_params[1][0] = a_param_id
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Activating parameter No {0} for player "{1}"'.format(a_param_id, self._cnf.PLAYER_NAME))
+                logger.debug(f'Activating parameter No {a_param_id} for player "{self._cnf.PLAYER_NAME}"')
             return True
 
     def toggle_titles_logging(self):
@@ -11543,7 +11552,7 @@ _____"|f|" to see the |free| keys you can use.
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     def _register_signals_handlers(self):
         if platform.startswith('win'):
-            import win32console, win32gui, win32con, win32api
+            import win32api
             ''' disable close button
             import win32console, win32gui, win32con, win32api
 
@@ -11599,10 +11608,10 @@ _____"|f|" to see the |free| keys you can use.
                         self._linux_signal_handler
                     )
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('SetConsoleCtrlHandler: Handler for signal {} registered'.format(a_sig))
+                        logger.debug(f'SetConsoleCtrlHandler: Handler for signal {a_sig} registered')
             except:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('SetConsoleCtrlHandler: Failed to register handler for signal {}'.format(a_sig))
+                    logger.debug(f'SetConsoleCtrlHandler: Failed to register handler for signal {a_sig}')
 
     def _linux_signal_handler(self, a_signal, a_frame):
         logger.error('DE ----==== _linux_signal_handler  ====----')
@@ -11677,7 +11686,8 @@ _____"|f|" to see the |free| keys you can use.
         if self._cnf.titles_log.titles_handler:
             logger.critical('=== Logging stopped')
         self.log._stop_desktop_notification_thread = True
-        import win32con, win32api
+        import win32con
+        import win32api
         if event in (win32con.CTRL_C_EVENT,
                      win32con.CTRL_LOGOFF_EVENT,
                      win32con.CTRL_BREAK_EVENT,
@@ -11716,7 +11726,7 @@ _____"|f|" to see the |free| keys you can use.
         self._cnf.stations_history.add(self._cnf.station_file_name[:-4], self.stations[self.playing][0], self.playing)
 
     def _load_playlist_and_station_from_station_history(self, h_item, func):
-        logger.info('h_item = {}'.format(h_item))
+        logger.info(f'h_item = {h_item}')
         num = -1
         current_playlist = self._cnf.station_file_name[:-4]
         if h_item[0] == '' or h_item[1] == '' or \
@@ -11725,11 +11735,11 @@ _____"|f|" to see the |free| keys you can use.
                 h_item[-1] < 0 or \
                 (h_item[-1] >= self.number_of_items and current_playlist == h_item[0]):
             if logger.isEnabledFor(logging.ERROR):
-                logger.error('\n===============\nInvalid h_item: "{0}"\nNumber of stations = {1}\n==============='.format(h_item, self.number_of_items))
+                logger.error(f'\n===============\nInvalid h_item: "{h_item}"\nNumber of stations = {self.number_of_items}\n===============')
             func()
             return
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Activating station history item: {}'.format(h_item))
+            logger.debug(f'Activating station history item: {h_item}')
 
         if current_playlist == h_item[0] or \
                     h_item[0] == 'Online Browser':
@@ -11737,7 +11747,7 @@ _____"|f|" to see the |free| keys you can use.
             if self.stations[h_item[-1]][0] == h_item[1]:
                 ''' station found '''
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Station history item found in current playlist at: {}'.format(num))
+                    logger.debug(f'Station history item found in current playlist at: {num}')
                 num = h_item[-1]
                 if num >= self.number_of_items:
                     if logger.isEnabledFor(logging.DEBUG):
@@ -11746,13 +11756,13 @@ _____"|f|" to see the |free| keys you can use.
                     return
             else:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Scanning other playlist for station history item: {}'.format(num))
+                    logger.debug(f'Scanning other playlist for station history item: {num}')
                 ''' I have to scan the playlist'''
                 num = self._scan_playlist_for_station(self.stations, h_item[-1], h_item[1])
                 if num == -1:
                     ''' station not found  '''
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Station "{}" not found!'.format(h_item[1]))
+                        logger.debug(f'Station "{h_item[1]}" not found!')
                     ''' Continue going through history items '''
                     func()
                     return
@@ -11784,10 +11794,10 @@ _____"|f|" to see the |free| keys you can use.
 
         try:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Station "{0}" found at {1}'.format(h_item[1], num))
+                logger.debug(f'Station "{h_item[1]}" found at {num}')
         except UnicodeEncodeError:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Station found at {}'.format(num))
+                logger.debug(f'Station found at {num}')
 
         logger.error('24 setStation')
         logger.error(f'{num = }')
@@ -11813,11 +11823,11 @@ _____"|f|" to see the |free| keys you can use.
         if self.selections[1][-1][0] == self.selections[2][-1][0]:
             change_regs_too = True
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Looking for playlist: {}'.format(a_playlist))
+            logger.debug(f'Looking for playlist: {a_playlist}')
         found = -1
         for i, n in enumerate(self.selections[1][-1]):
             if n[0] == a_playlist:
-                logger.error('Playlist found at {}'.format(i))
+                logger.error(f'Playlist found at {i}')
                 found = i
                 break
         if found > -1:
@@ -11847,7 +11857,7 @@ _____"|f|" to see the |free| keys you can use.
         up = down = 0
         num = -1
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('  checking start={0}: "{1}"'.format(start, stations[start]))
+            logger.debug(f'  checking start={start}: "{stations[start]}"')
         if stations[start][0] == station_to_find:
             return start
         for i in range(start, -1, -1):
@@ -11855,13 +11865,13 @@ _____"|f|" to see the |free| keys you can use.
             down = i - 1
             if down > -1 :
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('  checking down={0}: "{1}"'.format(down, stations[down]))
+                    logger.debug(f'  checking down={down}: "{stations[down]}"')
                 if stations[down][0] == station_to_find:
                     num = down
                     break
             if up < self._cnf.number_of_stations:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('  checking up={0}: "{1}"'.format(up, stations[up]))
+                    logger.debug(f'  checking up={up}: "{stations[up]}"')
                 if stations[up][0] == station_to_find:
                     num = up
                     break
@@ -11872,7 +11882,7 @@ _____"|f|" to see the |free| keys you can use.
                 logger.debug('Station not found... Scanning to top...')
             for i in range(down, -1, -1):
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('  checking {0}: "{1}"'.format(i, stations[i]))
+                    logger.debug(f'  checking {i}: "{stations[i]}"')
                 if stations[i][0] == station_to_find:
                     num = i
                     break
@@ -11882,7 +11892,7 @@ _____"|f|" to see the |free| keys you can use.
                 logger.debug('Station not found... Scanning to bottom...')
             for i in range(up, self._cnf.number_of_stations - 1):
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('  checking {0}: "{1}"'.format(i, stations[i]))
+                    logger.debug(f'  checking {i}: "{stations[i]}"')
                 if stations[i][0] == station_to_find:
                     num = i
                     break
@@ -12056,10 +12066,10 @@ _____"|f|" to see the |free| keys you can use.
     def _success_in_check_playlist(self):
         with self._check_lock:
             station_to_check_id = self._station_to_check_id
-        logger.error('got called!!!\nself._cnf.last_station_checked_id = {}, station_to_check_id = {}'.format(self._cnf.last_station_checked_id, station_to_check_id))
+        logger.error(f'got called!!!\nself._cnf.last_station_checked_id = {self._cnf.last_station_checked_id}, station_to_check_id = {station_to_check_id}')
         station_to_check = self.stations[station_to_check_id]
         if self._cnf.last_station_checked_id != station_to_check_id:
-            logger.error('\n\nsuccess in check playlist\n{}\n\n'.format(station_to_check))
+            logger.error(f'\n\nsuccess in check playlist\n{station_to_check}\n\n')
             self._cnf.last_station_checked = station_to_check
             self._cnf.last_station_checked_id = station_to_check_id
             logger.error('\n\nnungetch c\n\n')
@@ -12070,7 +12080,7 @@ _____"|f|" to see the |free| keys you can use.
         with self._check_lock:
             station_to_check_id = self._station_to_check_id
         if self._cnf.last_station_checked_id != self._last_played_station_id:
-            logger.error('\n\nerror in check playlist\nhttp_error: {}\n{}\n\n'.format(http_error, self.stations[self._last_played_station_id]))
+            logger.error(f'\n\nerror in check playlist\nhttp_error: {http_error}\n{self.stations[self._last_played_station_id]}\n\n')
             station_to_check = self.stations[station_to_check_id]
             self._cnf.last_station_checked = station_to_check
             self._cnf.last_station_checked_id = station_to_check_id
@@ -12220,7 +12230,7 @@ _____"|f|" to see the |free| keys you can use.
         # Generate Markdown content
         markdown_content = []
 
-        markdown_content.append('# Playlist: {}\n\n'.format(self._cnf.station_title))
+        markdown_content.append(f'# Playlist: {self._cnf.station_title}\n\n')
 
         # Errors and Descriptions section
         markdown_content.append("### Errors and Descriptions\n")
@@ -12355,14 +12365,14 @@ _____"|f|" to see the |free| keys you can use.
                         else:
                             station_data[station_number]['errors'][player] = (error_code, errors.get(error_code, 'Unknown error'))
 
-        logger.info('\n\nErrors:\n{}\n\n'.format(errors))
-        logger.info('\n\nStation Data:\n{}\n\n'.format(station_data))
+        logger.info(f'\n\nErrors:\n{errors}\n\n')
+        logger.info(f'\n\nStation Data:\n{station_data}\n\n')
 
         try:
             to_delete = [index for index, value in station_data.items() if all(error[0] != "None" for error in value['errors'].values())]
         except:
             to_delete = None
-        logger.info('\n\nItems to be Deleted:\n{}\n\n'.format(to_delete))
+        logger.info(f'\n\nItems to be Deleted:\n{to_delete}\n\n')
         return station_data, errors, to_delete
 
     def _generate_html_report(self, station_data, errors):
@@ -12405,7 +12415,7 @@ _____"|f|" to see the |free| keys you can use.
         for i, error_code in enumerate(sorted_error_codes):
             if error_code == 'None':
                 # Set "None" to black
-                dynamic_css.append(f'.error-none {{ color: black; font-weight: bold; }}')
+                dynamic_css.append('.error-none { color: black; font-weight: bold; }')
             else:
                 # Assign a color from the palette
                 color = color_palette[i % len(color_palette)]

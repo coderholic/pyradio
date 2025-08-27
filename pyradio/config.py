@@ -22,15 +22,14 @@ from rich.align import Align
 from rich import print
 from pyradio import version
 from .common import validate_resource_opener_path, is_rasberrypi, Station, describe_playlist, CsvReadWrite, ProfileManager
-from .keyboard import kbkey, lkbkey, read_keyboard_shortcuts, read_localized_keyboard, get_lkbkey, set_lkbkey, check_localized
+from .keyboard import read_keyboard_shortcuts, read_localized_keyboard, set_lkbkey
 from .browser import probeBrowsers
-from .install import get_github_long_description
 from .player import pywhich
 from .server import IPsWithNumbers
 from .xdg import XdgDirs, XdgMigrate, CheckDir
 from .install import get_a_linux_resource_opener
 from .html_help import is_graphical_environment_running
-from .log import Log, TIME_FORMATS
+from .log import TIME_FORMATS
 
 try:
     from subprocess import Popen, DEVNULL
@@ -39,7 +38,7 @@ except ImportError:
 if system().lower() == 'windows':
     from os import startfile
 else:
-    from os import getuid
+    pass
 HAS_REQUESTS = True
 
 try:
@@ -525,14 +524,14 @@ class PyRadioStations():
             copyfile(self.station_path, st)
         except:
             if logger.isEnabledFor(logging.ERROR):
-                logger.error('Cannot copy playlist: "{}"'.format(self.station_path))
+                logger.error(f'Cannot copy playlist: "{self.station_path}"')
             ret = -1
             return
         self._set_playlist_elements(st)
         self.read_playlists()
         self.foreign_file = False
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Playlist copied to: "{}"'.format(st))
+            logger.debug(f'Playlist copied to: "{st}"')
         return ret
 
     def is_same_playlist(self, a_playlist):
@@ -648,7 +647,7 @@ class PyRadioStations():
                 self.stations.append(a_pkg_station)
                 self.added_stations += 1
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Added: {0} - {1}'.format(self.added_stations, a_pkg_station))
+                    logger.debug(f'Added: {self.added_stations} - {a_pkg_station}')
 
     def read_playlist_for_server(self, stationFile):
         out = []
@@ -769,9 +768,9 @@ class PyRadioStations():
             try:
                 tmp = curses.COLORS
                 if logger.isEnabledFor(logging.INFO):
-                    logger.info('Trying to recover backed up playlist: "{}"'.format(backup_stationFile))
+                    logger.info(f'Trying to recover backed up playlist: "{backup_stationFile}"')
             except:
-                print('Trying to recover backed up playlist:\n  "{}"'.format(backup_stationFile))
+                print(f'Trying to recover backed up playlist:\n  "{backup_stationFile}"')
 
 
             if path.isfile(stationFile):
@@ -847,7 +846,7 @@ class PyRadioStations():
         else:
             st_file = self.station_path
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Saving playlist: "{}"'.format(st_file))
+            logger.debug(f'Saving playlist: "{st_file}"')
 
         if not self.dirty_playlist:
             if logger.isEnabledFor(logging.DEBUG):
@@ -936,16 +935,16 @@ class PyRadioStations():
         TB = float(KB ** 4) # 1,099,511,627,776
 
         if B < KB:
-            return '{0} B'.format(B)
+            return f'{B} B'
         B = float(B)
         if KB <= B < MB:
-            return '{0:.2f} KB'.format(B/KB)
+            return f'{B / KB:.2f} KB'
         elif MB <= B < GB:
-            return '{0:.2f} MB'.format(B/MB)
+            return f'{B / MB:.2f} MB'
         elif GB <= B < TB:
-            return '{0:.2f} GB'.format(B/GB)
+            return f'{B / GB:.2f} GB'
         elif TB <= B:
-            return '{0:.2f} TB'.format(B/TB)
+            return f'{B / TB:.2f} TB'
 
     def append_station(self, params, stationFile=''):
         ''' Append a station to csv file
@@ -969,7 +968,7 @@ class PyRadioStations():
         self._playlist_format_changed()
         if param_len == self._playlist_version:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Appending station to playlist: "{}"'.format(stationFile))
+                logger.debug(f'Appending station to playlist: "{stationFile}"')
             try:
                 #with open(st_file, 'a') as cfgfile:
                 with open(st_file, 'a', encoding='utf-8') as cfgfile:
@@ -1168,7 +1167,7 @@ class PyRadioStations():
         table.title_justify = "left"
         table.row_styles = ['', 'plum4']
         centered_table = Align.center(table)
-        table.title = 'Playlists found in "[magenta]{}[/magenta]"'.format(self.stations_dir)
+        table.title = f'Playlists found in "[magenta]{self.stations_dir}[/magenta]"'
         table.title_justify = "left"
         table.add_column("#", justify="right")
         table.add_column("Name")
@@ -2003,7 +2002,7 @@ class PyRadioConfig(PyRadioStations):
                     The version to use when checking for updates
         '''
         ret = None
-        self.info = " PyRadio {0} ".format(version)
+        self.info = f" PyRadio {version} "
         self.user_agent_string = r'PyRadio/{}'.format(version)
         ''' git_description can be set at build time
             if so, revision will be shown along with the version
@@ -2013,7 +2012,7 @@ class PyRadioConfig(PyRadioStations):
         if git_description:
             git_info = git_description.split('-')
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('versrion = {0} - git_info = {1}'.format(version, git_info))
+                logger.debug(f'versrion = {version} - git_info = {git_info}')
             if git_info[0] == version:
                 if git_description.endswith('-git') or \
                         git_description.endswith('-sng') or \
@@ -2026,15 +2025,15 @@ class PyRadioConfig(PyRadioStations):
                 else:
                     try:
                         if git_info[1] == '0':
-                            self.info = " PyRadio {}".format(git_info[0])
+                            self.info = f" PyRadio {git_info[0]}"
                             ret = 'PyRadio built from git master branch'
                         else:
-                            self.info = " PyRadio {0}-r{1}".format(git_info[0], git_info[1])
-                            ret = "PyRadio built from git: https://github.com/coderholic/pyradio/commit/{0} (rev. {1})".format(git_info[-1], git_info[1])
+                            self.info = f" PyRadio {git_info[0]}-r{git_info[1]}"
+                            ret = f"PyRadio built from git: https://github.com/coderholic/pyradio/commit/{git_info[-1]} (rev. {git_info[1]})"
                     except:
                         pass
             else:
-                self.info = " PyRadio {}".format(version)
+                self.info = f" PyRadio {version}"
                 ret = ''
         self.current_pyradio_version = self.info.replace(' PyRadio ', '').replace(' ', '')
         # if self._distro != 'None':
@@ -2310,7 +2309,7 @@ class PyRadioConfig(PyRadioStations):
             try:
                 with open(target_path, 'r', encoding='utf-8') as file:
                     data = json.load(file)
-            except Exception as e:
+            except Exception:
                 reversed_dict = {}
 
             # Reverse the keys and values
@@ -2636,7 +2635,7 @@ class PyRadioConfig(PyRadioStations):
             ch = path.join(self.stations_dir, self.opts['default_playlist'][1] + '.csv')
             if not path.exists(ch):
                 if logger.isEnabledFor(logging.INFO):
-                    logger.info('Default playlist "({}") does not exist; reverting to "stations"'.format(self.opts['default_station'][1]))
+                    logger.info(f"Default playlist \"({self.opts['default_station'][1]}\") does not exist; reverting to \"stations\"")
                 self.opts['default_playlist'][1] = 'stations'
                 self.opts['default_station'][1] = 'False'
         # # for n in self.opts.keys():
@@ -2708,17 +2707,17 @@ class PyRadioConfig(PyRadioStations):
             remove_after_validation=True
         )
         if not ch_dir.can_be_created:
-            print('Error: Recordings directory is for a folder: "{}"'.format(self.opts['recording_dir'][1]))
+            print(f"Error: Recordings directory is for a folder: \"{self.opts['recording_dir'][1]}\"")
             sys.exit(1)
         elif not ch_dir.can_be_writable:
-            print('Error: Recordings directory is not writable: "{}"'.format(self.opts['recording_dir'][1]))
+            print(f"Error: Recordings directory is not writable: \"{self.opts['recording_dir'][1]}\"")
             sys.exit(1)
 
         if not path.exists(self.opts['recording_dir'][1]):
             try:
                 makedirs(self.opts['recording_dir'][1])
             except:
-                print('Error: Cannot create recordings directory: "{}"'.format(self.opts['recording_dir'][1]))
+                print(f"Error: Cannot create recordings directory: \"{self.opts['recording_dir'][1]}\"")
                 sys.exit(1)
         # logger.error('self.opts["recording_dir"][1] = "{}"'.format(self.opts['recording_dir'][1]))
         if path.exists(path.join(self.stations_dir, 'data', 'recordings')) and \
@@ -3001,7 +3000,7 @@ class PyRadioConfig(PyRadioStations):
             #    logger.info('* self.backup_player_params {}'.format(self.backup_player_params))
         if not from_command_line and \
                 logger.isEnabledFor(logging.DEBUG):
-            logger.debug('saved params = {}'.format(self.saved_params))
+            logger.debug(f'saved params = {self.saved_params}')
 
         # logger.info('\nsaved_params\n{}\n\n'.format(self.saved_params))
         if not self.opts['dirty_config'][1]:
@@ -3093,7 +3092,7 @@ class PyRadioConfig(PyRadioStations):
                             profiles_params_changed = True
                     self.saved_params[a_key][0] = self.saved_params[a_key].index(the_profile)
             if profiles_params_changed and logger.isEnabledFor(logging.DEBUG):
-                logger.debug('reduced saved params = {}'.format(self.saved_params))
+                logger.debug(f'reduced saved params = {self.saved_params}')
             try:
                 with open(self.player_params_file, 'w', encoding='utf-8') as jf:
                     jf.write(json.dumps(self.saved_params))
@@ -3161,7 +3160,7 @@ class PyRadioConfig(PyRadioStations):
                             user_terminals = term.read().splitlines()
                     except:
                         pass
-                    logger.error('\n\nuser terminals: {}\n\n'.format(user_terminals))
+                    logger.error(f'\n\nuser terminals: {user_terminals}\n\n')
                     if user_terminals:
                         if parent.name() in user_terminals:
                             '''
@@ -3382,7 +3381,7 @@ class PyRadioPlaylistStack():
         if len(self._p) > 1 and station_path:
             if self._p[-1][self._id['station_path']] == station_path:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('PyRadioPlaylistStack.add(): Refusing to add duplicate entry: "{}"\nUpdating selections instead'.format(station_path))
+                    logger.debug(f'PyRadioPlaylistStack.add(): Refusing to add duplicate entry: "{station_path}"\nUpdating selections instead')
                     logger.debug('                            Updating selections instead')
                 self._p[-1][3:6] = [startPos, selection, playing]
                 return
@@ -3401,7 +3400,7 @@ class PyRadioPlaylistStack():
         if member in self._id:
             return self._p[item_id][self._id[member]]
         else:
-            raise ValueError('member "{}" does not exist'.format(member))
+            raise ValueError(f'member "{member}" does not exist')
 
     def _find_history_by_id(self, a_search, it_id, start=0):
         ''' Find a history item
@@ -3509,11 +3508,11 @@ class PyRadioStationsStack():
             logger.debug('>>> Stations history')
             if self.items:
                 for n in self.items:
-                    logger.debug('   {}'.format(n))
-                logger.debug('   item was = {}'.format(self.item))
+                    logger.debug(f'   {n}')
+                logger.debug(f'   item was = {self.item}')
             else:
                 logger.debug('   No items in list')
-                logger.debug('   item = {}'.format(self.item))
+                logger.debug(f'   item = {self.item}')
 
     def add(self, a_playlist, a_station, a_station_id):
         if a_playlist and a_station:
@@ -3559,9 +3558,9 @@ class PyRadioStationsStack():
         for i in range(len(self.items) - 1, -1, -1):
             if self.items[i][0] == playlist and \
                     self.items[i][1] == orig_station:
-                logger.error('item = {}'.format(self.items[i]))
+                logger.error(f'item = {self.items[i]}')
                 self.items[i][1] = new_station
-                logger.error('item = {}'.format(self.items[i]))
+                logger.error(f'item = {self.items[i]}')
         self._show_station_history_debug()
 
     def rename_playlist(self, orig, new):
@@ -3590,7 +3589,7 @@ class PyRadioStationsStack():
         else:
             self.item -= 1
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('   item is  = {}'.format(self.item))
+                logger.debug(f'   item is  = {self.item}')
             self.execute_func(self._get(), self.play_previous)
 
     def play_next(self):
@@ -3606,7 +3605,7 @@ class PyRadioStationsStack():
         else:
             self.item += 1
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('   item is  = {}'.format(self.item))
+                logger.debug(f'   item is  = {self.item}')
             self.execute_func(self._get(), self.play_next)
 
     def restore_index(self, a_func):
@@ -3615,7 +3614,7 @@ class PyRadioStationsStack():
         else:
             self.item += 1
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('   item restored  = {}'.format(self.item))
+            logger.debug(f'   item restored  = {self.item}')
 
 class PyRadioLog():
 
@@ -3673,7 +3672,7 @@ class PyRadioLog():
                     self.log_titles = False
                     self.titles_handler = None
                     if logger.isEnabledFor(logging.ERROR):
-                        logger.error('cannot start titles log on: "{}"; directory does not exist'.format(recording_dir))
+                        logger.error(f'cannot start titles log on: "{recording_dir}"; directory does not exist')
                     return False
                 else:
                     self.titles_handler = logging.handlers.RotatingFileHandler(
@@ -3692,7 +3691,7 @@ class PyRadioLog():
                     self.log_titles = True
                     logger.critical('=== Logging started')
                     if logger.isEnabledFor(logging.INFO):
-                        logger.info('starting titles log on: "{}"'.format(recording_dir))
+                        logger.info(f'starting titles log on: "{recording_dir}"')
 
         if (not titles) and self.log_titles:
             if self.titles_handler:
@@ -3725,7 +3724,7 @@ class PyRadioLog():
                 return True
             else:
                 return False
-        except Exception as e:
+        except Exception:
             # print(f"Error creating directory: {e}")
             return False
 
@@ -3874,7 +3873,7 @@ class PyRadioBase16Themes():
 
             url = self.get_url(w_theme)
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Project theme URL: "{}"'.format(url))
+                logger.debug(f'Project theme URL: "{url}"')
 
             ret = False
             # logger.error('w_path = {}'.format(w_path))

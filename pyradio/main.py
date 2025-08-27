@@ -19,11 +19,12 @@ from .install import PyRadioUpdate, PyRadioUpdateOnWindows, PyRadioCache, \
     is_pyradio_user_installed, version_string_to_list, get_github_tag
 from .cjkwrap import cjklen, cjkslices
 from .log import Log
-from .common import StationsChanges, M_STRINGS, CsvReadWrite, list_to_m3u, parse_m3u
+from .common import StationsChanges, M_STRINGS, CsvReadWrite
 from .schedule import PyRadioScheduleList
 from .install import get_a_linux_resource_opener
 from .html_help import is_graphical_environment_running
 from .client import client
+from .m3u import list_to_m3u, parse_m3u
 
 try:
     # Windows
@@ -126,11 +127,11 @@ Please install the module (named "python-netifaces" or
             ret, lfile = cf.remove_session_lock_file()
             if cf.force_to_remove_lock_file:
                 if ret == 0:
-                    print('Lock file removed: "[red]{}[/red]"'.format(lfile))
+                    print(f'Lock file removed: "[red]{lfile}[/red]"')
                 elif ret == 1:
-                    print('Failed to remove Lock file: "[red]{}[/red]"'.format(lfile))
+                    print(f'Failed to remove Lock file: "[red]{lfile}[/red]"')
                 else:
-                    print('Lock file not found: "[red]{}[/red]"'.format(lfile))
+                    print(f'Lock file not found: "[red]{lfile}[/red]"')
             cf.remove_remote_control_server_report_file()
         except:
             pass
@@ -141,7 +142,7 @@ def __configureLogger(pyradio_config, debug=None, titles=None):
     if debug or titles:
 
         if debug and \
-                not pyradio_config.log_degub and \
+                not pyradio_config.log_debug and \
                 not pyradio_config.check_playlist:
             if platform.startswith('win'):
                 print(r'''Debug mode activated
@@ -425,11 +426,11 @@ If nothing else works, try the following command:
     if not system().lower().startswith('win'):
         if args.config_dir:
             if '..' in args.config_dir:
-                print('Error in config path: "[red]{}[/red]"\n      Please do not use "[green]..[/green]" in the path!'.format(args.config_dir))
+                print(f'Error in config path: "[red]{args.config_dir}[/red]"\n      Please do not use "[green]..[/green]" in the path!')
                 sys.exit(1)
             user_config_dir = validate_user_config_dir(args.config_dir)
             if user_config_dir is None:
-                print('Error in config path: "[red]{}[/red]"\n      This directory cannot be used by [magenta]PyRadio[/magenta]!'.format(args.config_dir))
+                print(f'Error in config path: "[red]{args.config_dir}[/red]"\n      This directory cannot be used by [magenta]PyRadio[/magenta]!')
                 sys.exit(1)
 
     with pyradio_config_file(user_config_dir, args.headless) as pyradio_config:
@@ -541,7 +542,7 @@ If nothing else works, try the following command:
                     try:
                         shutil.copy(package_file, script)
                     except Exception as e:
-                        print('Error copying file: "{}"'.format(e))
+                        print(f'Error copying file: "{e}"')
                         sys.exit(1)
                     # try:
                     #     from urllib.request import urlretrieve
@@ -656,10 +657,10 @@ If nothing else works, try the following command:
 
         if args.version:
             pyradio_config.get_pyradio_version()
-            print('PyRadio version: [green]{}[/green]'.format(pyradio_config.current_pyradio_version))
-            print('Python version: [green]{}[/green]'.format(sys.version.replace('\n', ' ').replace('\r', ' ')))
+            print(f'PyRadio version: [green]{pyradio_config.current_pyradio_version}[/green]')
+            print(f"Python version: [green]{sys.version.replace('\\n', ' ').replace('\\r', ' ')}[/green]")
             if pyradio_config.distro != 'None':
-                print('Distribution: [green]{}[/green]'.format(pyradio_config.distro))
+                print(f'Distribution: [green]{pyradio_config.distro}[/green]')
             return
 
         if args.show_themes:
@@ -736,7 +737,7 @@ If nothing else works, try the following command:
             else:
                 pyradio_config.opts['open_last_playlist'][1] = not pyradio_config.opts['open_last_playlist'][1]
                 pyradio_config.opts['dirty_config'][1] =  True
-                print('Setting auto load last playlist to: "[red]{}[/red]"'.format(pyradio_config.opts['open_last_playlist'][1]))
+                print(f"Setting auto load last playlist to: \"[red]{pyradio_config.opts['open_last_playlist'][1]}[/red]\"")
                 save_config()
             return
 
@@ -751,7 +752,7 @@ If nothing else works, try the following command:
             if pyradio_config.distro != 'None' and \
                     not platform.startswith('win'):
                 action = 'uninstall' if args.uninstall else 'update'
-                print('[magenta]PyRadio[/magenta] has been installed using your [green]distribution\'s\npackage manager[/green]. Please use that to {} it.\n'.format(action))
+                print(f'[magenta]PyRadio[/magenta] has been installed using your [green]distribution\'s\npackage manager[/green]. Please use that to {action} it.\n')
                 return
 
         if args.update:
@@ -759,8 +760,8 @@ If nothing else works, try the following command:
                 pyradio_config.get_pyradio_version()
                 last_tag = get_github_tag()
                 if last_tag:
-                    print('Released version   :  [green]{}[/green]'.format(last_tag))
-                    print('Installed version  :  [red]{}[/red]'.format(pyradio_config.current_pyradio_version))
+                    print(f'Released version   :  [green]{last_tag}[/green]')
+                    print(f'Installed version  :  [red]{pyradio_config.current_pyradio_version}[/red]')
                     if version_string_to_list(last_tag) <= version_string_to_list(pyradio_config.current_pyradio_version):
                         print('Latest version already installed. Nothing to do....')
                         return
@@ -803,16 +804,16 @@ that window to complete the update process.''')
 
         if args.show_dirs:
             print('[magenta]Directories used by PyRadio[/magenta]')
-            print('    Config dir: "[red]{}[/red]"'.format(pyradio_config.stations_dir))
-            print('      Data dir: "[red]{}[/red]"'.format(pyradio_config.data_dir))
-            print('     State dir: "[red]{}[/red]"'.format(pyradio_config.state_dir))
-            print('     Cache dir: "[red]{}[/red]"'.format(pyradio_config.cache_dir))
-            print('      Code dir: "[red]{}[/red]"'.format(path.dirname(__file__)))
-            print('Recordings dir: "[red]{}[/red]"'.format(pyradio_config.recording_dir))
+            print(f'    Config dir: "[red]{pyradio_config.stations_dir}[/red]"')
+            print(f'      Data dir: "[red]{pyradio_config.data_dir}[/red]"')
+            print(f'     State dir: "[red]{pyradio_config.state_dir}[/red]"')
+            print(f'     Cache dir: "[red]{pyradio_config.cache_dir}[/red]"')
+            print(f'      Code dir: "[red]{path.dirname(__file__)}[/red]"')
+            print(f'Recordings dir: "[red]{pyradio_config.recording_dir}[/red]"')
             return
 
         if args.show_config_dir:
-            print('[magenta]PyRadio[/magenta] config dir: "[red]{}[/red]"'.format(pyradio_config.stations_dir))
+            print(f'[magenta]PyRadio[/magenta] config dir: "[red]{pyradio_config.stations_dir}[/red]"')
             return
 
         if args.open_config_dir:
@@ -970,7 +971,7 @@ that window to complete the update process.''')
             console = Console()
 
             table = Table(show_header=True, header_style="bold magenta")
-            table.title = 'Playlist: [bold magenta]{}[/bold magenta]'.format(pyradio_config.station_title)
+            table.title = f'Playlist: [bold magenta]{pyradio_config.station_title}[/bold magenta]'
             table.title_justify = "left"
             table.row_styles = ['', 'plum4']
             centered_table = Align.center(table)
@@ -1052,7 +1053,7 @@ that window to complete the update process.''')
             elif term == 'xterm' \
                     or term.startswith('screen') \
                     or term.startswith('tmux'):
-                print('[plum4]== Warning: [green]TERM[/green] is set to [green]{}[/green]. Using "[green]xterm-256color[/green]"[/plum4]'.format(term))
+                print(f'[plum4]== Warning: [green]TERM[/green] is set to [green]{term}[/green]. Using "[green]xterm-256color[/green]"[/plum4]')
                 environ['TERM'] = 'xterm-256color'
             # this is for linux console (i.e. init 3)
             if term == 'linux':
@@ -1123,8 +1124,8 @@ that window to complete the update process.''')
                 # pyradio_config.remove_session_lock_file()
                 import subprocess
                 print('\n[bold red]Launching external player[/bold red]')
-                print(M_STRINGS['station_'] + '"[cyan]{}[/cyan]"'.format(pyradio_config.EXTERNAL_PLAYER_OPTS[0]))
-                print('Command: "[yellow]{}[/yellow]"'.format(' '.join(pyradio_config.EXTERNAL_PLAYER_OPTS[1:])))
+                print(M_STRINGS['station_'] + f'"[cyan]{pyradio_config.EXTERNAL_PLAYER_OPTS[0]}[/cyan]"')
+                print(f"Command: \"[yellow]{' '.join(pyradio_config.EXTERNAL_PLAYER_OPTS[1:])}[/yellow]\"")
                 process = subprocess.Popen(pyradio_config.EXTERNAL_PLAYER_OPTS[1:], stdout=None, stderr=None)
                 process.wait()
                 pyradio.play = 'False'
@@ -1136,7 +1137,7 @@ that window to complete the update process.''')
             pyradio.program_restart = False
             print('[blue bold]-->[/blue bold] [magenta]Check Playlist Mode[/magenta] activated!')
             if path.exists(pyradio_config.check_output_folder):
-                print('[blue bold]-->[/blue bold] Output folder:\n    "[red]{}[/red]"'.format(pyradio_config.check_output_folder))
+                print(f'[blue bold]-->[/blue bold] Output folder:\n    "[red]{pyradio_config.check_output_folder}[/red]"')
                 pyradio.handle_check_playlist_data()
             else:
                 print('[blue bold]-->[/blue bold] Operation [red bold]Cancelled![/red bold]')
@@ -1190,10 +1191,10 @@ that window to complete the update process.''')
 def read_config(pyradio_config, check_playlist):
     ret = pyradio_config.read_config(check_playlist=check_playlist)
     if ret == -1:
-        print('Error opening config: "[red]{}[/red]"'.format(pyradio_config.config_file))
+        print(f'Error opening config: "[red]{pyradio_config.config_file}[/red]"')
         sys.exit(1)
     elif ret == -2:
-        print('Config file is malformed: "[red]{}[/red]"'.format(pyradio_config.config_file))
+        print(f'Config file is malformed: "[red]{pyradio_config.config_file}[/red]"')
         sys.exit(1)
     # for n in pyradio_config.opts.keys():
     #     print('{0}: {1}'.format(n, pyradio_config.opts[n]))
@@ -1224,7 +1225,7 @@ def print_simple_error(msg):
 def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True):
     if exit_if_malformed:
         if ret == -1:
-            print('[red]Error:[/red] playlist is malformed: "[magenta]{}[/magenta]"'.format(a_selection))
+            print(f'[red]Error:[/red] playlist is malformed: "[magenta]{a_selection}[/magenta]"')
             sys.exit(1)
 
     if ret == -2:

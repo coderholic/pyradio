@@ -183,7 +183,7 @@ def describe_playlist(value):
     names = [station.name for station in list(Station)[:value + 1]]
 
     # Join the names with spaces and return the result
-    return f"Playlist has {' '.join(names)}"
+    return 'Playlist has {}'.format(' '.join(names))
 
 def remove_consecutive_empty_lines(input_list):
     cleaned_list = []

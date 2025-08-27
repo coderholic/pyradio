@@ -121,7 +121,7 @@ class CJKWrapper(textwrap.TextWrapper):
     def _wrap_chunks(self, chunks):
         lines = []
         if self.width <= 0:
-            raise ValueError("invalid width %r (must be > 0)" % self.width)
+            raise ValueError(f"invalid width {self.width!r} (must be > 0)")
         if self.width == 1 and (sum(cjklen(chunk) for chunk in chunks) >
                                 sum(len(chunk) for chunk in chunks)):
             raise ValueError("invalid width 1 (must be > 1 when CJK chars)")
@@ -193,7 +193,7 @@ def fill(text, width=70, **kwargs):
 if __name__ == '__main__':
     a='这显然不是巧合。美国敌视中国之情绪正在加深、加剧'
     print(cjklen(a) * '-')
-    print('{}'.format(a))
+    print(f'{a}')
     print('len =', len(a))
     print('cjklen =', cjklen(a))
 

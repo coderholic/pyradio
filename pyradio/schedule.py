@@ -6,11 +6,12 @@ from string import printable
 from platform import system
 import logging
 import json
-from datetime import *
-from datetime import date as ddate, datetime, timedelta
-from dateutil.relativedelta import *
-from dateutil.rrule import *
-from dateutil.parser import *
+import datetime as dt
+from dateutil.relativedelta import relativedelta
+from dateutil.rrule import rrule, \
+    SU, MO, TU, WE, TH, FR, SA, \
+    DAILY, WEEKLY, MONTHLY
+from dateutil.parser import parser
 
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
@@ -30,16 +31,16 @@ def is_date_after(a_date, b_date):
 
 def datetime_to_my_time(a_date, shorten=True):
     t = a_date.ctime().split()
-    now = datetime.now()
+    now = dt.datetime.now()
     if shorten:
         if a_date.date() == now.date():
             return 'At ' + t[-2]
         # now = now.replace(day=now.day+1)
-        now = now + timedelta(days=1)
+        now = now + dt.timedelta(days=1)
         if a_date.date() == now.date():
             return 'Tomorrow, at ' + t[-2]
 
-    if datetime.now().year == a_date.year:
+    if dt.datetime.now().year == a_date.year:
         return t[0] + ', ' + t[1] + ' ' + t[2] + ', ' + t[-2]
     else:
         return t[0] + ', ' + t[1] + ' ' + t[2] + ' ' + t[-1] +', ' + t[-2]
@@ -51,7 +52,7 @@ def format_date_to_iso8851(a_date=None):
     ''' format a datetime.date in ISO-8851 format
     '''
     if a_date is None:
-        a_date = datetime.now()
+        a_date = dt.datetime.now()
     days = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun')
     months = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
@@ -117,7 +118,7 @@ class PyRadioScheduleList():
     def _read_list(self):
         ''' read json file to self._list '''
         if self._a_list:
-            logger.error('\n\nself._list\n{}\n\n'.format(self._a_list))
+            logger.error(f'\n\nself._list\n{self._a_list}\n\n')
             self._list = self._a_list
             for i in range(len(self._list)):
                 if self._list[-1]['token'] == '':
@@ -137,7 +138,7 @@ class PyRadioScheduleList():
                     )
         for i in range(len(self._schedule_list)-1, -1, -1):
             ac = self._schedule_list[i].get_active_item()
-            now = datetime.now()
+            now = dt.datetime.now()
             if is_date_before(ac[1], now) and \
                     is_date_before(ac[2], now) and \
                     ac[7] is None:
@@ -161,7 +162,7 @@ class PyRadioScheduleList():
         out = []
         for i, n in enumerate(self._schedule_list):
             x = n.get_active_item()
-            out.append('Item {}'.format(i+1))
+            out.append(f'Item {i + 1}')
             if x[2] == 0 or x[2] == 1:
                 out.append('  Start playback on: ' + datetime_to_my_time(x[0]))
             if x[2] == 0 or x[2] == 2:
@@ -205,18 +206,18 @@ class PyRadioScheduleList():
         }
 
         start_date = in_date[1]
-        now = datetime.now()
+        now = dt.datetime.now()
         if start_date < now:
             start_date = start_date.replace(year=now.year, month=now.month, day=now.day)
         now_with_correct_time = now.replace(hour=in_date[1].hour, minute=in_date[1].minute, second=in_date[1].minute)
-        now_plus_seven_days = now_with_correct_time + timedelta(days=7)
+        now_plus_seven_days = now_with_correct_time + dt.timedelta(days=7)
         if count == -1:
             if in_date[-4] == 'day':
                 ll = list(rrule(DAILY, count=12, dtstart=start_date))
             elif in_date[-4] == 'week':
-                ll = list(rrule(WEEKLY, dtstart=in_date[0], until=now + timedelta(days=14)))[-2:]
+                ll = list(rrule(WEEKLY, dtstart=in_date[0], until=now + dt.timedelta(days=14)))[-2:]
             elif in_date[-4] == 'month':
-                ll = list(rrule(MONTHLY, dtstart=in_date[0], until=now + timedelta(days=65)))[-3:]
+                ll = list(rrule(MONTHLY, dtstart=in_date[0], until=now + dt.timedelta(days=65)))[-3:]
                 for n in range(len(ll)-1, -1,-1):
                     if ll[n] <= now_with_correct_time:
                         ll.pop(n)
@@ -296,7 +297,7 @@ class PyRadioScheduleList():
         else:
             for i, n in enumerate(self._sorted):
                 if 'player' in n:
-                    out.append('Task: {}'.format(i+1))
+                    out.append(f'Task: {i + 1}')
                     out.append('    Name: ' + n['name'])
                     out.append('    Start playback on: ' + datetime_to_my_time(n['date']))
                     out.append('    From playlist: ' + n['playlist'])
@@ -313,7 +314,7 @@ class PyRadioScheduleList():
                         tmp += ' with buffering'
                     out.append(tmp)
                 else:
-                    out.append('Task: {0} {1}'.format(i+1, self._get_linked_task(n['link'])))
+                    out.append('').format(i + 1, self._get_linked_task(n['link']))
                     out.append('     Stop playback on: ' + datetime_to_my_time(n['date']))
         return out
 
@@ -323,7 +324,7 @@ class PyRadioScheduleList():
                 if to_dict:
                     return str(i + 1)
                 else:
-                    return '  ->   linked to Task {}'.format(i + 1)
+                    return f'  ->   linked to Task {i + 1}'
         return ''
 
     def get_list_of_tasks(self):
@@ -692,13 +693,13 @@ class PyRadioScheduleItem():
             token
         )
         '''
-        today = datetime.now().replace(microsecond=0)
+        today = dt.datetime.now().replace(microsecond=0)
         if self._item['type'] in (
                 PyRadioScheduleItemType.TYPE_START_END,
                 PyRadioScheduleItemType.TYPE_START
         ):
             if self._item['start_type'] == PyRadioScheduleTimeType.TIME_ABSOLUTE:
-                start_date = datetime(
+                start_date = dt.datetime(
                     year=self._item['start_date'][0],
                     month=self._item['start_date'][1],
                     day=self._item['start_date'][2],
@@ -716,11 +717,11 @@ class PyRadioScheduleItem():
                 PyRadioScheduleItemType.TYPE_END
         ):
             if self._item['end_type'] == PyRadioScheduleTimeType.TIME_ABSOLUTE:
-                end_date = datetime(
+                end_date = dt.datetime(
                     self._item['end_date'][0],
                     self._item['end_date'][1],
                     self._item['end_date'][2]
-                ) + timedelta(
+                ) + dt.timedelta(
                     hours=self._item['end_time'][0],
                     minutes=self._item['end_time'][1],
                     seconds=self._item['end_time'][2],
@@ -730,7 +731,7 @@ class PyRadioScheduleItem():
                     use_date = today
                 else:
                     use_date = start_date
-                end_date = use_date + timedelta(
+                end_date = use_date + dt.timedelta(
                     hours=self._item['end_duration'][0],
                     minutes=self._item['end_duration'][1],
                     seconds=self._item['end_duration'][2]
@@ -757,12 +758,12 @@ class PyRadioScheduleItem():
 
     def _get_today(self):
         ''' get today as pyradio date and time '''
-        today = datetime.now()
+        today = dt.datetime.now()
         return [today.year, today.month, today.day], \
                 [today.hour, today.minute, 0, 0]
 
     def _get_today_plus_one_hour(self):
-        today = datetime.now() + relativedelta(hours=+1)
+        today = dt.datetime.now() + relativedelta(hours=+1)
         return [today.year, today.month, today.day], \
             [today.hour, today.minute, 0, 0]
 
@@ -804,9 +805,9 @@ class PyRadioTime():
 
     def __str__(self):
         if self.date is None:
-            self.date = date.today()
+            self.date = dt.date.today()
         if self.time is None:
-            self.time = PyRadioTime.string_to_pyradio_time(datetime.now().strftime('%H:%M:%S'))
+            self.time = PyRadioTime.string_to_pyradio_time(dt.datetime.now().strftime('%H:%M:%S'))
         return self.date.strftime('%Y-%m-%d') + ' ' + PyRadioTime.pyradio_time_to_string(self.time)
 
     @classmethod
@@ -827,9 +828,9 @@ class PyRadioTime():
 
     def set_date(self, a_date_string):
         if a_date_string:
-            self.date = ddate.fromisoformat(a_date_string)
+            self.date = dt.date.fromisoformat(a_date_string)
         else:
-            self.date = ddate.today()
+            self.date = dt.date.today()
 
     def set_time(self, a_time_string):
         valid = True
@@ -874,7 +875,7 @@ class PyRadioTime():
                     valid = False
 
         if not valid:
-            a_date_time = datetime.now()
+            a_date_time = dt.datetime.now()
             hour = a_date_time.hour
             minute = a_date_time.minute
             seconds = a_date_time.second
@@ -946,7 +947,7 @@ class PyRadioTime():
                     valid = False
 
         if not valid:
-            a_date_time = datetime.now()
+            a_date_time = dt.datetime.now()
             hour = a_date_time.hour
             minute = a_date_time.minute
             seconds = a_date_time.second
@@ -955,7 +956,7 @@ class PyRadioTime():
 
     @classmethod
     def pyradio_time_to_string(cls, a_time):
-        a_date = datetime(2022, 1, 1) + timedelta(
+        a_date = dt.datetime(2022, 1, 1) + dt.timedelta(
             hours=a_time[0],
             minutes=a_time[1],
             seconds=a_time[2]
@@ -990,21 +991,21 @@ class PyRadioTime():
     @classmethod
     def pyradio_time_to_timedelta(cls, a_time):
         if a_time[-1] == PyRadioTime.NO_AM_PM_FORMAT:
-            return timedelta(
+            return dt.timedelta(
                 hours=a_time[0],
                 minutes=a_time[1],
                 seconds=a_time[2]
             )
 
         elif a_time[-1] == PyRadioTime.AM_FORMAT:
-            return timedelta(
+            return dt.timedelta(
                 hours=a_time[0] if a_time[0] < 12 else a_time[0] - 12,
                 minutes=a_time[1],
                 seconds=a_time[2]
             )
 
         elif a_time[-1] == PyRadioTime.PM_FORMAT:
-            return timedelta(
+            return dt.timedelta(
                 hours=a_time[0] + 12,
                 minutes=a_time[1],
                 seconds=a_time[2]
@@ -1022,7 +1023,7 @@ class PyRadioTime():
         else:
             a_time = t_time
         if t_date is None:
-            a_date = datetime.now()
+            a_date = dt.datetime.now()
         else:
             a_date = t_date
         b_date= a_date.replace(
@@ -1074,7 +1075,7 @@ class PyRadioTime():
 
 
 if __name__ == '__main__':
-    # print(format_date_to_iso8851(datetime.now()))
+    # print(format_date_to_iso8851(dt.datetime.now()))
 
     # print('\n\n============')
     # an_item = {
@@ -1184,7 +1185,7 @@ if __name__ == '__main__':
     t.time = [11, 15, 34, 1]
     print(t)
 
-    print('\n\n{}'.format(datetime_to_my_time(datetime.now())))
+    print(f'\n\n{datetime_to_my_time(dt.datetime.now())}')
 
-    print('\n\n{}'.format(datetime_to_my_time(datetime.now() + timedelta(days=1))))
+    print(f'\n\n{datetime_to_my_time(dt.datetime.now() + dt.timedelta(days=1))}')
 

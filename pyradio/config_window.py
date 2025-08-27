@@ -13,15 +13,15 @@ from sys import platform
 from collections import OrderedDict
 import json
 
-from .common import *
+from .common import CsvReadWrite, Station
 from .window_stack import Window_Stack_Constants
 from .cjkwrap import cjklen
-from .encodings import *
-from .themes import *
+from .encodings import get_encodings
+from .themes import PyRadioTheme
 from .server import IPsWithNumbers
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesMenu
 from .client import PyRadioClient
-from .keyboard import kbkey, kbkey_orig, ctrl_code_to_string, is_valid_char, is_invalid_key, is_ctrl_key, set_kbkey, conflicts, read_keyboard_shortcuts, check_localized, LetterDisplay, get_kb_letter, to_str, add_l10n_to_functions_dict, remove_l10n_from_global_functions
+from .keyboard import kbkey, kbkey_orig, ctrl_code_to_string, is_valid_char, is_invalid_key, is_ctrl_key, conflicts, read_keyboard_shortcuts, check_localized, LetterDisplay, get_kb_letter, to_str, add_l10n_to_functions_dict, remove_l10n_from_global_functions
 from .log import TIME_FORMATS
 
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -1852,8 +1852,8 @@ class ExtraParameters():
             'vlc': [0, 0, 0]
         }
         self._items_dict = {
-            'mpv': [],
-            'mplayer': [],
+            'mpv': ['profile:pyradio'],
+            'mplayer': ['profile:pyradio'],
             'vlc': []
         }
         logger.exception('\n\n1 Extraparameters.reset\nself._items.dict\n{}\n\n'.format(self._items_dict))
@@ -1912,7 +1912,10 @@ class ExtraParameters():
         # logger.error('DE working params = {}'.format(self._working_params))
         for a_param_set in self._profiles_from_files:
             for a_param in self._profiles_from_files[a_param_set]:
-                self._items_dict[a_param_set].append(a_param)
+                if a_param not in self._items_dict[a_param_set]:
+                    self._items_dict[a_param_set].append(a_param)
+            if self._items_dict[a_param_set][0] in self._items_dict[a_param_set][1:]:
+                self._items_dict[a_param_set]  = self._items_dict[a_param_set][1:]
 
     def _list_to_dict(self):
         ''' convert self._items_dict to self._working_params '''
@@ -4120,7 +4123,7 @@ class PyRadioKeyboardConfig():
 
     def _save_keyboard_config(self):
         out_dict = {}
-        for i, n in enumerate(self._list):
+        for n in self._list:
             if n[1] == n[2] == n[3]:
                 continue
             if n[1] == n[3]:
@@ -4135,7 +4138,6 @@ class PyRadioKeyboardConfig():
                 out_dict[n[0]] = n[2]
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(f'{out_dict = }')
-        import json
         try:
             with open(self._cnf.keyboard_file, 'w', encoding='utf-8') as json_file:
                 json.dump(out_dict, json_file)
@@ -4629,7 +4631,8 @@ class PyRadioLocalized():
 
         self._print_title()
         menu_height = 9
-        parent_Y, parent_X = self._parent.getmaxyx()
+        # pylint change
+        # parent_Y, parent_X = self._parent.getmaxyx()
         if self._widgets[0] is None:
             items=[x[0] for x in self._files]
             if logger.isEnabledFor(logging.DEBUG):

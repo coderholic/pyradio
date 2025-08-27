@@ -6,7 +6,7 @@ import curses.ascii
 import threading
 from os.path import basename
 from sys import exit
-from datetime import date, time, datetime, timedelta
+from datetime import datetime
 from collections import deque
 try:
     from dateutil.relativedelta import relativedelta
@@ -36,7 +36,6 @@ python -m pip install --user dateutil
 
 ''')
     exit(1)
-import logging
 from sys import platform
 try:
     from .cjkwrap import is_wide, cjklen, cjkrjust, cjkcenter, cjkljust, cjkslices
@@ -985,7 +984,7 @@ class SimpleCursesTime(SimpleCursesWidget):
             else:
                 self._win.addstr(
                     self._Y, self._X,
-                    '{0}:{1}:{2}'.format(h, m ,s),
+                    f'{h}:{m}:{s}',
                     self.color
                 )
         else:
@@ -1027,7 +1026,7 @@ class SimpleCursesTime(SimpleCursesWidget):
                 if self._time_format_changed_func:
                     self._time_format_changed_func()
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('time format changed to: {}'.format(self.time_format))
+                    logger.debug(f'time format changed to: {self.time_format}')
 
     def _calculate_token(self, chbox_id):
         if self._show_am_pm:
@@ -1699,7 +1698,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                     col
                 )
             except:
-                logger.error('error displaying item {}'.format(i))
+                logger.error(f'error displaying item {i}')
 
         # for i, n in enumerate(self._coords):
         #     logger.error('Item {}: X = {}, Y = {}'.format(i, *n))
@@ -1739,7 +1738,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                 ) or \
                 check_localized(char, (kbkey['l'], kbkey['pause'])):
             self.active = self.selection
-            logger.error('DE active = {}'.format(self.active))
+            logger.error(f'DE active = {self.active}')
             ''' Do not refresh the widget, it will
                 probably be hidden next
             '''
@@ -1751,7 +1750,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                 kbkey['pause'], ord('\n'), ord('\r'), curses.KEY_ENTER
                 ) or check_localized(char, (kbkey['pause'], )):
             self.active = self.selection
-            logger.error('DE active = {}'.format(self.active))
+            logger.error(f'DE active = {self.active}')
             self.show()
             return 0
 
@@ -3994,7 +3993,7 @@ class SimpleCursesLineEdit():
             if not self.bracket:
                 self._max_chars_to_display += 1
         if self.log is not None:
-            self.log('string_len = {}\n'.format(self._max_chars_to_display))
+            self.log(f'string_len = {self._max_chars_to_display}\n')
         # logger.error('DE 2 width = {0}, max_chars_to_display = {1}'.format(width, self._max_chars_to_display))
         return
 
@@ -4061,7 +4060,7 @@ class SimpleCursesLineEdit():
             try:
                 self._edit_win.addstr(0, 0, self._displayed_string, active_edit_color)
             except Exception as e:
-                logger.error('\n\nerror : "{}", for string: "{}"\n\n'.format(e, self._displayed_string))
+                logger.error(f'\n\nerror : "{e}", for string: "{self._displayed_string}"\n\n')
 
         ''' reset position '''
         if self._reset_position:
@@ -4071,8 +4070,8 @@ class SimpleCursesLineEdit():
         if self.log is not None:
             self.log('first={0}, curs={1}, dcurs={2}\n'.format(
                 self._first, self._curs_pos, self._disp_curs_pos))
-            self.log('     full string: "{}"\n'.format(self.string))
-            self.log('displayed string: "{}"\n'.format(self._displayed_string))
+            self.log(f'     full string: "{self.string}\"\n')
+            self.log(f'displayed string: "{self._displayed_string}\"\n')
 
         if self.focused:
             ''' enable this to get info on the function '''
@@ -4081,7 +4080,7 @@ class SimpleCursesLineEdit():
             try:
                 self._edit_win.chgat(0, self._disp_curs_pos, 1, self.cursor_color)
             except curses.error:
-                logger.error('\n\nERROR: self._disp_curs_pos = {}\n\n'.format(self._disp_curs_pos))
+                logger.error(f'\n\nERROR: self._disp_curs_pos = {self._disp_curs_pos}\n\n')
 
         self._edit_win.refresh()
         self._showed = True
@@ -4109,11 +4108,11 @@ class SimpleCursesLineEdit():
                 if key == 'new_y':
                     self.y = value
                     if self.log is not None:
-                        self.log('self.y = {}\n'.format(self.y))
+                        self.log(f'self.y = {self.y}\n')
                 elif key == 'new_x':
                     self.x = value
                     if self.log is not None:
-                        self.log('self.x = {}\n'.format(self.x))
+                        self.log(f'self.x = {self.x}\n')
                 elif key == 'opening':
                     opening = value
         self._prepare_to_show()
@@ -4227,7 +4226,7 @@ class SimpleCursesLineEdit():
                             if self._cjk:
                                 self._cjk = False
                                 if logger.isEnabledFor(logging.DEBUG):
-                                    logger.debug('CJK is {}'.format(self._cjk))
+                                    logger.debug(f'CJK is {self._cjk}')
                         else:
                             self.string = self.string[:-1]
                             if len(self.string) <= self._max_chars_to_display:
@@ -4453,7 +4452,7 @@ class SimpleCursesLineEdit():
         if not self._focused:
             return 1
         if self.log is not None:
-            self.log('char = {}\n'.format(char))
+            self.log(f'{char = }\n')
 
         if char in self._local_functions:
             self._backslash_pressed = False
@@ -4577,7 +4576,7 @@ class SimpleCursesLineEdit():
             self._edit_win.nodelay(True)
             char = self._edit_win.getch()
             if self.log is not None:
-                self.log('   *** char = {}\n'.format(char))
+                self.log(f'   *** char = {char}\n')
             self._edit_win.nodelay(False)
             if not self._paste_mode_always_on:
                 if self._use_paste_mode and self._paste_mode:
@@ -4598,7 +4597,7 @@ class SimpleCursesLineEdit():
                 return -1
             else:
                 if self.log is not None:
-                    self.log('   *** char = {}\n'.format(char))
+                    self.log(f'   *** char = {char}\n')
                 if char in (ord('d'), ):
                     ''' A-D, clear to end of line '''
                     if self.string:
@@ -5027,7 +5026,8 @@ class SimpleCursesLineEditHistory():
             self._active_history_index = len(self._history)
         except:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('search history failed to be read from "{}"'.format(basename(file_to_read)))
+                tmp = basename(file_to_read)
+                logger.debug(f'search history failed to be read from "{tmp}"')
 
     def save_search_history(self, a_file=None):
         if self._history_file_is_locked:
@@ -5047,11 +5047,13 @@ class SimpleCursesLineEditHistory():
                 with open(file_to_write, 'w', encoding='utf-8') as f:
                     f.write('\n'.join(history) + '\n')
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('search history saved to "{}"'.format(basename(file_to_write)))
+                    tmp = basename(file_to_write)
+                    logger.debug(f'search history saved to "{tmp}"')
                 return True
             except:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('search history failed to be saved to "{}"'.format(basename(file_to_write)))
+                    tmp = basename(file_to_write)
+                    logger.debug(f'search history failed to be saved to "{tmp}"')
                 return False
         return False
 
@@ -5136,6 +5138,12 @@ class SimpleCursesBoolean(SimpleCursesCounter):
         string='{0}', value=False,
         full_selection=None
     ):
+        super().__init__(
+            Y =Y, X =X, window=window, color=color,
+            color_focused=color_focused,
+            color_not_focused=color_not_focused,
+            color_disabled=color_disabled
+        )
         self._Y = Y
         self._X = X
         self._win = self._parent = window

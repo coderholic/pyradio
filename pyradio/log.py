@@ -12,7 +12,7 @@ import datetime
 import logging
 import threading
 import subprocess
-from .common import player_start_stop_token, STATES, M_STRINGS
+from .common import STATES, M_STRINGS
 from .cjkwrap import cjklen
 
 locale.setlocale(locale.LC_ALL, "")
@@ -383,8 +383,8 @@ class Log():
             if self.timer.time_format == -1:
                 logger.debug('timer is disabled! Not starting!')
             else:
-                logger.debug('timer\'s new time format = {} ({})'.format(self.timer.time_format, TIME_FORMATS[int(self.timer.time_format)]))
-                logger.debug('timer\'s new update functions = {}'.format(self.timer.update_functions))
+                logger.debug(f'timer\'s new time format = {self.timer.time_format} ({TIME_FORMATS[int(self.timer.time_format)]})')
+                logger.debug(f'timer\'s new update functions = {self.timer.update_functions}')
         self.timer.start()
 
     def stop_timer(self):
@@ -412,7 +412,7 @@ class Log():
             active_player_id = self._active_player_id()
 
             if msg:
-                logger.error('****** self._current_msg_id = {}: "{}" with msg_id = {}'.format(self._current_msg_id, msg, msg_id))
+                logger.error(f'****** self._current_msg_id = {self._current_msg_id}: "{msg}" with msg_id = {msg_id}')
             if msg_id == STATES.INIT:
                 self._stop_using_buffering_msg = False
             if msg and msg_id == STATES.VOLUME and M_STRINGS['buffering_'] in msg:
@@ -509,7 +509,7 @@ class Log():
 
                 ''' start normal execution '''
                 if msg:
-                    logger.error('\nself.msg\n{}\nmsg\n{}'.format(self.msg, msg))
+                    logger.error(f'\nself.msg\n{self.msg}\nmsg\n{msg}')
                 if msg and self._player_stopped:
                     ''' Refuse to print anything if "Playback stopped"
                         was the last message printed
@@ -519,7 +519,7 @@ class Log():
                             STATES.PLAYER_ACTIVATED, STATES.BUFFER, STATES.BUFF_MSG
                     ):
                         if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('Refusing to show message; player is stopped: "{}"'.format(msg))
+                            logger.debug(f'Refusing to show message; player is stopped: "{msg}"')
                         msg = None
                     # return
                 if self.asked_to_stop:
@@ -583,7 +583,7 @@ class Log():
                                 d_msg = fix_chars(self.msg.encode('utf-8', 'replace').strip()[0: self.width])
                             else:
                                 d_msg = fix_chars(self.msg.encode('utf-8', 'replace').strip()[0: self.width - len(self._the_time) - 3])
-                            logger.error('printing "{}" at {}'.format(d_msg, self._x_start))
+                            logger.error(f'printing "{d_msg}" at {self._x_start}')
                             self.cursesScreen.addstr(0, self._x_start, d_msg)
                         except:
                             pass
@@ -636,7 +636,7 @@ class Log():
                     if self._show_status_updates:
                         if logger.isEnabledFor(logging.DEBUG):
                             try:
-                                logger.debug('Status: "{}"'.format(self.msg))
+                                logger.debug(f'Status: "{self.msg}"')
                             except:
                                 pass
 
@@ -666,7 +666,7 @@ class Log():
                     self._active_width -= cjklen(d_msg)
                 if self._show_status_updates:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Suffix: {}'.format(self.suffix))
+                        logger.debug(f'Suffix: {self.suffix}')
 
                 ''' display counter '''
                 if self.counter:
@@ -686,7 +686,7 @@ class Log():
                         self.display_help_message = False
                 if self._show_status_updates:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Counter: {}'.format(self.counter))
+                        logger.debug(f'Counter: {self.counter}')
 
                 if self.asked_to_stop:
                     self.asked_to_stop = False
@@ -770,7 +770,7 @@ class Log():
                 if title:
                     title = title.replace(M_STRINGS['init_'], M_STRINGS['connecting_'])
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Sending Web Title: "{}"'.format(title))
+                        logger.debug(f'Sending Web Title: "{title}"')
                     server.send_song_title(title)
                     if old_song_title:
                         with self._song_title_lock:
@@ -841,7 +841,7 @@ class Log():
 
                             # toast.show()
                             if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug('Sending Desktop Notification: [{0}, {1}, {2}]'.format(d_title, d_msg, self.icon_path))
+                                logger.debug(f'Sending Desktop Notification: [{d_title}, {d_msg}, {self.icon_path}]')
                             self._desktop_notification_message = d_msg
                             self._desktop_notification_title = d_title
                             try:
@@ -880,7 +880,7 @@ class Log():
                         if self._cnf._current_notification_message != d_msg:
                             notification_command = self._repeat_notification._populate_notification_command(self._cnf._notification_command, d_title, d_msg)
                             if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug('Sending Desktop Notification: {}'.format(notification_command))
+                                logger.debug(f'Sending Desktop Notification: {notification_command}')
                             self._desktop_notification_message = d_msg
                             self._desktop_notification_title = d_title
                             try:
@@ -911,7 +911,7 @@ class Log():
                                     )
                                     self._desktop_notification_thread.start()
                                 else:
-                                    logger.error('Not starting Desktop Notification Thread!!! thread = {0}, enable_notifications = {1}'.format(self._desktop_notification_thread, self._enable_notifications))
+                                    logger.error(f'Not starting Desktop Notification Thread!!! thread = {self._desktop_notification_thread}, enable_notifications = {self._enable_notifications}')
                             else:
                                 self._repeat_notification.reset_timer()
 
@@ -922,7 +922,7 @@ class Log():
             if self._last[1] == d_msg:
                 ''' already shown this title '''
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('already shown this title: "{0}" - {1}'.format(d_msg, self._last))
+                    logger.debug(f'already shown this title: "{d_msg}" - {self._last}')
                 self._desktop_notification_message = d_msg
                 return None, None
             self._last[1] = d_msg
@@ -939,7 +939,7 @@ class Log():
             if self._last[0] == d_msg:
                 ''' already shown song title '''
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('already shown station name: "{0}" - {1}'.format(d_msg, self._last))
+                    logger.debug(f'already shown station name: "{d_msg}" - {self._last}')
                 return None, None
             self._last[0] = d_msg
         elif msg.startswith(M_STRINGS['muted']):
@@ -982,11 +982,11 @@ class Log():
                 if d_msg.startswith(M_STRINGS['init_']):
                     self._started_station_name = d_msg[len(M_STRINGS['init_']):]
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Early station name (initialization): "{}"'.format(self._started_station_name))
+                        logger.debug(f'Early station name (initialization): "{self._started_station_name}"')
                 if d_msg.startswith(M_STRINGS['station_']) and M_STRINGS['station-open'] in d_msg:
                     self._started_station_name = d_msg[len(M_STRINGS['station_']):].split(M_STRINGS['station-open'])[0]
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Early station name (station): "{}"'.format(self._started_station_name))
+                        logger.debug(f'Early station name (station): "{self._started_station_name}"')
 
                 if d_msg.startswith(M_STRINGS['title_']):
                     ''' print Early station name '''
@@ -1182,7 +1182,7 @@ class RepeatDesktopNotification():
             self._start_time = value
             end_time = value + datetime.timedelta(seconds=self.timeout())
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Setting repetative Desktop Notification timer to: {}'.format(end_time))
+                logger.debug(f'Setting repetative Desktop Notification timer to: {end_time}')
 
     def reset_timer(self):
         self.start_time = datetime.datetime.now()
@@ -1230,7 +1230,7 @@ class RepeatDesktopNotification():
             d_msg = m_msg()
             if platform.lower().startswith('win'):
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Sending repetative Desktop Notification: [{0}, {1}, {2}]'.format(d_title, d_msg, self.icon_path))
+                    logger.debug(f'Sending repetative Desktop Notification: [{d_title}, {d_msg}, {self.icon_path}]')
                 try:
                     with a_lock:
                         toaster.show_toast(
@@ -1244,7 +1244,7 @@ class RepeatDesktopNotification():
             else:
                 notification_command = self._populate_notification_command(a_notification_command, d_title, d_msg)
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Sending repetative Desktop Notification: {}'.format(notification_command))
+                    logger.debug(f'Sending repetative Desktop Notification: {notification_command}')
                 try:
                     with a_lock:
                         subprocess.Popen(

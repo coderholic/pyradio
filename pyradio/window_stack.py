@@ -2,7 +2,6 @@
 import locale
 from collections import deque
 import logging
-import locale
 locale.setlocale(locale.LC_ALL, "")
 logger = logging.getLogger(__name__)
 
@@ -284,7 +283,7 @@ class Window_Stack(Window_Stack_Constants):
                         list(self._dq)))
             else:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('MODE: Refusing to add duplicate {0} Remaining at {1}'.format(tmp, list(self._dq)))
+                    logger.debug(f'MODE: Refusing to add duplicate {tmp} Remaining at {list(self._dq)}')
 
     @property
     def window_mode(self):
@@ -302,7 +301,7 @@ class Window_Stack(Window_Stack_Constants):
                     list(self._dq)))
         else:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('WIN MODE: Refusing to add duplicate {0} Remaining at {1}'.format(tmp, list(self._dq)))
+                logger.debug(f'WIN MODE: Refusing to add duplicate {tmp} Remaining at {list(self._dq)}')
 
     @property
     def previous_operation_mode(self):
@@ -351,7 +350,7 @@ class Window_Stack(Window_Stack_Constants):
         if len(self._dq) > 1:
             tmp = self._dq.pop()
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('CLOSE MODE: {0} -> {1} - {2}'.format(self.mode_name(tmp[0]), self.mode_name(self._dq[-1][0]), list(self._dq)))
+                logger.debug(f'CLOSE MODE: {self.mode_name(tmp[0])} -> {self.mode_name(self._dq[-1][0])} - {list(self._dq)}')
         else:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('CLOSE MODE: Refusing to clear que...')

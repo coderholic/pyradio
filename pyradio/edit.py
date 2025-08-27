@@ -19,7 +19,7 @@ from .cjkwrap import cjkslices
 from .xdg import CheckDir
 from .html_help import HtmlHelp
 from .keyboard import kbkey, kb2str, kb2chr, check_localized
-from .common import M_STRINGS, Station, seconds_to_KB_128, seconds_to_KB_192, seconds_to_KB_320
+from .common import M_STRINGS, Station
 from .cjkwrap import cjklen
 
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -242,17 +242,17 @@ class PyRadioSearch(SimpleCursesLineEdit):
             for n in range(start, len(a_list)):
                 if active_search_term.lower() in self._get_string(a_list[n]):
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('forward search term "{0}" found at {1}'.format(self.string, n))
+                        logger.debug(f'forward search term "{self.string}" found at {n}')
                     return n
             """ if not found start from list top """
             for n in range(0, start):
                 if active_search_term.lower() in self._get_string(a_list[n]):
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('forward search term "{0}" found at {1}'.format(self.string, n))
+                        logger.debug(f'forward search term "{self.string}" found at {n}')
                     return n
             """ if not found return None """
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('forward search term "{}" not found'.format(self.string))
+                logger.debug(f'forward search term "{self.string}" not found')
             return None
         else:
             return None
@@ -277,17 +277,17 @@ class PyRadioSearch(SimpleCursesLineEdit):
             for n in range(start, -1, -1):
                 if active_search_term.lower() in self._get_string(a_list[n]):
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('backward search term "{0}" found at {1}'.format(self.string, n))
+                        logger.debug(f'backward search term "{self.string}" found at {n}')
                     return n
             """ if not found start from list end """
             for n in range(len(a_list) - 1, start, -1):
                 if active_search_term.lower() in self._get_string(a_list[n]):
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('backward search term "{0}" found at {1}'.format(self.string, n))
+                        logger.debug(f'backward search term "{self.string}" found at {n}')
                     return n
             """ if not found return None """
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('backward search term "{}" not found'.format(self.string))
+                logger.debug(f'backward search term "{self.string}" not found')
             return None
         else:
             return None
@@ -536,7 +536,7 @@ class PyRadioEditor():
             self._win.addstr('   <', curses.color_pair(col))
             self._win.addstr(headers[1], curses.color_pair(4))
             self._win.addstr('>', curses.color_pair(col))
-            self._win.addstr('   {} '.format(headers[2]), curses.color_pair(4))
+            self._win.addstr(f'   {headers[2]} ', curses.color_pair(4))
         elif self._focus == 3:
             self._win.addstr(4, x, ' ' + headers[0] + '    ' + headers[1] + '   ', curses.color_pair(4))
             self._win.addstr('<', curses.color_pair(col))
@@ -547,7 +547,7 @@ class PyRadioEditor():
             self._win.addstr(4, x, '<', curses.color_pair(col))
             self._win.addstr(headers[0], curses.color_pair(4))
             self._win.addstr('>', curses.color_pair(col))
-            self._win.addstr('   {}    {} '.format(headers[1], headers[2]), curses.color_pair(4))
+            self._win.addstr(f'   {headers[1]}    {headers[2]} ', curses.color_pair(4))
 
     def show(self, item=None):
         # if 3 < self._focus <= 10 and \
@@ -877,7 +877,7 @@ class PyRadioEditor():
             except:
                 pass
 
-        title = '── {}Station Editor '.format(token)
+        title = f'── {token}Station Editor '
         x = int((self.maxX - len(title)) / 2)
         try:
             self._win.addstr(0, x, title, curses.color_pair(4))
@@ -2202,12 +2202,12 @@ class PyRadioRenameFile():
 
     def __del__(self):
         try:
-            logger.error('DE deleting {}'.format(self._win))
+            logger.error(f'DE deleting {self._win}')
             del self._win
             self._win = None
             for x in self._widgets:
                 if x is not None:
-                    logger.error('DE deleting {}'.format(x))
+                    logger.error(f'DE deleting {x}')
                     del x
                     x = None
         except:
@@ -2549,7 +2549,7 @@ class PyRadioRenameFile():
         else:
             focus = self.focus - 1
             focus = self._widgets[focus].id
-            logger.error('pp focus = {}'.format(focus))
+            logger.error(f'pp focus = {focus}')
             while not self._widgets[focus].enabled:
                 focus -= 1
                 # logger.error('pp+ focus = {}'.format(focus))
@@ -2730,7 +2730,7 @@ class PyRadioBuffering():
         self.maxX = 0
         self._win = None
         self._cache_data  = None
-        logger.error('\n\nbuffering = {}\n\n'.format(buffering))
+        logger.error(f'\n\nbuffering = {buffering}\n\n')
         self._buffering = buffering
         if '@' in buffering:
             self.buffering_value, self.bitrate_value = buffering.split('@')
@@ -2795,7 +2795,7 @@ class PyRadioBuffering():
 
             # show content
             self._win.addstr(2, 4, self._text, curses.color_pair(10))
-            self._win.addstr('{}'.format(self.buffering_value), curses.color_pair(11))
+            self._win.addstr(f'{self.buffering_value}', curses.color_pair(11))
 
             # show help
             try:
@@ -2877,7 +2877,7 @@ class PyRadioBuffering():
                     check_localized(char, (kbkey['no_buffer'], )):
                 self.buffering_value = '0'
 
-            self._win.addstr(2, len(self._text) + 4, '{:<7}'.format(self.buffering_value), curses.color_pair(11))
+            self._win.addstr(2, len(self._text) + 4, f'{self.buffering_value:<7}', curses.color_pair(11))
             self._win.refresh()
         return 0, None
 
@@ -2959,7 +2959,7 @@ class PyRadioConnectionType():
 
             # show content
             self._win.addstr(2, 4, self._text, curses.color_pair(10))
-            self._win.addstr('{}'.format(self.connection_type), curses.color_pair(11))
+            self._win.addstr(f'{self.connection_type}', curses.color_pair(11))
 
             # show help
             try:
@@ -3016,7 +3016,7 @@ class PyRadioConnectionType():
                       curses.KEY_RIGHT, curses.KEY_UP, curses.KEY_DOWN) or \
                     check_localized(char, (kbkey['j'], kbkey['k'], kbkey['l'], kbkey['pause'])):
             self.connection_type = not self.connection_type
-            self._win.addstr(2, len(self._text) + 3, '{}'.format(self.connection_type), curses.color_pair(3))
+            self._win.addstr(2, len(self._text) + 3, f'{self.connection_type}', curses.color_pair(3))
             self._win.refresh()
 
         return 0

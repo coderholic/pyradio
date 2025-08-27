@@ -396,12 +396,12 @@ def get_github_tag(do_not_exit=False):
 def get_next_release():
     ''' not used '''
     r = get_github_long_description()
-    print('Description: {}'.format(r))
+    print(f'Description: {r}')
 
     sp = r[1].split('-')
-    print('sp = {}'.format(sp))
+    print(f'sp = {sp}')
     x = int(sp[1]) + 1
-    return sp[0] + '-{}'.format(x)
+    return sp[0] + f'-{x}'
 
 def get_devel_version():
     long_descpr = get_github_long_description(do_not_exit=True)
@@ -433,7 +433,6 @@ def windows_put_devel_version():
 def WindowExists(title):
     ''' fixing #146  '''
     try:
-        import win32api
         import win32ui
     except:
         pass
@@ -1048,13 +1047,13 @@ class PyRadioUpdate():
                 self._dir = os.path.join('/tmp', 'tmp-pyradio')
             else:
                 self._dir = os.path.join(os.path.expanduser('~'), 'tmp-pyradio')
-        print('Using directory: "{}"'.format(self._dir))
+        print(f'Using directory: "{self._dir}"')
 
         ''' create tmp directory '''
         self._delete_dir_limit = 0
         self._mkdir(self._dir, self._empty_dir, self._permission_error)
         if not os.path.isdir(self._dir):
-            print('Error: Cannot create temp directory: "{}"'.format(self._dir))
+            print(f'Error: Cannot create temp directory: "{self._dir}"')
             sys.exit(1)
 
         ''' download pyradio '''
@@ -1172,7 +1171,7 @@ class PyRadioUpdate():
 
     def _empty_dir(self, name=None):
         ddir = self._dir if name is None else name
-        print('Old "{}" found. Deleting...'.format(ddir))
+        print(f'Old "{ddir}" found. Deleting...')
         self._delete_dir_limit += 1
         if self._delete_dir_limit > 2:
             print('\n\nError: Cannot delete directory: "' + ddir  +  '"')
@@ -1182,7 +1181,7 @@ class PyRadioUpdate():
             r_dir = os.path.join(ddir, 'pyradio-source')
             shutil.rmtree(r_dir, ignore_errors=True)
             if os.path.exists(r_dir):
-                print('[red]Error:[/red] Cannot remove "{}"'.format(r_dir))
+                print(f'[red]Error:[/red] Cannot remove "{r_dir}"')
                 print('       Please close all open programs and try again...')
                 sys.exit(1)
         else:
@@ -1190,7 +1189,7 @@ class PyRadioUpdate():
             self._mkdir(ddir, self._empty_dir, self._permission_error)
 
     def _permission_error(self):
-        print('Error: You don\'t have permission to create: "{}"\n'.format(self._dir))
+        print(f'Error: You don\'t have permission to create: "{self._dir}\"\n')
         sys.exit(1)
 
     def _clean_up(self):
@@ -1202,15 +1201,15 @@ class PyRadioUpdate():
         if os.geteuid() != 0:
             msg = "[sudo] password for %u: "
             try:
-                ret = subprocess.check_call("sudo -v -p '%s'" % msg, shell=True)
+                ret = subprocess.check_call(f"sudo -v -p '{msg}'", shell=True)
                 return ret
             except subprocess.CalledProcessError:
                 print('\nError: You must be root to execute this script...\n')
                 sys.exit(1)
 
     def _download_file(self, url, filename):
-        print('  url: "{}"'.format(url))
-        print('  filename: "{}"'.format(filename))
+        print(f'  url: "{url}"')
+        print(f'  filename: "{filename}"')
         if os.path.exists(filename) and not (
                 filename.endswith('-master.zip') or \
                 filename.endswith('-devel.zip')
@@ -1378,7 +1377,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     if args.version:
-        print('[bold green]install.py[/bold green]: installation script for [bold magenta]PyRadio {}[/bold magenta]\n'.format(PyRadioInstallPyReleaseVersion ))
+        print(f'[bold green]install.py[/bold green]: installation script for [bold magenta]PyRadio {PyRadioInstallPyReleaseVersion}[/bold magenta]\n')
         sys.exit()
 
     if not platform.system().lower().startswith('win'):
@@ -1568,9 +1567,9 @@ Then try installing PyRadio again
                         break
                 subprocess.call('python "' + win_file + '"')
             print('\n\nNow you can delete the folder:')
-            print('    "{}"'.format(uni._dir))
+            print(f'    "{uni._dir}"')
             print('and the file:')
-            print('    "{}"'.format(__file__))
+            print(f'    "{__file__}"')
     else:
         if not args.force and not args.get_cache:
             ret = subprocess.call('pyradio -h 1>/dev/null 2>&1', shell=True)

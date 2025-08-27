@@ -485,7 +485,7 @@ class RadioBrowser(PyRadioStationsBrowser):
                         use_fav.endswith('.png'):
                     fav = use_fav
                 ret.append(
-                    [n['name'], n['url'], enc, {'image': fav}, '', '0@128', '', '', '']
+                    [n['name'], n['url'], enc, {'image': fav}, '', '0@128', '', '', '', '']
                 )
         return ret
 
@@ -531,7 +531,7 @@ class RadioBrowser(PyRadioStationsBrowser):
             try:
                 r = self._session.get(url=url, headers=self._headers, timeout=(self._search_timeout, 2 * self._search_timeout))
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Station click result: "{}"'.format(r.text))
+                    logger.debug(f'Station click result: "{r.text}"')
                 # if '"ok":true' in r.text:
                 #     self._raw_stations[a_station]['clickcount'] += 1
             except:
@@ -542,7 +542,7 @@ class RadioBrowser(PyRadioStationsBrowser):
     def vote(self, a_station):
         url = 'http://' + self._server + '/json/vote/' + self._raw_stations[a_station]['stationuuid']
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Voting for: {}'.format(self._raw_stations[a_station]))
+            logger.debug(f'Voting for: {self._raw_stations[a_station]}')
             logger.debug('Voting url: ' + url)
         try:
             r = self._session.get(url=url, headers=self._headers, timeout=(self._search_timeout, 2 * self._search_timeout))
@@ -550,7 +550,7 @@ class RadioBrowser(PyRadioStationsBrowser):
             self.vote_result = self._raw_stations[a_station]['name'], message['message'][0].upper() + message['message'][1:]
             # logger.error('DE voting result = {}'.format(self.vote_result))
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Voting result: "{}"'.format(message))
+                logger.debug(f'Voting result: "{message}"')
             ret = message['ok']
         except:
             if logger.isEnabledFor(logging.DEBUG):
@@ -703,7 +703,7 @@ class RadioBrowser(PyRadioStationsBrowser):
 
         if self._page > 0:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('fetching page {}'.format(self._page))
+                logger.debug(f'fetching page {self._page}')
             if 'limit' in post_data:
                 limit = post_data['limit']
             else:
@@ -711,7 +711,7 @@ class RadioBrowser(PyRadioStationsBrowser):
             offset = int(limit) * self._page
             post_data['offset'] = offset
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('query offset added: {}'.format(offset))
+                logger.debug(f'query offset added: {offset}')
         else:
             if 'offset' in post_data:
                 post_data.pop('offset')
@@ -751,7 +751,7 @@ class RadioBrowser(PyRadioStationsBrowser):
             self._page -= 1
             return '___No more results available!___'
         if msg_function:
-            msg_function('___Fetching page |{}|...___'.format(self._page+1))
+            msg_function(f'___Fetching page |{self._page + 1}|...___')
         self.search()
         return None
 
@@ -765,7 +765,7 @@ class RadioBrowser(PyRadioStationsBrowser):
             self._page = 0
             return '___Already on first page!___'
         if msg_function:
-            msg_function('___Fetching page |{}|...___'.format(self._page+1))
+            msg_function(f'___Fetching page |{self._page + 1}|...___')
         self.search()
         return None
 
@@ -773,10 +773,10 @@ class RadioBrowser(PyRadioStationsBrowser):
         if logger.isEnabledFor(logging.INFO):
             try:
                 logger.info('>>> RadioBrowser Query:')
-                logger.info('  search term = {}'.format(self._search_history[self._search_history_index]))
-                logger.info('  url = "{}"'.format(url))
-                logger.info('  headers = "{}"'.format(self._headers))
-                logger.info('  post_data = "{}"'.format(post_data))
+                logger.info(f'  search term = {self._search_history[self._search_history_index]}')
+                logger.info(f'  url = "{url}"')
+                logger.info(f'  headers = "{self._headers}"')
+                logger.info(f'  post_data = "{post_data}"')
             except (AttributeError, IndexError, TypeError):
                 pass
 
@@ -784,9 +784,9 @@ class RadioBrowser(PyRadioStationsBrowser):
         if logger.isEnabledFor(logging.INFO):
             try:
                 logger.info('>>> RadioBrowser Response Query:')
-                logger.info('  url = "{}"'.format(r.request.url))
-                logger.info('  body = "{}"'.format(r.request.body))
-                logger.info('  headers = "{}"'.format(r.request.headers))
+                logger.info(f'  url = "{r.request.url}"')
+                logger.info(f'  body = "{r.request.body}"')
+                logger.info(f'  headers = "{r.request.headers}"')
             except (AttributeError, TypeError, ValueError):
                 pass
 
@@ -797,7 +797,7 @@ class RadioBrowser(PyRadioStationsBrowser):
             To be used with the sort function
         '''
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('_get_search_elements() :search term is\n\t"{}"'.format(a_search))
+            logger.debug(f'_get_search_elements() :search term is\n\t"{a_search}"')
         # a_term = a_search['term']
         p_data = a_search['post_data']
         self.search_by = None
@@ -809,7 +809,7 @@ class RadioBrowser(PyRadioStationsBrowser):
                 self.reverse = True if a_search['post_data']['reverse'] == 'true' else False
 
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('searching by was: "{}"'.format(self.search_by))
+            logger.debug(f'searching by was: "{self.search_by}"')
         if self.search_by is None:
             a_type = a_search['type']
             if a_type == 'byname':
@@ -844,25 +844,25 @@ class RadioBrowser(PyRadioStationsBrowser):
                 logger.error('forced searching by: "name" (default)')
 
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('searching by: "{}"'.format(self.search_by))
+            logger.debug(f'searching by: "{self.search_by}"')
 
     def get_next(self, search_term, start=0, stop=None):
         if search_term:
             for n in range(start, len(self._raw_stations)):
                 if self._search_in_station(search_term, n):
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('forward search term "{0}" found at {1}'.format(search_term, n))
+                        logger.debug(f'forward search term "{search_term}" found at {n}')
                     return n
 
             """ if not found start from list top """
             for n in range(0, start):
                 if self._search_in_station(search_term, n):
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('forward search term "{0}" found at {1}'.format(search_term, n))
+                        logger.debug(f'forward search term "{search_term}" found at {n}')
                     return n
             """ if not found return None """
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('forward search term "{}" not found'.format(search_term))
+                logger.debug(f'forward search term "{search_term}" not found')
             return None
         else:
             return None
@@ -872,17 +872,17 @@ class RadioBrowser(PyRadioStationsBrowser):
             for n in range(start, -1, -1):
                 if self._search_in_station(search_term, n):
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('backward search term "{0}" found at {1}'.format(search_term, n))
+                        logger.debug(f'backward search term "{search_term}" found at {n}')
                     return n
             """ if not found start from list end """
             for n in range(len(self._raw_stations) - 1, start, -1):
                 if self._search_in_station(search_term, n):
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('backward search term "{0}" found at {1}'.format(search_term, n))
+                        logger.debug(f'backward search term "{search_term}" found at {n}')
                     return n
             """ if not found return None """
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('backward search term "{}" not found'.format(search_term))
+                logger.debug(f'backward search term "{search_term}" not found')
             return None
         else:
             return None
@@ -912,12 +912,9 @@ class RadioBrowser(PyRadioStationsBrowser):
         a_search_copy = deepcopy(a_search)
         # logger.error('_format_url(): a_search_copy = {}'.format(a_search_copy))
         if a_search_copy['type'] in RADIO_BROWSER_DISPLAY_TERMS:
-            url = 'http://{0}{1}'.format(
-                self._server,
-                '/json/stations/{}'.format(a_search_copy['type'])
-            )
+            url = f"http://{self._server}/json/stations/{a_search_copy['type']}"
             if a_search_copy['term'] not in ('', '0'):
-                url += '/{}'.format(a_search_copy['term'])
+                url += f"/{a_search_copy['term']}"
             self._search_type = 0
 
         elif a_search_copy['type'] in RADIO_BROWSER_SEARCH_BY_TERMS:
@@ -933,10 +930,7 @@ class RadioBrowser(PyRadioStationsBrowser):
             self._search_type = 1
 
         elif a_search_copy['type'] == 'search':
-            url = 'http://{0}{1}'.format(
-                self._server,
-                '/json/stations/search'
-            )
+            url = f'http://{self._server}/json/stations/search'
             if a_search_copy['post_data']:
                 if 'country' in a_search_copy['post_data']:
                     ''' look for country code '''
@@ -1093,7 +1087,7 @@ class RadioBrowser(PyRadioStationsBrowser):
         if id_in_list < len(self._raw_stations):
             self._raw_stations[id_in_list]['encoding'] = new_encoding
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('New encoding set to "{0}" for station "{1}"'.format(new_encoding, self._raw_stations[id_in_list]['name']))
+                logger.debug(f"New encoding set to \"{new_encoding}\" for station \"{self._raw_stations[id_in_list]['name']}\"")
 
     def _fix_cjk_string_width(self, a_string, width):
         while cjklen(a_string) > width:
@@ -1342,9 +1336,9 @@ class RadioBrowser(PyRadioStationsBrowser):
     def get_history_from_search(self):
         if self._search_win:
             self._search_history_index, self._default_search_history_index, history = self._search_win.get_history()
-            logger.error('DE search_history_index = {}'.format(self._search_history_index))
-            logger.error('DE search_default_history_index = {}'.format(self._default_search_history_index))
-            logger.error('DE history = {}'.format(history))
+            logger.error(f'DE search_history_index = {self._search_history_index}')
+            logger.error(f'DE search_default_history_index = {self._default_search_history_index}')
+            logger.error(f'DE history = {history}')
             self._search_history = deepcopy(history)
 
     def get_internal_header(self, pad, width):
@@ -1492,11 +1486,11 @@ class RadioBrowser(PyRadioStationsBrowser):
                 logger.info('RadioBrowser: using random server: ' + self._server)
 
         if logger.isEnabledFor(logging.INFO):
-            logger.info('RadioBrowser: result limit = {}'.format(self._default_max_number_of_results))
-            logger.info('RadioBrowser: default search term = {}'.format(self._default_search_history_index))
+            logger.info(f'RadioBrowser: result limit = {self._default_max_number_of_results}')
+            logger.info(f'RadioBrowser: default search term = {self._default_search_history_index}')
             logger.info('RadioBrowser: search history')
             for i, n in enumerate(self._search_history):
-                logger.info('  {0}: {1}'.format(i, n))
+                logger.info(f'  {i}: {n}')
         self._get_title()
         return True
 
@@ -1520,7 +1514,7 @@ class RadioBrowser(PyRadioStationsBrowser):
                     self.reverse = False
                     if self.search_by != self._old_search_by:
                         if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('search by = "{}"'.format(self.search_by))
+                            logger.debug(f'search by = "{self.search_by}"')
                         ''' set reverse to True for numerical values
                             when changing sort type
                         '''
@@ -1531,7 +1525,7 @@ class RadioBrowser(PyRadioStationsBrowser):
                         ):
                             self.reverse = True
                             if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug('settng reverse to {}'.format(self.reverse))
+                                logger.debug(f'settng reverse to {self.reverse}')
 
                 self._raw_stations = sorted(self._raw_stations, key=itemgetter(self.search_by), reverse=self.reverse)
                 self._old_search_by = self.search_by
@@ -1703,7 +1697,7 @@ class RadioBrowserConfig():
                     self.terms.append(json.loads(term_str[n]))
                 except (json.JSONDecodeError, IndexError):
                     if logger.isEnabledFor(logging.ERROR):
-                        logger.error('RadioBrowser: error inserting search term {}'.format(n))
+                        logger.error(f'RadioBrowser: error inserting search term {n}')
                 if 'limit' in self.terms[-1]['post_data'].keys():
                     if self.terms[-1]['post_data']['limit'] == str(self.limit):
                         self.terms[-1]['post_data'].pop('limit')
@@ -2353,7 +2347,7 @@ class RadioBrowserConfigWindow():
     def _print_params(self):
         logger.error('\n\n')
         for i, n in enumerate(self._params):
-            logger.error('-- id: {}'.format(i))
+            logger.error(f'-- id: {i}')
             logger.error(n['auto_save'])
             logger.error(n['server'])
             logger.error(n['ping_count'])
@@ -2747,7 +2741,7 @@ class RadioBrowserSearchWindow():
                 for n in RADIO_BROWSER_SEARCH_BY_TERMS.items():
                     if n[1] == what_type[0]:
                         ret['type'] = n [0]
-                        logger.error('DE type = {}'.format(ret['type']))
+                        logger.error(f"DE type = {ret['type']}")
                         break
                 if self._widgets[what_type[0] - 1].checked and \
                         not ret['type'].endswith('exact'):
@@ -2782,7 +2776,7 @@ class RadioBrowserSearchWindow():
         ''' get order '''
         self._order_to_term(ret)
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Search term returned: {}'.format(ret))
+            logger.debug(f'Search term returned: {ret}')
         return ret
 
     def _order_to_term(self, ret):
@@ -2817,14 +2811,14 @@ class RadioBrowserSearchWindow():
         if init:
             self._default_history_id = main_window_default_search_history_index
             self._selected_history_id = main_window_search_history_index
-        logger.error('DE set_search_history - _selected_history_id={}'.format(self._selected_history_id))
+        logger.error(f'DE set_search_history - _selected_history_id={self._selected_history_id}')
         self._history = deepcopy(main_window_search_history)
         self._search_term = self._history[self._history_id]
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Search history')
-            logger.debug('     search history: {}'.format(self._history))
-            logger.debug('     search history index: {}'.format(self._history_id))
-            logger.debug('     active search term: {}'.format(self._search_term))
+            logger.debug(f'     search history: {self._history}')
+            logger.debug(f'     search history index: {self._history_id}')
+            logger.debug(f'     active search term: {self._search_term}')
 
     def _get_a_third(self):
         ''' calculate window / 3 X
@@ -3144,8 +3138,8 @@ class RadioBrowserSearchWindow():
         self._carret_chgat(self.maxY-2, thisX, msg)
 
         self._win.addstr(self.maxY - 2, 2 , 'History item: ')
-        self._win.addstr('{}'.format(self._selected_history_id), curses.color_pair(4))
-        self._win.addstr('/{} '.format(len(self._history)-1))
+        self._win.addstr(f'{self._selected_history_id}', curses.color_pair(4))
+        self._win.addstr(f'/{len(self._history) - 1} ')
 
     def _other_chgat(self, Y, X, a_string):
         indexes = [i for i, c in enumerate(a_string) if c == '/' or c == ',']
@@ -3210,12 +3204,12 @@ class RadioBrowserSearchWindow():
                 ret_index = a_search_term_index
                 found = True
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('New search term already in history, id = {}'.format(ret_index))
+                    logger.debug(f'New search term already in history, id = {ret_index}')
                 break
 
         if not found:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Adding new search term to history, id = {}'.format(len(self._history)))
+                logger.debug(f'Adding new search term to history, id = {len(self._history)}')
             self._history.append(new_search_term)
             # self._history_id = self._selected_history_id = len(self._history) - 1
             ret_index = len(self._history) - 1
@@ -3254,7 +3248,7 @@ class RadioBrowserSearchWindow():
     def _ctrl_n(self):
         ''' ^N - Next history item '''
         cur_history_id = self._selected_history_id
-        logger.error('cur_history_id = {}'.format(cur_history_id))
+        logger.error(f'cur_history_id = {cur_history_id}')
         self._handle_new_or_existing_search_term()
         if abs(self._selected_history_id - cur_history_id) > 1:
             self._selected_history_id = cur_history_id
@@ -3858,7 +3852,7 @@ class RadioBrowserData():
                 ret, my_data[an_item] = get_data(an_item)
             if stop():
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.info('Asked to stop after working on "{}"...'.format(an_item))
+                    logger.info(f'Asked to stop after working on "{an_item}"...')
                 self._terminated = True
                 return
         lock.acquire()
@@ -3936,7 +3930,7 @@ class RadioBrowserDns():
         self._countries = []
         for n in self._urls:
             self._countries.append(country_from_server(n))
-        logger.error('DE countries = {}'.format(self._countries))
+        logger.error(f'DE countries = {self._countries}')
 
     def give_me_a_server_url(self):
         ''' Returns a random server '''
@@ -4075,9 +4069,10 @@ class RadioBrowserSort():
             elif i == self.active:
                 col = 11
 
-            self._win.addstr(i + 1, 1,
-                             ' {}'.format(n.ljust(self.maxX - 3)),
-                             curses.color_pair(col))
+            self._win.addstr(
+                i + 1, 1,
+                ' {}'.format(n.ljust(self.maxX - 3)),
+                curses.color_pair(col))
         self._win.refresh()
 
     def keypress(self, char):
@@ -4312,7 +4307,7 @@ class RadioBrowserServersSelect():
                     self.server = self.servers.server
             if self._return_function:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('selected server: {}'.format(self.servers.server))
+                    logger.debug(f'selected server: {self.servers.server}')
                 self._return_function(self.servers.server)
                 return 2
 
@@ -4337,7 +4332,7 @@ class RadioBrowserServers():
         for i, n in enumerate(self.items):
             if self.server == n:
                 self.selection = self.active = i
-            self.items[i] = ' ' + country_from_server(n) + '  ({}) '.format(n)
+            self.items[i] = ' ' + country_from_server(n) + f'  ({n}) '
             if len(self.items[i]) > s_max:
                 s_max = len(self.items[i])
         self.items.sort()
@@ -4353,7 +4348,7 @@ class RadioBrowserServers():
             self.items.append(' Random' + (s_max - 7) * ' ')
             self.items.reverse()
             self.maxY = len(self.items)
-            logger.error('DE items = {}'.format(self.items))
+            logger.error(f'DE items = {self.items}')
         ''' get selection and active server id '''
         if show_random and (
             self.server == '' or 'Random' in self.server
@@ -4520,11 +4515,11 @@ class RadioBrowserStationsStack():
             logger.debug('>>> Online browser stations history')
             if self.items:
                 for n in self.items:
-                    logger.debug('   {}'.format(n))
-                logger.debug('   item was = {}'.format(self.item))
+                    logger.debug(f'   {n}')
+                logger.debug(f'   item was = {self.item}')
             else:
                 logger.debug('   No items in list')
-                logger.debug('   item = {}'.format(self.item))
+                logger.debug(f'   item = {self.item}')
 
     def add(self, a_playlist, a_station, a_station_id):
         a_playlist = 'Online Browser'
@@ -4566,9 +4561,9 @@ class RadioBrowserStationsStack():
         self._show_station_history_debug()
         for i in range(len(self.items) - 1, -1, -1):
             if self.items[i][1] == orig_station:
-                logger.error('item = {}'.format(self.items[i]))
+                logger.error(f'item = {self.items[i]}')
                 self.items[i][1] = new_station
-                logger.error('item = {}'.format(self.items[i]))
+                logger.error(f'item = {self.items[i]}')
         self._show_station_history_debug()
 
     def _get(self):
@@ -4590,7 +4585,7 @@ class RadioBrowserStationsStack():
         else:
             self.item -= 1
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('   item is  = {}'.format(self.item))
+                logger.debug(f'   item is  = {self.item}')
             self.execute_func(self._get(), self.play_previous)
 
     def play_next(self):
@@ -4606,7 +4601,7 @@ class RadioBrowserStationsStack():
         else:
             self.item += 1
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('   item is  = {}'.format(self.item))
+                logger.debug(f'   item is  = {self.item}')
             self.execute_func(self._get(), self.play_next)
 
 
@@ -4750,9 +4745,9 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
         if self._items:
             self._win.addstr(' {}'.format(str(self._selection).rjust(rpad)), col)
         else:
-            self._win.addstr(' {}'.format(0), col)
+            self._win.addstr(f' {0}', col)
             self._selection = -1
-        self._win.addstr('/{}   '.format(len(self._items) - 1), self._color)
+        self._win.addstr(f'/{len(self._items) - 1}   ', self._color)
 
         if self._selection == 0:
             self._win.addstr('   Template Item!     ', col)
@@ -4771,7 +4766,7 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
         self._win.addstr(1, 25, ' Limit: ', self._color)
         str_out = 15 * ' '
         if limit is not None:
-            str_out ='{}'.format(limit)
+            str_out =f'{limit}'
         else:
             if self._items:
                 if 'post_data' in self._items[self._selection]:
@@ -4779,10 +4774,10 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
                         str_out = '{}'.format(self._items[self._selection]['post_data']['limit'])
                     else:
                         if limit is None:
-                            str_out = '{}'.format(self._default_limit)
+                            str_out = f'{self._default_limit}'
                         else:
                             if limit != '':
-                                str_out = '{}'.format(limit)
+                                str_out = f'{limit}'
         self._win.addstr(str_out, col)
 
         self._win.addstr('   Codec: ', self._color)
@@ -4793,7 +4788,7 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
         if self._items:
             if term is not None:
                 if term != '':
-                    str_out = '{}'.format(term)
+                    str_out = f'{term}'
             else:
                 if 'term' in self._items[self._selection]:
                     try:
@@ -4969,12 +4964,12 @@ def probeBrowsers(a_browser_url):
         base_url = a_browser_url
     implementedBrowsers = PyRadioStationsBrowser.__subclasses__()
     if logger.isEnabledFor(logging.INFO):
-        logger.info('Implemented browsers: {}'.format(implementedBrowsers))
+        logger.info(f'Implemented browsers: {implementedBrowsers}')
 
     for a_browser in implementedBrowsers:
         if a_browser.BASE_URL == base_url:
             if logger.isEnabledFor(logging.INFO):
-                logger.info('Supported browser: {}'.format(a_browser))
+                logger.info(f'Supported browser: {a_browser}')
             return a_browser
     if logger.isEnabledFor(logging.INFO):
         logger.info('No supported browser found for: ' + a_browser_url)

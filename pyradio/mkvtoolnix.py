@@ -77,10 +77,10 @@ class MKVToolNix:
 
     def execute(self, print_messages=True):
         if print_messages:
-            print('MKV file: "{}"'.format(os.path.basename(self._mkv_file)))
+            print(f'MKV file: "{os.path.basename(self._mkv_file)}"')
             folder = os.path.dirname(self._mkv_file)
             if folder:
-                print('  Folder: "{}"'.format(os.path.dirname(folder)))
+                print(f'  Folder: "{os.path.dirname(folder)}"')
         if self._cover_file and self._command:
             self.update_cover()
 
@@ -121,9 +121,10 @@ class MKVToolNix:
             console = Console()
 
             table = Table(show_header=True, header_style="bold magenta")
-            table.title = 'List of files under [bold magenta]{}[/bold magenta]'.format(
-                    os.path.basename(self._cnf.recording_dir)
-                    )
+            table.title = (
+                f'List of files under [bold magenta]'
+                f'{os.path.basename(self._cnf.recording_dir)}[/bold magenta]'
+            )
             table.title_justify = "left"
             table.row_styles = ['', 'plum4']
             centered_table = Align.center(table)
@@ -147,7 +148,7 @@ class MKVToolNix:
             return files[index]
         except IndexError:
             if print_messages:
-                print('[red]Error:[/red] Index {} not found!'.format(index))
+                print(f'[red]Error:[/red] Index {index} not found!')
             return None
 
     def _file_valid(self, a_file, print_messages=True):
@@ -157,7 +158,7 @@ class MKVToolNix:
                 if os.path.exists(test_file):
                     return test_file
             if print_messages:
-                print('File not found: "{}"'.format(a_file))
+                print(f'File not found: "{a_file}"')
                 sys.exit(1)
             else:
                 return None
@@ -181,18 +182,18 @@ class MKVToolNix:
         # Validate files
         if 'container: Matroska' not in s:
             if print_messages:
-                print('  File not supported: "{}"'.format(self._mkv_file))
+                print(f'  File not supported: "{self._mkv_file}"')
                 sys.exit(1)
             else:
                 return None
         if not self._cover_file.endswith('.png'):
             if print_messages:
-                print('  File not supported: "{}"'.format(self._cover_file))
+                print(f'  File not supported: "{self._cover_file}"')
                 sys.exit(1)
             else:
                 return None
         if print_messages:
-            print('  (r) PNG file: "{}"'.format(self._cover_file))
+            print(f'  (r) PNG file: "{self._cover_file}"')
         r = re.compile(r"Attachment ID ([0-9]*): type 'image/png', size [0-9]* bytes, file name 'cover'")
         cov = re.search(r, s)
         att = cov.group(1) if cov else -1
@@ -228,7 +229,7 @@ class MKVToolNix:
                     f.write('\n'.join(out))
             except:
                 if print_messages:
-                    print('  Error writing file: "{}"'.format(self._srt_file))
+                    print(f'  Error writing file: "{self._srt_file}"')
                 else:
                     return None
         else:
@@ -238,7 +239,7 @@ class MKVToolNix:
             else:
                 return None
         if print_messages:
-            print('  (w) SRT file: "{}"'.format(os.path.basename(self._srt_file)))
+            print(f'  (w) SRT file: "{os.path.basename(self._srt_file)}"')
         else:
             return self._srt_file
 
@@ -311,14 +312,14 @@ class MKVToolNix:
             print('[magenta]Updating MKV chapters...[/magenta]')
         srt_file = self._mkv_file[:-4] + '.srt'
         if print_messages:
-            print('  (r) SRT file: "{}"'.format(os.path.basename(srt_file)))
+            print(f'  (r) SRT file: "{os.path.basename(srt_file)}"')
         txt_file = self._mkv_file[:-4] + '.txt'
         if os.path.exists(srt_file):
             with open(srt_file, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
         else:
             if print_messages:
-                print('[red]Error:[/red] [bold magenta]SRT[/bold magents] file not found: "{}"'.format(srt_file))
+                print(f'[red]Error:[/red] [bold magenta]SRT[/bold magents] file not found: "{srt_file}"')
                 sys.exit(1)
             else:
                 return None
@@ -340,7 +341,7 @@ class MKVToolNix:
                 f.write('\n'.join(out))
         except:
             if print_messages:
-                print('[red]Error:[/red] Cannot write [bold magenta]Chapters[/bold magents] file "{}"'.format(txt_file))
+                print(f'[red]Error:[/red] Cannot write [bold magenta]Chapters[/bold magents] file "{txt_file}"')
                 sys.exit(1)
             else:
                 return None

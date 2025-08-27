@@ -8,7 +8,7 @@ from shutil import copyfile
 from copy import deepcopy
 from math import sqrt
 import colorsys
-from .common import *
+from .common import rgb_to_curses_rgb, rgb_to_hex, hex_to_rgb
 from .keyboard import kbkey, check_localized, remove_l10n_from_global_functions
 
 logger = logging.getLogger(__name__)
@@ -28,11 +28,11 @@ def compare_color_pairs(pair1, pair2, curses_colors):
         return True  # The color pairs are identical
     return False  # The color pairs are different
 
-def isLightOrDark(rgbColor=[0,128,255]):
-    [r,g,b]=rgbColor
-    '''
+def is_light_or_dark(rgb_color=[0,128,255]):
+    [r,g,b]=rgb_color
+    """
     https://stackoverflow.com/questions/22603510/is-this-possible-to-detect-a-colour-is-a-light-or-dark-colour
-    '''
+    """
     #hsp = sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b))
     #if (hsp>127.5):
     #    return True
@@ -47,12 +47,7 @@ def isLightOrDark(rgbColor=[0,128,255]):
     hsp = sqrt(0.241 * (r * r) + 0.691 * (g * g) + 0.068 * (b * b))
     # logger.error('hsp = {}'.format(hsp))
 
-    if (hsp>130):
-        return True
-        return 'light'
-    else:
-        return False
-        return 'dark'
+    return True if hsp > 130 else False
 
 def calculate_fifteenth_color(colors, an_amount, inhibit_if_color15_exists=True):
     if an_amount == '0' or \
@@ -67,16 +62,16 @@ def calculate_fifteenth_color(colors, an_amount, inhibit_if_color15_exists=True)
         logger.info('Calculating color15...')
     amount = round(float(an_amount) ,2)
     if logger.isEnabledFor(logging.DEBUG):
-        logger.debug('Luminance color factor = {}'.format(amount))
+        logger.debug(f'Luminance color factor = {amount}')
     if logger.isEnabledFor(logging.DEBUG):
-        logger.debug('color2: {}'.format(colors[2]))
+        logger.debug(f'color2: {colors[2]}')
     x = list(colorsys.rgb_to_hls(
         float(colors[2][0] / 255.0),
         float(colors[2][1] / 255.0),
         float(colors[2][2] / 255.0)
     ))
     if logger.isEnabledFor(logging.DEBUG):
-        logger.debug('hls: {}'.format(x))
+        logger.debug(f'hls: {x}')
     #logger.error('x = {}'.format(x))
 
     start_x1 = x[1]
@@ -85,9 +80,9 @@ def calculate_fifteenth_color(colors, an_amount, inhibit_if_color15_exists=True)
     # luma = 0.2126 * colors[2][0] + 0.7152 * colors[2][1] + 0.0722 * colors[2][2]
     # logger.error('luma = {}'.format(luma))
 
-    action = not isLightOrDark(colors[2])
+    action = not is_light_or_dark(colors[2])
     if logger.isEnabledFor(logging.DEBUG):
-        logger.debug('color is dark = {}'.format(action))
+        logger.debug(f'color is dark = {action}')
     count = 0
 
     y = list(x)
@@ -107,7 +102,7 @@ def calculate_fifteenth_color(colors, an_amount, inhibit_if_color15_exists=True)
 
             y = list(colorsys.hls_to_rgb(x[0], x[1], x[2]))
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('  luminance {0}: {1}'.format(count, x[1]))
+                logger.debug(f'  luminance {count}: {x[1]}')
 
             if abs(y[0] - colors[10][0]) > 15 and \
                     abs(y[1] - colors[11][1]) > 15 and \
@@ -127,7 +122,7 @@ def calculate_fifteenth_color(colors, an_amount, inhibit_if_color15_exists=True)
         y[n] = round(y[n] * 255)
 
     if logger.isEnabledFor(logging.DEBUG):
-        logger.debug('color15: {}'.format(y))
+        logger.debug(f'color15: {y}')
     return tuple(y)
 
 class PyRadioTheme():
@@ -221,7 +216,7 @@ class PyRadioTheme():
                    self._cnf.has_border_background:
                 if transp:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('--> 1 transparency: ON (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
+                        logger.debug(f'--> 1 transparency: ON (use_calculated_colors: {self._cnf.use_calculated_colors}, has_border_background: {self._cnf.has_border_background})')
                     colors = {
                         1: (12 + self._cnf.start_colors_at, -1),
                         2: (11 + self._cnf.start_colors_at, -1),
@@ -240,7 +235,7 @@ class PyRadioTheme():
                     }
                 else:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('--> 1 transparency: OFF (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
+                        logger.debug(f'--> 1 transparency: OFF (use_calculated_colors: {self._cnf.use_calculated_colors}, has_border_background: {self._cnf.has_border_background})')
                     colors = {
                         1: (12 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
                         2: (11 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
@@ -260,7 +255,7 @@ class PyRadioTheme():
             else:
                 if transp:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('--> 2 transparency: ON (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
+                        logger.debug(f'--> 2 transparency: ON (use_calculated_colors: {self._cnf.use_calculated_colors}, has_border_background: {self._cnf.has_border_background})')
                     colors = {
                         1: (12 + self._cnf.start_colors_at, -1),
                         2: (11 + self._cnf.start_colors_at, -1),
@@ -279,7 +274,7 @@ class PyRadioTheme():
                     }
                 else:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('--> 2 transparency: OFF (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
+                        logger.debug(f'--> 2 transparency: OFF (use_calculated_colors: {self._cnf.use_calculated_colors}, has_border_background: {self._cnf.has_border_background})')
                     colors = {
                         1: (12 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
                         2: (11 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
@@ -296,8 +291,8 @@ class PyRadioTheme():
                         13: (border_color + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
                         14: (9 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at)
                     }
-            for k in colors:
-                curses.init_pair(k, colors[k][0], colors[k][1])
+            for k, (fg, bg) in colors.items():
+                curses.init_pair(k, fg, bg)
                 # logger.error('pair {}: {}'.format(k, colors[k]))
             if compare_color_pairs(6, 7, self._curses_colors):
                 if compare_color_pairs(9, 7, self._curses_colors):
@@ -365,7 +360,7 @@ class PyRadioTheme():
                 self.applied_theme_name = 'light'
             self._cnf.fallback_theme = self.applied_theme_name
         if logger.isEnabledFor(logging.INFO):
-            logger.info('Applying fallback theme: "{0}" instead of: "{1}"'.format(self.applied_theme_name, a_theme))
+            logger.info(f'Applying fallback theme: "{self.applied_theme_name}" instead of: "{a_theme}"')
         self.open_theme(self.applied_theme_name)
         self._update_colors()
         self._cnf.last_theme_s_transparency_setting = self._colors['transparency']
@@ -401,7 +396,7 @@ class PyRadioTheme():
     def recalculate_theme(self, inhibit_if_color15_exists=True):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Recalculating color15...')
-            logger.debug('Stations background color: {}'.format(self._colors['css'][2]))
+            logger.debug(f"Stations background color: {self._colors['css'][2]}")
         self._cnf.use_calculated_colors = False if self._cnf.opts['calculated_color_factor'][1] == '0' else True
         # logger.error('\n\nself._colors before recalculate\n{}\n\n'.format(self._colors))
         if self._colors['color_factor'] == 0:
@@ -423,8 +418,8 @@ class PyRadioTheme():
             based on an internal or system theme
         '''
         out_file = path.join(self._cnf.themes_dir, out_theme_name + '.pyradio-theme')
-        if exists(out_file):
-            return False, 'Theme "{}" already exists...'.format(out_theme_name)
+        if path.exists(out_file):
+            return False, f'Theme "{out_theme_name}" already exists...'
         th_name = theme_name if theme_name else 'dark'
         if theme_name not in self._cnf.internal_themes and \
                 theme_name not in self._cnf.system_themes:
@@ -440,17 +435,17 @@ class PyRadioTheme():
             ret = save_theme.write_theme(out_file, colors=self._colors)
             # print(self._colors)
             if ret == 0:
-                return True, 'Theme created: "{}"'.format(out_theme_name)
+                return True, f'Theme created: "{out_theme_name}"'
             elif ret == -2:
-                return False, 'Error writing theme file: "{}"'.format(out_theme_name)
+                return False, f'Error writing theme file: "{out_theme_name}"'
         else:
             ''' copy theme file '''
             in_file = path.join(path.dirname(__file__), 'themes', theme_name + '.pyradio-theme')
             try:
                 copyfile(in_file, out_file)
-                return True, 'Theme created: "{}"'.format(out_theme_name)
+                return True, f'Theme created: "{out_theme_name}"'
             except:
-                return False, 'Error creating file for theme: "{}"'.format(out_theme_name)
+                return False, f'Error creating file for theme: "{out_theme_name}"'
 
     def open_theme(self, a_theme='', a_path='', print_errors=None, no_curses=False):
         """ Read a theme and place it in _colors
@@ -465,7 +460,7 @@ class PyRadioTheme():
         if not a_theme.strip():
             a_theme = 'dark'
 
-        if a_theme == 'dark' or a_theme == 'default':
+        if a_theme in {'dark', 'default'}:
             self._colors['transparency'] = 2
             self._colors['color_factor'] = 0
             self._colors['data'] = {1: (192, 192, 192), 2: (0, 0, 0), 3: (0, 128, 0), 4: (0, 0, 0), 5: (135, 0, 135), 6: (0, 0, 0), 7: (0, 128, 0), 8: (0, 0, 0), 9: (0, 128, 0), 10: (128, 128, 0), 11: (95, 135, 255), 12: (0, 255, 255), 14: (192, 192, 192), 13: (0, 0, 0), 15: (26, 26, 26)}
@@ -517,7 +512,7 @@ class PyRadioTheme():
                     self._colors['data'][16] = (128, 128, 128)
             self._cnf.has_border_background = True
 
-        elif a_theme == 'black_on_white' or a_theme == 'bow':
+        elif a_theme in {'black_on_white', 'bow'}:
             ''' info '''
             self._colors['Name'] = 'black_on_white'
             self._colors['transparency'] = 0
@@ -529,7 +524,7 @@ class PyRadioTheme():
                 self._colors['data'][16] = (128, 128, 128)
             self._cnf.has_border_background = True
 
-        elif a_theme == 'white_on_black' or a_theme == 'wob':
+        elif a_theme in {'white_on_black', 'wob'}:
             ''' info '''
             self._colors['Name'] = 'white_on_black'
             self._colors['transparency'] = 2
@@ -551,7 +546,7 @@ class PyRadioTheme():
                 a_path = ret.default_theme_path
                 ret.theme_id = ret_ind
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Project theme file name: {}'.format(a_path))
+                    logger.debug(f'Project theme file name: {a_path}')
                 if not self._cnf.locked:
                     if ret.download(print_errors=print_errors)[0]:
                         if logger.isEnabledFor(logging.DEBUG):
@@ -642,11 +637,11 @@ class PyRadioThemeReadWrite():
         self._temp_colors = None
         if not path.isfile(theme_path):
             if logger.isEnabledFor(logging.ERROR):
-                logger.error('read_theme(): file not found: {}'.format(theme_path))
+                logger.error(f'read_theme(): file not found: {theme_path}')
             return 1, None
         if not access(theme_path, R_OK):
             if logger.isEnabledFor(logging.ERROR):
-                logger.error('read_theme(): file not readable: {}'.format(theme_path))
+                logger.error(f'read_theme(): file not readable: {theme_path}')
             return 2, None
 
         try:
@@ -655,7 +650,7 @@ class PyRadioThemeReadWrite():
 
         except:
             if logger.isEnabledFor(logging.ERROR):
-                logger.error('read_theme(): read error on: {}'.format(theme_path))
+                logger.error(f'read_theme(): read error on: {theme_path}')
             return 3, None
 
         names = {}
@@ -664,13 +659,13 @@ class PyRadioThemeReadWrite():
                 ''' old theme format '''
                 # return 5, None
                 if logger.isEnabledFor(logging.ERROR):
-                    logger.error('read_theme(): old format theme: {}'.format(theme_path))
+                    logger.error(f'read_theme(): old format theme: {theme_path}')
                 return 4, None
             raw = line.split(' ')
             if raw[-1].startswith('#') and len(raw[-1]) != 7:
                 ''' corrupt: not valid color '''
                 if logger.isEnabledFor(logging.ERROR):
-                    logger.error('read_theme(): {0} - invalid color in line: ""{1}: - value: {2}'.format(theme_path, line, raw[-1]))
+                    logger.error(f'read_theme(): {theme_path} - invalid color in line: ""{line}: - value: {raw[-1]}')
                 return 4, None
             sp = [raw[-1]]
             raw.pop()
@@ -679,7 +674,7 @@ class PyRadioThemeReadWrite():
                     if raw[-1].startswith('#') and len(raw[-1]) != 7:
                         ''' corrupt: not valid color '''
                         if logger.isEnabledFor(logging.ERROR):
-                            logger.error('read_theme(): {0} - invalid color in line: ""{1}: - value: {2}'.format(theme_path, line, raw[-1]))
+                            logger.error(f'read_theme(): {theme_path} - invalid color in line: ""{line}: - value: {raw[-1]}')
                         return 4, None
                     sp.append(raw[-1])
                     raw.pop()
@@ -690,15 +685,15 @@ class PyRadioThemeReadWrite():
                 sp.reverse()
             except IndexError:
                 if logger.isEnabledFor(logging.ERROR):
-                    logger.error('read_theme(): file is corrupt: {}'.format(theme_path))
+                    logger.error(f'read_theme(): file is corrupt: {theme_path}')
                 return 4, None
             # logger.error('sp = {}'.format(sp))
             # logger.error('names = {}'.format(names))
             names[sp[0].strip()] = sp[1:]
-            for k in names:
+            for k, v in names.items():
                 for n in (0, 1):
                     try:
-                        names[k][n] = names[k][n].strip()
+                        v[n] = v[n].strip()
                     except IndexError:
                         pass
 
@@ -707,7 +702,7 @@ class PyRadioThemeReadWrite():
             names['Border'] = [names['Stations'][0]]
 
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('theme names = {}'.format(names))
+            logger.debug(f'theme names = {names}')
         self._temp_colors = { 'data': {}, 'css': {}, 'transparency': 2, 'color_factor': 0}
         for name in names:
             if name == 'transparency':
@@ -737,7 +732,7 @@ class PyRadioThemeReadWrite():
                     self._temp_colors['css'][self._param_to_color_id[name][0]] = names[name][0]
                 except KeyError:
                     if logger.isEnabledFor(logging.ERROR):
-                        logger.error('read_theme(): file is corrupt: {}'.format(theme_path))
+                        logger.error(f'read_theme(): file is corrupt: {theme_path}')
                     return 4, None
                 self._temp_colors['data'][self._param_to_color_id[name][0]] = hex_to_rgb(names[name][0])
                 if len(self._param_to_color_id[name]) == 2:
@@ -746,7 +741,7 @@ class PyRadioThemeReadWrite():
 
         if self._theme_is_incomplete():
             if logger.isEnabledFor(logging.ERROR):
-                logger.error('read_theme(): file is incomplete: {}'.format(theme_path))
+                logger.error(f'read_theme(): file is incomplete: {theme_path}')
             return 4, None
             return 5, None
 
@@ -756,12 +751,12 @@ class PyRadioThemeReadWrite():
             self._temp_colors['color_factor'] = 0
             self._cnf.has_border_background = True
             if logger.isEnabledFor(logging.INFO):
-                logger.info('read_theme(): color15 = {}'.format(self._temp_colors['css'][15]))
+                logger.info(f"read_theme(): color15 = {self._temp_colors['css'][15]}")
         else:
             self._cnf.has_border_background = False
             self._calculate_fifteenth_color()
             if logger.isEnabledFor(logging.INFO):
-                logger.info('read_theme(): calculated color15 = {}'.format(self._temp_colors['css'][15]))
+                logger.info(f"read_theme(): calculated color15 = {self._temp_colors['css'][15]}")
 
         self._theme_name = theme_name
         self._theme_path = theme_path
@@ -769,12 +764,12 @@ class PyRadioThemeReadWrite():
         self._temp_colors['Path'] = theme_path
         self._cnf.active_transparency = self._temp_colors['transparency']
         if logger.isEnabledFor(logging.INFO):
-            logger.info('self._temp_colors\n{}'.format(self._temp_colors))
+            logger.info(f'self._temp_colors\n{self._temp_colors}')
         return 0, self._temp_colors
 
     def _calculate_fifteenth_color(self):
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Stations background color: {}'.format(self._temp_colors['css'][2]))
+            logger.debug(f"Stations background color: {self._temp_colors['css'][2]}")
         # logger.error('tmp_colors\n{}'.format(self._temp_colors))
         if self._temp_colors['color_factor'] == 0:
             fact = self._cnf.opts['calculated_color_factor'][1]
@@ -813,11 +808,11 @@ class PyRadioThemeReadWrite():
                -1   colors are incomplete
                 0   all ok
         '''
-        if exists(out_theme):
+        if path.exists(out_theme):
             return -4
         if colors is None:
             if base_theme is not None:
-                if not exists(base_theme):
+                if not path.exists(base_theme):
                     return -3
                 try:
                     copyfile(base_theme, out_theme)
@@ -1010,11 +1005,10 @@ class PyRadioThemeSelector():
             self._first_theme_to_watch = len(self._themes)
 
         for a_theme in self._themes:
-            if len(a_theme[0]) > self._max_title_width:
-                self._max_title_width = len(a_theme[0])
+            self._max_title_width = max(len(theme[0]) for theme in self._themes)
 
         if self.log:
-            self.log('max_title_width = {}\n'.format(self._max_title_width))
+            self.log(f'max_title_width = {self._max_title_width}\n')
         self._get_config_and_applied_theme(touch_selection)
         self._get_metrics()
 
@@ -1052,7 +1046,7 @@ class PyRadioThemeSelector():
             if n.can_auto_update:
                 for k in n.THEME:
                     tmp_themes.append([k, n.default_theme_path])
-        logger.error('\n\nthemes\n{}\n\n'.format(tmp_themes))
+        logger.error(f'\n\nthemes\n{tmp_themes}\n\n')
         if tmp_themes:
             tmp_themes.reverse()
             tmp_themes.append(['Ext. Themes Projects', '-'])
@@ -1093,7 +1087,7 @@ class PyRadioThemeSelector():
         self._config_theme_name = self._short_to_normal_theme_name(self._config_theme_name)
         self._applied_theme_name = self._short_to_normal_theme_name(self._applied_theme_name)
         if self.log:
-            self.log('config theme name = "{0}", applied theme name = "{1}"\n'.format(self._config_theme_name, self._applied_theme_name))
+            self.log(f'config theme name = "{self._config_theme_name}", applied theme name = "{self._applied_theme_name}\"\n')
         self._config_theme = -1
         self._applied_theme = -1
         found = 0
@@ -1108,7 +1102,7 @@ class PyRadioThemeSelector():
                 break
 
         if self.log:
-            self.log('config theme = {0}, applied theme = {1}\n'.format(self._config_theme, self._applied_theme))
+            self.log(f'config theme = {self._config_theme}, applied theme = {self._applied_theme}\n')
         if touch_selection:
             if self._applied_theme == -1 or \
                     self._selection >= len(self._themes):
@@ -1141,7 +1135,7 @@ class PyRadioThemeSelector():
         self._height = self._items + 2
 
         if self.log:
-            self.log('max_title_width = {}\n'.format(self._max_title_width))
+            self.log(f'max_title_width = {self._max_title_width}\n')
         self._width = self._max_title_width + 4
 
         """ check if too small """
@@ -1159,7 +1153,7 @@ class PyRadioThemeSelector():
             self._too_small = False
 
             if self.log:
-                self.log('width = {}\n'.format(self._width))
+                self.log(f'width = {self._width}\n')
             self.X = int((maxX - self._width) / 2)
 
             self._page_jump = int(self._items / 2)
@@ -1204,13 +1198,11 @@ class PyRadioThemeSelector():
             if self._selection > old_selection:
                 while self._selection >= self._start_pos + self._items:
                     self._start_pos += self._items
-                if self._start_pos >= len(self._themes) - self._items:
-                    self._start_pos = len(self._themes) - self._items
+                self._start_pos = min(self._start_pos, len(self._themes) - self._items)
             else:
                 while self._selection < self._start_pos:
                     self._start_pos -= self._items
-                if self._start_pos < 0:
-                    self._start_pos = 0
+                self._start_pos = max(self._start_pos, 0)
         self.refresh()
 
     def set_theme(self, a_theme):
@@ -1218,7 +1210,7 @@ class PyRadioThemeSelector():
             if ex_theme == a_theme:
                 if self._selection != i:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Setting theme: "{}"'.format(a_theme))
+                        logger.debug(f'Setting theme: "{a_theme}"')
                     self.selection = i
                 break
 
@@ -1227,7 +1219,7 @@ class PyRadioThemeSelector():
             return
         if self.log:
             self.log('======================\n')
-            self.log('{}\n'.format(self._themes))
+            self.log(f'{self._themes}\n')
         self._draw_box()
         if not self._showed:
             number_of_items = len(self._themes)
@@ -1418,14 +1410,14 @@ class PyRadioThemeSelector():
                         if is_project_theme.can_auto_update:
                             self._theme_is_watched = True
                             if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug('Theme set to auto update: "{}"'.format(self._applied_theme_name))
+                                logger.debug(f'Theme set to auto update: "{self._applied_theme_name}"')
                         else:
                             if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug('Theme cannot auto update: "{}"'.format(self._applied_theme_name))
+                                logger.debug(f'Theme cannot auto update: "{self._applied_theme_name}"')
                     else:
                         self._theme_is_watched = True
                         if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('Theme set to auto update: "{}"'.format(self._applied_theme_name))
+                            logger.debug(f'Theme set to auto update: "{self._applied_theme_name}"')
             self.refresh()
             return self._selection, True
         elif char in (curses.KEY_UP, kbkey['k']) or \
@@ -1484,17 +1476,17 @@ class PyRadioThemeSelector():
                 if not self.changed_from_config:
                     if self._applied_theme_name != self._config_theme_name:
                         if logger.isEnabledFor(logging.INFO):
-                            logger.info('Restoring saved theme: {}'.format(self._config_theme_name))
+                            logger.info(f'Restoring saved theme: {self._config_theme_name}')
                         ret, ret_theme_name = self._theme.readAndApplyTheme(self._config_theme_name)
                         self._applied_theme = self._config_theme
                         if ret == 0:
                             self._applied_theme_name = self._config_theme_name
-                            self._cnf.use_calculated_colors = False if self._cnf.opts['calculated_color_factor'][1] == '0' else True
+                            self._cnf.use_calculated_colors = self._cnf.opts['calculated_color_factor'][1] == '0'
                             self._cnf.update_calculated_colors()
                         else:
                             self._applied_theme_name = ret_theme_name
                             self._cnf.theme_not_supported = True
-                            self._cnf.theme_has_error = True if ret == -1 else False
+                            self._cnf.theme_has_error = ret == -1
                             ''' avoid showing extra notification when exiting theme selector '''
                             self._cnf.theme_not_supported_notification_shown = True
                 self.selection = -1
@@ -1508,7 +1500,7 @@ class PyRadioThemeSelector():
 
 class PyRadioThemeEditor():
 
-    def __init__(self, theme_name, theme_path, editing, config, maxX, maxY):
+    def __init__(self, *, theme_name, theme_path, editing, config, maxX, maxY):
         self.theme_name = theme_name
         self.theme_path = theme_path
         self.editing = editing
@@ -1519,5 +1511,4 @@ class PyRadioThemeEditor():
     def keypress(self, char):
         ''' PyRadioThemeEditor keypress '''
         l_char = None
-        pass
 

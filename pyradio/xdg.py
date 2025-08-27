@@ -165,7 +165,7 @@ class XdgMigrate():
                         remove_tree(self.new_registers_dir)
                     except:
                         if to_console:
-                            print('[red]Error:[/red] CannCannot remove dir: "{}"'.format(self.new_registers_dir))
+                            print(f'[red]Error:[/red] CannCannot remove dir: "{self.new_registers_dir}"')
                         exit(1)
                     go_on = move_registers = True
             else:
@@ -186,7 +186,7 @@ class XdgMigrate():
                     makedirs(n, exist_ok=True)
                 except:
                     if to_console:
-                        print('[red]Error:[/red] Cannot create dir: "{}"'.format(n))
+                        print(f'[red]Error:[/red] Cannot create dir: "{n}"')
                     exit(1)
             i = -1
             max_length = self._get_max_length()
@@ -397,7 +397,7 @@ class XdgDirs():
             'recording'
                 )
         for n in range(len(self._old_dirs)):
-            out.append('{}\n  {}\n  {}'.format(cap[n], self._old_dirs[n], self._new_dirs[n]))
+            out.append(f'{cap[n]}\n  {self._old_dirs[n]}\n  {self._new_dirs[n]}')
         logger.info('\n'.join(out))
 
     @classmethod
@@ -435,7 +435,7 @@ class XdgDirs():
                 try:
                     makedirs(a_dir, exist_ok=True)
                 except:
-                    print('Error: Cannot create directory: "{}"'.format(a_dir))
+                    print(f'Error: Cannot create directory: "{a_dir}"')
                     exit(1)
 
         # getenv('XDG_RUNTIME_DIR', '/run/user/1000')
@@ -552,14 +552,14 @@ class XdgDirs():
             try:
                 move(self._old_dirs[self.CACHE], self._new_dirs[self.CACHE])
             except:
-                print('Cannot move cache\nfrom: "{0}"\nto: "{1}"'.format(self._old_dirs[self.CACHE], self._new_dirs[self.CACHE]))
+                print(f'Cannot move cache\nfrom: "{self._old_dirs[self.CACHE]}"\nto: "{self._new_dirs[self.CACHE]}"')
                 exit(1)
         else:
             if not path.exists(self._new_dirs[self.CACHE]):
                 try:
                     makedirs(self._new_dirs[self.CACHE])
                 except:
-                    print('\nCannot create cache dir: "{}"'.format(self._new_dirs[self.CACHE]))
+                    print(f'\nCannot create cache dir: "{self._new_dirs[self.CACHE]}"')
                     exit(1)
 
     def migrate_recordings(self, silent=False):
@@ -582,7 +582,7 @@ class XdgDirs():
                                 if silent:
                                     return False
                                 else:
-                                    print("\nCannot remove empty target dir: {}".format(self._new_dirs[self.RECORDINGS]))
+                                    print(f"\nCannot remove empty target dir: {self._new_dirs[self.RECORDINGS]}")
                                     exit(1)
                         else:
                             self._new_dirs[self.RECORDINGS] = path.join(self._new_dirs[self.RECORDINGS], 'pyradio-recordings')
@@ -594,7 +594,7 @@ class XdgDirs():
                         if silent:
                             return False
                         else:
-                            print("\nCannot create target's parent dir: {}".format(parent_dir))
+                            print(f"\nCannot create target's parent dir: {parent_dir}")
                             exit(1)
                 try:
                     move(self._old_dirs[self.RECORDINGS], self._new_dirs[self.RECORDINGS])
@@ -602,7 +602,7 @@ class XdgDirs():
                     if silent:
                         return False
                     else:
-                        print('\nCannot copy files\nfrom: "{0}"\nto: {1}'.format(self._old_dirs[self.RECORDINGS], self._new_dirs[self.RECORDINGS]))
+                        print(f'\nCannot copy files\nfrom: "{self._old_dirs[self.RECORDINGS]}"\nto: {self._new_dirs[self.RECORDINGS]}')
                         exit(1)
                 if dir_is_fixed and self.dir_fixed_function is not None:
                     # save config if dir is "fixed"

@@ -436,7 +436,7 @@ class Player():
             self._recording = val
         else:
             self._recording = 0
-        logger.error('\n\nsetting recording to {}'.format(self._recording))
+        logger.error(f'\n\nsetting recording to {self._recording}')
 
     @property
     def buffering_data(self):
@@ -632,7 +632,7 @@ class Player():
         notify_function()
         # logger.error('------------------ after notify function')
         if logger.isEnabledFor(logging.INFO):
-            logger.info('----==== {0} monitor started ====----\nExecuting command {1}'.format(self.PLAYER_NAME, self.monitor_opts))
+            logger.info(f'----==== {self.PLAYER_NAME} monitor started ====----\nExecuting command {self.monitor_opts}')
 
     def save_volume(self):
         pass
@@ -672,7 +672,7 @@ class Player():
             this_enc_string = [x for x in enc if x[0] == this_enc][0][2]
         except:
             this_enc_string = 'Unknown'
-        enc_to_show = '{0} ({1})'.format(this_enc, this_enc_string)
+        enc_to_show = f'{this_enc} ({this_enc_string})'
 
 
         info = collections.OrderedDict()
@@ -775,9 +775,9 @@ class Player():
                                 self._split_config_file(config_file)
                         ind = [(i,x) for i,x in enumerate(lines_no_profile) if 'volume=' in x]
                         if ind:
-                            lines_no_profile[ind[0][0]] = 'volume={}'.format(self.volume)
+                            lines_no_profile[ind[0][0]] = f'volume={self.volume}'
                         else:
-                            lines_no_profile.append('volume={}\n'.format(self.volume))
+                            lines_no_profile.append(f'volume={self.volume}\n')
                         try:
                             with open(config_file, "w", encoding='utf-8') as c_file:
                                 c_file.write(
@@ -920,7 +920,7 @@ class Player():
                     break
                 elif subsystemOut == '':
                     if logger.isEnabledFor(logging.INFO):
-                        logger.info('----==== {} got empty input ====----'.format(self.PLAYER_NAME))
+                        logger.info(f'----==== {self.PLAYER_NAME} got empty input ====----')
                     break
                 elif not is_accepted:
                     continue
@@ -961,7 +961,7 @@ class Player():
                 # logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
                 if logger.isEnabledFor(logging.DEBUG) and \
                         log_player_input() == 1:
-                    logger.debug('PLAYER: "{}"'.format(subsystemOut))
+                    logger.debug(f'PLAYER: "{subsystemOut}"')
 
                 with recording_lock:
                     tmp = self.oldUserInput['Input']
@@ -1120,7 +1120,7 @@ class Player():
                                             logger.error('1008 self.success_in_check_playlist is None')
                                     else:
                                         if logger.isEnabledFor(logging.DEBUG):
-                                            logger.debug('***** Title change inhibited: ok_to_display = {0}, playbabk_is_on = {1}'.format(ok_to_display, self.playback_is_on))
+                                            logger.debug(f'***** Title change inhibited: ok_to_display = {ok_to_display}, playbabk_is_on = {self.playback_is_on}')
                             else:
                                 ok_to_display = True
                                 if (logger.isEnabledFor(logging.INFO)):
@@ -1236,7 +1236,7 @@ class Player():
                 subsystemOut = subsystemOut.replace('\r', '').replace('\n', '')
                 if logger.isEnabledFor(logging.DEBUG) and \
                         log_player_input == 1:
-                    logger.debug('RECORDER: "{0}"'.format(subsystemOut.strip()))
+                    logger.debug('RECORDER: "{}"'.format(subsystemOut.strip()))
                 if stop():
                     break
                 with recording_lock:
@@ -1356,12 +1356,12 @@ class Player():
                     a_data = self._fix_returned_data(data)
                     if logger.isEnabledFor(logging.DEBUG) and \
                             log_player_input() > 0:
-                        logger.debug('PLAYER: "{!r}"'.format(a_data))
+                        logger.debug('PLAYER: "%r"', a_data)
                     http_error = False
                     if b'unrecognized file format' in a_data:
                         http_error = 1004
                         if logger.isEnabledFor(logging.INFO):
-                            logger.info('----==== playbak stopped, reason: "{}" ====----'.format(a_data))
+                            logger.info(f'----==== playbak stopped, reason: "{a_data}" ====----')
                     if b'"file_error":"unrecognized file format"' in a_data:
                         http_error = 1008
                         break
@@ -1369,7 +1369,7 @@ class Player():
                         if b'"error":"success"' in a_data:
                             # logger.error('it is valid!')
                             if logger.isEnabledFor(logging.INFO):
-                                logger.info('----==== playbak stopped, reason: "{}" ====----'.format(a_data))
+                                logger.info(f'----==== playbak stopped, reason: "{a_data}" ====----')
                             ''' try to parse it '''
                             if b'HTTP Error 404' in a_data or \
                                     b'HTTPError 404' in a_data or \
@@ -1576,7 +1576,7 @@ class Player():
                     continue
                 if logger.isEnabledFor(logging.DEBUG) and \
                         log_player_input == 1:
-                    logger.debug('PLAYER: "{0}"'.format(subsystemOut.strip()))
+                    logger.debug('PLAYER: "%s"', subsystemOut.strip())
                 is_accepted = self._is_accepted_input(subsystemOut)
                 if logger.isEnabledFor(logging.DEBUG) and \
                         log_player_input == 2:
@@ -2232,7 +2232,7 @@ class Player():
         )
         self.stop_mpv_status_update_thread = False
         if logger.isEnabledFor(logging.INFO):
-            logger.info('Executing command: {}'.format(' '.join(opts)))
+            logger.info('Executing command: %s', ' '.join(opts))
 
         if self._cnf.USE_EXTERNAL_PLAYER:
             ''' do not start the player, just return opts '''
@@ -2352,7 +2352,7 @@ class Player():
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('playback detection thread not starting (timeout is 0)')
         if logger.isEnabledFor(logging.INFO):
-            logger.info('----==== {} player started ====----'.format(self.PLAYER_NAME))
+            logger.info(f'----==== {self.PLAYER_NAME} player started ====----')
         self.currently_recording = True if self.recording > 0 else False
         if self.recording == self.RECORD_AND_LISTEN \
                 and self.PLAYER_NAME != 'mpv':
@@ -2403,24 +2403,24 @@ class Player():
         # Check if the process has terminated
         if a_process.poll() is not None:
             if logger.isEnabledFor(logging.ERROR):
-                logger.error("Cannot send command; process has terminated. Command: {}".format(command).strip())
+                logger.error(f"Cannot send command; process has terminated. Command: {command}".strip())
             return
 
         # Optionally check if stdin is valid and open
         if a_process.stdin is None or getattr(a_process.stdin, "closed", False):
             if logger.isEnabledFor(logging.ERROR):
-                logger.error("Cannot send command; process's stdin is closed. Command: {}".format(command).strip())
+                logger.error(f"Cannot send command; process's stdin is closed. Command: {command}".strip())
             return
 
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("Sending Command: {}".format(command).strip())
+            logger.debug(f"Sending Command: {command}".strip())
         try:
             # Write the command to the process's standard input
             a_process.stdin.write(command.encode('utf-8', 'replace'))
             a_process.stdin.flush()
         except Exception:
             if logger.isEnabledFor(logging.ERROR):
-                logger.error("Error while sending Command: {}".format(command).strip())
+                logger.error(f"Error while sending Command: {command}".strip())
 
     def close_from_windows(self):
         ''' kill player instance when window console is closed '''
@@ -2478,7 +2478,7 @@ class Player():
             parent = psutil.Process(pid)
         else:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('PID {} does not exist...'.format(pid))
+                logger.debug(f'PID {pid} does not exist...')
             return
         try:
             children = parent.children(recursive=True)
@@ -2492,7 +2492,7 @@ class Player():
                 except:
                     pass
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('PID {} (and its children)  killed...'.format(pid))
+                logger.debug(f'PID {pid} (and its children)  killed...')
         except psutil.NoSuchProcess:
             pass
 
@@ -2682,7 +2682,7 @@ class MpvPlayer(Player):
         else:
             mpvsocket = '/tmp/mpvsocket.{}'.format(os.getpid())
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('mpv socket is "{}"'.format(mpvsocket))
+            logger.debug(f'mpv socket is "{mpvsocket}"')
         if os.path.exists(mpvsocket):
             os.system('rm ' + mpvsocket + ' 2>/dev/null')
 
@@ -2731,8 +2731,10 @@ class MpvPlayer(Player):
         return self._do_save_volume(self.profile_token + '\nvolume={}\n')
 
     def _buildStartOpts(self, a_station, playList=False):
-        logger.error('\n\nprofiles = {}\n\n'.format(self._cnf.profile_manager.profiles(self.PLAYER_NAME)))
-        logger.error('\n\nall_profiles = {}\n\n'.format(self._cnf.profile_manager.all_profiles()))
+        profiles = self._cnf.profile_manager.profiles(self.PLAYER_NAME)
+        logger.error('\n\nprofiles = %s\n\n', profiles)
+        all_profiles = self._cnf.profile_manager.all_profiles()
+        logger.error('\n\nall_profiles = %s\n\n', all_profiles)
         ''' Builds the options to pass to mpv subprocess.'''
         # logger.error('\n\nself._recording = {}'.format(self._recording))
         # logger.error('self.profile_name = "{}"'.format(self.profile_name))
@@ -2790,23 +2792,23 @@ class MpvPlayer(Player):
                 profile_string = None
                 if self.station_volume != -1 and self.enable_per_station_volume:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Initial profile: "[{}]"'.format(profile))
+                        logger.debug(f'Initial profile: "[{profile}]"')
                     ret = self._cnf.profile_manager.copy_profile_with_new_volume(
                         self.PLAYER_NAME, profile, 'pyradio-volume', str(self.station_volume)
                     )
                     if ret:
                         profile = ret
-                        profile_string = 'Using profile: "[{}]", volume: {}'.format(profile, self.station_volume)
+                        profile_string = f'Using profile: "[{profile}]", volume: {self.station_volume}'
                 opts.append('--profile=' + profile)
                 if (logger.isEnabledFor(logging.INFO)):
                     if profile_string:
                         logger.info(profile_string)
                     else:
-                        logger.info('Using profile: "[{}]"'.format(profile))
+                        logger.info(f'Using profile: "[{profile}]"')
             else:
                 if (logger.isEnabledFor(logging.INFO)):
                     if self.USE_PROFILE == 0:
-                        logger.info('Profile "[{}]" not found in config file!!!'.format(profile))
+                        logger.info(f'Profile "[{profile}]" not found in config file!!!')
                     else:
                         logger.info('No usable profile found')
 
@@ -2815,7 +2817,7 @@ class MpvPlayer(Player):
             self.recording_filename = self.get_recording_filename(self.name, '.mkv')
             opts.append('--stream-record=' + self.recording_filename)
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('---=== Starting Recording: "{}" ===---'.format(self.recording_filename))
+                logger.debug(f'---=== Starting Recording: "{self.recording_filename}" ===---')
 
         referer, referer_file = self._get_referer(
             a_station[Station.name], a_station[Station.referer]
@@ -2853,7 +2855,7 @@ class MpvPlayer(Player):
             self.buffering_change_function()
         # logger.error('==== self.buffering = {}'.format(self.buffering))
 
-        logger.error('Opts:\n{}'.format(opts))
+        logger.error(f'Opts:\n{opts}')
         return opts, None, referer, referer_file
 
     def _fix_returned_data(self, data):
@@ -3356,24 +3358,24 @@ class MpPlayer(Player):
                 profile_string = None
                 if self.station_volume != -1 and self.enable_per_station_volume:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Initial profile: "[{}]"'.format(profile))
+                        logger.debug(f'Initial profile: "[{profile}]"')
                     ret = self._cnf.profile_manager.copy_profile_with_new_volume(
                         self.PLAYER_NAME, profile, 'pyradio-volume', str(self.station_volume)
                     )
                     if ret:
                         profile = ret
-                        profile_string = 'Using profile: "[{}]", volume: {}'.format(profile, self.station_volume)
+                        profile_string = f'Using profile: "[{profile}]", volume: {self.station_volume}'
                 opts.append('-profile')
                 opts.append(profile)
                 if (logger.isEnabledFor(logging.INFO)):
                     if profile_string:
                         logger.info(profile_string)
                     else:
-                        logger.info('Using profile: "[{}]"'.format(profile))
+                        logger.info(f'Using profile: "[{profile}]"')
             else:
                 if (logger.isEnabledFor(logging.INFO)):
                     if self.USE_PROFILE == 0:
-                        logger.info('Profile "[{}]" not found in config file!!!'.format(profile))
+                        logger.info(f'Profile "[{profile}]" not found in config file!!!')
                     else:
                         logger.info('No usable profile found')
 
@@ -3416,7 +3418,7 @@ class MpPlayer(Player):
             opts.append('-dumpfile')
             opts.append(self.recording_filename)
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('---=== Starting Recording: "{}" ===---'.format(self.recording_filename))
+                logger.debug(f'---=== Starting Recording: "{self.recording_filename}" ===---')
 
         ''' check if buffering '''
         self.buffering = self._player_is_buffering(opts, self.buffering_tokens)
@@ -3679,7 +3681,7 @@ class VlcPlayer(Player):
             self._win_volup()
             self._win_show_vlc_volume()
         else:
-            self._sendCommand('volume {}\n'.format(vol))
+            self._sendCommand(f'volume {vol}\n')
 
     def set_volume(self, vol):
         if self.isPlaying() and \
@@ -3688,7 +3690,7 @@ class VlcPlayer(Player):
             ivol = int(vol)
             ovol = round(self.max_volume*ivol/100)
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('setting volume at {0}% ({1}) with max_volume={2}'.format(ivol, ovol, self.max_volume))
+                logger.debug(f'setting volume at {ivol}% ({ovol}) with max_volume={self.max_volume}')
             if ovol != int(self.volume):
                 diff = 10 if ovol > int(self.volume) else -10
                 vols = [x + diff for x in range(int(self.volume), ovol, diff)]
@@ -3696,7 +3698,7 @@ class VlcPlayer(Player):
                 if self.WIN:
                     self.show_volume = False
                     for a_vol in vols:
-                        self._thrededreq('volume {}'.format(a_vol))
+                        self._thrededreq(f'volume {a_vol}')
                         self.volume = a_vol
                         sleep(.01)
                     self._win_get_volume()
@@ -3705,7 +3707,7 @@ class VlcPlayer(Player):
                 else:
                     self.show_volume = False
                     for a_vol in vols:
-                        self._sendCommand('volume {}\n'.format(a_vol))
+                        self._sendCommand(f'volume {a_vol}\n')
                         self.volume = a_vol
                         sleep(.01)
                     self.show_volume = True
@@ -3728,18 +3730,18 @@ class VlcPlayer(Player):
             random.seed()
             ok_to_go_on = False
             while True:
-                logger.error('DE getting port for {}'.format(self.config_dir))
+                logger.error(f'DE getting port for {self.config_dir}')
                 self._port = random.randint(44000, 44999)
                 self._vlc_stdout_log_file = os.path.join(self.config_dir, 'vlc_log.' + str(self._port))
                 if os.path.exists(self._vlc_stdout_log_file):
                     ''' another instance running? '''
-                    logger.error('DE file exists: "{}"'.format(self._vlc_stdout_log_file))
+                    logger.error(f'DE file exists: "{self._vlc_stdout_log_file}"')
                     continue
                 try:
                     with open(self._vlc_stdout_log_file, 'w', encoding='utf-8'):
                         ok_to_go_on = True
                 except:
-                    logger.error('DE file not opened: "{}"'.format(self._vlc_stdout_log_file))
+                    logger.error(f'DE file not opened: "{self._vlc_stdout_log_file}"')
                     continue
                 if ok_to_go_on:
                     break
@@ -3755,8 +3757,8 @@ class VlcPlayer(Player):
                     self._url_to_use(a_station[Station.url], a_station[Station.http])]
 
                 if logger.isEnabledFor(logging.INFO):
-                    logger.info('vlc listening on 127.0.0.1:{}'.format(self._port))
-                    logger.info('vlc log file: "{}"'.format(self._vlc_stdout_log_file))
+                    logger.info(f'vlc listening on 127.0.0.1:{self._port}')
+                    logger.info(f'vlc log file: "{self._vlc_stdout_log_file}"')
 
         else:
             if self.recording == self.NO_RECORDING:
@@ -3821,7 +3823,7 @@ class VlcPlayer(Player):
             opts.append(r'file/ps:' + self.recording_filename)
             monitor_opts.append(self.recording_filename)
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('---=== Starting Recording: "{}" ===---'.format(self.recording_filename))
+                logger.debug(f'---=== Starting Recording: "{self.recording_filename}" ===---')
 
         ''' check if buffering '''
         self.buffering = self._player_is_buffering(opts, self.buffering_tokens)
@@ -3841,10 +3843,10 @@ class VlcPlayer(Player):
                 self._win_set_volume(self._unmuted_volume)
                 self.volume = int(100 * self._unmuted_volume / self.max_volume)
             else:
-                self._sendCommand('volume {}\n'.format(self.actual_volume))
+                self._sendCommand(f'volume {self.actual_volume}\n')
                 self.volume = int(100 * self.actual_volume / self.max_volume)
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('VLC unmuted: {0} ({1}%)'.format(self.actual_volume, self.volume))
+                logger.debug(f'VLC unmuted: {self.actual_volume} ({self.volume}%)')
             self.muted = False
         else:
             if self.actual_volume == -1:
@@ -3928,7 +3930,7 @@ class VlcPlayer(Player):
             dec_sep = '.' if '.' in volume_string else ','
             self.actual_volume = int(volume_string.split(self.volume_string)[1].split(dec_sep)[0].split()[0])
             self.volume = int(100 * self.actual_volume / self.max_volume)
-        return '[' + M_STRINGS['vol_'] + '{}%] '.format(self.volume)
+        return '[' + M_STRINGS['vol_'] + f'{self.volume}%] '
 
     def _format_title_string(self, title_string):
         ''' format vlc's title '''
@@ -4079,7 +4081,7 @@ class VlcPlayer(Player):
         self._thrededreq_thread.join()
         pvol = int(100 * self.actual_volume / self.max_volume)
         if pvol > 0:
-            avol = '[' + M_STRINGS['vol_'] + '{}%] '.format(pvol)
+            avol = '[' + M_STRINGS['vol_'] + f'{pvol}%] '
             if self.show_volume and self.oldUserInput['Title']:
                 self.outputStream.write(msg_id=STATES.VOLUME, msg=avol + self.oldUserInput['Title'], counter='')
                 self.threadUpdateTitle()
@@ -4204,7 +4206,7 @@ class PyRadioChapters():
                     self.HAS_MKVTOOLNIX = True
                     self.mkvmerge = mkvmerge_file
         if logger.isEnabledFor(logging.INFO):
-            logger.info('mkvmerge is: "{}"'.format(self.mkvmerge))
+            logger.info(f'mkvmerge is: "{self.mkvmerge}"')
 
     def add_function(self):
         ''' return the function to use to add
@@ -4244,7 +4246,7 @@ class PyRadioChapters():
             else:
                 if self.HAS_MKVTOOLNIX:
                     if logger.isEnabledFor(logging.INFO):
-                        logger.info('starting mkvmerge!\ninput_file: "{}"'.format(input_file))
+                        logger.info(f'starting mkvmerge!\ninput_file: "{input_file}"')
                     threading.Thread(
                             target=self.write_chapters_to_file_thread(input_file)
                         )
@@ -4286,7 +4288,7 @@ class PyRadioChapters():
         ):
             if os.path.exists(n):
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('cover file is: "{}"'.format(n))
+                    logger.debug(f'cover file is: "{n}"')
                 cover_file = n
                 break
         if cover_file:
@@ -4300,7 +4302,7 @@ class PyRadioChapters():
             self._mkv_file
             ])
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('merge options = {}'.format(opts))
+            logger.debug(f'merge options = {opts}')
         p = subprocess.Popen(
                 opts, shell=False,
                 stdout=subprocess.PIPE,
@@ -4321,7 +4323,7 @@ class PyRadioChapters():
             return True
         else:
             if logger.isEnabledFor(logging.ERROR):
-                logger.error('mkvmerge failed with error:\n{}'.format(err))
+                logger.error(f'mkvmerge failed with error:\n{err}')
             return False
 
     def _remove_starting_tmp_string(self, a_string):
@@ -4432,8 +4434,8 @@ class PyRadioChapters():
         m, s = divmod(rem, 60)
         n = int(a_timedelta.microseconds/1000)
         return '{0:0>2}:{1:0>2}:{2:0>2}.{3:0>3}'.format(
-                h, m, s, n
-                )
+            h, m, s, n
+        )
 
 
 class PlayerCache():
@@ -4566,7 +4568,7 @@ def probePlayer(config, requested_player=''):
                 if a_found_player.PLAYER_NAME == r_player:
                     return a_found_player
         if logger.isEnabledFor(logging.INFO):
-            logger.info('Requested player "{}" not supported'.format(requested_player))
+            logger.info(f'Requested player "{requested_player}" not supported')
         return None
     else:
         return available_players[0] if available_players else None
@@ -4580,9 +4582,9 @@ def check_player(a_player):
         p.terminate()
 
         if logger.isEnabledFor(logging.INFO):
-            logger.info('{} supported.'.format(str(a_player)))
+            logger.info('%s supported.', str(a_player))
         return a_player
     except OSError:
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('{} not supported.'.format(str(a_player)))
+            logger.debug('%s not supported.', str(a_player))
         return None

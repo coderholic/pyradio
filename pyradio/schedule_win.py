@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
 import locale
 from datetime import datetime, timedelta
-from calendar import monthrange
 from time import sleep
 import curses
 import logging
 import threading
 import platform
 
-from .simple_curses_widgets import DisabledWidget, SimpleCursesCheckBox, SimpleCursesPushButton, SimpleCursesTime, SimpleCursesString, SimpleCursesDate, SimpleCursesLineEdit
-from .cjkwrap import cjklen, cjkslices
-from .schedule import PyRadioScheduleItem, PyRadioScheduleItemType, PyRadioScheduleTimeType, PyRadioTime, PyRadioScheduleList, format_date_to_iso8851, random_string, datetime_to_my_time, is_date_before
+from .simple_curses_widgets import SimpleCursesCheckBox, SimpleCursesPushButton, SimpleCursesTime, SimpleCursesString, SimpleCursesDate, SimpleCursesLineEdit
+from .schedule import PyRadioScheduleItem, PyRadioScheduleItemType, PyRadioScheduleTimeType, PyRadioTime, PyRadioScheduleList, format_date_to_iso8851, datetime_to_my_time, is_date_before
 from .keyboard import kbkey, check_localized
 
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -170,7 +168,7 @@ class PyRadioSimpleScheduleWindow():
 
         logger.error('set_item')
         for n in self._schedule_item.item:
-            logger.error('{0}: {1}'.format(n, self._schedule_item.item[n]))
+            logger.error(f'{n}: {self._schedule_item.item[n]}')
 
         ''' parse and assign values '''
 
@@ -618,7 +616,7 @@ class PyRadioSimpleScheduleWindow():
         self._widgets[19].string = self._repeat[self._repeat_index].ljust(self._max_repeat_len)
 
     def _item_to_form(self):
-        logger.error('\n\n{}\n\n'.format(self._schedule_item.item))
+        logger.error(f'\n\n{self._schedule_item.item}\n\n')
         ''' assign values '''
         self._widgets[3].date = self._schedule_item.item['start_date']
         self._widgets[5].time = self._schedule_item.item['start_time']
@@ -774,19 +772,19 @@ class PyRadioSimpleScheduleWindow():
     def _fix_focus(self):
         for i in (2, 8):
             for k in range(2, 6):
-                logger.error('setting {0} enabled to {1}'.format(i+k, self._widgets[i].checked))
+                logger.error(f'setting {i + k} enabled to {self._widgets[i].checked}')
                 self._widgets[i+k].enabled = self._widgets[i].checked
 
         for i in range(14, 20):
             # logger.debug('{0} enabled is now {1}'.format(i, self._widgets[2].checked))
-            logger.error('setting {0} enabled to {1}'.format(i, self._widgets[2].checked))
+            logger.error(f'setting {i} enabled to {self._widgets[2].checked}')
             self._widgets[i].enabled = self._widgets[2].checked
 
         # self._widgets[-2].enabled = self._widgets[2].checked or self._widgets[8].checked
 
         for i in (4, 6, 10, 12):
             if self._widgets[i].enabled:
-                logger.error('setting {0} enabled to {1} - {2}'.format(i, i, self._widgets[i].checked))
+                logger.error(f'setting {i} enabled to {i} - {self._widgets[i].checked}')
                 self._widgets[i+1].enabled = self._widgets[i].checked
 
         # for i in (6, 12):
@@ -799,7 +797,7 @@ class PyRadioSimpleScheduleWindow():
 
         for i in (15, 18):
             if self._widgets[i].enabled:
-                logger.error('setting {0} enabled to {1}'.format(i+1, self._widgets[i].checked))
+                logger.error(f'setting {i + 1} enabled to {self._widgets[i].checked}')
                 self._widgets[i+1].enabled = self._widgets[i].checked
 
         self._fix_recording_from_player_selection()
@@ -898,7 +896,7 @@ class PyRadioSimpleScheduleWindow():
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('--== item ==--')
             for n in tmp_item.item:
-                logger.debug('{0}: {1}'.format(n, tmp_item.item[n]))
+                logger.debug(f'{n}: {tmp_item.item[n]}')
         return tmp_item
 
     def _show_info(self):
@@ -916,10 +914,10 @@ class PyRadioSimpleScheduleWindow():
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('--== active item ==--')
             for n in tmp_item.active_item:
-                logger.debug('{0}: {1}'.format(n, tmp_item.active_item[n]))
+                logger.debug(f'{n}: {tmp_item.active_item[n]}')
         ac_tmp_item = tmp_item.get_active_item()
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('ac_tmp_item = {}'.format(ac_tmp_item))
+            logger.debug(f'ac_tmp_item = {ac_tmp_item}')
 
         err_out = []
         error = False
@@ -965,7 +963,7 @@ class PyRadioSimpleScheduleWindow():
             it_count = 3 if tmp_item.item['type'] == 0 else 6
             the_r_list = PyRadioScheduleList(a_file='', a_list=[tmp_item.item])
             the_list = the_r_list.get_list_of_repeating_dates(it_count)
-            out.append('Displaying |{}| subsequent occurrences:'.format(it_count))
+            out.append(f'Displaying |{it_count}| subsequent occurrences:')
             for n in the_list:
                 out.append('__|#| Start: |' + n[0] + '__')
                 if tmp_item.item['type'] == 0:
@@ -991,8 +989,8 @@ class PyRadioSimpleScheduleWindow():
             out.append('')
         self._info_result = '\n'.join(out)
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('self._info_result\n{}'.format(self._info_result))
-            logger.debug('ret = {}'.format(ret))
+            logger.debug(f'self._info_result\n{self._info_result}')
+            logger.debug(f'ret = {ret}')
 
     def _format_info_lines(self, the_type, item):
         out = []
@@ -1024,17 +1022,17 @@ class PyRadioSimpleScheduleWindow():
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('--== active item ==--')
             for n in tmp_item.active_item:
-                logger.debug('{0}: {1}'.format(n, tmp_item.active_item[n]))
-            logger.debug('tmp_item ={}'.format(tmp_item))
+                logger.debug(f'{n}: {tmp_item.active_item[n]}')
+            logger.debug(f'tmp_item ={tmp_item}')
         ac_tmp_item = tmp_item.get_active_item()
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('ac_tmp_item = {}'.format(ac_tmp_item))
+            logger.debug(f'ac_tmp_item = {ac_tmp_item}')
 
         the_type = ac_tmp_item[3]
         rep = ac_tmp_item[-4]
 
-        logger.error('\nthe_type = {}'.format(the_type))
-        logger.error('rep = {}\n'.format(rep))
+        logger.error(f'\nthe_type = {the_type}')
+        logger.error(f'rep = {rep}\n')
 
         if the_type in (0, 1) and rep is None:
             if is_date_before(ac_tmp_item[1], datetime.now()):
@@ -1126,16 +1124,16 @@ class PyRadioSimpleScheduleWindow():
         f_dur = f_time + 2
 
         for n in enable:
-            logger.error('setting {0} enabled to {1}'.format(n, True))
+            logger.error(f'setting {n} enabled to {True}')
             self._widgets[n].enabled = True
         for n in disable:
-            logger.error('setting {0} enabled to {1}'.format(n, False))
+            logger.error(f'setting {n} enabled to {False}')
             self._widgets[n].enabled = False
         for n in checked:
-            logger.error('setting {0} checked to {1}'.format(n, True))
+            logger.error(f'setting {n} checked to {True}')
             self._widgets[n].checked = True
         for n in notchecked:
-            logger.error('setting {0} checked to {1}'.format(n, False))
+            logger.error(f'setting {n} checked to {False}')
             self._widgets[n].checked = False
 
         self._widgets[f_date].set_date_tupple((
@@ -1189,7 +1187,7 @@ class PyRadioSimpleScheduleWindow():
         l_char = None
         if self._widgets[self._focus].w_id == 22:
             ret = self._widgets[22].keypress(self._win, char)
-            logger.error('return = {}'.format(ret))
+            logger.error(f'return = {ret}')
             if ret == -1:
                 self._stop = True
                 self._exit = True
@@ -1249,10 +1247,10 @@ class PyRadioSimpleScheduleWindow():
                 for n in disable:
                     self._widgets[n].enabled = False
                 for n in checked:
-                    logger.error('setting {0} checked to {1}'.format(n, True))
+                    logger.error(f'setting {n} checked to {True}')
                     self._widgets[n].checked = True
                 for n in notchecked:
-                    logger.error('setting {0} checked to {1}'.format(n, False))
+                    logger.error(f'setting {n} checked to {False}')
                     self._widgets[n].checked = False
 
                 self._widgets[f_date].set_date_tupple((
@@ -1387,7 +1385,7 @@ class PyRadioSimpleScheduleWindow():
                     logger.error('return 1')
                     # TODO: create an entry
                     return 1
-                logger.error('return {}'.format(self._error_num))
+                logger.error(f'return {self._error_num}')
                 return self._error_num
 
             elif self._widgets[self._focus].w_id in (3, 5, 7, 9, 11, 13):
