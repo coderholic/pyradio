@@ -149,6 +149,8 @@ If you are a packager and would like to produce a package for your distribution 
 
 3. [Vifm](https://vifm.info/) -  A file manager with curses interface, which provides a Vi[m]-like environment.
 
+4. [pyradio-m3u-to-playlist](https://github.com/LionyxML/pyradio-m3u-to-playlist) by [LionyxML](https://github.com/LionyxML) - An M3U to **PyRadio** CSV converter which inspired the M3U fumctionality.
+
 ## Special thanks
 
 1. [edunfelt](https://github.com/edunfelt), for her wonderful work on [base16 themes](https://github.com/edunfelt/base16-pyradio), and ideas regarding theming and such.

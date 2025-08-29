@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PyRadio M3U Playlist Support</title>
+    <style> 
+    body {padding: 2em;} 
+    @media screen and (max-width: 770px) { 
+        body {padding: 10px;} 
+    }
+    body {max-width: 750px; margin: auto;} 
+    h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
+    h3 {margin-top: 2em; color: SaddleBrown; text-decoration: underline SaddleBrown} 
+    h4 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 1em;} 
+    h4:before {content: "# "; font-weight: bold; vertical-align: middle;} 
+    h5 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 1em;;} 
+    h5:before {content: "## "; font-weight: bold; vertical-align: middle;} 
+    p, table, ol, ul {margin-left: .8em;} 
+    STRONG {color: SaddleBrown;} 
+    dl {margin: 2em;} 
+    dd {margin: 1em;} 
+    dt {font-weight: bold;} 
+    TABLE {border: 1px solid SaddleBrown; border-collapse: collapse; margin-left: auto; margin-right: auto; border-radius: 5px; -moz-border-radius: 5px; border-collapse:separate; box-shadow: 5px 5px 15px #888888;} 
+    TH {text-align: left; vertical-align: top; padding: 5px;color: SaddleBrown;border: 1px solid SaddleBrown; background-color: SaddleBrown; color: white;} 
+    TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
+    pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; overflow: auto; box-shadow: 5px 5px 15px #C7C7C7;} 
+    .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} 
+    img{display: block; margin-left: auto; margin-right: auto; max-width: 750px; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
+    .indented {text-indent: -1.5em; padding-left: 1.5em; margin-left: 1em;} 
+    a{ color: SaddleBrown;}
+a:visited{color: SaddleBrown;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+</header>
+<h1 style="color: SaddleBrown" id="pyradio-m3u-playlist-support">PyRadio M3U Playlist Support</h1>
+<p><strong>PyRadio</strong> offers seamless two-way conversion between its native CSV playlist format and the widely supported M3U format. This functionality allows you to import radio stations from external M3U sources and export your <strong>PyRadio</strong> stations to share with other media players.</p>
+<h2 id="what-you-can-do">What You Can Do <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<h3 id="convert-m3u-to-pyradio-csv">Convert M3U to PyRadio CSV</h3>
+<p>When you have an M3U playlist file (from another media player or online source), <strong>PyRadio</strong> can convert it to its CSV format while preserving important metadata like station logos and group categories. The conversion process:</p>
+<ul>
+<li>Reads standard M3U files (both local and remote URLs)</li>
+<li>Extracts station names, URLs, and metadata</li>
+<li>Preserves group/category information</li>
+<li>Validates URLs to ensure they’re working streams</li>
+<li>Handles various character encodings automatically</li>
+<li>Converts HTML entities to readable text</li>
+</ul>
+<p>The default maximum number of stations in an M3U file is 10,000.</p>
+<p>You can perform M3U to CSV conversion in two ways:</p>
+<ol type="1">
+<li><p><strong>Command line conversion</strong> using the --convert option.<br />
+<br />
+This is ideal for batch conversions of multiple files (or M3U URLs).<br />
+<br />
+It also provides a way to convert very large M3Us to CSV; the “-lm” / “--limit” parameter will help you overcome the default 10,000 stations limit.</p></li>
+<li><p><strong>Automatic conversion within PyRadio</strong> when selecting M3U playlists from the playlist browser<br />
+<br />
+<strong>PyRadio</strong> automatically detects M3U files in your playlists directory and labels them with ” (m3u)” suffix. When you select an M3U playlist from within <strong>PyRadio</strong>, it transparently converts it to CSV format for editing and use within the application.<br />
+<br />
+If both M3U and CSV versions of a playlist exist, <strong>PyRadio</strong> prioritizes the CSV file, assuming it’s your preferred edited version.</p></li>
+</ol>
+<h3 id="convert-pyradio-csv-to-m3u">Convert PyRadio CSV to M3U</h3>
+<p>When you want to use your <strong>PyRadio</strong> stations with other media players or share them with others, you can export to the universal M3U format. The conversion:</p>
+<ul>
+<li>Maintains all your station information</li>
+<li>Preserves PyRadio-specific settings through custom tags</li>
+<li>Formats the output for maximum compatibility</li>
+<li>Applies proper character escaping for M3U standards</li>
+<li>Includes both standard and extended M3U metadata</li>
+</ul>
+<h2 id="character-conversions-in-csvm3u-conversion">Character Conversions in CSV→M3U Conversion <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>When converting from <strong>PyRadio</strong> CSV to M3U format, certain characters are automatically converted for better compatibility and visual presentation:</p>
+<table>
+<colgroup>
+<col style="width: 45%" />
+<col style="width: 33%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th>Original Character</th>
+<th>Converted To</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Comma (,)</td>
+<td>Middle dot (·) with spaces</td>
+<td>Prevents parsing issues in M3U files</td>
+</tr>
+<tr>
+<td>Hyphen (-)</td>
+<td>En dash (–) with spaces</td>
+<td>Improved visual appearance</td>
+</tr>
+<tr>
+<td>Straight quote (")</td>
+<td>Right double quotation mark (”)</td>
+<td>Better typography</td>
+</tr>
+</tbody>
+</table>
+<p>These conversions help maintain data integrity while ensuring the M3U files work reliably across different media players.</p>
+<h2 id="field-correspondence">Field Correspondence <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>Here’s how PyRadio’s internal fields map to M3U attributes:</p>
+<table>
+<colgroup>
+<col style="width: 34%" />
+<col style="width: 36%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>PyRadio Field</th>
+<th>M3U Equivalent</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Station.name</td>
+<td>#EXTINF title</td>
+<td>The display name of the radio station</td>
+</tr>
+<tr>
+<td>Station.url</td>
+<td>Direct URL line</td>
+<td>The stream URL (after #EXTINF line)</td>
+</tr>
+<tr>
+<td>Station.encoding</td>
+<td>#PYRADIO-ENCODING</td>
+<td>Character encoding specification</td>
+</tr>
+<tr>
+<td>Station.icon</td>
+<td>tvg-logo attribute or #EXTIMG</td>
+<td>Station icon image URL</td>
+</tr>
+<tr>
+<td>Station.profile</td>
+<td>#PYRADIO-PROFILE</td>
+<td>Audio profile setting</td>
+</tr>
+<tr>
+<td>Station.buffering</td>
+<td>network-caching + #PYRADIO-BITRATE</td>
+<td>Buffer and bitrate settings</td>
+</tr>
+<tr>
+<td>Station.http</td>
+<td>#PYRADIO-HTTP</td>
+<td>Force HTTP option (special PyRadio feature)</td>
+</tr>
+<tr>
+<td>Station.volume</td>
+<td>#PYRADIO-VOLUME</td>
+<td>Volume preset for the station</td>
+</tr>
+<tr>
+<td>Station.referer</td>
+<td>http-referrer option</td>
+<td>HTTP referer header for the stream</td>
+</tr>
+<tr>
+<td>Station.player</td>
+<td>#PYRADIO-PLAYER</td>
+<td>Preferred media player for this station</td>
+</tr>
+</tbody>
+</table>
+<p>Group information is preserved through M3U’s group-title attribute and/or #EXTGRP directives.</p>
+<p>All <strong>#PYRADIO-</strong>* fields inserted in created M3Us are there to preserve <strong>PyRadio</strong> specific data; they will be ignored by all existing players but will be used if the M3U is converted back to a CSV.</p>
+<h2 id="command-line-usage">Command Line Usage <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>The conversion functionality is accessible through PyRadio’s command line interface:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert M3U to CSV</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pyradio</span> <span class="at">--convert</span> playlist.m3u</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert online M3U to CSV</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">pyradio</span> <span class="at">--convert</span> https://radio-site.org/m3u/playlist.m3u</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert CSV to M3U</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ex">pyradio</span> <span class="at">--convert</span> radio.csv</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Specify output file for conversion</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="ex">pyradio</span> <span class="at">--convert</span> radio <span class="at">-o</span> my_playlist.m3u</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Force overwrite without confirmation</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="ex">pyradio</span> <span class="at">--convert</span> radio <span class="at">-o</span> my_playlist <span class="at">-y</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Limit the number of processed stations</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co"># This one actually extends it from 10,000 to 50,000</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="ex">pyradio</span> <span class="at">--convert</span> large_playlist.m3u <span class="at">-lm</span> 50000</span></pre></div>
+</body>
+</html>

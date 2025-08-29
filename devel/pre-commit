@@ -157,7 +157,8 @@ for afile in index.md \
     headless.md \
     client.md \
     rec-dir.md \
-    buffering.md
+    buffering.md \
+    m3u.md
 do
     sed -i -e "s/'s-/s-/g" -e "s/s'-/s-/g"  "$afile"
     git add "$afile"
@@ -202,6 +203,8 @@ do
         echo '% PyRadio Recordings Directory' > tmp.md
     elif [ "$afile" = "buffering.md" ];then
         echo '% PyRadio Buffering' > tmp.md
+    elif [ "$afile" = "m3u.md" ];then
+        echo '% PyRadio M3U Playlist Support' > tmp.md
     fi
     cat ${afile} >> tmp.md
     pandoc --wrap=none -s -t html tmp.md -o ${out} || {

@@ -404,20 +404,23 @@ If nothing else works, try the following command:
 
     gr_m3u = parser.add_argument_group('• m3u playlist handling')
     gr_m3u.add_argument('-cvt', '--convert', default='',
-                        help='Convert CSV (PyRadio playlist) to m3u and vise-versa, based on the file extension of CONVERT. '
+                        help='Convert CSV (PyRadio playlist) to M3U and vise-versa, based on the file extension of CONVERT. '
                         'If there\'s no file extension, .csv is assumed. '
-                        'Accepts -y, -o (general options). With -o: provides '
-                        'the output file for the CSV to m3u conversion. '
+                        'Accepts -y, -o, -lm (general options). With -o: provides '
+                        'the output file for the CSV to M3U conversion. '
                         'If not specified, the same path (including the name) '
                         'as the CONVERT parameter is used, replacing .csv with .m3u. '
-                        'The file extension .m3u will be automatically added if not specified.'
+                        'The file extension .m3u will be automatically added if not specified. '
+                        'With -lm: specify maximum number of stations in an M3U file (default is 10,000).'
                         )
 
     gr_general = parser.add_argument_group('• options')
     gr_general.add_argument('-o', '--output', default='',
-                        help='Output file path (see specific commands for default behavior)')
+                        help='Output file path (see specific commands for default behavior).')
     gr_general.add_argument('-y', '--yes', '--force', action='store_true',
-                        help='Assume yes to all prompts (dangerous: overwrites files without confirmation, etc.)')
+                        help='Assume yes to all prompts (dangerous: overwrites files without confirmation, etc.).')
+    gr_general.add_argument('-lm', '--limit', default='',
+                        help='Use LIMIT as a maximim value of accected items.')
 
     args = parser.parse_args()
     sys.stdout.flush()
@@ -505,7 +508,12 @@ If nothing else works, try the following command:
 
                 print(f'[green]Success:[/green] Created M3U file: "{out_file}"')
             else:
-                stations, error = parse_m3u(in_file)
+                try:
+                    max_entries = int(args.limit) if args.limit else 10_000
+                except (ValueError, TypeError):
+                    print(f'[red]Error:[/red] Invalid max entries value "{args.limit}"')
+                    sys.exit(1)
+                stations, error = parse_m3u(in_file, max_entries=max_entries)
                 if error:
                     print(f'[red]Error:[/red] {error}')
                     sys.exit(1)
