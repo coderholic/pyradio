@@ -89,6 +89,7 @@ Command line internet radio player.
  - [RadioBrowser](radio-browser.md) support
  - Remote Control Server
  - Multiple playlist support
+ - [M3U playlist](m3u.md) support
  - vi like station registers
  - Theming support
  - Station editor (add/edit) with [CJK characters support](#cjk-characters-support)
@@ -134,28 +135,29 @@ Furthermore, please refrain from using any third-party packaging methods, such a
 
 Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-x] [-u PLAYER]
                [-l] [-lt] [-sds] [-sd] [-od] [-pc] [-d]
-               [--d-player-input D_PLAYER_INPUT] [-ul] [-us] [-U] [-R] [-V]
-               [-ls] [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes]
+               [--d-player-input D_PLAYER_INPUT] [-ul] [-cp] [-us] [-U] [-R]
+               [-V] [-ls] [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes]
                [--no-themes] [--write-theme IN_THEME OUT_THEME,]
                [--terminal TERMINAL] [--terminal-param ...] [-oc] [-sc] [-cc]
                [-gc] [-r] [-or] [-lr] [-mkv MKV_FILE] [-scv PNG_FILE] [-srt]
                [-ach] [--headless IP_AND_PORT] [--address] [-fd]
+               [-cvt CONVERT] [-o OUTPUT] [-y] [-lm LIMIT]
 
 Curses based Internet Radio Player
 
 General options:
   -h, --help            Show this help message and exit
-  -c CONFIG_DIR, --config-dir CONFIG_DIR
+  -c, --config-dir CONFIG_DIR
                         Use specified configuration directory instead of the
                         default one. PyRadio will try to create it, if it does
                         not exist. Not available on Windows.
-  -p [STATION_NUMBER], --play [STATION_NUMBER]
+  -p, --play [STATION_NUMBER]
                         Start and play.The value is num station or empty for
                         random.
   -x, --external-player
                         Play station in external player. Can be combined with
                         --play.
-  -u PLAYER, --use-player PLAYER
+  -u, --use-player PLAYER
                         Use specified player. A comma-separated list can be
                         used to specify detection order. Supported players:
                         mpv, mplayer, vlc.
@@ -174,6 +176,8 @@ General options:
                         (value = 0), log accepted input (value = 1) or raw
                         input (value = 2).
   -ul, --unlock         Remove sessions' lock file.
+  -cp, --check-playlist
+                        Enter playlist check mode.
   -us, --update-stations
                         Update "stations.csv" (if needed).
   -U, --update          Update PyRadio.
@@ -183,15 +187,14 @@ General options:
 Playlist selection:
   -ls, --list-playlists
                         List of available playlists in config dir.
-  -s PLAYLIST, --stations PLAYLIST
+  -s, --stations PLAYLIST
                         Load the specified playlist instead of the default
                         one.
   -tlp, --toggle-load-last-playlist
                         Toggle autoload last opened playlist.
 
 Themes:
-  -t THEME, --theme THEME
-                        Use specified theme.
+  -t, --theme THEME     Use specified theme.
   --show-themes         Show Internal and System Themes names.
   --no-themes           Disable themes (use default theme).
   --write-theme IN_THEME OUT_THEME,
@@ -219,14 +222,14 @@ Recording stations:
                         Open the Recordings folder.
   -lr, --list-recordings
                         List recorded files.
-  -mkv MKV_FILE, --mkv-file MKV_FILE
+  -mkv, --mkv-file MKV_FILE
                         Specify a previously recorded MKV file to be used with
                         one of the following options. The MKV_FILE can either
                         be an absolute or a relative path, or a number
                         provided by the -lr command line paremater. If it is a
                         relative path, it should be found in the current or in
                         the Recordings directory.
-  -scv PNG_FILE, --set-mkv-cover PNG_FILE
+  -scv, --set-mkv-cover PNG_FILE
                         Add or change the cover image of a previously recorded
                         MKV file. PNG_FILE can either be an absolute or a
                         relative path. If relative, it should be found in the
@@ -254,6 +257,27 @@ Headless operation:
                         Use this if your headless server has terminated
                         unexpectedly, and you cannot start a new one (you get
                         a message that it is already running).
+
+m3u playlist handling:
+  -cvt, --convert CONVERT
+                        Convert CSV (PyRadio playlist) to M3U and vise-versa,
+                        based on the file extension of CONVERT. If there's no
+                        file extension, .csv is assumed. Accepts -y, -o, -lm
+                        (general options). With -o: provides the output file
+                        for the CSV to M3U conversion. If not specified, the
+                        same path (including the name) as the CONVERT
+                        parameter is used, replacing .csv with .m3u. The file
+                        extension .m3u will be automatically added if not
+                        specified. With -lm: specify maximum number of
+                        stations in an M3U file (default is 10,000, 0 disables
+                        it, effectively accepting any number of entries).
+
+General options:
+  -o, --output OUTPUT   Output file path (see specific commands for default
+                        behavior).
+  -y, --yes, --force    Assume yes to all prompts (dangerous: overwrites files
+                        without confirmation, etc.).
+  -lm, --limit LIMIT    Use LIMIT as a maximim value of accected items.
 
 ```
 

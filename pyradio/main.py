@@ -411,7 +411,8 @@ If nothing else works, try the following command:
                         'If not specified, the same path (including the name) '
                         'as the CONVERT parameter is used, replacing .csv with .m3u. '
                         'The file extension .m3u will be automatically added if not specified. '
-                        'With -lm: specify maximum number of stations in an M3U file (default is 10,000).'
+                        'With -lm: specify maximum number of stations in an M3U file (default is 10,000, '
+                        '0 disables it, effectively accepting any number of entries).'
                         )
 
     gr_general = parser.add_argument_group('• options')

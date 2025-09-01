@@ -1146,10 +1146,10 @@ class PyRadioStations():
                 self.playlists.append([a_file_name + ' (m3u)', a_file_time, a_file_size, a_file])
         self.playlists.sort()
 
-        logger.error('\n\n')
-        for n in self.playlists:
-            logger.error(f'{n}')
-        logger.error('\n\n')
+        # logger.error('\n\n')
+        # for n in self.playlists:
+        #     logger.error(f'{n}')
+        # logger.error('\n\n')
 
         ''' get already loaded playlist id '''
         for i, a_playlist in enumerate(self.playlists):

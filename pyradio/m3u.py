@@ -140,11 +140,11 @@ def is_valid_url(url, check_image=False):
     except ValueError:
         return False
 
-    # Basic requirements
+    # Basic requirements - NO AUTO-CORRECTION
     if not parsed.scheme:
         return False
 
-    # Forbidden characters - ALLOW '?' and '=' for query parameters
+    # Forbidden characters
     invalid_chars = ['"', "'", '<', '>', '{', '}', '|', '\\', '^', '`', ' ', '\n', '\r']
     if any(char in url for char in invalid_chars):
         return False
@@ -157,47 +157,42 @@ def is_valid_url(url, check_image=False):
     # 2. Mode-specific checks
     # -------------------------------------------------------------------------
     if check_image:
-        # RELAXED mode for images (http/https only but allow query params)
+        # RELAXED mode for images (http/https only)
         if parsed.scheme not in ('http', 'https'):
             return False
+        return True  # Permissive for images
 
-        # For images, we're more flexible about the host validation
-        if parsed.netloc:
-            host = parsed.netloc.split('@')[-1].split(':')[0]
-            # Skip if pure IPv4
-            if not re.match(r'^\d+\.\d+\.\d+\.\d+$', host):
-                if HAS_IDNA:
-                    try:
-                        host.encode('idna')
-                    except (idna.core.IDNAError, UnicodeError):
-                        # For images, we can be more permissive
-                        if not host.isascii():
-                            return False
-                else:
-                    if not host.isascii():
-                        return False
-        return True  # Accept even if no netloc (though unusual for http/https)
-
-    # STRICT mode for streams (original strict logic)
-    if not parsed.netloc:
+    # STRICT mode for streams
+    if not parsed.scheme or not parsed.netloc:
         return False
 
     if parsed.scheme not in ('http', 'https', 'rtsp', 'udp', 'rtmp', 'mms', 'klp'):
         return False
 
-    # Original strict host validation for streams
+    # Strict host validation for streams
     host = parsed.netloc.split('@')[-1].split(':')[0]
-    if not re.match(r'^\d+\.\d+\.\d+\.\d+$', host):
+
+    # Allow ONLY:
+    # 1. Valid domains (example.com)
+    # 2. Valid IPv4 addresses (192.168.1.1)
+    # 3. Valid IPv6 addresses (not shown here but could be added)
+
+    is_valid_domain = re.match(r'^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$', host)
+    is_valid_ipv4 = re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', host)
+
+    if not (is_valid_domain or is_valid_ipv4):
+        # Additional check for IDNA/international domains
         if HAS_IDNA:
             try:
                 host.encode('idna')
+                # If it encodes successfully, it's probably valid
             except (idna.core.IDNAError, UnicodeError):
                 return False
         else:
-            if not host.isascii():
+            # Fallback: must be ASCII and look like a domain
+            if not host.isascii() or not re.match(r'^[a-zA-Z0-9.-]+$', host):
                 return False
-            if not re.match(r'^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$', host):
-                return False
+
     return True
 
 ##############################################################################
@@ -369,33 +364,6 @@ def parse_attributes(line):
 
     return out
 
-# Optional: Function to detect file encoding (if needed elsewhere)
-# Optimized encoding detection
-def detect_file_encoding(file_path):
-    """Detect encoding with optimized fallback."""
-    try:
-        with io.open(file_path, 'rb') as f:
-            raw_data = f.read(10000)
-            result = detect(raw_data)
-            encoding = result.get('encoding') if result else None
-
-            # Try detected encoding first, then common ones
-            encodings_to_try = []
-            if encoding:
-                encodings_to_try.append(encoding)
-            encodings_to_try.extend(['utf-8', 'latin-1', 'cp1252', 'iso-8859-1'])
-
-            for enc in encodings_to_try:
-                if enc:
-                    try:
-                        raw_data.decode(enc)
-                        return enc
-                    except UnicodeDecodeError:
-                        continue
-            return 'utf-8'
-    except Exception:
-        return 'utf-8'
-
 def generate_reverse_subs():
     """Creates reverse mappings with smart space handling"""
     reverse = {}
@@ -477,119 +445,160 @@ def parse_m3u(m3u_path, max_entries=10000):
         except Exception as e:
             return None, f"Error parsing {m3u_path}: {str(e)}"
 
-    encoding = detect_file_encoding(m3u_path)
+    # READ AS BINARY FIRST - FIXED
+    try:
+        with open(m3u_path, 'rb') as f:
+            raw_data = f.read()
+    except Exception as e:
+        clean_temp_file(temp_file)
+        return None, f"Error reading file: {str(e)}"
+
+    # DETECT ENCODING FROM BYTES - FIXED
+    try:
+        result = detect(raw_data)
+        encoding = result['encoding'] if result and result['encoding'] else 'utf-8'
+        # Normalize encoding names
+        if encoding.lower() in ['iso-8859-1', 'cp1252', 'windows-1252']:
+            encoding = 'latin-1'
+    except:
+        encoding = 'utf-8'
+
+    # DECODE PROPERLY - FIXED
+    try:
+        content = raw_data.decode(encoding, errors='replace')
+    except:
+        # Fallback sequence
+        for test_enc in ['utf-8', 'latin-1', 'cp1252']:
+            try:
+                content = raw_data.decode(test_enc, errors='replace')
+                encoding = test_enc
+                break
+            except:
+                continue
+        else:
+            content = raw_data.decode('latin-1', errors='replace')
+            encoding = 'latin-1'
+
+    # PROCESS LINES
+    lines = content.splitlines()
     ungrouped = []
     groups = {}
     current_station = [''] * len(Station)
     current_group = None
+    current_logo = ''
     entry_count = 0
+
     try:
+        for line in lines:
+            # Safety checks
+            if len(line.encode('utf-8')) > 4096:
+                continue
+            line = line.strip()
+            if not line or line.startswith("#EXTM3U"):
+                continue
 
-        with io.open(m3u_path, 'r', encoding=encoding, errors='replace') as f:
-            for line in f:
-                # Safety checks
-                if len(line.encode('utf-8')) > 4096:
-                    continue
-                line = line.strip()
-                if not line or line.startswith("#EXTM3U"):
-                    continue
+            if line.startswith("#EXTGRP:"):
+                # Handle group headers
+                current_group = clean_name(line.split(':', 1)[1].strip()[:100])
+                continue
 
-                if line.startswith("#EXTGRP:"):
-                    # Handle group headers
-                    current_group = clean_name(line.split(':', 1)[1].strip()[:100])
-                    continue
+            if line.startswith("#EXTIMG:"):
+                # Process EXTIMG lines
+                extimg_url = line.split(':', 1)[1].strip()
+                current_logo = extimg_url
+                current_station[Station.icon] = extimg_url
 
-                if line.startswith("#EXTIMG:"):
-                    # Process EXTIMG lines when reading M3U files
-                    # EXTIMG provides an alternative way to specify station icons
-                    extimg_url = line.split(':', 1)[1].strip()
-                    current_station[Station.icon] = extimg_url
+            elif line.startswith("#EXTVLCOPT:"):
+                try:
+                    opt_line = line.split(':', 1)[1].strip()
+                    if '=' in opt_line:
+                        key, value = opt_line.split('=', 1)
+                        key = key.strip()
+                        value = value.strip()
 
-                elif line.startswith("#EXTVLCOPT:"):
-                    try:
-                        opt_line = line.split(':', 1)[1].strip()
-                        if '=' in opt_line:
-                            key, value = opt_line.split('=', 1)
-                            key = key.strip()
-                            value = value.strip()
+                        if key == "http-referrer" and current_station and value:
+                            current_station[Station.referer] = value
+                        elif key == "network-caching" and current_station and value:
+                            ms = int(value)
+                            seconds = ms // 1000
+                            current_station[Station.buffering] = f"{seconds}@128"
+                except (ValueError, IndexError):
+                    pass
 
-                            if key == "http-referrer" and current_station and value:
-                                current_station[Station.referer] = value
-                            elif key == "network-caching" and current_station and value:
-                                # Value is in milliseconds; convert to seconds (int)
-                                # Safe parse: avoid TypeError from string/float division
-                                ms = int(value)
-                                seconds = ms // 1000
-                                current_station[Station.buffering] = f"{seconds}@128"
-                    except (ValueError, IndexError):
-                        # Silently skip malformed EXTVLCOPT lines
-                        pass
+            elif line.startswith("#PYRADIO-"):
+                try:
+                    field_part = line[9:].split(':', 1)
+                    if len(field_part) == 2:
+                        field_name = field_part[0].strip()
+                        value = field_part[1].strip()
 
-                # Add this in parse_m3u after EXTVLCOPT handling
-                elif line.startswith("#PYRADIO-"):
-                    try:
-                        # Extract field name and value from #PYRADIO-FIELD: value
-                        field_part = line[9:].split(':', 1)  # Remove "#PYRADIO-"
-                        if len(field_part) == 2:
-                            field_name = field_part[0].strip()
-                            value = field_part[1].strip()
+                        field_map = {
+                            "PROFILE": Station.profile,
+                            "HTTP": Station.http,
+                            "VOLUME": Station.volume,
+                            "PLAYER": Station.player,
+                            "BITRATE": None,
+                            "ENCODING": Station.encoding
+                        }
 
-                            # Map to Station enum fields
-                            field_map = {
-                                "PROFILE": Station.profile,
-                                "HTTP": Station.http,
-                                "VOLUME": Station.volume,
-                                "PLAYER": Station.player,
-                                "BITRATE": None,  # Special handling for bitrate
-                                "ENCODING": Station.encoding
-                            }
+                        if field_name in field_map and current_station:
+                            if field_name == "BITRATE" and current_station[Station.buffering]:
+                                seconds = current_station[Station.buffering].split('@')[0]
+                                current_station[Station.buffering] = f"{seconds}@{value}"
+                            else:
+                                current_station[field_map[field_name]] = value
+                except (ValueError, IndexError):
+                    pass
 
-                            if field_name in field_map and current_station:
-                                if field_name == "BITRATE" and current_station[Station.buffering]:
-                                    # Combine with existing buffering seconds
-                                    seconds = current_station[Station.buffering].split('@')[0]
-                                    current_station[Station.buffering] = f"{seconds}@{value}"
-                                else:
-                                    current_station[field_map[field_name]] = value
+            elif line.startswith("#EXTINF"):
+                if entry_count >= max_entries and max_entries > 0:
+                    clean_temp_file(temp_file)
+                    return None, f"Maximum entries ({max_entries}) reached"
 
-                    except (ValueError, IndexError):
-                        # Silently skip malformed PYRADIO comments
-                        pass
+                if ',' in line:
+                    name = clean_name(line.split(',', 1)[1].strip())[:255]
+                    name = html_entities_to_unicode_chars(name)
 
-                elif line.startswith("#EXTINF"):
-                    if entry_count >= max_entries:
-                        clean_temp_file(temp_file)
-                        return None, f"Maximum entries ({max_entries}) reached"
+                    # FIX: ENCODING RECOVERY FOR STATION NAMES
+                    if '�' in name and encoding != 'utf-8':
+                        try:
+                            # Try to recover from encoding mismatch
+                            byte_data = name.encode(encoding, errors='replace')
+                            recovered_name = byte_data.decode('utf-8', errors='replace')
+                            if '�' not in recovered_name:
+                                name = recovered_name
+                        except:
+                            pass
 
-                    if ',' in line:
-                        name = clean_name(line.split(',', 1)[1].strip())[:255]
-                        name = html_entities_to_unicode_chars(name)
-                        current_station[Station.name] = reverse_substitutions(name)
+                    current_station[Station.name] = reverse_substitutions(name)
 
-                    # Parse attributes
-                    attrs = parse_attributes(line)
-                    if "group-title" in attrs:
-                        current_group = clean_name(attrs["group-title"])[:100]
-                    if "tvg-logo" in attrs:
-                        current_station[Station.icon] = attrs["tvg-logo"][:500]
+                # Parse attributes
+                attrs = parse_attributes(line)
+                if "group-title" in attrs:
+                    current_group = clean_name(attrs["group-title"])[:100]
+                if "tvg-logo" in attrs:
+                    current_station[Station.icon] = attrs["tvg-logo"][:500]
+                elif current_logo:
+                    current_station[Station.icon] = current_logo
 
-                elif not line.startswith('#'):
-                    # Process URL line (not a comment)
-                    url = line.strip()
-                    if is_valid_url(url):  # STRICT for streams (check_image=False)
-                        if ';' in url:  # Remove ICY metadata
-                            url = url.split(';')[0]
-                        current_station[Station.url] = url
-                        entry_count += 1
+            elif not line.startswith('#'):
+                # Process URL line
+                url = line.strip()
+                if is_valid_url(url):
+                    if ';' in url:  # Remove ICY metadata
+                        url = url.split(';')[0]
+                    current_station[Station.url] = url
+                    entry_count += 1
 
-                        # Append the completed station to appropriate group
-                        if current_group:
-                            groups.setdefault(current_group, []).append(current_station)
-                        else:
-                            ungrouped.append(current_station)
+                    # Append the completed station to appropriate group
+                    if current_group:
+                        groups.setdefault(current_group, []).append(current_station)
+                    else:
+                        ungrouped.append(current_station)
 
-                        # Reset current_station for the next station
-                        current_station = [''] * len(Station)
+                    # Reset for next station
+                    current_station = [''] * len(Station)
+                    current_logo = ''
 
         # Build playlist
         playlist = []

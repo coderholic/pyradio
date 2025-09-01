@@ -1,7 +1,8 @@
-2025-06-18 s-n-g
+2025-08-18 s-n-g
     * version 0.9.3.11.16 - 0.9.3.12-beta16
     * heavy refactoring - expect bugs!
     * adding player field (optional) to station's definition
+    * adding M3U playlist support
     * fixing #300 - General Options player select param bug
     * fixing a potential Remote Control Server crash
     * fixing a couple of minor bugs

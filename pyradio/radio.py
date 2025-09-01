@@ -33,7 +33,7 @@ except:
 
 from .player import PlayerCache
 from .config import HAS_REQUESTS, HAS_DNSPYTHON, Station
-from .common import StationsChanges, STATES, M_STRINGS, player_start_stop_token
+from .common import StationsChanges, CsvReadWrite, STATES, M_STRINGS, player_start_stop_token
 from .window_stack import Window_Stack
 from .config_window import PyRadioConfigWindow, PyRadioExtraParams, \
     PyRadioKeyboardConfig, PyRadioLocalized, PyRadioSelectEncodings, \
@@ -1439,7 +1439,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         else:
             self.footerWin.refresh()
         # self._redraw()
-        # logger.error('1 redraw')
         curses.doupdate()
 
     def _print_limited_info(self):
@@ -2203,7 +2202,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     if self.play.replace('-', '').isdigit():
                         num = int(self.play) - 1
                 if num < self.number_of_items:
-                    logger.error('1 setStation')
                     self.setStation(num)
                     if self.number_of_items > 0:
                         self.playSelection()
@@ -2218,7 +2216,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
             elif self._pre_select != 'False':
                 if self._pre_select < self.number_of_items:
-                    logger.error('2 setStation')
                     self.setStation(self._pre_select)
                     self._put_selection_in_the_middle(force=True)
                     self.refreshBody()
@@ -2264,7 +2261,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 #
 ############################################################################
 '''.format(a_player.PLAYER_NAME))
-                    logger.error('1 _activate+player')
                     self._activate_player(a_player.PLAYER_NAME)
                     self._cnf.check_output_file = path.join(
                         self._cnf.check_output_folder,
@@ -2275,24 +2271,18 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     while cur_id < end_id:
                         if cur_id != old_id:
                             logger.error(f'working on {old_id = }, {cur_id = }')
-                            logger.error('3 setStation')
                             self.setStation(cur_id)
                             self.playSelection()
                             self.refreshBody()
                             # self.log.write(msg_id=STATES.RESET, msg=M_STRINGS['wait_for_player_'] + self.player.PLAYER_NAME, help_msg=True)
-                            # logger.error('1')
                             # ret = self._loop_wait_for_next_station()
-                            # logger.error('2')
                             # if ret is not None:
                             #     break
-                            # logger.error('3')
                             sleep(1)
                             old_id = cur_id
-                        # logger.error('4')
                         # logger.error(f'brefore {old_id = }, {cur_id = }')
                         cur_id, old_id, exit_players_loop = self._loop_check_playlist(cur_id, old_id, end_id)
                         # logger.error(f' after {old_id = }, {cur_id = }')
-                        # logger.error('5')
                     self._write_accumulated_errors()
                     if exit_players_loop:
                         break
@@ -2585,7 +2575,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             number = 0
 
         self.selection = number
-        logger.error(f'1 {self.selection = }')
 
         if self.selection - self.startPos >= self.bodyMaxY:
             self.startPos = self.selection - self.bodyMaxY + 1
@@ -2595,7 +2584,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self._force_print_all_lines = self.startPos != old_start_pos
         self._update_history_positions_in_list()
         # logger.error('de setStation: selection = {}'.format(self.selection))
-        logger.error(f'2 {self.selection = }')
 
     def playSelectionBrowser(self, a_url=None):
         self.log.display_help_message = False
@@ -2656,7 +2644,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
     def _get_the_stations_player(self, station_player):
         if station_player != self.active_player_name:
             sel = self.selection
-            logger.error('2 _activate+player')
             self._activate_player(station_player)
             self.selection = sel
 
@@ -3356,7 +3343,6 @@ ____Using |fallback| theme.''')
             self.closeThemeNotSupportedNotification)
         self._theme_not_supported_thread.start()
         self._redraw()
-        # logger.error('2 redraw')
         curses.doupdate()
         self._theme_not_supported_thread.join()
 
@@ -4057,10 +4043,10 @@ ____Using |fallback| theme.''')
                 self.detect_if_player_exited = False
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Scanning playlist for stations...')
-                logger.error(f'DE \n\n{self.active_stations}\n\n')
-                logger.error(f'DE \n\n{self._last_played_station}\n\n')
-                logger.error(f'DE \n\n{self._last_played_playlist}\n\n')
-                logger.error(f'\n\n{self.playing = }, {self._cnf.continuous_playback = }\n\n')
+                # logger.error(f'DE \n\n{self.active_stations}\n\n')
+                # logger.error(f'DE \n\n{self._last_played_station}\n\n')
+                # logger.error(f'DE \n\n{self._last_played_playlist}\n\n')
+                # logger.error(f'\n\n{self.playing = }, {self._cnf.continuous_playback = }\n\n')
                 self.selection, self.playing = self._get_stations_ids((
                     self.active_stations[0][0],
                     self.active_stations[1][0]))
@@ -4077,7 +4063,6 @@ ____Using |fallback| theme.''')
                 if self.playing > -1:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug(f'Setting playing station at {self.playing}')
-                    logger.error('4 setStation')
                     self.setStation(self.playing)
                     self._last_played_playlist = self._cnf.station_title
                 else:
@@ -4090,7 +4075,6 @@ ____Using |fallback| theme.''')
                             self.startPos = 0
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug(f'Setting selection station at {self.selection}')
-                    logger.error('5 setStation')
                     self.setStation(self.selection)
 
         if self.selection < 0:
@@ -4844,7 +4828,6 @@ and |remove the file manually|.
                 rnd = random.randint(0, len(self.stations) - 1)
                 if self.stations[rnd][1] != '-':
                     break
-            logger.error('6 setStation')
             self.setStation(rnd)
             self.playSelection()
             self._put_selection_in_the_middle(force=True)
@@ -5228,7 +5211,6 @@ and |remove the file manually|.
 
     def _apply_search_result(self, ret, reapply=False):
         def _apply_main_windows(ret):
-            logger.error('7 setStation')
             self.setStation(ret)
             self._put_selection_in_the_middle(force=True)
         if reapply:
@@ -5306,7 +5288,6 @@ and |remove the file manually|.
             elif self.playing == target:
                 self.playing = source - 1
             self.selection = target
-            logger.error('8 setStation')
             self.setStation(self.selection)
             self.refreshBody()
         return ret
@@ -5575,7 +5556,6 @@ and |remove the file manually|.
             sel = self.selection - self.pageChange
             if sel < 0 and self.selection > 0:
                 sel = 0
-            logger.error('9 setStation')
             self.setStation(sel)
             self._handle_cursor_move_up()
 
@@ -5587,7 +5567,6 @@ and |remove the file manually|.
                 sel = 0
             elif sel >= len(self.stations):
                 sel = len(self.stations) - 1
-            logger.error('10 setStation')
             self.setStation(sel)
             self._handle_cursor_move_down()
 
@@ -6044,14 +6023,12 @@ and |remove the file manually|.
     def _move_cursor_one_up(self):
         self._reset_status_bar_right()
         if self.number_of_items > 0:
-            logger.error('11 setStation')
             self.setStation(self.selection - 1)
             self._handle_cursor_move_up()
 
     def _move_cursor_one_down(self):
         self._reset_status_bar_right()
         if self.number_of_items > 0:
-            logger.error('12 setStation')
             self.setStation(self.selection + 1)
             self._handle_cursor_move_down()
 
@@ -7744,7 +7721,6 @@ _____"|f|" to see the |free| keys you can use.
             self._reset_status_bar_right()
             if self.number_of_items > 0:
                 if self.number_of_items < self.bodyMaxY:
-                    logger.error('14 setStation')
                     self.setStation(-1)
                 else:
                     self.selection = self.startPos + self.bodyMaxY - 1
@@ -7849,7 +7825,6 @@ _____"|f|" to see the |free| keys you can use.
                     )
                 self._schedule_station_select_win.init_window(read_items=False)
                 self._schedule_station_select_win.refresh_win()
-                logger.error('15 setStation')
                 self._schedule_station_select_win.setStation(self._simple_schedule.station)
             elif ret in (3, 6, 7, 8):
                 self._open_simple_message_by_key(
@@ -7985,7 +7960,6 @@ _____"|f|" to see the |free| keys you can use.
                     self._station_select_win.update_playlist_and_station(self._config_win._config_options['default_playlist'][1], self._config_win._config_options['default_station'][1])
                 self._station_select_win.init_window()
                 self._station_select_win.refresh_win()
-                logger.error('16 setStation')
                 self._station_select_win.setStation(self._config_win._config_options['default_station'][1])
 
             elif ret >= 0:
@@ -8207,7 +8181,6 @@ _____"|f|" to see the |free| keys you can use.
                             self._cnf.theme_has_error = True if ret == -1 else False
                             self._cnf.theme_not_supported = True
                         self._redraw()
-                        # logger.error('4 redraw')
                         curses.doupdate()
                         if self._cnf.theme_download_failed:
                             logger.info('_print_theme_download_error 2')
@@ -8988,7 +8961,6 @@ _____"|f|" to see the |free| keys you can use.
                     self._show_theme_not_supported()
                 #self.refreshBody()
                 self._redraw()
-                # logger.error('4 redraw')
                 curses.doupdate()
                 # if self._cnf.theme_download_failed:
                 #     self._print_theme_download_error()
@@ -9371,7 +9343,6 @@ _____"|f|" to see the |free| keys you can use.
             if ret <= 0:
                 if ret == 0:
                     ret = self._groups[self._group_selection_window.selection][0]
-                    logger.error('17 setStation')
                     self.setStation(ret)
                     self._put_selection_in_the_middle(force=True)
                     self.refreshBody()
@@ -9734,7 +9705,6 @@ _____"|f|" to see the |free| keys you can use.
             if char in (curses.KEY_END, ):
                 self._update_status_bar_right()
                 if self.number_of_items > 0:
-                    logger.error('18 setStation')
                     self.setStation(-1)
                     self.refreshBody()
                 return
@@ -9760,7 +9730,6 @@ _____"|f|" to see the |free| keys you can use.
             if char in (kbkey['g'], curses.KEY_HOME) or \
                     check_localized(char, (kbkey['g'], )):
                 self._update_status_bar_right()
-                logger.error('19 setStation')
                 self.setStation(0)
                 self.refreshBody()
                 return
@@ -9953,7 +9922,6 @@ _____"|f|" to see the |free| keys you can use.
                                         if ind == len(d):
                                             ind = 0
                                     ind = d[ind]
-                                    # logger.error('1 ind = {}'.format(ind))
                             else:
                                 # logger.error('selection not in d')
                                 if len(d) == 1:
@@ -9983,7 +9951,6 @@ _____"|f|" to see the |free| keys you can use.
                                     callback_function=self.refreshBody)
                             ind = -1
                         if ind != -1:
-                            logger.error('20 setStation')
                             self.setStation(ind)
                             self._put_selection_in_the_middle(force=True)
                             self.refreshBody()
@@ -10371,28 +10338,61 @@ _____"|f|" to see the |free| keys you can use.
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug(f'Loading playlist: "{self.stations[self.selection][-1]}"')
                         playlist_to_try_to_open = self.stations[self.selection][-1]
-                        logger.error(f'\n\nplaylist_to_try_to_open = "{playlist_to_try_to_open}"\n\n')
                         if playlist_to_try_to_open.lower().endswith('.m3u'):
-                            logger.error('****** Need to convert M3U to CSV ******')
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug('****** Need to convert M3U to CSV ******')
                             # TODO: display message
+                            self._show_notification_with_delay(
+                                    txt='___Converting M3U playlist___',
+                                    mode_to_set=self.ws.operation_mode,
+                                    callback_function=self.refreshBody)
                             stations, error = parse_m3u(playlist_to_try_to_open)
-                            logger.error(f'{stations = }')
+                            # logger.error(f'{stations = }')
                             if error:
                                 # TODO: display m3u conversion error
+                                self._messaging_win.set_a_message(
+                                    'UNIVERSAL',
+                                    ('', f'___{error}___')
+                                )
+                                if logger.isEnabledFor(logging.DEBUG):
+                                    logger.debug(f'm3u_to_csv: Error converting file: "{playlist_to_try_to_open}" : "{error}')
+                                self._open_simple_message_by_key('UNIVERSAL')
                                 return
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug(f'm3u_to_csv: File converted: "{playlist_to_try_to_open}"')
                             csv_file_to_save = playlist_to_try_to_open[:-3] + 'csv'
-                            ret = self.saveCurrentPlaylist(csv_file_to_save)
-                            logger.error(f'{ret = }')
+                            out_csv = CsvReadWrite(csv_file_to_save)
+                            ret = out_csv.write(items=stations)
+                            out_csv = None
+                            # logger.error(f'{ret = }')
                             if ret == 0:
+                                self.stations = stations[:]
                                 playlist_to_try_to_open = csv_file_to_save
+                                self.ws.close_window()
+                                if logger.isEnabledFor(logging.DEBUG):
+                                    logger.debug(f'm3u_to_csv: File saved: "{csv_file_to_save}"')
+                            else:
+                                self._messaging_win.set_a_message(
+                                    'UNIVERSAL',
+                                    ('', '___Cannot write CSV file___')
+                                )
+                                if logger.isEnabledFor(logging.DEBUG):
+                                    logger.debug(f'm3u_to_csv: Error saving file: "{csv_file_to_save}"')
+                                self._open_simple_message_by_key('UNIVERSAL')
+                                # TODO: display
+                                if not os.path.exists(csv_file_to_save):
+                                    try:
+                                        os.unlink(csv_file_to_save)
+                                    except (FileNotFoundError, PermissionError, IsADirectoryError, OSError) as e:
+                                        if logger.isEnabledFor(logging.DEBUG):
+                                            logger.debug(f'm3u_to_csv: Failed to remove file: "{csv_file_to_save}": "{e}')
+                                return
 
-
-                        logger.error('\n\n')
-                        logger.error(f'{self.selections = }')
-                        logger.error(f'{self.playlist_selections = }')
-                        logger.error('\n\n')
+                        # logger.error('\n\n')
+                        # logger.error(f'{self.selections = }')
+                        # logger.error(f'{self.playlist_selections = }')
+                        # logger.error('\n\n')
                         ret = self._cnf.read_playlist_file(stationFile=playlist_to_try_to_open)
-                        logger.error(f'DE playlist_selections = {playlist_to_try_to_open}')
 
                         if ret == -1:
                             self.stations = self._cnf.playlists
@@ -10514,22 +10514,16 @@ _____"|f|" to see the |free| keys you can use.
             if self.jumpnr == '':
                 if char == kbkey['G'] or \
                         check_localized(char, (kbkey['G'],)):
-                    logger.error('21 setStation')
                     self.setStation(-1)
                 else:
-                    logger.error('22 setStation')
                     self.setStation(0)
             else:
                 force_center = False
                 jumpto = min(int(self.jumpnr) - 1, len(self.stations) - 1)
-                logger.error(f'1 {jumpto =  }')
                 jumpto = max(0, jumpto)
-                logger.error(f'2 {jumpto =  }')
                 if jumpto < self.startPos - 1 or \
                         jumpto > self.startPos + self.bodyMaxY:
                     force_center = True
-                logger.error(f'3 {jumpto =  }')
-                logger.error('23 setStation')
                 self.setStation(jumpto)
                 self._put_selection_in_the_middle(force=force_center)
                 self.jumpnr = ''
@@ -10692,13 +10686,11 @@ _____"|f|" to see the |free| keys you can use.
                 self._limited_width_mode or \
                 msg is None:
             ret = False
-            # logger.error('1 Display ? : False')
         else:
             if self.outerBodyWin:
                 ret = self.outerBodyMaxX - cjklen(msg) - out_msg_len > 10 if msg else True
             else:
                 ret = False
-            # logger.error(f'2 Display ? : {ret}')
         return ret
 
     def _show_confirm_cancel_config_changes(self):
@@ -11799,7 +11791,6 @@ _____"|f|" to see the |free| keys you can use.
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'Station found at {num}')
 
-        logger.error('24 setStation')
         logger.error(f'{num = }')
         self.setStation(num)
         if self.number_of_items > 0:

@@ -18,11 +18,11 @@ The default maximum number of stations in an M3U file is 10,000.
 
 You can perform M3U to CSV conversion in two ways:
 
-1. **Command line conversion** using the `--convert` option. \
+1. **Command line conversion** using the "*--convert*" option. \
 \
 This is ideal for batch conversions of multiple files (or M3U URLs). \
 \
-It also provides a way to convert very large M3Us to CSV; the "`-lm`" / "`--limit`" parameter will help you overcome the default 10,000 stations limit.
+It also provides a way to convert very large M3Us to CSV; the "*-lm*" / "*--limit*" parameter will help you overcome the default 10,000 stations limit; setting it to 0 will disable any such check.
 
 2. **Automatic conversion within PyRadio** when selecting M3U playlists from the playlist browser \
 \

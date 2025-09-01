@@ -30,6 +30,7 @@ Command line internet radio player.
  - [RadioBrowser](docs/radio-browser.md) support
  - Remote Control Server
  - Multiple playlist support
+ - [M3U playlist](docs/m3u.md) support
  - vi like station registers
  - Theming support
  - Station editor (add/edit) with [CJK characters support](#cjk-characters-support)
