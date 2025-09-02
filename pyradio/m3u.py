@@ -45,7 +45,7 @@ locale.setlocale(locale.LC_ALL, "")
 #   "·" (MIDDLE DOT U+00B7)
 #   ""  (GREEK ANO TELEIA U+0387)
 M3U_SUBSTITUTIONS = (
-    (",", " · "),   # MIDDLE DOT (U+00B7) - BEST FOR CSV ROUND-TRIP
+    (",", "_·_"),   # MIDDLE DOT (U+00B7) - BEST FOR CSV ROUND-TRIP
     ("-", "–"),     # EN DASH (U+2013) WITH SPACES
     ('"', "”"),     # RIGHT DOUBLE QUOTATION MARK (U+201D)
 )
@@ -365,16 +365,16 @@ def parse_attributes(line):
     return out
 
 def generate_reverse_subs():
-    """Creates reverse mappings with smart space handling"""
+    """
+    Creates reverse mappings for M3U -> CSV round-trip.
+    - Preserves "_·_" placeholders (protected commas) safely.
+    - Converts normal substitutions back to their original form.
+    """
     reverse = {}
+
     for orig, sub in reversed(M3U_SUBSTITUTIONS):
-        if orig.endswith(' '):  # Handle space-preserving substitutions
-            reverse[sub] = orig
-        else:
-            reverse[sub] = orig
-    # Special case: Ensure middle dot becomes comma+space
-    if " · " in reverse:
-        reverse[" · "] = ", "
+        reverse[sub.replace("_·_", " · ")] = orig
+
     return reverse
 
 @functools.lru_cache(maxsize=1)
@@ -741,9 +741,9 @@ def list_to_m3u(stations, out_file):
                 if logo:
                     attrs.append(f'tvg-logo="{logo}"')
                 if current_group:
-                    attrs.append(f'group-title="{current_group}"')
+                    attrs.append('group-title="{}"'.format(current_group.replace('_·_', ' · ')))
 
-                escaped_m3u_string = escape_m3u_string(name)
+                escaped_m3u_string = escape_m3u_string(name).replace('_·_', ' · ')
                 if attrs:
                     joined_attrs = ' '.join(attrs)
                     string = (f"#EXTINF:-1 {joined_attrs}, "
