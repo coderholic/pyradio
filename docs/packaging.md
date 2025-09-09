@@ -49,6 +49,7 @@ Then you have to add the following python modules to the relevant section of you
 5. rich
 5. netifaces
 6. dateutil
+7. charset-normalizer
 
 ## Files to change
 

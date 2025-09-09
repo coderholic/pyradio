@@ -137,7 +137,8 @@ sudo apt-get install \
     python3-dnspython \
     python3-psutil \
     python3-netifaces \
-    python3-dateutil
+    python3-dateutil \
+    python3-charset-normalizer
 ```
 
 Install **PyRadio**:
@@ -190,7 +191,8 @@ sudo dnf install \
     python3-netifaces \
     python3-psutil \
     python3-dns \
-    python3-dateutil
+    python3-dateutil \
+    python3-charset-normalizer
 ```
 
 Install **PyRadio**:
@@ -244,7 +246,8 @@ sudo zypper install \
     python3-psutil \
     python3-dnspython \
     python3-dateutil \
-    python3-netifaces
+    python3-netifaces \
+    python3-charset-normalizer
 ```
 
 Finally, install **PyRadio**:

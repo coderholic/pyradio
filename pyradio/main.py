@@ -12,6 +12,7 @@ from contextlib import contextmanager
 from platform import system
 import re
 import glob
+from urllib.parse import urlparse, unquote
 
 from .radio import PyRadio
 from .config import PyRadioConfig
@@ -103,7 +104,10 @@ class MyArgParser(ArgumentParser):
         'mplayer', '[green]mplayer[/green]').replace(
         'vlc', '[green]vlc[/green]').replace(
         'Curses based Internet Radio Player',
-        '[magenta]Curses based Internet Radio Player[/magenta]'
+        '[magenta]Curses based Internet Radio Player[/magenta]').replace(
+        'M3U', '[green]M3U[/green]').replace(
+        'mark:', '[cyan]mark:[/cyan]').replace(
+        'drop:', '[cyan]drop:[/cyan]'
         )
         return '[bold]' + t.replace('||', r']').replace('|', r'\[').replace('• ', '') + '[/bold]'
 
@@ -403,17 +407,76 @@ If nothing else works, try the following command:
         #                          help='Create systemd service files to enable / disable headless operation using tmux or screen.')
 
     gr_m3u = parser.add_argument_group('• m3u playlist handling')
-    gr_m3u.add_argument('-cvt', '--convert', default='',
-                        help='Convert CSV (PyRadio playlist) to M3U and vise-versa, based on the file extension of CONVERT. '
-                        'If there\'s no file extension, .csv is assumed. '
-                        'Accepts -y, -o, -lm (general options). With -o: provides '
-                        'the output file for the CSV to M3U conversion. '
-                        'If not specified, the same path (including the name) '
-                        'as the CONVERT parameter is used, replacing .csv with .m3u. '
-                        'The file extension .m3u will be automatically added if not specified. '
-                        'With -lm: specify maximum number of stations in an M3U file (default is 10,000, '
-                        '0 disables it, effectively accepting any number of entries).'
-                        )
+    gr_m3u.add_argument(
+        '-cvt', '--convert', default='',
+        help='Convert CSV (PyRadio playlist) to M3U and vise-versa, based on the file extension of CONVERT. '
+             'If there\'s no file extension, .csv is assumed. '
+             'Accepts -y, -o, -lm (general options). With -o: provides '
+             'the output file for the CSV to M3U conversion. '
+             'If not specified, the same path (including the name) '
+             'as the CONVERT parameter is used, replacing .csv with .m3u. '
+             'The file extension .m3u will be automatically added if not specified. '
+             'With -lm: specify maximum number of stations in an M3U file (default is 10,000, '
+             '0 disables it, effectively accepting any number of entries).'
+    )
+
+    gr_validate = parser.add_argument_group(
+        '• Playlist validation',
+        description='Validate playlists given with --convert. '
+                    'Requires a CSV file or an M3U file or URL as input.'
+    )
+    gr_validate.add_argument(
+        '--validate',
+        nargs='?',
+        const='mark',
+        choices=['mark', 'drop'],
+        help='Validate a playlist (CSV or M3U).\n'
+             'If no value is given, defaults to "mark".\n'
+             'Options:\n'
+             '  mark: mark failed stations with [X],\n'
+             '  drop: save working and failed stations separately'
+    )
+    gr_validate.add_argument(
+        '--threads',
+        type=int,
+        default=5,
+        help='Number of parallel threads to use when checking stations (default: 5).'
+    )
+    gr_validate.add_argument(
+        '--timeout',
+        type=int,
+        default=5,
+        help='Timeout in seconds for each station request (default: 5).'
+    )
+
+    gr_validate.add_argument(
+        '--max-per-host',
+        type=int,
+        default=2,
+        help='Maximum concurrent requests per host (default: 2).\n'
+             'Prevents server banning by throttling requests to the same host.'
+    )
+
+    gr_validate.add_argument(
+        '--with-date',
+        action='store_true',
+        help='Add timestamp to output filenames.\n'
+             'Useful for scheduled checks to preserve history.'
+    )
+
+    gr_validate.add_argument(
+        '--no-color',
+        action='store_true',
+        help='Disable colored output.\n'
+             'Useful for logging or when running in non-interactive environments.'
+    )
+
+    gr_validate.add_argument(
+        '--quiet',
+        action='store_true',
+        help='Reduce verbosity (suppress per-station output).\n'
+             'Only show summary and errors.'
+    )
 
     gr_general = parser.add_argument_group('• options')
     gr_general.add_argument('-o', '--output', default='',
@@ -440,60 +503,65 @@ If nothing else works, try the following command:
     with pyradio_config_file(user_config_dir, args.headless) as pyradio_config:
         read_config(pyradio_config, args.check_playlist)
 
+        # handle playilst validation
+        if args.validate:
+            # determine mode (mark or drop)
+            mode = args.validate
+
+            # get the input playlist file
+            # here we reuse --convert as the input file argument
+            if args.convert:
+                file_path, _ = csv_vs_m3u_output_filename(args.convert, pyradio_config.stations_dir)
+            else:
+                print("[red]Error:[/red] You must provide a playlist file ([green]CSV[/green] or [green]M3U[/green]) with [magenta][bold]--convert[/bold][/magenta].")
+                sys.exit(1)
+
+            # run validation
+            from .validate_playlist import check_playlist
+            result = check_playlist(
+                file_path=file_path,
+                mode=mode,
+                threads=args.threads,
+                timeout=args.timeout,
+                max_per_host=args.max_per_host,
+                with_date=args.with_date,
+                no_color=args.no_color,
+                verbose=not args.quiet
+            )
+
+            sys.exit(0)
+
         if args.convert:
             # Determine conversion direction and validate input file
             csv_to_m3u = False
             in_file = args.convert  # Let's say args.convert is "reversed"
 
-            # Add extension if missing
-            if not in_file.lower().endswith(('.m3u', '.csv')):
-                args.convert += '.csv'  # Now args.convert = "reversed.csv"
-                in_file = args.convert  # Now in_file = "reversed.csv"
-
-            # First check - try exact path (could be full path or relative)
-            if not path.exists(in_file):
-                # Fallback - try in config directory with basename
-                config_path = path.join(pyradio_config.stations_dir, path.basename(in_file))
-                if path.exists(config_path):
-                    in_file = config_path
-                else:
-                    print(f'[red]Error:[/red] File "{in_file}" does not exist')
-                    sys.exit(1)
-
-            # Check file permissions
-            if not path.isfile(in_file):
-                print(f'[red]Error:[/red] "{in_file}" is not a file')
-                sys.exit(1)
-            if not access(in_file, R_OK):
-                print(f'[red]Error:[/red] "{in_file}" is not readable')
-                sys.exit(1)
-
-            csv_to_m3u = in_file.lower().endswith('.csv')
-            # Determine output file
-            if args.output:
-                out_file = args.output
-                if csv_to_m3u and not out_file.lower().endswith('.m3u'):
-                    out_file += '.m3u'
-                elif not csv_to_m3u and not out_file.lower().endswith('.csv'):
-                    out_file += '.csv'
+            if in_file.startswith('http://') or \
+                    in_file.startswith('https://'):
+                # we only support online m3u files
+                _, out_file = csv_vs_m3u_output_filename(in_file, pyradio_config.stations_dir, 'm3u')
+                csv_to_m3u = False
             else:
-                csv_to_m3u = in_file.lower().endswith('.csv')
-                if csv_to_m3u:
-                    out_file = path.splitext(in_file)[0] + '.m3u'
-                else:
-                    out_file = path.splitext(in_file)[0] + '.csv'
+                # Add extension if missing
+                if not in_file.lower().endswith(('.m3u', '.csv')):
+                    args.convert += '.csv'  # Now args.convert = "reversed.csv"
+                    in_file = args.convert  # Now in_file = "reversed.csv"
 
-            if path.exists(out_file) and not args.yes:
-                print(rf'File "{out_file}" exists. Overwrite? \[y/N] ', end='', flush=True)
-                try:
-                    key = _getch().lower()
-                    sys.stderr.write('\n')  # Move to new line
-                    if key != 'y':
-                        print('Operation cancelled', file=sys.stderr)
+                in_file, out_file = csv_vs_m3u_output_filename(in_file, pyradio_config.stations_dir)
+
+                csv_to_m3u = in_file.lower().endswith('.csv')
+
+                if path.exists(out_file) and not args.yes:
+                    print(rf'File "{out_file}" exists. Overwrite? \[y/N] ', end='', flush=True)
+                    try:
+                        key = _getch().lower()
+                        sys.stderr.write('\n')  # Move to new line
+                        if key != 'y':
+                            print('Operation cancelled', file=sys.stderr)
+                            sys.exit(1)
+                    except Exception as e:
+                        print(f'\nError reading input: {e}', file=sys.stderr)
                         sys.exit(1)
-                except Exception as e:
-                    print(f'\nError reading input: {e}', file=sys.stderr)
-                    sys.exit(1)
 
             # Perform conversion
             csv_handler = CsvReadWrite()
@@ -667,7 +735,8 @@ If nothing else works, try the following command:
         if args.version:
             pyradio_config.get_pyradio_version()
             print(f'PyRadio version: [green]{pyradio_config.current_pyradio_version}[/green]')
-            print(f"Python version: [green]{sys.version.replace('\\n', ' ').replace('\\r', ' ')}[/green]")
+            python_version = sys.version.replace('\\n', ' ').replace('\\r', ' ')
+            print(f"Python version: [green]{python_version}[/green]")
             if pyradio_config.distro != 'None':
                 print(f'Distribution: [green]{pyradio_config.distro}[/green]')
             return
@@ -1356,6 +1425,138 @@ def pad_string(a_string, width):
         return cjkslices(a_string, width)
     diff = width - st_len
     return a_string + ' ' * diff
+
+
+def csv_vs_m3u_output_filename(input_file, output_dir, resource_type="csv"):
+    """
+    Generate appropriate input and output filenames based on input file/URL.
+    Returns both CSV and M3U files, with detection determining which is which.
+
+    Args:
+        input_file (str): Input file path or URL (can be full path or filename in output_dir)
+        output_dir (str): Output directory path
+        resource_type (str): Desired output format - "csv" or "m3u" (default: "csv")
+
+    Returns:
+        tuple: (in_file_path, out_file_path) where in_file is the original input for URLs
+    """
+    def _get_full_input_path(file_path, add_extension=None):
+        """Get the full path of the input file, handling both absolute and relative paths"""
+        if path.isabs(file_path):
+            full_path = file_path
+        else:
+            full_path = path.join(output_dir, file_path)
+
+        # If add_extension is provided and file doesn't have extension, add it
+        if add_extension and not path.splitext(full_path)[1]:
+            full_path = full_path + '.' + add_extension
+
+        return full_path
+
+    def _validate_input_file(file_path, add_extension=None):
+        """Validate that the input file exists, is a file, and is readable"""
+        full_path = _get_full_input_path(file_path, add_extension)
+
+        if not path.exists(full_path):
+            print(f'[red]Error:[/red] Input file "{full_path}" does not exist.')
+            sys.exit(1)
+
+        if not path.isfile(full_path):
+            print(f'[red]Error:[red] "{full_path}" is not a file.')
+            sys.exit(1)
+
+        if not access(full_path, R_OK):
+            print(f'[red]Error:[/red] Cannot read input file "{full_path}". Check permissions.')
+            sys.exit(1)
+
+        return full_path
+
+    def _detect_input_type(filename):
+        basename = path.basename(filename)
+        if basename.lower().endswith('.csv'):
+            return 'csv'
+        elif basename.lower().endswith('.m3u'):
+            return 'm3u'
+        elif basename.lower().endswith('.m3u8'):
+            return 'm3u'
+        return None
+
+    def _extract_base_filename(input_source):
+        if input_source.startswith(('http://', 'https://')):
+            parsed_url = urlparse(input_source)
+            path_part = unquote(parsed_url.path)
+            path_part = path_part.rstrip('/')
+            filename = path.basename(path_part)
+
+            if not filename:
+                domain = parsed_url.netloc.replace('www.', '')
+                domain_parts = domain.split('.')
+                for part in domain_parts:
+                    if part and part not in ['com', 'org', 'net', 'io', 'gr', 'uk', 'de', 'fr']:
+                        filename = part
+                        break
+                else:
+                    filename = 'station'
+        else:
+            # For local files, get the basename without extension
+            filename = path.splitext(path.basename(input_source))[0]
+
+        return filename
+
+    def _clean_filename(filename):
+        return re.sub(r'[^\w\-_.]', '_', filename)
+
+    # Check if input is URL
+    is_url = input_file.startswith(('http://', 'https://'))
+
+    # Determine the input file type
+    input_type = _detect_input_type(input_file)
+
+    # Extract base filename for output file
+    base_filename = _extract_base_filename(input_file)
+    base_filename = _clean_filename(base_filename)
+
+    # Create both CSV and M3U filenames in output_dir
+    csv_path = path.join(output_dir, base_filename + '.csv')
+    m3u_path = path.join(output_dir, base_filename + '.m3u')
+
+    # Handle input and output files
+    if is_url:
+        # For URLs, return the original URL as in_file
+        in_file_path = input_file
+
+        # Determine output based on detection or resource_type
+        if input_type == 'csv':
+            out_file_path = m3u_path
+        elif input_type == 'm3u':
+            out_file_path = csv_path
+        else:
+            # Cannot detect type, use resource_type to decide output
+            if resource_type == 'csv':
+                out_file_path = m3u_path
+            else:
+                out_file_path = csv_path
+    else:
+        # For local files
+        if input_type == 'csv':
+            # Input is CSV, validate the CSV file
+            in_file_path = _validate_input_file(input_file, None)
+            out_file_path = m3u_path
+        elif input_type == 'm3u':
+            # Input is M3U, validate the M3U file
+            in_file_path = _validate_input_file(input_file, None)
+            out_file_path = csv_path
+        else:
+            # Cannot detect type, add resource_type extension to input file
+            in_file_path = _validate_input_file(input_file, resource_type)
+
+            # Output gets the opposite extension
+            if resource_type == 'csv':
+                out_file_path = m3u_path
+            else:
+                out_file_path = csv_path
+
+    return in_file_path, out_file_path
 
 def run_client():
     client()

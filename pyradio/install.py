@@ -820,34 +820,35 @@ class PyRadioUpdate():
             3   -   official devel
     '''
 
+    ZIP_URL = ['https://github.com/coderholic/pyradio/archive/',
+               'https://github.com/s-n-g/pyradio/archive/master.zip',
+               'https://github.com/s-n-g/pyradio/archive/devel.zip',
+               'https://github.com/coderholic/pyradio/archive/devel.zip',
+               'https://github.com/coderholic/pyradio/archive/master.zip',
+               ]
+
+    ZIP_DIR  = ['pyradio-',
+                'pyradio-master',
+                'pyradio-devel',
+                'pyradio-devel',
+                'pyradio-master'
+                ]
+
+    install = False
+    user = True
+
+    _python_exec = None
+
+    _delete_dir_limit = 0
+
+    _get_cache = False
+
     def __init__(self,
                  package=0,
                  user=True,
                  github_long_description=None,
                  pix_isolated=False
                  ):
-        self.ZIP_URL = ['https://github.com/coderholic/pyradio/archive/',
-                   'https://github.com/s-n-g/pyradio/archive/master.zip',
-                   'https://github.com/s-n-g/pyradio/archive/devel.zip',
-                   'https://github.com/coderholic/pyradio/archive/devel.zip',
-                   'https://github.com/coderholic/pyradio/archive/master.zip',
-                   ]
-        self.ZIP_DIR  = ['pyradio-',
-                    'pyradio-master',
-                    'pyradio-devel',
-                    'pyradio-devel',
-                    'pyradio-master'
-                    ]
-
-        self.install = False
-        self.user = True
-
-        self._python_exec = None
-
-        self._delete_dir_limit = 0
-
-        self._get_cache = False
-
         if platform.system().lower().startswith('win'):
             raise RuntimeError('This is a linux only class...')
         self._dir = self._install_dir = ''

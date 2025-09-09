@@ -239,6 +239,67 @@ def rgb_to_curses_rgb(rgb):
     return tuple(int(y *1000 / 255) for y in rgb)
 
 
+class RichColorPrinter:
+    """
+    A conditional printer that handles rich text formatting tags.
+
+    Provides colorized output when enabled, while preserving non-rich bracket
+    notation (like [X] markers) when color is disabled.
+
+    Args:
+        use_color (bool): If True, uses rich formatting; if False, removes rich tags
+
+    Attributes:
+        use_color (bool): Color printing state
+        _rich_print (callable): Cached rich print function
+
+    Methods:
+        __call__(message): Print message with conditional formatting
+
+    Initialization:
+        >>> printer = RichColorPrinter(use_color=not no_color)
+
+    Usage:
+        >>> printer = RichColorPrinter(use_color=True)
+        >>> printer("[green]Success![/green]")  # Colorized
+        >>> printer = RichColorPrinter(use_color=False)
+        >>> printer("[green]Success![/green]")  # Plain text: "Success!"
+
+    Note:
+        Only removes rich formatting tags (colors, styles), preserves other
+        bracket content like [X] markers or [custom_text].
+    """
+
+    def __init__(self, use_color=True):
+        self.use_color = use_color
+        self._rich_print = None
+        # Define specific rich tags to remove (colors and styles only)
+        self.rich_tags = [
+            'red', 'green', 'blue', 'yellow', 'cyan', 'magenta', 'white', 'black',
+            'bold', 'italic', 'underline', 'dim', 'reverse', 'blink', 'strike',
+            '/red', '/green', '/blue', '/yellow', '/cyan', '/magenta', '/white', '/black',
+            '/bold', '/italic', '/underline', '/dim', '/reverse', '/blink', '/strike'
+        ]
+
+    def __call__(self, message):
+        """
+        Print message with conditional formatting handling.
+
+        Args:
+            message (str): Message to print, may contain rich formatting tags
+        """
+        if not self.use_color:
+            import re
+            pattern = r'\[(' + '|'.join(self.rich_tags) + r')\]'
+            clean_message = re.sub(pattern, '', message)
+            print(clean_message)
+        else:
+            if self._rich_print is None:
+                from rich import print as rich_print
+                self._rich_print = rich_print
+            self._rich_print(message)
+
+
 class StationsChanges():
     '''
     #########################################################################
