@@ -1254,11 +1254,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.log.program_restart = self.program_restart
         self.program_restart = False
         self.log.can_display_help_msg = self._can_display_help_msg
-        # if self._cnf.check_playlist:
-        #     self.log.restart_timer(
-        #         time_format=int(self._cnf.time_format),
-        #         update_functions=(self.log.write_time, )
-        #     )
         ''' For the time being, supported players are mpv, mplayer and vlc. '''
         # self.player = player.probePlayer(
         #     config=self._cnf,
@@ -1290,11 +1285,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.player.log = self.log
             self.player.handle_old_referer = self._handle_old_referer
             self.player.update_bitrate = self._update_bitrate
-            if self._cnf.check_playlist:
-                if logger.isEnabledFor(logging.INFO):
-                    logger.info('******* registering check playlist callback functions')
-                self.player.success_in_check_playlist = self._success_in_check_playlist
-                self.player.error_in_check_playlist = self._error_in_check_playlist
             if self._request_recording:
                 if not (platform.startswith('win') and \
                         self.player.PLAYER_NAME == 'vlc'):
@@ -1498,20 +1488,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         try:
             self.headWin.addstr(0, 0, info, curses.color_pair(4))
             if self._cnf.locked:
-                if self._cnf.check_playlist:
-                    self.headWin.addstr('[', curses.color_pair(4))
-                    self.headWin.addstr(
-                        M_STRINGS['checking-playlist'].replace(' (', '').replace(')', ''),
-                        curses.color_pair(5)
-                    )
-                    self.headWin.addstr(']', curses.color_pair(4))
-                else:
-                    self.headWin.addstr('[', curses.color_pair(4))
-                    self.headWin.addstr(
-                        M_STRINGS['session-locked'].replace(' (', '').replace(')', ''),
-                        curses.color_pair(4)
-                    )
-                    self.headWin.addstr('] ', curses.color_pair(4))
+                self.headWin.addstr('[', curses.color_pair(4))
+                self.headWin.addstr(
+                    M_STRINGS['session-locked'].replace(' (', '').replace(')', ''),
+                    curses.color_pair(4)
+                )
+                self.headWin.addstr('] ', curses.color_pair(4))
             elif self._cnf.headless:
                 self.headWin.addstr('[', curses.color_pair(4))
                 self.headWin.addstr('Headless Session', curses.color_pair(4))
@@ -2146,9 +2128,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 elif self._cnf.headless:
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('(detectUpdateThread): session is headless. Not starting!!!')
-                elif self._cnf.check_playlist:
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info('(detectUpdateThread): check playlist mode is on. Not starting!!!')
                 else:
                     distro_package_found = False
                     if self._cnf.distro != 'None' and not platform.startswith('win'):
@@ -2172,9 +2151,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 self._update_stations_thread = None
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('(detectUpdateStationsThread): not starting; session is headless!!!')
-            elif self._cnf.check_playlist:
-                if logger.isEnabledFor(logging.INFO):
-                    logger.info('(detectUpdateStationsThread): check playlist mode is on. Not starting!!!')
             elif not self._cnf.user_csv_found:
                 self._update_stations_thread = None
                 self._cls_update_stations.stations_csv_needs_sync(print_messages=False)
@@ -2245,58 +2221,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self._global_letter = None
             remaining_keys = 0
             self._accumulated_errors = None
-            if self._cnf.check_playlist:
-                self.bodyWin.nodelay(True)
-                exit_players_loop = False
-                for a_player in self._cnf.AVAILABLE_PLAYERS:
-                    cur_id = 0
-                    end_id = self._cnf.number_of_stations
-                    old_id = -1
-                    self._accumulated_errors = None
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info('''\n\n
-############################################################################
-#
-#                       Activating player: {}
-#
-############################################################################
-'''.format(a_player.PLAYER_NAME))
-                    self._activate_player(a_player.PLAYER_NAME)
-                    self._cnf.check_output_file = path.join(
-                        self._cnf.check_output_folder,
-                        self.player.PLAYER_NAME + '-' + self._cnf.station_title + '.csv'
-                    )
-                    self._write_check_output('write_header')
-                    logger.error(f'\n\nself._cnf.check_output_file\n{self._cnf.check_output_file}\n\n')
-                    while cur_id < end_id:
-                        if cur_id != old_id:
-                            logger.error(f'working on {old_id = }, {cur_id = }')
-                            self.setStation(cur_id)
-                            self.playSelection()
-                            self.refreshBody()
-                            # self.log.write(msg_id=STATES.RESET, msg=M_STRINGS['wait_for_player_'] + self.player.PLAYER_NAME, help_msg=True)
-                            # ret = self._loop_wait_for_next_station()
-                            # if ret is not None:
-                            #     break
-                            sleep(1)
-                            old_id = cur_id
-                        # logger.error(f'brefore {old_id = }, {cur_id = }')
-                        cur_id, old_id, exit_players_loop = self._loop_check_playlist(cur_id, old_id, end_id)
-                        # logger.error(f' after {old_id = }, {cur_id = }')
-                    self._write_accumulated_errors()
-                    if exit_players_loop:
-                        break
-                self.detect_if_player_exited = False
-                self.player.stop_mpv_status_update_thread = True
-                self.player.stop_win_vlc_status_update_thread = True
-                if logger.isEnabledFor(logging.INFO):
-                    logger.info('Playlist check finished! Terminating...')
-                self.player.ctrl_c_pressed = True
-                self.ctrl_c_handler(0, 0)
-                if exit_players_loop:
-                    from shutil import rmtree
-                    rmtree(self._cnf.check_output_folder, ignore_errors=True)
-                return
             while True:
                 try:
                     if self._do_launch_external_palyer:
@@ -2364,32 +2288,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     self.player.ctrl_c_pressed = True
                     self.ctrl_c_handler(0, 0)
                     break
-
-    def _loop_check_playlist(self, cur_id, old_id, end_id):
-        for k in range(10):
-            sleep(.1)
-            char = self.bodyWin.getch()
-            if char == kbkey['q']:
-                cur_id = end_id
-                return cur_id, old_id, True
-            elif char == kbkey['open_config']:
-                old_id = cur_id
-                cur_id += 1
-                return cur_id, old_id, False
-        return cur_id, old_id, False
-
-    def _loop_wait_for_next_station(self):
-        ch = None
-        for k in range(20):
-            sleep(.1)
-            char = self.bodyWin.getch()
-            if char == ord('q'):
-                return 'q'
-            elif char == ord('|'):
-                ch = char
-        if ch is not None:
-            curses.ungetch(ch)
-        return None
 
     def _give_me_a_search_class(self, operation_mode):
         ''' get a search class for a given operation mode
@@ -2822,8 +2720,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.player.stop_mpv_status_update_thread = True
         self.log.write(msg_id=STATES.CONNECT_ERROR, msg=self.player.PLAYER_NAME  + ': ' + M_STRINGS['error-1001'])
         self.player.connecting = False
-        if self._cnf.check_playlist:
-            self._error_in_check_playlist(1001)
         if self._random_requested and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
             if logger.isEnabledFor(logging.INFO):
@@ -2934,9 +2830,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         if from_update_thread:
             msg_key = http_error if http_error else 1000
             state = STATES.CONNECT_ERROR
-            if self._cnf.check_playlist:
-                logger.error(f'self._error_in_check_playlist({msg_key})')
-                self._error_in_check_playlist(msg_key)
         else:
             msg_key = 1
             state = STATES.STOPPED
@@ -6757,15 +6650,9 @@ and |remove the file manually|.
         self.player.update_bitrate = self._update_bitrate
         self.player.log = self.log
         self.player.handle_old_referer = self._handle_old_referer
-        if self._cnf.check_playlist:
-            self.player.success_in_check_playlist = self._success_in_check_playlist
-            self.player.error_in_check_playlist = self._error_in_check_playlist
-        if self._cnf.check_playlist:
-            self.player.recording = 0
-        else:
-            if not (self.player.PLAYER_NAME == 'vlc' and \
-                    platform.startswith('win')):
-                self.player.recording = to_record
+        if not (self.player.PLAYER_NAME == 'vlc' and \
+                platform.startswith('win')):
+            self.player.recording = to_record
         self._update_config_buffering_data()
         self.log.display_help_message = False
         if logger.isEnabledFor(logging.INFO):
@@ -11935,11 +11822,6 @@ _____"|f|" to see the |free| keys you can use.
             return False
 
     def _start_remote_control_server(self):
-        if self._cnf.check_playlist:
-            if logger.isEnabledFor(logging.INFO):
-                logger.info('check playlist mode is on, Not starting!!!')
-            self._remote_control_server = None
-            return
         self._remote_control_server = PyRadioServer(
             bind_ip=self._cnf.active_remote_control_server_ip,
             bind_port=int(self._cnf.active_remote_control_server_port),
@@ -11989,11 +11871,6 @@ _____"|f|" to see the |free| keys you can use.
         self._remote_control_server = self._remote_control_server_thread = None
 
     def _restart_remote_control_server(self):
-        if self._cnf.check_playlist:
-            if logger.isEnabledFor(logging.INFO):
-                logger.info('check playlist mode is on, Not starting!!!')
-            self._remote_control_server = None
-            return
         self._stop_remote_control_server()
         self._cnf._remote_control_server = self._cnf._remote_control_server_thread = None
         self._cnf.active_remote_control_server_ip = self._cnf.remote_control_server_ip
@@ -12053,31 +11930,6 @@ _____"|f|" to see the |free| keys you can use.
         )
         if path.exists(self._cnf.check_output_file):
             remove(self._cnf.check_output_file)
-
-    def _success_in_check_playlist(self):
-        with self._check_lock:
-            station_to_check_id = self._station_to_check_id
-        logger.error(f'got called!!!\nself._cnf.last_station_checked_id = {self._cnf.last_station_checked_id}, station_to_check_id = {station_to_check_id}')
-        station_to_check = self.stations[station_to_check_id]
-        if self._cnf.last_station_checked_id != station_to_check_id:
-            logger.error(f'\n\nsuccess in check playlist\n{station_to_check}\n\n')
-            self._cnf.last_station_checked = station_to_check
-            self._cnf.last_station_checked_id = station_to_check_id
-            logger.error('\n\nnungetch c\n\n')
-            curses.ungetch(kbkey['open_config'])
-            self._write_check_output(None, station_to_check, station_to_check_id)
-
-    def _error_in_check_playlist(self, http_error):
-        with self._check_lock:
-            station_to_check_id = self._station_to_check_id
-        if self._cnf.last_station_checked_id != self._last_played_station_id:
-            logger.error(f'\n\nerror in check playlist\nhttp_error: {http_error}\n{self.stations[self._last_played_station_id]}\n\n')
-            station_to_check = self.stations[station_to_check_id]
-            self._cnf.last_station_checked = station_to_check
-            self._cnf.last_station_checked_id = station_to_check_id
-            logger.error('\n\nungetch c\n\n')
-            curses.ungetch(kbkey['open_config'])
-            self._write_check_output(http_error, station_to_check, station_to_check_id)
 
     def _write_check_output(self, http_error, station_to_check=None, station_to_check_id=None):
         logger.error(f'got called with {http_error = }')
@@ -12647,25 +12499,5 @@ _____"|f|" to see the |free| keys you can use.
         output_file = os.path.join(self._cnf.check_output_folder, 'playlist_report.html')
         with open(output_file, 'w') as file:
             file.writelines(html_content)
-
-    def handle_check_playlist_data(self):
-        self._split_logs()
-        csv_files = self._generate_markdown_report()
-        if csv_files is None:
-            print('[bold green]Info: [/bold green]No playback error occured!')
-            from shutil import rmtree
-            rmtree(self._cnf.check_output_folder, ignore_errors=True)
-        else:
-            for a_csv_file in csv_files:
-                remove(path.join(self._cnf.check_output_folder, a_csv_file))
-            station_data, errors, to_delete = self.read_markdown_file()
-            self._generate_html_report(station_data, errors)
-            self._cnf.open_a_dir(self._cnf.check_output_folder)
-    ############################################################################
-    #
-    #                    End of Chech Playlist functions
-    #
-    ############################################################################
-
 
 # pymode:lint_ignore=W901

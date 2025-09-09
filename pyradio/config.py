@@ -115,7 +115,6 @@ class PyRadioStations():
         self.foreign_copy_asked = False
         self.added_stations = 0
         self._is_register = False
-        self.check_playlist = None
 
         ''' True if playlist not in config dir '''
         self.foreign_file = False
@@ -1262,8 +1261,6 @@ class PyRadioConfig(PyRadioStations):
     )
 
     def _init_vars(self):
-        self.check_playlist = False
-
         ''' if debug is on, this will tell the logger to
                 0:  not log input from the player
                 1:  input accepted input from the player
@@ -2318,12 +2315,7 @@ class PyRadioConfig(PyRadioStations):
             # logger.error('\n\nsetting lkbkey 1\n{}\n\n'.format(reversed_dict))
             set_lkbkey(reversed_dict)
 
-    def read_config(self, distro_config=False, check_playlist=False):
-        if check_playlist:
-            if self._i_created_the_lock_file:
-                self.remove_session_lock_file()
-            self.locked = True
-        self.check_playlist = check_playlist
+    def read_config(self, distro_config=False):
         self._read_config(distro_config=True)
         self.config_opts = deepcopy(self.opts)
         # for n in self.config_opts.items():
@@ -2608,16 +2600,6 @@ class PyRadioConfig(PyRadioStations):
 
         self.opts['dirty_config'][1] = False
         self.saved_params = deepcopy(self.params)
-
-        if self.check_playlist:
-            self._headless = None
-            self._distro = 'Check Playlist Mode'
-            self.opts['enable_notifications'][1] = '-1'
-            self.opts['remote_control_server_auto_start'][1] = False
-            self.opts['enable_clock'][1] = False
-            self.opts['auto_update_theme'][1] = False
-            self.opts['enable_clock'][1] = True
-            self.opts['time_format'][1] = 0
 
         if self.headless:
             self.opts['remote_control_server_ip'][1], self.opts['remote_control_server_port'][1] = to_ip_port(self._headless)
@@ -2965,12 +2947,6 @@ class PyRadioConfig(PyRadioStations):
                  0: Config saved successfully
                  1: Config not saved (not modified)
                  TODO: 2: Config not saved (session locked) '''
-        if self.check_playlist:
-            if not from_command_line and \
-                    logger.isEnabledFor(logging.INFO):
-                logger.info('Not saving Config (checking playlist mode activated)')
-            return 1
-
         if self.locked:
             if not from_command_line and \
                     logger.isEnabledFor(logging.INFO):
@@ -3635,15 +3611,7 @@ class PyRadioLog():
         if debug or titles:
             if debug and not self.log_debug:
                 # Handler
-                if self._cnf.check_playlist:
-                    if self._cnf.check_output_folder is  None:
-                        ret = self._create_check_output_folder()
-                        if not ret:
-                            return False
-                    log_file = path.join(self._cnf.check_output_folder, 'pyradio.log')
-                    self._cnf.check_output_file = log_file
-                else:
-                    log_file = path.join(path.expanduser('~'), 'pyradio.log')
+                log_file = path.join(path.expanduser('~'), 'pyradio.log')
                 self.debug_handler = logging.FileHandler(log_file)
                 self.debug_handler.setLevel(logging.DEBUG)
 

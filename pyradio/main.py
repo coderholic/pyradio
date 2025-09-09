@@ -1153,7 +1153,7 @@ that window to complete the update process.''')
                 win_title = M_STRINGS['session-locked']
             else:
                 win_title = None
-            Log.set_win_title(win_title, args.check_playlist)
+            Log.set_win_title(win_title)
         except:
             pass
 

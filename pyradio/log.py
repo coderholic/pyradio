@@ -290,9 +290,6 @@ class Log():
 
         self._stop_using_buffering_msg = False
 
-        if config.check_playlist:
-            self._check_start_time = datetime.datetime.now()
-            logger.error(f'{self._check_start_time = }')
         self._current_msg_id = STATES.RESET
         self._current_player_id = current_player_id
         self._active_player_id = active_player_id
@@ -627,9 +624,9 @@ class Log():
                     if msg:
                         msg = fix_chars(msg)
                     if msg_id in (STATES.PLAY, STATES.TITLE):
-                        self.set_win_title(d_msg if d_msg else msg, is_checking_playlist=self._cnf.check_playlist)
+                        self.set_win_title(d_msg if d_msg else msg)
                     elif msg_id not in (STATES.ANY, STATES.VOLUME, STATES.BUFF_MSG):
-                        self.set_win_title(is_checking_playlist=self._cnf.check_playlist)
+                        self.set_win_title()
                     self._write_title_to_log(msg if msg else 'No')
                     self._show_notification(msg)
                     self._set_web_title(msg)
@@ -1086,7 +1083,7 @@ class Log():
             stdout.flush()
 
     @staticmethod
-    def set_win_title(msg=None, is_checking_playlist=None):
+    def set_win_title(msg=None):
         default = M_STRINGS['win-title']
         # just_return = (
         #     'Config saved',
@@ -1153,9 +1150,7 @@ class Log():
                 # if logger.isEnabledFor(logging.DEBUG):
                 #     logger.debug('set_win_title(): d_msg = "' + d_msg + '"')
 
-        if is_checking_playlist:
-            d_msg += M_STRINGS['checking-playlist']
-        elif token_id == 0 and Log.locked:
+        if token_id == 0 and Log.locked:
             d_msg += M_STRINGS['session-locked']
 
         if platform.lower().startswith('win'):
