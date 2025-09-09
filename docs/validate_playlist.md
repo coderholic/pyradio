@@ -30,7 +30,7 @@
 
 <!-- vim-markdown-toc -->
 
-[ [Back to main doc](index.md#playlist-validation-support)  ]
+[ [Back to main doc](index.md#playlist-validation-support)  ] [ Related: [M3U Playlist Support](m3u.md) ]
 
 ## Overview
 

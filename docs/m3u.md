@@ -15,7 +15,7 @@
 
 <!-- vim-markdown-toc -->
 
-[ [Back to main doc](index.md)  ]
+[ [Back to main doc](index.md)  ] [ Related [Playlist Validation Guide](validate_playlist.md) ]
 
 
 ## What You Can Do
