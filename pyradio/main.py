@@ -146,8 +146,7 @@ def __configureLogger(pyradio_config, debug=None, titles=None):
     if debug or titles:
 
         if debug and \
-                not pyradio_config.log_debug and \
-                not pyradio_config.check_playlist:
+                not pyradio_config.log_debug:
             if platform.startswith('win'):
                 print(r'''Debug mode activated
   printing messages to file: "[red]{}\pyradio.log[/red]"'''.format(getenv('USERPROFILE')))
@@ -299,8 +298,6 @@ If nothing else works, try the following command:
                         help='When -d is used, this option will not log player input (value = 0), log accepted input (value = 1) or raw input (value = 2).')
     parser.add_argument('-ul', '--unlock', action='store_true',
                         help="Remove sessions' lock file.")
-    parser.add_argument('-cp', '--check-playlist', action='store_true',
-                        help='Enter playlist check mode.')
     parser.add_argument('-us', '--update-stations', action='store_true',
                         help='Update "stations.csv" (if needed).')
     parser.add_argument('-U', '--update', action='store_true',
@@ -501,7 +498,7 @@ If nothing else works, try the following command:
                 sys.exit(1)
 
     with pyradio_config_file(user_config_dir, args.headless) as pyradio_config:
-        read_config(pyradio_config, args.check_playlist)
+        read_config(pyradio_config)
 
         # handle playilst validation
         if args.validate:
@@ -595,12 +592,6 @@ If nothing else works, try the following command:
                 print(f'[green]Success:[/green] Created CSV file: "{out_file}"')
 
             sys.exit(0)
-
-        if args.check_playlist:
-            pyradio_config.check_playlist = args.check_playlist
-            args.play = 'False'
-            args.debug = True
-            args.d_player_input = '2'
 
         if not system().lower().startswith('darwin') and \
                 not system().lower().startswith('win'):
@@ -1158,9 +1149,7 @@ that window to complete the update process.''')
 
         ''' set window title '''
         try:
-            if pyradio_config.check_playlist:
-                win_title = ' (' + M_STRINGS['checking-playlist'] + ')'
-            elif pyradio_config.locked:
+            if pyradio_config.locked:
                 win_title = M_STRINGS['session-locked']
             else:
                 win_title = None
@@ -1211,15 +1200,6 @@ that window to complete the update process.''')
             else:
                 break
 
-        if pyradio_config.check_playlist:
-            pyradio.program_restart = False
-            print('[blue bold]-->[/blue bold] [magenta]Check Playlist Mode[/magenta] activated!')
-            if path.exists(pyradio_config.check_output_folder):
-                print(f'[blue bold]-->[/blue bold] Output folder:\n    "[red]{pyradio_config.check_output_folder}[/red]"')
-                pyradio.handle_check_playlist_data()
-            else:
-                print('[blue bold]-->[/blue bold] Operation [red bold]Cancelled![/red bold]')
-
         ''' curses is off '''
         pyradio_config._online_browser = None
         if pyradio.setup_return_status:
@@ -1250,24 +1230,23 @@ that window to complete the update process.''')
                     upd.user = is_pyradio_user_installed()
                     upd.update_pyradio()
             else:
-                if not pyradio_config.check_playlist:
-                    st = en = ''
-                    if platform.startswith('win') or \
-                            platform.lower().startswith('dar'):
+                st = en = ''
+                if platform.startswith('win') or \
+                        platform.lower().startswith('dar'):
+                    st = '\n'
+                else:
+                    if is_graphical_environment_running():
                         st = '\n'
                     else:
-                        if is_graphical_environment_running():
-                            st = '\n'
-                        else:
-                            import subprocess
-                            subprocess.call('clear')
-                            en = '\n'
-                    print(st + 'Thank you for using [magenta]PyRadio[/magenta]. Cheers!' + en)
+                        import subprocess
+                        subprocess.call('clear')
+                        en = '\n'
+                print(st + 'Thank you for using [magenta]PyRadio[/magenta]. Cheers!' + en)
         else:
             print('\nThis terminal can not display colors.\nPyRadio cannot function in such a terminal.\n')
 
-def read_config(pyradio_config, check_playlist):
-    ret = pyradio_config.read_config(check_playlist=check_playlist)
+def read_config(pyradio_config):
+    ret = pyradio_config.read_config()
     if ret == -1:
         print(f'Error opening config: "[red]{pyradio_config.config_file}[/red]"')
         sys.exit(1)
