@@ -2,6 +2,22 @@
 
 **PyRadio** offers seamless two-way conversion between its native CSV playlist format and the widely supported M3U format. This functionality allows you to import radio stations from external M3U sources and export your **PyRadio** stations to share with other media players.
 
+## Table of Contents
+
+<!-- vim-markdown-toc Marked -->
+
+* [What You Can Do](#what-you-can-do)
+    * [Convert M3U to PyRadio CSV](#convert-m3u-to-pyradio-csv)
+    * [Convert PyRadio CSV to M3U](#convert-pyradio-csv-to-m3u)
+* [Character Conversions in CSV→M3U Conversion](#character-conversions-in-csv→m3u-conversion)
+* [Field Correspondence](#field-correspondence)
+* [Command Line Usage](#command-line-usage)
+
+<!-- vim-markdown-toc -->
+
+[ [Back to main doc](index.md)  ]
+
+
 ## What You Can Do
 
 ### Convert M3U to PyRadio CSV

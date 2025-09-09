@@ -29,6 +29,7 @@ Command line internet radio player.
     * [Managing playlists (within PyRadio)](#managing-playlists-(within-pyradio))
     * [Managing foreign playlists](#managing-foreign-playlists)
     * [Playlist history](#playlist-history)
+    * [Playlist validation support](#playlist-validation-support)
 * [Stations history](#stations-history)
 * [Search function](#search-function)
 * [Line editor](#line-editor)
@@ -96,6 +97,7 @@ Command line internet radio player.
  - Configuration editor
  - Search function
  - Customizable key bindings
+ - Playlist validation support
  - Easy installation / updating
  - Runs on Linux, macOS and Windows
 
@@ -646,6 +648,13 @@ If a playlist of the same name already exists in the configuration directory, th
 In order to go back to the previous playlist, the user just has to press "**\\\\**" (double backslash). To get to the first playlist "**\\]**" (backslash - closing square bracket) can be used.
 
 Going forward in history is not supported.
+
+### Playlist validation support
+
+
+**PyRadio** provides a powerful playlist validation system, with multi-threading support and host-aware throttling for both **CSV** and **M3U** playlists. 
+
+More info: [PyRadio Playlist Validation Guide](validate_playlist.md)
 
 ## Stations history
 

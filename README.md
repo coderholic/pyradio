@@ -37,6 +37,7 @@ Command line internet radio player.
  - Configuration editor
  - Search function
  - Customizable key bindings
+ - Playlist validation support
  - Easy installation / updating
  - Runs on Linux, macOS and Windows
 

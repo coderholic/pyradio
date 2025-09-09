@@ -73,6 +73,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#managing-playlists-(within-pyradio)">Managing playlists (within PyRadio)</a></li>
 <li><a href="#managing-foreign-playlists">Managing foreign playlists</a></li>
 <li><a href="#playlist-history">Playlist history</a></li>
+<li><a href="#playlist-validation-support">Playlist validation support</a></li>
 </ul></li>
 <li><a href="#stations-history">Stations history</a></li>
 <li><a href="#search-function">Search function</a></li>
@@ -169,6 +170,7 @@ a:visited{color: SaddleBrown;}
 <li>Configuration editor</li>
 <li>Search function</li>
 <li>Customizable key bindings</li>
+<li>Playlist validation support</li>
 <li>Easy installation / updating</li>
 <li>Runs on Linux, macOS and Windows</li>
 </ul>
@@ -1967,6 +1969,9 @@ $ pyradio -s 5</pre>
 <p><strong>PyRadio</strong> will keep a history of all the playlists opened (within a given session), so that navigating between them is made easy.</p>
 <p>In order to go back to the previous playlist, the user just has to press “<strong>\\</strong>” (double backslash). To get to the first playlist “<strong>\]</strong>” (backslash - closing square bracket) can be used.</p>
 <p>Going forward in history is not supported.</p>
+<h3 id="playlist-validation-support">Playlist validation support</h3>
+<p><strong>PyRadio</strong> provides a powerful playlist validation system, with multi-threading support and host-aware throttling for both <strong>CSV</strong> and <strong>M3U</strong> playlists.</p>
+<p>More info: <a href="validate_playlist.html">PyRadio Playlist Validation Guide</a></p>
 <h2 id="stations-history">Stations history <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>Playing several stations, sometimes among different playlists, and returning to them is sometimes a tedious operation.</p>
 <p>This problem is addressed with the “<strong>Station history</strong>” functionality, which is actually a list of stations which have been played back.</p>

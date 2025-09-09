@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PyRadio Playlist Validation Guide</title>
+    <style> 
+    body {padding: 2em;} 
+    @media screen and (max-width: 770px) { 
+        body {padding: 10px;} 
+    }
+    body {max-width: 750px; margin: auto;} 
+    h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
+    h3 {margin-top: 2em; color: SaddleBrown; text-decoration: underline SaddleBrown} 
+    h4 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 1em;} 
+    h4:before {content: "# "; font-weight: bold; vertical-align: middle;} 
+    h5 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 1em;;} 
+    h5:before {content: "## "; font-weight: bold; vertical-align: middle;} 
+    p, table, ol, ul {margin-left: .8em;} 
+    STRONG {color: SaddleBrown;} 
+    dl {margin: 2em;} 
+    dd {margin: 1em;} 
+    dt {font-weight: bold;} 
+    TABLE {border: 1px solid SaddleBrown; border-collapse: collapse; margin-left: auto; margin-right: auto; border-radius: 5px; -moz-border-radius: 5px; border-collapse:separate; box-shadow: 5px 5px 15px #888888;} 
+    TH {text-align: left; vertical-align: top; padding: 5px;color: SaddleBrown;border: 1px solid SaddleBrown; background-color: SaddleBrown; color: white;} 
+    TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
+    pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; overflow: auto; box-shadow: 5px 5px 15px #C7C7C7;} 
+    .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} 
+    img{display: block; margin-left: auto; margin-right: auto; max-width: 750px; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
+    .indented {text-indent: -1.5em; padding-left: 1.5em; margin-left: 1em;} 
+    a{ color: SaddleBrown;}
+a:visited{color: SaddleBrown;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+</header>
+<h1 style="color: SaddleBrown" id="pyradio-playlist-validation-guide">PyRadio Playlist Validation Guide</h1>
+<p><strong>PyRadio</strong> provides a powerful playlist validation system, with multi-threading support and host-aware throttling.</p>
+<h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<!-- vim-markdown-toc Marked -->
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#features">Features</a></li>
+<li><a href="#usage">Usage</a>
+<ul>
+<li><a href="#basic-syntax">Basic Syntax</a></li>
+<li><a href="#validation-options">Validation Options</a></li>
+<li><a href="#validation-modes">Validation Modes</a>
+<ul>
+<li><a href="#mark-mode-(default)">mark mode (default)</a></li>
+<li><a href="#drop-mode">drop mode</a></li>
+</ul></li>
+<li><a href="#usage-examples">Usage Examples</a></li>
+</ul></li>
+<li><a href="#technical-details">Technical Details</a>
+<ul>
+<li><a href="#validation-algorithm">Validation Algorithm</a></li>
+<li><a href="#host-aware-throttling">Host-Aware Throttling</a></li>
+<li><a href="#supported-formats">Supported Formats</a></li>
+</ul></li>
+<li><a href="#output-files">Output Files</a>
+<ul>
+<li><a href="#mark-mode">mark mode</a></li>
+<li><a href="#drop-mode">drop mode</a></li>
+</ul></li>
+<li><a href="#results-summary">Results Summary</a></li>
+<li><a href="#usage-tips">Usage Tips</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+<li><a href="#contributing">Contributing</a></li>
+</ul>
+<!-- vim-markdown-toc -->
+<p class="indented">[ <a href="index.html#playlist-validation-support">Back to main doc</a> ]</p>
+<h2 id="overview">Overview <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>This tool allows validation of radio stations in playlist files (CSV or M3U) to ensure all links are functional and provide actual playable audio content.</p>
+<h2 id="features">Features <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<ul>
+<li><strong>Multi-threaded validation</strong>: Validate multiple stations simultaneously</li>
+<li><strong>Host-aware throttling</strong>: Limit requests per host to prevent server banning</li>
+<li><strong>Smart audio detection</strong>: Detect actual audio streams through multiple methods</li>
+<li><strong>Flexible output options</strong>: Mark non-functional stations or save to separate files</li>
+<li><strong>Colorized output</strong>: Readable results with color coding</li>
+</ul>
+<h2 id="usage">Usage <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<h3 id="basic-syntax">Basic Syntax</h3>
+<pre>pyradio [options] --validate &lt;mode&gt; --convert &lt;playlist_file&gt;</pre>
+<h3 id="validation-options">Validation Options</h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>–validate</td>
+<td>mark</td>
+<td>Validation mode (<strong>mark</strong> or <strong>drop</strong>)</td>
+</tr>
+<tr>
+<td>–threads</td>
+<td>5</td>
+<td>Number of threads for parallel processing</td>
+</tr>
+<tr>
+<td>–timeout</td>
+<td>5</td>
+<td>Timeout in seconds per request</td>
+</tr>
+<tr>
+<td>–max-per-host</td>
+<td>2</td>
+<td>Maximum concurrent requests per host</td>
+</tr>
+<tr>
+<td>–with-date</td>
+<td>False</td>
+<td>Add timestamp to output filenames</td>
+</tr>
+<tr>
+<td>–no-color</td>
+<td>False</td>
+<td>Disable color output</td>
+</tr>
+<tr>
+<td>–quiet</td>
+<td>False</td>
+<td>Reduce verbosity (hide per-station output)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="validation-modes">Validation Modes</h3>
+<h4 id="mark-mode-default">mark mode (default)</h4>
+<p>Marks non-functional stations with “<em>[X]</em>” in the name and saves all results to one file.</p>
+<pre>pyradio --validate --convert my_playlist.csv</pre>
+<h4 id="drop-mode">drop mode</h4>
+<p>Creates two separate files: - <strong>.ok</strong>: Working stations - <strong>.bad</strong>: Non-working stations</p>
+<p>Example:</p>
+<pre>pyradio --validate drop my_playlist.m3u</pre>
+<h3 id="usage-examples">Usage Examples</h3>
+<p><strong>Basic validation:</strong></p>
+<pre>pyradio --validate mark --convert playlist.csv</pre>
+<p><strong>Validation with 10 threads and stricter timeout:</strong></p>
+<pre>pyradio --validate drop --threads 10 --timeout 3 --convert playlist.m3u</pre>
+<p><strong>Validation with timestamp and without colors:</strong></p>
+<pre>pyradio --validate mark --with-date --no-color --convert playlist.csv</pre>
+<p><strong>Quiet validation (summary only):</strong></p>
+<pre>pyradio --validate mark --quiet --convert playlist.m3u</pre>
+<h2 id="technical-details">Technical Details <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<h3 id="validation-algorithm">Validation Algorithm</h3>
+<p>The tool uses multiple techniques to determine if a URL provides actual audio stream:</p>
+<ol type="1">
+<li><strong>Content-Type check</strong>: Verifies content type is audio/video</li>
+<li><strong>ICY headers detection</strong>: Checks for Shoutcast/Icecast headers</li>
+<li><strong>Audio signature analysis</strong>: Detects patterns of common audio formats (MP3, AAC, OGG, FLAC, etc.)</li>
+<li><strong>HTML exclusion</strong>: Rejects HTML responses indicating errors or pages</li>
+</ol>
+<h3 id="host-aware-throttling">Host-Aware Throttling</h3>
+<p>To prevent server banning, the tool: - Groups requests by hostname - Applies separate semaphore for each host - Limits concurrent requests per host (default: 2)</p>
+<h3 id="supported-formats">Supported Formats</h3>
+<ul>
+<li><strong>CSV</strong>: Files with <strong>PyRadio</strong> CSV formatting</li>
+<li><strong>M3U</strong>: Standard M3U playlist files</li>
+</ul>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If you provide a URL instead of a file path, <strong>PyRadio</strong> will treat it as a link to an online M3U file and attempt to download and validate it.</p>
+<h2 id="output-files">Output Files <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<h3 id="mark-mode">mark mode</h3>
+<ul>
+<li>“<em>playlist.validated.[timestamp].csv/m3u</em>”: File with marked non-functional stations</li>
+</ul>
+<h3 id="drop-mode-1">drop mode</h3>
+<ul>
+<li>“<em>playlist.ok.[timestamp].csv/m3u</em>”: Working stations</li>
+<li>“<em>playlist.bad.[timestamp].csv/m3u</em>”: Non-working stations</li>
+</ul>
+<h2 id="results-summary">Results Summary <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>The tool displays a detailed summary including:</p>
+<ul>
+<li>Number of online/offline stations</li>
+<li>Number of groups (group headers)</li>
+<li>Success rate</li>
+<li>Total counts</li>
+</ul>
+<h2 id="usage-tips">Usage Tips <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<ol type="1">
+<li><strong>For large playlists</strong>: Use more threads (“<em>–threads</em>”) for faster processing</li>
+<li><strong>For sensitive servers</strong>: Reduce “<em>–max-per-host</em>” to avoid banning</li>
+<li><strong>For scheduled validations</strong>: Use “<em>–with-date</em>” for history</li>
+<li><strong>For scripting</strong>: Use “<em>–no-color –quiet</em>” for machine-readable output</li>
+</ol>
+<h2 id="troubleshooting">Troubleshooting <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p><strong>Error: “Cannot write file”</strong> - Ensure you have write permissions in the directory</p>
+<p><strong>Error: “Unsupported file type”</strong> - Ensure the file has <strong>.csv</strong> or <strong>.m3u</strong> extension</p>
+<p><strong>Many non-functional stations</strong> - Check your network connection - Increase “<em>–timeout</em>” for slow servers - Check if stations require specific headers/referrer</p>
+<h2 id="contributing">Contributing <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>Any improvements to the validation algorithm or new detection techniques are welcome.</p>
+</body>
+</html>
