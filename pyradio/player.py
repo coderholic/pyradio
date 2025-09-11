@@ -2694,7 +2694,11 @@ class MpvPlayer(Player):
         ''' Do I have user profile in config?
             If so, can I use it?
         '''
+        self.USE_PROFILE, profile = self._configHasProfile(
+            a_station[Station.profile] if a_station[Station.profile] else self.profile_name
+        )
 
+        # logger.error('\n\nself.USE_PROFILE = {}\n\n'.format(self.USE_PROFILE))
         if self._recording == self.RECORD_WITH_SILENCE:
             self._cnf.profile_manager.write_silenced_profile(self.PLAYER_NAME)
             opts.append('--profile=silent')
@@ -3248,7 +3252,9 @@ class MpPlayer(Player):
         ''' Do I have user profile in config?
             If so, can I use it?
         '''
-
+        self.USE_PROFILE, profile = self._configHasProfile(
+            a_station[Station.profile] if a_station[Station.profile] else self.profile_name
+        )
         if self._recording == self.RECORD_WITH_SILENCE:
             if self.USE_PROFILE > -1:
                 self._cnf.profile_manager.write_silenced_profile(self.PLAYER_NAME)
