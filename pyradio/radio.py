@@ -2547,12 +2547,19 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
     def _what_is_the_station_player(self):
         station_player = self.stations[self.selection][Station.player]
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.error(f'{self._default_player_name =  }')
+            logger.error(f'from station: {station_player =  }')
         if station_player == '':
             station_player = self._default_player_name
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.error(f'self._default_player_name = {station_player =  }')
         if station_player not in [x.PLAYER_NAME for x in self._cnf.AVAILABLE_PLAYERS]:
             station_player = self._default_player_name
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f'{station_player = }')
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.error(f'self._default_player_name = {station_player =  }')
+        if logger.isEnabledFor(logging.INFO):
+            logger.info(f'using {station_player = }')
         return station_player
 
     def _get_the_stations_player(self, station_player):
@@ -6617,8 +6624,8 @@ and |remove the file manually|.
         return ''
 
     def _activate_player(self, player_name):
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f'selected player = {player_name}')
+        if logger.isEnabledFor(logging.INFO):
+            logger.info(f'activating player = {player_name}')
         self._change_player = None
         to_record = self.player.recording
         if self.player.isPlaying():
@@ -7545,9 +7552,11 @@ _____"|f|" to see the |free| keys you can use.
                 self.refreshBody()
             elif ret != '':
                 # set player
-                logger.error(f'\n\nplayer = {ret}\n\n')
                 self.ws.close_window()
                 playing = self.player.isPlaying()
+                self._default_player_name = ret
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info(f'setting {self._default_player_name = }')
                 self._activate_player(ret)
                 if playing:
                     self.playSelection()
