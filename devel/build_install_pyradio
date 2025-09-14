@@ -22,6 +22,48 @@ Checking python availability:"
             echo
 }
 
+function check_pipx() {
+    # Δοκιμή 1: python -m pipx
+    local pipx_test=$(python"${TO_PYTHON}" -m pipx --version 2>/dev/null)
+    if [ -n "$pipx_test" ]; then
+        echo "python${TO_PYTHON} -m pipx"
+        return 0
+    fi
+
+    # Δοκιμή 2: standalone pipx
+    pipx_test=$(pipx --version 2>/dev/null)
+    if [ -n "$pipx_test" ]; then
+        echo "pipx"
+        return 0
+    fi
+
+    # Δοκιμή 3: απόλυτο path (συνήθης θέση σε macOS)
+    pipx_test=$(/usr/local/bin/pipx --version 2>/dev/null)
+    if [ -n "$pipx_test" ]; then
+        echo "/usr/local/bin/pipx"
+        return 0
+    fi
+
+    # Δοκιμή 4: άλλα πιθανά paths
+    local potential_paths=(
+        "/opt/homebrew/bin/pipx"
+        "/usr/bin/pipx" 
+        "$HOME/.local/bin/pipx"
+    )
+    
+    for path in "${potential_paths[@]}"; do
+        if [ -x "$path" ]; then
+            pipx_test=$("$path" --version 2>/dev/null)
+            if [ -n "$pipx_test" ]; then
+                echo "$path"
+                return 0
+            fi
+        fi
+    done
+
+    return 1
+}
+
 function pipx_error(){
 cat <<END
 The installation has failed!!!
@@ -76,18 +118,21 @@ function uninstall(){
     echo 'Uninstalling PyRadio'
     echo -n '  ** Removing python files ... '
     echo -n "Looking for pipx ... "
-    PIPX_VERSION=$(python"${TO_PYTHON}" -m pipx --version)
-    [ -z "$PIPX_VERSION" ] || PIPX=1
-    [ -z "$PIPX_VERSION" ] && {
-        echo "Command used: python"${TO_PYTHON}" -m pipx --version 2>/dev/null"
-    } || echo "$PIPX_VERSION"
+    PIPX_CMD=$(check_pipx)
+    if [ -n "$PIPX_CMD" ]; then
+        PIPX=1
+        PIPX_VERSION=$($PIPX_CMD --version 2>/dev/null)
+        echo "$PIPX_VERSION (found via: $PIPX_CMD)"
+    else
+        echo "not found"
+    fi
     if [ -z "${PIPX}" ]
     then
         python -m pip uninstall -y pyradio 2>/dev/null 1>&2
         python2 -m pip uninstall -y pyradio 2>/dev/null 1>&2
         python3 -m pip uninstall -y pyradio 2>/dev/null 1>&2
     else
-        python"${TO_PYTHON}" -m pipx uninstall pyradio 2>/dev/null 1>&2
+        $PIPX_CMD uninstall pyradio 2>/dev/null 1>&2
     fi
     echo 'done'
     echo -n '  ** Removing help files ... '
@@ -345,27 +390,7 @@ do
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-# if [ -z "$NO_DEV" ]
-# then
-#     cd pyradio
-#     DEVEL=$(python -c 'from install import get_github_long_description_for_script; get_github_long_description_for_script()')
-#     # DEVEL=$(python -c 'from install import get_devel_version; print(get_devel_version())')
-#     echo "Devel version: $DEVEL"
-#     cd ..
-# fi
-
-
-## check dependencies :)
-#for prog in git sed ;do
-#    ${prog} --version 2>/dev/null 1>&2 || {
-#        echo "Error: ${prog} not found."
-#        echo "       Please install it and try again."
-#        exit 1
-#    }
-#done
-
 # check dependencies :)
-# for prog in git sed ;do
 for prog in sed ;do
     ${prog} --version 2>/dev/null 1>&2 || {
         if [ "${prog}" = "sed" ]
@@ -383,24 +408,19 @@ for prog in sed ;do
     }
 done
 
-# uninstall previous versions
-# uninstall 1
-
-# # delete any files that were left from previous attempt
-# sudo find . -iname "*.pyc" -delete 2>/dev/null
-# sudo find . -iname "*.egg" -delete 2>/dev/null
-
-# echo "***** installing for user..."
 do_dev
 
 #
 # Use pipx by default, if installed
 echo -n "Looking for pipx ... "
-PIPX_VERSION=$(python"${TO_PYTHON}" -m pipx --version)
-[ -z "$PIPX_VERSION" ] || PIPX=1
-[ -z "$PIPX_VERSION" ] && {
-    echo "Command used: python"${TO_PYTHON}" -m pipx --version 2>/dev/null"
-} || echo "$PIPX_VERSION"
+PIPX_CMD=$(check_pipx)
+if [ -n "$PIPX_CMD" ]; then
+    PIPX=1
+    PIPX_VERSION=$($PIPX_CMD --version 2>/dev/null)
+    echo "$PIPX_VERSION (found via: $PIPX_CMD)"
+else
+    echo "not found"
+fi
 
 if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ]
 then
@@ -468,12 +488,12 @@ else
     fi
     if [ -z "$PIPX_ISOLATE" ]
     then
-        python3 -m pipx install $PIPX_EDITABLE --system-site-packages --force . || pipx_error
+        $PIPX_CMD install $PIPX_EDITABLE --system-site-packages --force . || pipx_error
         inst_type=1
     else
-        python3 -m pipx install $PIPX_EDITABLE --force . || pipx_error
+        $PIPX_CMD install $PIPX_EDITABLE --force . || pipx_error
         [ -z "$PIPX_EDITABLE" ] && \
-            cat requirements_pipx.txt | sed -e 's/#.*//' | xargs python3 -m pipx inject pyradio
+            cat requirements_pipx.txt | sed -e 's/#.*//' | xargs $PIPX_CMD inject pyradio
         inst_type=2
     fi
 fi

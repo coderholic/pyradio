@@ -1,2 +1,7 @@
 recursive-include pyradio *
+prune pyradio/__pycache__
+prune pyradio/.ruff_cache
+prune devel
+prune .git
+prune .github
 exclude *.pyc *.orig

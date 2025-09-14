@@ -30,6 +30,21 @@ pyradio-client = "pyradio.main:run_client"
 "Homepage" = "https://github.com/coderholic/pyradio"
 "Bug Tracker" = "https://github.com/coderholic/pyradio/issues"
 
+[tool.setuptools.packages.find]
+include = [
+    "pyradio",
+    "pyradio.icons",
+    "pyradio.keyboard",
+    "pyradio.scripts",
+    "pyradio.themes"
+]
+exclude = [
+    "pyradio.__pycache__",
+    "pyradio.*.__pycache__",
+    "pyradio.*.tests",
+    "pyradio..ruff_cache"
+]
+
 [build-system]
 # Minimum requirements for the build system to execute.
 requires = ["setuptools", "wheel"]  # PEP 508 specifications.
