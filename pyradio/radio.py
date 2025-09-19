@@ -9901,7 +9901,7 @@ _____"|f|" to see the |free| keys you can use.
                                 check_localized(char, (kbkey['append'], )):
                             self._station_editor.append = True
                         self._station_editor.show()
-                        self._station_editor.item = ['', '', '', '', '', '0@128', '', '', '']
+                        self._station_editor.item = ['', '', '', '', '', '0@128', '', '', '', '']
                         self.ws.operation_mode = self.ws.ADD_STATION_MODE
 
                 elif char == kbkey['paste'] or \
