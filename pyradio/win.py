@@ -8,10 +8,19 @@ from time import sleep
 import site
 from shutil import rmtree
 from msvcrt import getwch
+from pathlib import Path
 from urllib.request import urlretrieve
 import glob
 import threading
 import requests
+try:
+    # Python ≥ 3.9
+    from importlib.resources import files, as_file
+    from importlib.abc import Traversable
+except ImportError:
+    # Python 3.7–3.8 (backport)
+    from importlib_resources import files, as_file
+    from importlib_resources.abc import Traversable
 
 locale.setlocale(locale.LC_ALL, "")
 
@@ -41,26 +50,23 @@ zurl = [
     'https://sourceforge.net/projects/mplayerwin/files/MPlayer-MEncoder/r38151/mplayer-svn-38151-x86_64.7z/download'
 ]
 
-def win_press_any_key_to_unintall():
-    the_path = __file__.split(sep)
-    the_file = sep.join(the_path[:-1]) + sep + 'install.py'
+def win_press_any_key_to_uninstall():
     print('\nTo complete the process you will have to [red]execute a batch file[/red].')
-    print('Windows Explorer will open the location of the batch file to run.')
-    print('')
-    print('Please double click')
-    print('')
-    print('    [bold green]uninstall.bat[/bold green]')
-    print('')
-    print('to remove [magenta]PyRadio[/magenta] from your system.')
-    print('')
-    print('After you are done, you can delete the folder it resides in.')
-    print('\nPress any key to exit...', end='', flush=True)
+    print('Windows Explorer will open the location of the batch file to run.\n')
+    print('Please double click\n')
+    print('    [bold green]uninstall.bat[/bold green]\n')
+    print('to remove [magenta]PyRadio[/magenta] from your system.\n')
+    print('After you are done, you can delete the folder it resides in.\n')
+    print('Press any key to exit...', end='', flush=True)
+
     getwch()
-    #print('\nPress any key to exit...', end='', flush=True)
-    #getwch()
-    subprocess.call('python ' + the_file + ' -R',
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL)
+
+    with as_file(files("pyradio").joinpath("install.py")) as tmp_path:
+        subprocess.call(
+            [sys.executable, str(tmp_path), "-R"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
 
 def win_print_exe_paths():
     from .install import fix_pyradio_win_exe

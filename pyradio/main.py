@@ -13,6 +13,11 @@ from platform import system
 import re
 import glob
 from urllib.parse import urlparse, unquote
+try:
+    from importlib.resources import files, as_file   # 3.9+
+except ImportError:
+    from importlib_resources import files, as_file   # backport για 3.7–3.8
+from pathlib import Path
 
 from .radio import PyRadio
 from .config import PyRadioConfig
@@ -220,7 +225,7 @@ def _win_python_3_12():
 def create_systemd_service_files():
     file_names = ('start-headless-pyradio.sh', 'stop-headless-pyradio.sh', 'pyradio.service')
     if program == 'tmux':
-        files = (
+        srv_files = (
 r'''#!|SHELL|
 touch |HOME|/pyradio.log
 |PROGRAM| new-session -dA -s pyradio-session |PYRADIO| --headless auto
@@ -603,15 +608,13 @@ If nothing else works, try the following command:
             if args.terminal:
                 import subprocess
                 r = None
-                script = None
-                if script is None:
-                    package_file = path.join(path.dirname(__file__), 'scripts', 'fix_pyradio_desktop_file')
-                    script = path.join(pyradio_config.cache_dir, 'fix_pyradio_desktop_file')
-                    try:
-                        shutil.copy(package_file, script)
-                    except Exception as e:
-                        print(f'Error copying file: "{e}"')
-                        sys.exit(1)
+                script = Path(pyradio_config.cache_dir) / 'fix_pyradio_desktop_file'
+                try:
+                    with as_file(files("pyradio").joinpath("scripts", "fix_pyradio_desktop_file")) as src:
+                        shutil.copy(src, script)
+                except Exception as e:
+                    print(f'Error copying file: {e}')
+                    sys.exit(1)
                     # try:
                     #     from urllib.request import urlretrieve
                     # except:
@@ -673,9 +676,11 @@ If nothing else works, try the following command:
             return
 
         if args.print_config:
-            cnf = path.join(path.dirname(__file__), 'config')
-            with open(cnf, 'r', encoding='utf-8') as f:
-                lines = f.readlines()
+            res = files("pyradio").joinpath("config")
+            with as_file(res) as cnf_path:
+                cnf_path = Path(cnf_path)
+                with cnf_path.open('r', encoding='utf-8') as f:
+                    lines = f.readlines()
             if not pyradio_config.show_no_themes_message:
                 lines.append('')
                 lines.append('# User option (response to a message window)')
@@ -877,7 +882,12 @@ that window to complete the update process.''')
             print(f'      Data dir: "[red]{pyradio_config.data_dir}[/red]"')
             print(f'     State dir: "[red]{pyradio_config.state_dir}[/red]"')
             print(f'     Cache dir: "[red]{pyradio_config.cache_dir}[/red]"')
-            print(f'      Code dir: "[red]{path.dirname(__file__)}[/red]"')
+            code_dir = files("pyradio")
+            if code_dir.isdir():
+                print(f'      Code dir: "[red]{str(code_dir)}[/red]"')
+            else:
+                container = str(code_dir.locate().parent)
+                print(f'      Code dir (container): "[red]{container}[/red]"')
             print(f'Recordings dir: "[red]{pyradio_config.recording_dir}[/red]"')
             return
 

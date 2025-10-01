@@ -3,11 +3,20 @@ import locale
 import curses
 import logging
 import glob
-from os import path, sep as dir_sep, access, R_OK
+from os import path, sep as dir_sep, access, R_OK, W_OK
 from shutil import copyfile
 from copy import deepcopy
 from math import sqrt
 import colorsys
+from pathlib import Path
+try:
+    # Python ≥ 3.9
+    from importlib.resources import files, as_file
+    from importlib.abc import Traversable
+except ImportError:
+    # Python 3.7–3.8 (backport)
+    from importlib_resources import files, as_file
+    from importlib_resources.abc import Traversable
 from .common import rgb_to_curses_rgb, rgb_to_hex, hex_to_rgb
 from .keyboard import kbkey, check_localized, remove_l10n_from_global_functions
 
@@ -440,11 +449,12 @@ class PyRadioTheme():
                 return False, f'Error writing theme file: "{out_theme_name}"'
         else:
             ''' copy theme file '''
-            in_file = path.join(path.dirname(__file__), 'themes', theme_name + '.pyradio-theme')
+            in_resource = files("pyradio.themes").joinpath(theme_name + ".pyradio-theme")
             try:
-                copyfile(in_file, out_file)
+                with as_file(in_resource) as real_path:
+                    copyfile(real_path, out_file)
                 return True, f'Theme created: "{out_theme_name}"'
-            except:
+            except Exception as e:
                 return False, f'Error creating file for theme: "{out_theme_name}"'
 
     def open_theme(self, a_theme='', a_path='', print_errors=None, no_curses=False):
@@ -587,16 +597,61 @@ class PyRadioTheme():
         return ret
 
     def _get_theme_path(self, a_theme):
-        #self.root_path = path.join(path.dirname(__file__), 'stations.csv')
-        theme_dirs = [path.join(self._cnf.stations_dir, 'themes'),
-                      path.join(path.dirname(__file__), 'themes')]
+        """
+        Locate a theme file by name, searching both user and package directories.
+
+        1. First search the user themes directory (real filesystem path).
+        2. Then search the package's internal themes directory (may be inside a zip/egg).
+        3. If found inside the package resources, extract it to the cache directory and return the real path.
+
+        Parameters
+        ----------
+        a_theme : str
+            The name of the theme (without extension).
+
+        Returns
+        -------
+        str
+            Absolute path to the located theme file, or an empty string if not found.
+        """
+        # logger.error(f'{a_theme = }')
+        from importlib.abc import Traversable
+
+        # List of theme directories: user path first, package resources second
+        theme_dirs = [
+            path.join(self._cnf.stations_dir, 'themes'),  # user themes
+            files("pyradio").joinpath("themes")           # package internal themes
+        ]
+        # logger.error(f'{theme_dirs = }')
+
         for theme_dir in theme_dirs:
-            files = glob.glob(path.join(theme_dir, '*.pyradio-theme'))
-            if files:
-                for a_file in files:
-                    a_theme_name = a_file.split(dir_sep)[-1].replace('.pyradio-theme', '')
+            # Case 1: Traversable object (package resource, may be zipped)
+            if isinstance(theme_dir, Traversable):
+                for res in theme_dir.iterdir():
+                    # logger.debug(f'===> {res.name = }')
+                    if res.name.endswith('.pyradio-theme') and res.name[:-14] == a_theme:
+                        # Extract the resource temporarily to cache
+                        with as_file(res) as tmp_path:
+                            cache_dir = path.join(self._cnf.cache_dir, 'themes')
+                            Path(cache_dir).mkdir(parents=True, exist_ok=True)
+                            real_theme_path = path.join(cache_dir, a_theme + '.pyradio-theme')
+                            # logger.info(f'{real_theme_path = }')
+                            # Always overwrite to handle updated package themes
+                            copyfile(tmp_path, real_theme_path)
+                            # logger.error(f'{real_theme_path = }')
+                            return real_theme_path
+
+            # Case 2: Real filesystem path (string or Path)
+            elif path.isdir(theme_dir):
+                theme_files = glob.glob(path.join(theme_dir, '*.pyradio-theme'))
+                for a_file in theme_files:
+                    a_theme_name = path.basename(a_file).replace('.pyradio-theme', '')
                     if a_theme_name == a_theme:
+                        # logger.error(f'{a_file = }')
                         return a_file
+
+        # Not found
+        # logger.error('*** Not found ***')
         return ''
 
 
@@ -1012,35 +1067,71 @@ class PyRadioThemeSelector():
         self._get_config_and_applied_theme(touch_selection)
         self._get_metrics()
 
-    def _scan_for_theme_files(self, cnf_path, user_themes_first=False):
+    def _scan_for_theme_files(self, cnf_path, user_themes_first: bool = False):
+        """
+        Scan for available theme files.
+
+        This function collects theme names and their corresponding paths from:
+          1. User themes directory (real filesystem path).
+          2. Package internal themes directory (may be zipped).
+
+        If a theme comes from the package, its path is set to an empty string (''),
+        signaling that it must be extracted/resolved later by _get_theme_path().
+
+        Parameters
+        ----------
+        cnf_path : str
+            Path to the user's configuration directory.
+        user_themes_first : bool, optional
+            If True, list user themes first.
+
+        Returns
+        -------
+        list[list[str, str]]
+            A list of [theme_name, theme_path] pairs. Some entries are headers
+            of the form [header_text, '-'].
+        """
         out_themes = []
-        #self.root_path = path.join(path.dirname(__file__), 'stations.csv')
-        theme_dirs = [path.join(path.dirname(__file__), 'themes'),
-                      path.join(cnf_path, 'themes')]
+
+        # User and package theme directories
+        user_dir = path.join(cnf_path, 'themes')
+        package_dir = files("pyradio").joinpath("themes")
+
+        # Build directory list depending on priority
+        theme_dirs = [(user_dir, 'User Themes'), (package_dir, 'System Themes')]
         if user_themes_first:
             theme_dirs.reverse()
-        for i, theme_dir in enumerate(theme_dirs):
-            files = glob.glob(path.join(theme_dir, '*.pyradio-theme'))
-            if files:
-                tmp_themes = []
-                for a_file in files:
-                    theme_name = a_file.split(dir_sep)[-1].replace('.pyradio-theme', '')
 
+        for theme_dir, header in theme_dirs:
+            tmp_themes = []
+
+            # Case 1: user directory (real path)
+            if isinstance(theme_dir, str) and path.isdir(theme_dir):
+                theme_files = glob.glob(path.join(theme_dir, '*.pyradio-theme'))
+                for a_file in theme_files:
+                    theme_name = path.basename(a_file).replace('.pyradio-theme', '')
                     ret, _ = self._cnf.is_project_theme(theme_name)
-                    if ret is None:
-                        if not self._cnf.is_default_file(theme_name):
-                            tmp_themes.append([theme_name, a_file])
-                if tmp_themes:
-                    tmp_themes.sort()
-                    tmp_themes.reverse()
-                    if i == 0:
-                        tmp_themes.append(['System Themes', '-'])
-                    else:
-                        tmp_themes.append(['User Themes', '-'])
-                    tmp_themes.reverse()
-                    out_themes.extend(tmp_themes)
+                    if ret is None and not self._cnf.is_default_file(theme_name):
+                        tmp_themes.append([theme_name, a_file])
 
-        ''' add auto update themes, if not already there '''
+            # Case 2: package directory (Traversable, may be zipped)
+            elif isinstance(theme_dir, Traversable):
+                for res in theme_dir.iterdir():
+                    if res.name.endswith('.pyradio-theme'):
+                        theme_name = res.name[:-14]
+                        ret, _ = self._cnf.is_project_theme(theme_name)
+                        if ret is None and not self._cnf.is_default_file(theme_name):
+                            # '' indicates package resource, to be resolved later
+                            tmp_themes.append([theme_name, ''])
+
+            if tmp_themes:
+                tmp_themes.sort()
+                tmp_themes.reverse()
+                tmp_themes.append([header, '-'])
+                tmp_themes.reverse()
+                out_themes.extend(tmp_themes)
+
+        # Add auto update themes, if not already there
         tmp_themes = []
         for n in self._cnf.auto_update_frameworks:
             if n.can_auto_update:
@@ -1052,6 +1143,7 @@ class PyRadioThemeSelector():
             tmp_themes.append(['Ext. Themes Projects', '-'])
             tmp_themes.reverse()
             out_themes.extend(tmp_themes)
+
         return out_themes
 
     def _theme_name_in_themes(self, themes_list, theme_name):
@@ -1331,17 +1423,33 @@ class PyRadioThemeSelector():
         self.selection = len(self._themes)
 
     def _is_theme_read_only(self, theme_path):
-        if theme_path:
-            themes_path = path.join(path.dirname(__file__), 'themes')
-            if themes_path == path.dirname(theme_path):
-                return True
-            else:
-                if access(theme_path, R_OK):
-                    return False
-                else:
-                    return True
-        else:
+        """
+        Determine if a theme is read-only.
+
+        Read-only if:
+          1. No real path ('' or inside zip/wheel)
+          2. Located in cache_dir (even if writable)
+          3. Located in system dir and not writable
+        """
+        # Case 1: zip/wheel resource (no real file)
+        if not theme_path:
             return True
+
+        # Normalize
+        theme_dir = path.dirname(theme_path)
+
+        # Case 2: cache_dir copy (always read-only)
+        if theme_dir.startswith(self._cnf.cache_dir):
+            return True
+
+        # Case 3: system dir (package installed themes)
+        # it is ok, zip/wheel taken care of
+        system_themes_path = path.join(path.dirname(__file__), 'themes')
+        if theme_dir == system_themes_path:
+            return True
+
+        # Otherwise, check real FS permissions (user themes)
+        return not access(theme_path, R_OK | W_OK)
 
     def keypress(self, char):
         """ PyRadioThemeSelector keypress

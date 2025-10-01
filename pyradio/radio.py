@@ -30,7 +30,10 @@ try:
     HAVE_PSUTIL = True
 except:
     HAVE_PSUTIL = False
-
+try:
+    from importlib.resources import files, as_file   # 3.9+
+except ImportError:
+    from importlib_resources import files, as_file   # backport για 3.7–3.8
 from .player import PlayerCache
 from .config import HAS_REQUESTS, HAS_DNSPYTHON, Station
 from .common import StationsChanges, CsvReadWrite, STATES, M_STRINGS, player_start_stop_token
@@ -65,9 +68,6 @@ except ImportError:
 locale.setlocale(locale.LC_ALL, "")
 
 logger = logging.getLogger(__name__)
-
-def rel(path):
-    return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
 
 def is_ascii(s):
     return all(ord(c) < 128 for c in s)
@@ -4952,8 +4952,8 @@ and |remove the file manually|.
                 if stop():
                     return
 
-        def clean_date_files(files, start=0):
-            files_to_delete = files[start+1:]
+        def clean_date_files(del_files, start=0):
+            files_to_delete = del_files[start+1:]
             for a_file in files_to_delete:
                 try:
                     remove(a_file)
@@ -4993,12 +4993,12 @@ and |remove the file manually|.
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('detectUpdateThread: Asked to stop. Stoping...')
             return
-        files = glob.glob(path.join(a_path, '.*.date'))
-        if files:
-            files.sort(reverse=True)
-            if len(files) > 1:
-                clean_date_files(files)
-            a_date = path.split(path.splitext(files[0])[0])[1][1:]
+        date_files = glob.glob(path.join(a_path, '.*.date'))
+        if date_files:
+            date_files.sort(reverse=True)
+            if len(date_files) > 1:
+                clean_date_files(date_files)
+            a_date = path.split(path.splitext(date_files[0])[0])[1][1:]
 
             d1 = datetime.now()
             d2 = datetime.strptime(a_date, '%Y-%m-%d')
@@ -5008,7 +5008,7 @@ and |remove the file manually|.
                 ''' enable update check '''
                 delta = check_days
             if delta < check_days:
-                clean_date_files(files)
+                clean_date_files(date_files)
                 if logger.isEnabledFor(logging.INFO):
                     if check_days - delta == 1:
                         logger.info('detectUpdateThread: PyRadio is up to date. Will check again tomorrow...')
@@ -5039,7 +5039,7 @@ and |remove the file manually|.
                 if logger.isEnabledFor(logging.INFO):
                     logger.info(f'detectUpdateThread: Upstream version found: {last_tag}')
                 if this_version == last_tag:
-                    clean_date_files(files, -1)
+                    clean_date_files(date_files, -1)
                     create_todays_date_file(a_path)
                     if logger.isEnabledFor(logging.INFO):
                         logger.info(f'detectUpdateThread: No update found. Will check again in {check_days} days. Terminating...')
@@ -5055,7 +5055,7 @@ and |remove the file manually|.
                                 logger.debug('detectUpdateThread: Asked to stop. Stoping...')
                             break
                         ''' remove all existing date files '''
-                        clean_date_files(files, -1)
+                        clean_date_files(date_files, -1)
                         if stop():
                             if logger.isEnabledFor(logging.DEBUG):
                                 logger.debug('detectUpdateThread: Asked to stop. Stoping...')
@@ -5351,9 +5351,9 @@ and |remove the file manually|.
         self._set_active_stations()
         if self._cnf.is_register:
             self._clear_register_file()
-        files = glob.glob(path.join(self._cnf.registers_dir, '*.csv'))
-        if files:
-            for a_file in files:
+        reg_files = glob.glob(path.join(self._cnf.registers_dir, '*.csv'))
+        if reg_files:
+            for a_file in reg_files:
                 try:
                     remove(a_file)
                 except:
@@ -10615,13 +10615,16 @@ _____"|f|" to see the |free| keys you can use.
         self._open_dir_win.show(parent=self.bodyWin)
 
     def _show_dirs_list(self):
+        source_path = files("pyradio")
         if logger.isEnabledFor(logging.INFO):
             logger.info('No resource opener found; displaying dirs list...')
         out = ['|____Config Dir:| ' + self._cnf.stations_dir]
         out.append('|______Data Dir:| ' + self._cnf.data_dir)
         if self._cnf.data_dir != self._cnf.state_dir:
             out.append('|_____State Dir:| ' + self._cnf.state_dir)
-        out.append('|______Code Dir:| ' + path.dirname(__file__))
+        if not os.path.isdir(source_path):
+            source_path = ''
+        out.append('|______Code Dir:| ' + source_path)
         out.append('|Recordings Dir:| ' + self._cnf.recording_dir)
         txt = '\n'.join(out)
         self._messaging_win.set_a_message(
@@ -11139,29 +11142,29 @@ _____"|f|" to see the |free| keys you can use.
             self.selections[mode]
         '''
         # self.ll('_find_renamed_selection(): before')
-        files = glob.glob(path.join(search_path, '*.csv'))
-        if files:
-            files.sort()
+        csv_files = glob.glob(path.join(search_path, '*.csv'))
+        if csv_files:
+            csv_files.sort()
             try:
-                sel = files.index(search_file)
+                sel = csv_files.index(search_file)
             except:
                 # TODO set max - 1?
                 self.selections[mode][1:-1] = [0, -1]
-                if self.selections[mode][0] >= len(files):
-                    self.selections[mode][0] = len(files) - 1
+                if self.selections[mode][0] >= len(csv_files):
+                    self.selections[mode][0] = len(csv_files) - 1
                 self.playlist_selections[self.ws.PLAYLIST_MODE] = self.selections[self.ws.PLAYLIST_MODE][:-1][:]
                 # self.ll('_find_renamed_selection(): after not found')
                 return
             self.selections[mode][0] = self.selections[mode][2] = sel
 
             ''' Set startPos '''
-            if len(files) - 1 < self.bodyMaxY:
+            if len(csv_files) - 1 < self.bodyMaxY:
                 self.selections[mode][1] = 0
             else:
                 if self.selections[mode][0] < self.bodyMaxY:
                     self.selections[mode][1] = 0
-                elif self.selections[mode][0] >= len(files) - self.bodyMaxY:
-                    self.selections[mode][1] = len(files) - self.bodyMaxY
+                elif self.selections[mode][0] >= len(csv_files) - self.bodyMaxY:
+                    self.selections[mode][1] = len(csv_files) - self.bodyMaxY
                 else:
                     self.selections[mode][1] = self.selections[mode][0] - int(self.bodyMaxY / 2)
             # self.ll('_find_renamed_selection(): after')

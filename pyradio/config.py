@@ -7,9 +7,10 @@ import glob
 import curses
 import collections
 import json
+from pathlib import Path
 # import socket
 from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, getpid, listdir, access, R_OK
-from sys import platform
+from sys import platform, exit
 from time import ctime, sleep
 from datetime import datetime
 from shutil import which, copyfile, move, Error as shutil_Error, rmtree as remove_tree
@@ -20,6 +21,14 @@ from rich.console import Console
 from rich.table import Table
 from rich.align import Align
 from rich import print
+try:
+    # Python ≥ 3.9
+    from importlib.resources import files, as_file
+    from importlib.abc import Traversable
+except ImportError:
+    # Python 3.7–3.8 (backport)
+    from importlib_resources import files, as_file
+    from importlib_resources.abc import Traversable
 from pyradio import version
 from .common import validate_resource_opener_path, is_rasberrypi, Station, describe_playlist, CsvReadWrite, ProfileManager
 from .keyboard import read_keyboard_shortcuts, read_localized_keyboard, set_lkbkey
@@ -172,7 +181,7 @@ class PyRadioStations():
             self.stations_dir = user_config_dir
             self.xdg.build_paths()
         self.xdg.ensure_paths_exist()
-        self.root_path = path.join(path.dirname(__file__), 'stations.csv')
+        self.root_path = files("pyradio").joinpath("stations.csv")
         self.themes_dir = path.join(self.stations_dir, 'themes')
         self.favorites_path = path.join(self.stations_dir, 'favorites.csv')
         try:
@@ -214,9 +223,9 @@ class PyRadioStations():
             path.join(self.stations_dir, 'pyradio.png'),
         ]
         for n in ('.*.date', '.*.ver', '*.lock'):
-            files = glob.glob(path.join(self.stations_dir, n))
-            if files:
-                files_to_move.extend(files)
+            misc_files = glob.glob(path.join(self.stations_dir, n))
+            if misc_files:
+                files_to_move.extend(misc_files)
         for n in files_to_move:
             from_file = path.join(self.stations_dir, n)
             if path.exists(from_file):
@@ -245,13 +254,14 @@ class PyRadioStations():
         #     os.remove(upd)
 
         for an_icon in ('pyradio.png', 'cover.png'):
-            if not path.exists(path.join(self.data_dir, an_icon)) or \
-                    not path.exists(upd):
-                from_file = path.join(path.dirname(__file__), 'icons', an_icon)
+            if (not path.exists(path.join(self.data_dir, an_icon)) or
+                not path.exists(upd)):
                 to_file = path.join(self.data_dir, an_icon)
                 try:
-                    copyfile(from_file, to_file)
-                except:
+                    icon_res = files('pyradio').joinpath('icons', an_icon)
+                    with as_file(icon_res) as icon_path:
+                        copyfile(icon_path, to_file)
+                except Exception:
                     pass
         # create file so that icons will not be forced copied
         with open(upd, 'w', encoding='utf-8') as f:
@@ -264,11 +274,21 @@ class PyRadioStations():
         default_icon_location = self.data_dir
         if default_icon_location != self.data_dir:
             for an_icon in ('pyradio.png', 'cover.png'):
-                from_file = path.join(path.dirname(__file__), 'icons', an_icon)
+                # target location
                 to_file = path.join(default_icon_location, an_icon)
+
                 try:
-                    copyfile(from_file, to_file)
-                except:
+                    # package resource
+                    icon_res = files('pyradio').joinpath('icons', an_icon)
+                    if isinstance(icon_res, Traversable) and icon_res.is_file():
+                        with as_file(icon_res) as tmp_path:
+                            copyfile(tmp_path, to_file)
+                    else:
+                        # fallback to real path if available
+                        real_path = str(icon_res)
+                        if path.exists(real_path):
+                            copyfile(real_path, to_file)
+                except Exception:
                     pass
 
     @property
@@ -500,7 +520,9 @@ class PyRadioStations():
             self._user_csv_found = True
             return
         else:
-            copyfile(root, path.join(usr, 'stations.csv'))
+            # root_traversable είναι το files(...).joinpath(...)
+            with as_file(root) as root_real:
+                copyfile(root_real, path.join(usr, 'stations.csv'))
             with open(path.join(self.state_dir, 'last-sync'), 'w', encoding='utf-8') as f:
                 self.get_pyradio_version()
                 v = self.current_pyradio_version.replace('.', ', ')
@@ -616,7 +638,7 @@ class PyRadioStations():
 
     def _package_stations(self):
         ''' read package stations.csv file '''
-        with open(self.root_path, 'r', encoding='utf-8') as cfgfile:
+        with self.root_path.open('r', encoding='utf-8') as cfgfile:
             for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
                 if not row:
                     continue
@@ -1115,23 +1137,23 @@ class PyRadioStations():
     def read_playlists(self):
         self.playlists = []
         self.selected_playlist = -1
-        files = []
+        csv_files = []
         m3u_files = []
         if self._open_register_list:
-            files = glob.glob(path.join(self.registers_dir, '*.[Cc][Ss][Vv]'))
+            csv_files = glob.glob(path.join(self.registers_dir, '*.[Cc][Ss][Vv]'))
         else:
-            files = glob.glob(path.join(self.stations_dir, '*.[Cc][Ss][Vv]'))
+            csv_files = glob.glob(path.join(self.stations_dir, '*.[Cc][Ss][Vv]'))
             m3u_files = glob.glob(path.join(self.stations_dir, '*.[Mm][3][Uu]'))
             # Filter M3U files:
             m3u_files = [f for f in m3u_files
                         if path.getsize(f) > 0
                         and access(f, R_OK)
-                        and not any(path.splitext(path.basename(f))[0] == path.splitext(path.basename(csv))[0] for csv in files)]
+                        and not any(path.splitext(path.basename(f))[0] == path.splitext(path.basename(csv))[0] for csv in csv_files)]
 
-        if len(files) == 0 and len(m3u_files) == 0:
+        if len(csv_files) == 0 and len(m3u_files) == 0:
             return 0, -1
         else:
-            for a_file in files:
+            for a_file in csv_files:
                 a_file_name = ''.join(path.basename(a_file).split('.')[:-1])
                 a_file_size = self._bytes_to_human(path.getsize(a_file))
                 a_file_time = ctime(path.getmtime(a_file))
@@ -1874,7 +1896,24 @@ class PyRadioConfig(PyRadioStations):
 
     @property
     def system_themes(self):
-        return tuple(sorted([path.basename(x).replace('.pyradio-theme', '') for x in glob.glob(path.join(path.dirname(__file__), 'themes', '*.pyradio-theme'), recursive = False)]))
+        """Return a tuple of theme names shipped with the package."""
+        try:
+            theme_dir = files('pyradio').joinpath('themes')
+            if isinstance(theme_dir, Traversable):
+                # inside a wheel/zip → Traversable
+                return tuple(sorted(
+                    res.name.replace('.pyradio-theme', '')
+                    for res in theme_dir.iterdir()
+                    if res.name.endswith('.pyradio-theme')
+                ))
+            else:
+                # normal filesystem path
+                return tuple(sorted(
+                    path.basename(x).replace('.pyradio-theme', '')
+                    for x in glob.glob(path.join(theme_dir, '*.pyradio-theme'), recursive=False)
+                ))
+        except Exception:
+            return tuple()
 
     def is_project_theme(self, a_theme_name):
         ''' Check if a theme name is in auto_update_frameworks
@@ -1961,22 +2000,41 @@ class PyRadioConfig(PyRadioStations):
         self._notification_command = []
         if platform == 'win32':
             return
-        ns = (
-            path.join(self.stations_dir, 'notification'),
-            path.join(path.dirname(__file__), 'notification')
-        )
-        for i, n in enumerate(ns):
-            if path.exists(n):
-                try:
-                    with open(n, 'r', encoding='utf-8') as f:
-                        for line in f:
-                            self._notification_command.append(line.replace('\n', '').strip())
-                except:
-                    self._notification_command = []
-            if i == 0 and self._notification_command:
-                break
 
-        if self._notification_command == []:
+        # first look for the user notification file
+        user_file = path.join(self.stations_dir, 'notification')
+        if path.exists(user_file):
+            try:
+                with open(user_file, 'r', encoding='utf-8') as f:
+                    self._notification_command = [
+                        line.strip() for line in f if line.strip()
+                    ]
+                return
+            except Exception:
+                self._notification_command = []
+
+        if not self._notification_command:
+            # then look for package resource (filesystem ή zip)
+            try:
+                notif_res = files('pyradio').joinpath('notification')
+                if isinstance(notif_res, Traversable) and notif_res.is_file():
+                    # zip/wheel → Traversable
+                    with notif_res.open('r', encoding='utf-8') as f:
+                        self._notification_command = [
+                            line.strip() for line in f if line.strip()
+                        ]
+                else:
+                    # fallback: real path
+                    real_path = str(notif_res)
+                    if path.exists(real_path):
+                        with open(real_path, 'r', encoding='utf-8') as f:
+                            self._notification_command = [
+                                line.strip() for line in f if line.strip()
+                            ]
+            except Exception:
+                self._notification_command = []
+
+        if not self._notification_command:
             # set default commands
             if platform.lower().startswith('darwin'):
                 self._notification_command = [
@@ -2210,7 +2268,6 @@ class PyRadioConfig(PyRadioStations):
 
     def _check_config_file(self, usr):
         ''' Make sure a config file exists in the config dir '''
-        package_config_file = path.join(path.dirname(__file__), 'config')
         user_config_file = path.join(usr, 'config')
 
         ''' restore config from bck file '''
@@ -2224,15 +2281,31 @@ class PyRadioConfig(PyRadioStations):
         ''' update pi config file '''
         if not path.exists(user_config_file) and \
                 is_rasberrypi():
-            self._convert_config_for_rasberrypi(package_config_file, user_config_file)
+            self._convert_config_for_rasberrypi(user_config_file)
 
-    def _convert_config_for_rasberrypi(self, package_config_file, user_config_file):
+    def _convert_config_for_rasberrypi(self, user_config_file):
         lines = []
-        with open(package_config_file, 'r', encoding='utf-8') as f:
-            lines = [line.strip() for line in f]
+
+        # read package config (filesystem or wheel/zip)
+        pkg_res = files('pyradio').joinpath('config')
+        try:
+            if isinstance(pkg_res, Traversable) and pkg_res.is_file():
+                with pkg_res.open('r', encoding='utf-8') as f:
+                    lines = [line.strip() for line in f]
+            else:
+                real_path = str(pkg_res)
+                if path.exists(real_path):
+                    with open(real_path, 'r', encoding='utf-8') as f:
+                        lines = [line.strip() for line in f]
+        except Exception:
+            lines = []
+
+        # modify player line
         for i in range(len(lines)):
             if lines[i].startswith('player'):
                 lines[i] = 'player = mplayer,vlc,mpv'
+
+        # write to user config
         with open(user_config_file, 'w', encoding='utf-8') as f:
             f.write('\n'.join(lines) + '\n')
 
@@ -2278,42 +2351,67 @@ class PyRadioConfig(PyRadioStations):
                         pass
 
     def _read_localized_shortcuts(self, name=None):
+        """
+        Read the localized keyboard shortcuts.
+
+        Parameters
+        ----------
+        name : str, optional
+            The name of the localization (e.g., 'greek'). Defaults to self.localize.
+
+        Behavior
+        --------
+        1. Tries to read from ~/.config/pyradio/{name}.json
+        2. If not found, tries to read from package resources (may be zip/wheel)
+        3. If from package, copies it to cache to make a real file
+        4. Reverses the dictionary (value -> key) and sets it via set_lkbkey()
+        """
         if name is None:
             name = self.localize
         if not name or name == 'english':
-            return {}
-        # Construct potential paths
-        script_dir_path = path.join(path.dirname(__file__), 'keyboard', name + '.json')
-        full_path = path.join(self.data_dir, name + '.json')
-        # logger.error(f'{script_dir_path = }')
-        # logger.error(f'{full_path = }')
-
-        reversed_dict = {}
-        # Check which file path exists
-        if path.exists(full_path):
-            target_path = full_path
-        elif path.exists(script_dir_path):
-            target_path = script_dir_path
-        else:
-            # Return an empty dictionary if neither path exists
-            target_path = None
-
-        # logger.error(f'{target_path = }')
-        if target_path is None:
             set_lkbkey({})
+            return
+
+        # Paths
+        user_path = Path(self.data_dir) / f"{name}.json"
+        script_res = files('pyradio').joinpath('keyboard', f"{name}.json")
+
+        target_path = None
+
+        # 1. User path exists?
+        if user_path.exists():
+            target_path = str(user_path)
         else:
-            # Open and load the JSON file
+            # 2. Package resource
             try:
-                with open(target_path, 'r', encoding='utf-8') as file:
-                    data = json.load(file)
+                if isinstance(script_res, Traversable) and script_res.is_file():
+                    # Copy to cache to have a real file
+                    cache_dir = Path(self._cnf.cache_dir) / "keyboard"
+                    cache_dir.mkdir(parents=True, exist_ok=True)
+                    real_path = cache_dir / f"{name}.json"
+                    with as_file(script_res) as tmp_path:
+                        copyfile(tmp_path, real_path)
+                    target_path = str(real_path)
+                else:
+                    # fallback: try as string path
+                    real_path = str(script_res)
+                    if Path(real_path).exists():
+                        target_path = real_path
+            except Exception:
+                target_path = None
+
+        # 3. Read JSON
+        reversed_dict = {}
+        if target_path:
+            try:
+                with open(target_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                reversed_dict = {v: k for k, v in data.items()}
             except Exception:
                 reversed_dict = {}
 
-            # Reverse the keys and values
-            reversed_dict = {value: key for key, value in data.items()}
-
-            # logger.error('\n\nsetting lkbkey 1\n{}\n\n'.format(reversed_dict))
-            set_lkbkey(reversed_dict)
+        # 4. Apply
+        set_lkbkey(reversed_dict)
 
     def read_config(self, distro_config=False):
         self._read_config(distro_config=True)
@@ -2328,23 +2426,30 @@ class PyRadioConfig(PyRadioStations):
 
     def _read_config(self, distro_config=False):
         xdg_compliant_read_from_file = False
-        if distro_config:
-            file_to_read = path.join(path.dirname(__file__), 'config')
-        else:
-            file_to_read = self.config_file
-            if not path.exists(file_to_read):
-                # user config does not exist, just return
-                self._make_sure_dirs_exist()
-                self._first_read = False
-                return
         lines = []
-        try:
-            with open(file_to_read, 'r', encoding='utf-8') as cfgfile:
-                lines = [line.strip() for line in cfgfile if line.strip() and not line.startswith('#') ]
 
-        except:
+        try:
+            if distro_config:
+                # config μέσα στο package (system / wheel)
+                cfg_res = files('pyradio').joinpath('config')
+                with as_file(cfg_res) as cfg_path:
+                    with open(cfg_path, 'r', encoding='utf-8') as cfgfile:
+                        lines = [line.strip() for line in cfgfile
+                                 if line.strip() and not line.startswith('#')]
+            else:
+                file_to_read = self.config_file
+                if not path.exists(file_to_read):
+                    # user config δεν υπάρχει
+                    self._make_sure_dirs_exist()
+                    self._first_read = False
+                    return
+                with open(file_to_read, 'r', encoding='utf-8') as cfgfile:
+                    lines = [line.strip() for line in cfgfile
+                             if line.strip() and not line.startswith('#')]
+        except Exception:
             self.__dirty_config = False
             return -1
+
         self.params = {
             'mpv': [1, 'profile:pyradio'],
             'mplayer': [1, 'profile:pyradio'],
@@ -2583,19 +2688,19 @@ class PyRadioConfig(PyRadioStations):
 
         # logger.error('\n\nself.params{}\n\n'.format(self.params))
         ''' read distro from package config file '''
-        package_config_file = path.join(path.dirname(__file__), 'config')
         try:
-            with open(package_config_file, 'r', encoding='utf-8') as pkg_config:
-                lines = [line.strip() for line in pkg_config if line.strip() and not line.startswith('#') ]
+            # The file may be real, Traversable even in z zip/wheel
+            config_res = files('pyradio').joinpath('config')
+            with as_file(config_res) as config_path:
+                with open(config_path, 'r', encoding='utf-8') as pkg_config:
+                    lines = [line.strip() for line in pkg_config
+                             if line.strip() and not line.startswith('#')]
             for line in lines:
                 sp = line.split('=')
-                sp[0] = sp[0].strip()
-                sp[1] = sp[1].strip()
-                if sp[0] == 'distro':
-                    self._distro = sp[1].strip()
-                    if not self._distro:
-                        self._distro = 'None'
-        except:
+                if len(sp) == 2 and sp[0].strip() == 'distro':
+                    self._distro = sp[1].strip() or 'None'
+                    break
+        except Exception:
             self._distro = 'None'
 
         self.opts['dirty_config'][1] = False
@@ -2916,9 +3021,12 @@ class PyRadioConfig(PyRadioStations):
             out.append('show_recording_message = False')
 
         if out:
+            # it is ok, no need to compensate for zip/wheel
+            config_path = path.join(path.dirname(__file__), 'config')
             out.reverse()
             out.append('#')
-            out.append('# or examine the file: {}'.format(path.join(path.dirname(__file__), 'config')))
+            if path.isfile(config_path):
+                out.append(f'# or examine the file: {config_path}')
             out.append('# To get a full list of options execute: pyradio -pc')
             out.append('# PyRadio User Configuration File')
             out.reverse()

@@ -4,7 +4,7 @@ import curses
 import curses.ascii
 from time import sleep
 import logging
-from sys import platform
+from sys import platform, modules
 from os import path, remove, sep, access, X_OK, environ, makedirs
 from string import punctuation as string_punctuation
 try:
@@ -52,6 +52,21 @@ class PyRadioOpenDir(SimpleCursesMenu):
         self.dir = None
         self._cnf = config
 
+        # these are ok, I do not need to compensate for zip/wheel
+        pkg_file = modules['pyradio'].__file__
+        code_dir = path.dirname(__file__)
+        if path.isdir(code_dir):
+            real_dir = code_dir
+        else:
+            # Inside a wheel/zip → get the folder that contains the .whl or zip
+            wheel_path = Path(pkg_file).parts
+            try:
+                whl_index = [i for i, p in enumerate(wheel_path) if p.endswith('.whl', '.zip')][0]
+                real_dir = str(Path(*wheel_path[:whl_index]).resolve())
+            except IndexError:
+                # fallback: just dirname of pkg_file
+                real_dir = str(Path(pkg_file).parent.resolve())
+
         if self._cnf.xdg_compliant:
             self._items = [
                     'Config Directory',
@@ -66,7 +81,7 @@ class PyRadioOpenDir(SimpleCursesMenu):
                     self._cnf.data_dir,
                     self._cnf.state_dir,
                     self._cnf.cache_dir,
-                    path.dirname(__file__),
+                    real_dir,
                     self._cnf.recording_dir
             ]
             self._ord = [
@@ -89,7 +104,7 @@ class PyRadioOpenDir(SimpleCursesMenu):
                     self._cnf.stations_dir,
                     self._cnf.data_dir,
                     self._cnf.cache_dir,
-                    path.dirname(__file__),
+                    real_dir,
                     self._cnf.recording_dir
             ]
             self._ord = [

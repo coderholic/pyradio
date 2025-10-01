@@ -962,6 +962,7 @@ class PyRadioUpdate():
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                 # b.write('PAUSE\n')
                 if mode.startswith('update'):
+                    # it is ok, no need to compensate for zip/wheel
                     b.write('COPY "{}" . 1>NUL\n'.format(os.path.abspath(__file__)))
                     if self._package == 0:
                         b.write(self._python_exec.python + ' install.py --no-logo --do-update\n')
@@ -980,6 +981,7 @@ class PyRadioUpdate():
                     b.write('devel\\build_install_pyradio.bat -U\n')
                     b.write('GOTO endofscript\n')
                 else:
+                    # it is ok, no need to compensate for zip/wheel
                     b.write('COPY "{}" uninstall.py 1>NUL\n'.format(os.path.abspath(__file__)))
                     if self._package == 0:
                         b.write(self._python_exec.python + ' uninstall.py --do-uninstall\n')
@@ -1570,6 +1572,7 @@ Then try installing PyRadio again
             print('\n\nNow you can delete the folder:')
             print(f'    "{uni._dir}"')
             print('and the file:')
+            # it is ok, no need to compensate for zip/wheel
             print(f'    "{__file__}"')
     else:
         if not args.force and not args.get_cache:

@@ -25,6 +25,10 @@ try:
     import psutil
 except:
     pass
+try:
+    from importlib.resources import files, as_file   # 3.9+
+except ImportError:
+    from importlib_resources import files, as_file   # backport για 3.7–3.8
 if platform.startswith('win'):
     import win32pipe
     import win32file
@@ -104,20 +108,20 @@ except:
             # "python.exe". If it does match, only test that one, otherwise we
             # have to try others.
             if any(cmd.lower().endswith(ext.lower()) for ext in pathext):
-                files = [cmd]
+                check_files = [cmd]
             else:
-                files = [cmd + ext for ext in pathext]
+                check_files = [cmd + ext for ext in pathext]
         else:
             # On other platforms you don't have things like PATHEXT to tell you
             # what file suffixes are executable, so just pass on cmd as-is.
-            files = [cmd]
+            check_files = [cmd]
 
         seen = set()
         for dir in path:
             normdir = os.path.normcase(dir)
             if normdir not in seen:
                 seen.add(normdir)
-                for thefile in files:
+                for thefile in check_files:
                     name = os.path.join(dir, thefile)
                     if _access_check(name, mode):
                         return name
@@ -136,8 +140,8 @@ def find_vlc_on_windows(config_dir=None):
     return PLAYER_CMD
 
     #result = []
-    #for root, dirs, files in os.walk(path):
-    #    for name in files:
+    #for root, dirs, check_files in os.walk(path):
+    #    for name in check_files:
     #        if fnmatch.fnmatch(name, pattern):
     #            result.append(os.path.join(root, name))
     #return result
@@ -4188,52 +4192,54 @@ class PyRadioChapters():
             return
         t_dir_dir = os.path.dirname(self._tag_file)
         cover_file = None
-        for n in (
-                os.path.join(t_dir_dir, 'user-cover.png'), \
-                os.path.join(t_dir_dir, 'cover.png'), \
-                os.path.join(self._cnf.data_dir, 'user-cover.png'), \
-                os.path.join(self._cnf.data_dir, 'cover.png'), \
-                os.path.join(os.path.dirname(__file__), 'icons', 'cover.png')
-        ):
-            if os.path.exists(n):
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug(f'cover file is: "{n}"')
-                cover_file = n
-                break
-        if cover_file:
+        default_cover_resource = files("pyradio").joinpath("icons", "cover.png")
+        with as_file(default_cover_resource) as default_cover:
+            for n in (
+                    os.path.join(t_dir_dir, 'user-cover.png'), \
+                    os.path.join(t_dir_dir, 'cover.png'), \
+                    os.path.join(self._cnf.data_dir, 'user-cover.png'), \
+                    os.path.join(self._cnf.data_dir, 'cover.png'), \
+                    default_cover
+            ):
+                if os.path.exists(n):
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug(f'cover file is: "{n}"')
+                    cover_file = n
+                    break
+            if cover_file:
+                opts.extend([
+                    '--attachment-mime-type', 'image/png',
+                    '--attachment-name', 'cover',
+                    '--attach-file', cover_file
+                    ])
             opts.extend([
-                '--attachment-mime-type', 'image/png',
-                '--attachment-name', 'cover',
-                '--attach-file', cover_file
+                '-o', self._output_file,
+                self._mkv_file
                 ])
-        opts.extend([
-            '-o', self._output_file,
-            self._mkv_file
-            ])
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f'merge options = {opts}')
-        p = subprocess.Popen(
-                opts, shell=False,
-                stdout=subprocess.PIPE,
-                stdin=subprocess.PIPE,
-                stderr=subprocess.PIPE
-                )
-        _, err = p.communicate()
-        # logger.error('outs = "{0}", err = "{1}"'.format(outs, err))
-        if p.returncode == 0:
-            if logger.isEnabledFor(logging.INFO):
-                logger.info('mkvmerge was successful!')
-            self._mkvmerge_is_done = True
-            for n in self._chapters_file, self._tag_file, self._mkv_file:
-                try:
-                    os.remove(n)
-                except:
-                    pass
-            return True
-        else:
-            if logger.isEnabledFor(logging.ERROR):
-                logger.error(f'mkvmerge failed with error:\n{err}')
-            return False
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'merge options = {opts}')
+            p = subprocess.Popen(
+                    opts, shell=False,
+                    stdout=subprocess.PIPE,
+                    stdin=subprocess.PIPE,
+                    stderr=subprocess.PIPE
+                    )
+            _, err = p.communicate()
+            # logger.error('outs = "{0}", err = "{1}"'.format(outs, err))
+            if p.returncode == 0:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('mkvmerge was successful!')
+                self._mkvmerge_is_done = True
+                for n in self._chapters_file, self._tag_file, self._mkv_file:
+                    try:
+                        os.remove(n)
+                    except:
+                        pass
+                return True
+            else:
+                if logger.isEnabledFor(logging.ERROR):
+                    logger.error(f'mkvmerge failed with error:\n{err}')
+                return False
 
     def _remove_starting_tmp_string(self, a_string):
         sp = a_string.split(os.sep)

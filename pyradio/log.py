@@ -8,10 +8,16 @@ from sys import platform, stdout
 from platform import system as platform_system
 from copy import deepcopy
 from time import sleep
+from shutil import copy2
+from pathlib import Path
 import datetime
 import logging
 import threading
 import subprocess
+try:
+    from importlib.resources import files, as_file   # 3.9+
+except ImportError:
+    from importlib_resources import files, as_file   # backport για 3.7–3.8
 from .common import STATES, M_STRINGS
 from .cjkwrap import cjklen
 
@@ -773,26 +779,64 @@ class Log():
                         with self._song_title_lock:
                             self._song_title = old_song_title
 
-
     def _get_icon_path(self):
         self.icon_path = self._cnf.notification_image_file
+
         if self.icon_path is None:
+
+            # Platform-specific candidates + package resource target name
             if platform_system().lower().startswith('win'):
-                the_path = (
-                    join(getenv('APPDATA'), 'pyradio', 'help', 'pyradio.ico'),
-                    join(dirname(__file__), 'icons', 'pyradio.ico')
-                )
+                fs_candidates = [
+                    Path(getenv("APPDATA") or "") / "pyradio" / "help" / "pyradio.ico"
+                ]
+                pkg_resource = files("pyradio").joinpath("icons", "pyradio.ico")
+                cache_name = "pyradio.ico"
             else:
-                the_path = (
-                    join(self._cnf.data_dir, 'pyradio.png'),
-                    join(dirname(__file__), 'icons', 'pyradio.png'),
-                    '/usr/share/icons/pyradio.png',
-                    '/usr/local/share/icons/pyradio.png'
-                )
-            for n in the_path:
-                if exists(n):
-                    self.icon_path = n
-                    break
+                fs_candidates = [
+                    Path(self._cnf.data_dir) / "pyradio.png",
+                    Path("/usr/share/icons/pyradio.png"),
+                    Path("/usr/local/share/icons/pyradio.png"),
+                ]
+                pkg_resource = files("pyradio").joinpath("icons", "pyradio.png")
+                cache_name = "pyradio.png"
+
+            # 1) Check filesystem candidates first (user/system)
+            chosen = None
+            for p in fs_candidates:
+                try:
+                    if p.exists():
+                        chosen = str(p)
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug(f"Found icon on filesystem: {chosen}")
+                        break
+                except Exception:
+                    # ignore permission or other err while probing
+                    continue
+
+            # 2) If not found, try packaged resource -> extract to cache and copy persistently
+            if not chosen:
+                cache_dir = Path(self._cnf.cache_dir)
+                cache_dir.mkdir(parents=True, exist_ok=True)
+
+                if pkg_resource.is_file():
+                    # Resource is a filesystem file
+                    # Use its path directly
+                    chosen = str(pkg_resource)
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug(f"Using packaged icon directly: {chosen}")
+                else:
+                    # Resource is in a zip/wheel → needs extraction
+                    with as_file(pkg_resource) as tmp_path:
+                        cache_file = cache_dir / cache_name
+                        if not cache_file.exists():
+                            copy2(tmp_path, cache_file)
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug(f"Copied packaged icon to cache: {cache_file}")
+                        chosen = str(cache_file)
+
+            # 3) Final assignment (may still be None)
+            self.icon_path = chosen
+
         self._repeat_notification.icon_path = self.icon_path
 
     def _show_notification(self, msg):

@@ -13,6 +13,10 @@ from os.path import join, exists, dirname
 from collections import deque
 from threading import Lock
 try:
+    from importlib.resources import files, as_file   # 3.9+
+except ImportError:
+    from importlib_resources import files, as_file   # backport για 3.7–3.8
+try:
     from .cjkwrap import is_wide
 except ImportError:
     pass
@@ -351,21 +355,23 @@ def read_localized_keyboard(localize, data_dir):
         error = True
     else:
         user_file = join(data_dir, 'lkb_' + localize + '.json')
-        package_file = join(dirname(__file__), 'keyboard', 'lkb_' + localize + '.json')
-        target_file = None
-        if exists(package_file):
-            target_file = package_file
-        if exists(user_file):
-            target_file = user_file
+        package_res = files("pyradio").joinpath("keyboard", 'lkb_' + localize + '.json')
 
-        if target_file is None:
-            error = True
-        else:
+        if exists(user_file):
             try:
-                with open(target_file, 'r', encoding='utf-8', errors='ignore') as json_file:
+                with open(user_file, 'r', encoding='utf-8', errors='ignore') as json_file:
                     data = json.load(json_file)
-            except (FileNotFoundError, json.JSONDecodeError, TypeError, IOError):
+            except (json.JSONDecodeError, TypeError, IOError):
                 error = True
+        elif package_res.is_file():  # package resource
+            with as_file(package_res) as tmp_path:
+                try:
+                    with open(tmp_path, 'r', encoding='utf-8', errors='ignore') as json_file:
+                        data = json.load(json_file)
+                except (json.JSONDecodeError, TypeError, IOError):
+                    error = True
+        else:
+            error = True
 
     if error:
         # keys = list(string.ascii_lowercase) + list(string.ascii_uppercase)

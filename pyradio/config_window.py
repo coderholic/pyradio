@@ -3624,16 +3624,19 @@ class PyRadioKeyboardConfig():
         # use self._precompute_context_map to populate it dynamically
         # keys.json will not be part of the package
 
-        keys_file = path.join(path.dirname(__file__), 'keyboard', 'keys.json')
-        logger.error(f'{keys_file =  }')
-        with open(keys_file, 'r', encoding='utf-8') as f:
-            self._keys_to_classes = json.load(f)
+        # keys.json
+        keys_res = files("pyradio").joinpath("keyboard", "keys.json")
+        with as_file(keys_res) as tmp_path:
+            with open(tmp_path, 'r', encoding='utf-8') as f:
+                self._keys_to_classes = json.load(f)
 
         '''
-        keys_file = path.join(path.dirname(__file__), 'keyboard', 'classes.json')
-        # logger.error(f'{keys_file =  }')
-        with open(keys_file, 'r', encoding='utf-8') as f:
-            self._classes = json.load(f)
+        # classes.json
+        classes_res = files("pyradio").joinpath("keyboard", "classes.json")
+        with as_file(classes_res) as tmp_path:
+            with open(tmp_path, 'r', encoding='utf-8') as f:
+                self._classes = json.load(f)
+
         # logger.error(f'{self._classes = }')
         self._keys_to_classes = self._precompute_context_map(self._classes)
         # logger.error(f'{self._keys_to_classes = }')
@@ -4463,27 +4466,45 @@ class PyRadioLocalized():
                 self._widgets[0].active = 1
             self._widgets[0].show()
 
-    def _read_keys(self):
+def _read_keys(self):
+    """Read the localized key mapping JSON file, either from data dir or package resource."""
+    error = False
+    self._keys = {}
+
+    user_file = path.join(self._cnf.data_dir, f'lkb_{self.localize}.json')
+    package_res = files("pyradio").joinpath("keyboard", f'lkb_{self.localize}.json')
+
+    if path.exists(user_file):
+        # user file exists
         try:
-            files = [
-                path.join(self._cnf.data_dir, 'lkb_' + self.localize + '.json'),
-                path.join(path.dirname(__file__), 'keyboard', 'lkb_' + self.localize + '.json')
-            ]
-            target_file = files[0]
-            if path.exists(files[-1]):
-                target_file = files[-1]
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug(f'reading localized file: {target_file}')
-            with open(target_file, 'r', encoding='utf-8') as f:
+            with open(user_file, 'r', encoding='utf-8', errors='ignore') as f:
                 self._keys = json.load(f)
-        except Exception as e:
-            # set default _keys
+        except (FileNotFoundError, json.JSONDecodeError, TypeError, IOError) as e:
+            error = True
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug(f'{e}')
-            keys = list(string.ascii_lowercase) + list(string.ascii_uppercase)
-            self._keys = {keys[i]: '' for i in range(len(keys))}
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f'{self._keys =}')
+                logger.debug(f'Error reading user file {user_file}: {e}')
+
+    elif package_res.is_file():
+        # package resource, may be inside zip/wheel
+        try:
+            with as_file(package_res) as tmp_path:
+                with open(tmp_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    self._keys = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError, TypeError, IOError) as e:
+            error = True
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'Error reading package resource {package_res}: {e}')
+
+    else:
+        error = True
+
+    # fallback
+    if error or not self._keys:
+        keys = list(string.ascii_lowercase) + list(string.ascii_uppercase)
+        self._keys = {keys[i]: '' for i in range(len(keys))}
+
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug(f'{self._keys = }')
 
     def _read_file_list(self):
         ''' Read layout file names from disk (not the content)
@@ -4499,27 +4520,40 @@ class PyRadioLocalized():
                         writable    : True if in data dir, else false
                         None        : placeholder for keys dict (to be populated by _read_layout_file)
         '''
-        # Directories to scan for JSON files
+        # Directories to scan: user first, then package
         directories = [
-            path.join(path.dirname(__file__), 'keyboard'),
-            self._cnf.data_dir
+            self._cnf.data_dir,                 # user directory
+            files("pyradio").joinpath("keyboard")  # package resource
         ]
 
-        # Collect all JSON filenames
         dict_filenames = {}
-        for i, directory in enumerate(directories):
-            if path.exists(directory) and path.isdir(directory):
-                for file in listdir(directory):
-                    if file.startswith('lkb_') and \
-                            file.endswith('.json'):
-                        dict_filenames[file[4:-5]] = (
-                            path.join(directory, file),
-                            True if i == 1 else False
-                        )
 
-        # Prepare the list of filenames with metadata
+        for i, directory in enumerate(directories):
+            if isinstance(directory, Traversable):
+                # Package resource (may be zipped)
+                for res in directory.iterdir():
+                    if res.name.startswith('lkb_') and res.name.endswith('.json'):
+                        # Extract to cache dir
+                        cache_dir = Path(self._cnf.cache_dir) / "keyboard"
+                        cache_dir.mkdir(parents=True, exist_ok=True)
+                        with as_file(res) as tmp_path:
+                            real_path = cache_dir / res.name
+                            copyfile(tmp_path, real_path)
+                        dict_filenames[res.name[4:-5]] = (str(real_path), False)
+            else:
+                # Real filesystem directory
+                dir_path = Path(directory)
+                if dir_path.is_dir():
+                    for file in os.listdir(dir_path):
+                        if file.startswith('lkb_') and file.endswith('.json'):
+                            dict_filenames[file[4:-5]] = (
+                                str(dir_path / file),
+                                True if i == 0 else False
+                            )
+
+        # Prepare the list with default items first
         filenames = [
-            [title, data[0], data[1], None]  # Title, path
+            [title, data[0], data[1], None]  # title, path, writable, placeholder
             for title, data in dict_filenames.items()
         ]
 
