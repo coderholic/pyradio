@@ -30,7 +30,11 @@ from .schedule import PyRadioScheduleList
 from .install import get_a_linux_resource_opener
 from .html_help import is_graphical_environment_running
 from .client import client
-from .m3u import list_to_m3u, parse_m3u
+HAS_CHARSET_NORMALIZER = True
+try:
+    from .m3u import list_to_m3u, parse_m3u
+except ImportError:
+    HAS_CHARSET_NORMALIZER = False
 
 try:
     # Windows
@@ -507,6 +511,9 @@ If nothing else works, try the following command:
 
         # handle playilst validation
         if args.validate:
+            if not HAS_CHARSET_NORMALIZER:
+                print_module_not_found_error('charset-normalizer')
+                sys.exit(1)
             # determine mode (mark or drop)
             mode = args.validate
 
@@ -534,6 +541,9 @@ If nothing else works, try the following command:
             sys.exit(0)
 
         if args.convert:
+            if not HAS_CHARSET_NORMALIZER:
+                print_module_not_found_error('charset-normalizer')
+                sys.exit(1)
             # Determine conversion direction and validate input file
             csv_to_m3u = False
             in_file = args.convert  # Let's say args.convert is "reversed"
@@ -1288,6 +1298,18 @@ def save_config(pyradio_config):
 def print_simple_error(msg):
     msg = msg.replace('Error: ', '[red]Error: [/red]').replace('PyRadio', '[magenta]PyRadio[/magenta]')
     print(msg)
+
+def print_module_not_found_error(the_module):
+    msg = '''Error: Module [green]MODULE[/green] not found!
+
+Please use your distro package manager to install it
+  (named [green]python-MODULE[/green] or [green]python3-MODULE[/green]),
+  or execute:
+
+    [green]pip install MODULE[/green]
+
+'''.replace('MODULE', the_module)
+    print_simple_error(msg)
 
 def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True):
     if exit_if_malformed:

@@ -57,7 +57,11 @@ from .simple_curses_widgets import SimpleCursesMenu
 from .messages_system import PyRadioMessagesSystem
 from .server import PyRadioServer, HAS_NETIFACES
 from .keyboard import kbkey, get_lkbkey, get_unicode_and_cjk_char, dequeue_input, input_queue, set_kb_letter, check_localized, add_l10n_to_functions_dict, set_kb_cjk
-from .m3u import parse_m3u
+HAVE_CHARSET_NORMALIZER = True
+try:
+    from .m3u import parse_m3u
+except ModuleNotFoundError:
+    HAVE_CHARSET_NORMALIZER = False
 
 CAN_CHECK_FOR_UPDATES = True
 try:
@@ -1525,7 +1529,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.outerBodyMaxY, self.outerBodyMaxX = self.outerBodyWin.getmaxyx()
         self.bodyWin.noutrefresh()
         self.outerBodyWin.noutrefresh()
-        if not HAVE_PSUTIL:
+        if not HAVE_CHARSET_NORMALIZER:
+            self.ws.operation_mode = self.ws.DEPENDENCY_ERROR
+            self._missing_dependency = 'charset-normalizer'
+            self.refreshNoDepencency()
+        elif not HAVE_PSUTIL:
             self.ws.operation_mode = self.ws.DEPENDENCY_ERROR
             self._missing_dependency = 'psutil'
             self.refreshNoDepencency()
@@ -1674,11 +1682,13 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.bodyWin.addstr(1,1, 'PyRadio ', curses.color_pair(4))
         self.bodyWin.addstr('has a new dependency: ', curses.color_pair(5))
         self.bodyWin.addstr(self._missing_dependency, curses.color_pair(4))
-        self.bodyWin.addstr(3,1, 'Please use you distro package manager to install it (named ', curses.color_pair(5))
-        self.bodyWin.addstr('python-psutil', curses.color_pair(4))
-        self.bodyWin.addstr(4,1, 'or ', curses.color_pair(5))
-        self.bodyWin.addstr('python3-psutil', curses.color_pair(4))
-        self.bodyWin.addstr('), or execute:', curses.color_pair(5))
+        self.bodyWin.addstr(3,1, 'Please use your distro package manager to install it', curses.color_pair(5))
+        self.bodyWin.addstr(4,1, '(named ', curses.color_pair(5))
+        self.bodyWin.addstr('python-' + self._missing_dependency, curses.color_pair(4))
+        self.bodyWin.addstr(' or ', curses.color_pair(5))
+        self.bodyWin.addstr('python3-' + self._missing_dependency, curses.color_pair(4))
+        self.bodyWin.addstr('),', curses.color_pair(5))
+        self.bodyWin.addstr(5,1, 'or execute:', curses.color_pair(5))
         self.bodyWin.addstr(6,1, '      pip install ' + self._missing_dependency, curses.color_pair(4))
         self.bodyWin.addstr(8,1, 'to install it and then try to execute ', curses.color_pair(5))
         self.bodyWin.addstr('PyRadio ', curses.color_pair(4))
@@ -1697,6 +1707,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.bodyWin.addstr('rich', curses.color_pair(4))
         self.bodyWin.addstr(16,1, '      5. ', curses.color_pair(5))
         self.bodyWin.addstr('netifaces', curses.color_pair(4))
+        self.bodyWin.addstr(17,1, '      6. ', curses.color_pair(5))
+        self.bodyWin.addstr('charset-normalizer', curses.color_pair(4))
         self.outerBodyWin.refresh()
         self.bodyWin.refresh()
 
