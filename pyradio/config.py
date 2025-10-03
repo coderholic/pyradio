@@ -1028,8 +1028,6 @@ class PyRadioStations():
                     m_station[0] = '"' + m_station[0] + '"'
                     break
 
-            if 'image' in m_station[3]:
-                m_station[3] = m_station[3]['image']
             w_str = ','.join(m_station)
             while w_str.endswith(','):
                 w_str = w_str[:-1]
@@ -1237,8 +1235,6 @@ class PyRadioStations():
             a_station[0] = name
         while len(a_station) < Station.referer:
             a_station.append('')
-        if 'image' in a_station[3]:
-            a_station[3] = a_station[3]['image']
         string_to_write = ','.join(a_station) + '\n'
         with self._registers_lock:
             try:
@@ -4493,8 +4489,6 @@ class FavoritesManager:
         while this_item[-1] == '':
             this_item.pop()
 
-        if isinstance(this_item[-1], dict):
-            this_item[-1] = this_item[-1]['image']
         msg = None
         for i, item in enumerate(items):
             if item[1] == this_item[1]:

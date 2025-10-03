@@ -57,6 +57,7 @@ from .simple_curses_widgets import SimpleCursesMenu
 from .messages_system import PyRadioMessagesSystem
 from .server import PyRadioServer, HAS_NETIFACES
 from .keyboard import kbkey, get_lkbkey, get_unicode_and_cjk_char, dequeue_input, input_queue, set_kb_letter, check_localized, add_l10n_to_functions_dict, set_kb_cjk
+from .terminal_icon import SimpleIconManager, DummyIconManager, detect_graphic_terminal
 HAVE_CHARSET_NORMALIZER = True
 try:
     from .m3u import parse_m3u
@@ -883,6 +884,8 @@ class PyRadio():
         self._global_functions = add_l10n_to_functions_dict(self._global_functions_template)
         self._local_functions = add_l10n_to_functions_dict(self._local_functions_template)
 
+        self.icon_downloader = None
+
     def __del__(self):
         self.transientWin = None
 
@@ -1168,6 +1171,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 logger.debug('currently not in playback, aborting!')
 
     def setup(self, stdscr):
+        self.stdscr = stdscr
         if logger.isEnabledFor(logging.INFO):
             if self.program_restart:
                 logger.info('\n\n<<<===---  TUI restart  ---===>>>')
@@ -2179,6 +2183,17 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                           lambda: self.stop_update_notification_thread))
                 self._update_stations_thread.start()
 
+
+            self._graphic_terminal = detect_graphic_terminal()
+            if self._graphic_terminal:
+                self.icon_manager = SimpleIconManager(
+                    graphics=self._graphic_terminal,
+                    normal_mode=self.ws.NORMAL_MODE,
+                    cache_dir=join(self._cnf.cache_dir, 'logos')
+                )
+            else:
+                self.icon_manager = DummyIconManager()
+
             #signal.signal(signal.SIGINT, self.ctrl_c_handler)
             self.log.write(msg_id=STATES.RESET, msg=M_STRINGS['selected_player_'] + self.player.PLAYER_NAME, help_msg=True)
             if self.play != 'False':
@@ -2613,12 +2628,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             if self._cnf.enable_notifications and \
                     self._cnf.use_station_icon and \
                     not platform.startswith('win'):
-                if 'image' in self.stations[self.selection][3]:
+                if self.stations[self.selection][3]:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug(f'+++ need to download icon: "{self.stations[self.selection][3]["image"]}"')
+                        logger.debug(f'+++ need to download icon: "{self.stations[self.selection][3]}"')
                     self.log.write(msg_id=STATES.RESET, msg=M_STRINGS['down-icon'])
                     self._download_station_image(
-                        self.stations[self.selection][3]['image'],
+                        self.stations[self.selection][3],
                         self.stations[self.selection][0],
                         lambda: self.stop_update_notification_thread
                     )
@@ -9717,6 +9732,15 @@ _____"|f|" to see the |free| keys you can use.
             if char in (curses.KEY_DOWN, kbkey['j']) or \
                     check_localized(char, (kbkey['j'], )):
                 self._move_cursor_one_down()
+                self.icon_manager.on_station_change(
+                    station=self.stations[self.selection],
+                    operation_mode=self.ws.operation_mode,
+                    screen_size=self.bodyWin.getbegyx(),
+                    icon_duration=3
+                )
+                # self.outerBodyWin.refresh()
+                # self.bodyWin.refresh()
+                # self.stdscr.refresh()
                 return
 
             if char in (curses.KEY_UP, kbkey['k']) or \

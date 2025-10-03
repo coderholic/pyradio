@@ -448,7 +448,7 @@ class PyRadioEditor():
             self._line_editor[0].string = item[0]
             self._line_editor[1].string = item[1]
             try:
-                self._line_editor[2].string = item[3]['image'] if 'image' in item[3] else ''
+                self._line_editor[2].string = item[3] if item[3] else ''
             except:
                 self._line_editor[2].string = ''
             self._line_editor[3].string = item[Station.referer]
@@ -936,7 +936,7 @@ class PyRadioEditor():
                 self.new_station = [
                     self._line_editor[0].string.strip(),
                     self._line_editor[1].string.strip(),
-                    '', {'image': ''}
+                    '', ''
                 ]
             else:
                 buff = self._orig_item[Station.buffering]
@@ -951,7 +951,7 @@ class PyRadioEditor():
                     self._line_editor[0].string.strip(),
                     self._line_editor[1].string.strip(),
                     encoding,
-                    {'image': self._line_editor[2].string.strip()},
+                    self._line_editor[2].string.strip(),
                     self._profile,
                     buff,
                     '1' if self._http.strip() == 'True' else '',

@@ -1,4 +1,13 @@
 2025-09-19 s-n-g
+    * version 0.9.3.11.20 - 0.9.3.12-beta20
+    * adding error messages for charset-normalizer module not found (#305)
+    * fixing #307 - [BUG] TypeError: string indices must be integers, not 'str'
+    * fix(resources): support running from zip/wheel via importlib.resources
+      This makes PyRadio fully functional even when distributed as a wheel/zip
+    * enabling include-package-data and setuptools-scm in pyproject.toml
+    * updating mpv windows download link
+
+2025-09-19 s-n-g
     * version 0.9.3.11.19 - 0.9.3.12-beta19
     * fixing #303 - Crash on adding a station
     * updating build_install_pyradio so that it detects pipx even if it 

@@ -478,7 +478,7 @@ class StationsChanges():
                 writter = csv.writer(cfgfile)
                 for a_station in self._stations:
                     if a_station[3] != '':
-                        a_station[3] = a_station[3]['image']
+                        a_station[3] = a_station[3]
                     writter.writerow(self._format_playlist_row_out(a_station))
         except:
             print('Error: Cannot create the updated stations file.')
@@ -802,7 +802,7 @@ class CsvReadWrite():
 
                         # Append the parsed values to the reading stations list
                         station_info = [
-                            name, url, enc, {'image': icon} if icon else '',
+                            name, url, enc, icon if icon else '',
                             profile, buffering, http, volume, referer, player
                         ]
                         self._items.append(station_info)
@@ -834,9 +834,6 @@ class CsvReadWrite():
                 Eliminates any trailing empty fields
         '''
         this_row = a_row[:]
-        # Extract the 'image' from the icon dictionary if present
-        if len(this_row) > Station.icon and 'image' in this_row[Station.icon]:
-            this_row[Station.icon] = this_row[Station.icon]['image']
         if self.encoding_to_remove is not None:
             if this_row[Station.encoding] == self.encoding_to_remove:
                 this_row[Station.encoding] = ''

@@ -683,10 +683,7 @@ def list_to_m3u(stations, out_file):
                 logo = ''
                 if len(entry) > Station.icon and entry[Station.icon]:
                     icon_value = entry[Station.icon]
-                    if isinstance(icon_value, dict):
-                        logo = icon_value.get('image', '')
-                    else:
-                        logo = icon_value
+                    logo = icon_value
 
                     # RELAXED validation for logos (per requirement)
                     if not is_valid_url(logo, check_image=True):
