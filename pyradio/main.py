@@ -328,6 +328,7 @@ If nothing else works, try the following command:
     parser.add_argument('--sng-devel', action='store_true', help=SUPPRESS)
     parser.add_argument('--devel', action='store_true', help=SUPPRESS)
     parser.add_argument('--force-update', default='', help=SUPPRESS)
+    parser.add_argument('-g', '--graphics', help='Display icon')
 
     pl_group = parser.add_argument_group('• Playlist selection')
     pl_group.add_argument('-ls', '--list-playlists', action='store_true',
@@ -1162,6 +1163,8 @@ that window to complete the update process.''')
             force_update=args.force_update,
             record=args.record
         )
+        if args.graphics:
+            pyradio._icon_size = int(args.graphics)
         ''' Setting ESCAPE key delay to 25ms
             Refer to: https://stackoverflow.com/questions/27372068/why-does-the-escape-key-have-a-delay-in-python-curses
         '''

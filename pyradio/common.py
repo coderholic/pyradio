@@ -4,6 +4,7 @@ import locale
 import io
 import csv
 import curses
+import hashlib
 from os import rename, remove, access, X_OK, getenv, makedirs
 from os.path import exists, dirname, join, expanduser
 from shutil import which, move, Error as shutil_Error
@@ -1275,3 +1276,41 @@ def validate_resource_opener_path(a_file):
     # Return the validated path
     return a_file
 
+def get_cached_icon_path(cache_dir, station_name, icon_url):
+    """
+    Get cached icon path, migrating from station-based to URL-based naming
+    """
+    # Old filename (based on station name)
+    old_filename = f"{station_name.replace(' ', '_')}."
+    ext = 'jpg' if icon_url.endswith('.jpg') else 'png'
+    path1 = join(cache_dir, old_filename + ext)
+
+    # New filename (based on icon URL hash)
+    url_hash = hashlib.md5(icon_url.encode()).hexdigest()
+    new_filename = f"{url_hash}.{ext}"
+    path2 = join(cache_dir, new_filename)
+
+    # Migration logic
+    if exists(path1):
+        if exists(path2):
+            # Both new and old filenames exist - delete old
+            try:
+                remove(path1)
+            except OSError as e:
+                # Log the error but continue with path2
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f'Failed to remove old icon {path1}: {e}')
+            return path2
+        else:
+            # Old filename exists - rename to new
+            try:
+                rename(path1, path2)
+            except OSError as e:
+                # If rename fails, fall back to old path
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f'Failed to rename {path1} to {path2}: {e}')
+                return path1
+            return path2
+    else:
+        # Old filename does not exist - use the new one
+        return path2

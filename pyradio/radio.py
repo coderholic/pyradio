@@ -16,6 +16,7 @@ import os
 import random
 import signal
 import csv
+import tempfile
 from copy import deepcopy
 from sys import version as python_version, platform
 from os.path import join, basename, getmtime, getsize, exists
@@ -36,7 +37,7 @@ except ImportError:
     from importlib_resources import files, as_file   # backport για 3.7–3.8
 from .player import PlayerCache
 from .config import HAS_REQUESTS, HAS_DNSPYTHON, Station
-from .common import StationsChanges, CsvReadWrite, STATES, M_STRINGS, player_start_stop_token
+from .common import StationsChanges, CsvReadWrite, STATES, M_STRINGS, player_start_stop_token, get_cached_icon_path
 from .window_stack import Window_Stack
 from .config_window import PyRadioConfigWindow, PyRadioExtraParams, \
     PyRadioKeyboardConfig, PyRadioLocalized, PyRadioSelectEncodings, \
@@ -511,6 +512,7 @@ class PyRadio():
             in log.write, if _current_player_id != _active_player_id
                     do not display any message
         '''
+        self._icon_size = 30
         self.player = None
         # player data
         self._default_player_name = None
@@ -525,11 +527,6 @@ class PyRadio():
 
         # self.program_restart = False
         self._do_launch_external_palyer = external_player
-        self._station_images = (
-            join(pyradio_config.logos_dir, 'station.jpg'),
-            join(pyradio_config.logos_dir, 'station.png'),
-            join(pyradio_config.logos_dir, 'station-icon.raw'),
-        )
         self._message_system_default_operation_mode = self.ws.MESSAGING_MODE
         self._request_recording = record
         self._no_netifaces = False
@@ -885,6 +882,7 @@ class PyRadio():
         self._local_functions = add_l10n_to_functions_dict(self._local_functions_template)
 
         self.icon_downloader = None
+        self.icon_manager = None
 
     def __del__(self):
         self.transientWin = None
@@ -1325,6 +1323,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 self._start_remote_control_server()
 
         self.stdscr.nodelay(0)
+        logger.error('1')
         self.setupAndDrawScreen(init_from_function_setup=True)
         self._screen_ready = True
 
@@ -1422,7 +1421,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.bodyWin.bkgdset(' ', curses.color_pair(13))
             self.initBody()
 
-        #self.stdscr.timeout(100)
         self.bodyWin.keypad(1)
 
         #self.stdscr.noutrefresh()
@@ -1526,7 +1524,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
     def initBody(self):
         ''' Initializes the body/story window '''
-        #self.bodyWin.timeout(100)
         #self.bodyWin.keypad(1)
         self.bodyMaxY, self.bodyMaxX = self.bodyWin.getmaxyx()
         logger.debug(f'maxY = {self.bodyMaxY}, maxX = {self.bodyMaxX}')
@@ -1675,6 +1672,29 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                         self._ask_to_update_stations_csv()
 
         self._update_history_positions_in_list()
+        self._display_icon_on_treminal()
+
+
+    def _display_icon_on_treminal(self, reset=False):
+        if self.icon_manager is None:
+            self._graphic_terminal = detect_graphic_terminal()
+            if self._graphic_terminal:
+                self.icon_manager = SimpleIconManager(
+                    graphics=self._graphic_terminal,
+                    normal_mode=self.ws.NORMAL_MODE,
+                    cache_dir=join(self._cnf.cache_dir, 'logos')
+                )
+            else:
+                self.icon_manager = DummyIconManager()
+
+        self.icon_manager.on_station_change(
+            station=None if reset else self.stations[self.selection],
+            operation_mode=self.ws.operation_mode,
+            screen_size=tuple(self.outerBodyWin.getmaxyx()),
+            icon_size=self._icon_size,
+            icon_duration=3,
+            adjust_for_radio_browser=self._cnf._online_browser,
+        )
 
     def refreshNoDepencency(self):
         col = curses.color_pair(13)
@@ -1750,8 +1770,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             if self._cnf.browsing_station_service:
                 ticks = None
                 if self._cnf.online_browser:
-                    if self._cnf._online_browser:
-                        ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_header=True)
+                    ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_header=True)
                 if ticks:
                     for n in ticks:
                         try:
@@ -2183,17 +2202,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                           lambda: self.stop_update_notification_thread))
                 self._update_stations_thread.start()
 
-
-            self._graphic_terminal = detect_graphic_terminal()
-            if self._graphic_terminal:
-                self.icon_manager = SimpleIconManager(
-                    graphics=self._graphic_terminal,
-                    normal_mode=self.ws.NORMAL_MODE,
-                    cache_dir=join(self._cnf.cache_dir, 'logos')
-                )
-            else:
-                self.icon_manager = DummyIconManager()
-
             #signal.signal(signal.SIGINT, self.ctrl_c_handler)
             self.log.write(msg_id=STATES.RESET, msg=M_STRINGS['selected_player_'] + self.player.PLAYER_NAME, help_msg=True)
             if self.play != 'False':
@@ -2248,6 +2256,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self._global_letter = None
             remaining_keys = 0
             self._accumulated_errors = None
+            # self.bodyWin.timeout(100)
             while True:
                 try:
                     if self._do_launch_external_palyer:
@@ -2258,6 +2267,10 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                         # self._do_launch_external_palyer = False
                     c = self.bodyWin.getch()
                     # logger.error(f'{c = }')
+
+                    if c == -1:
+                        logger.error('continue')
+                        continue
 
                     if remaining_keys > 0:
                         # Skip processing for replayed keys
@@ -2402,7 +2415,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             if ret:
                 self._remote_control_server = None
         self.restore_colors()
-        self._remove_station_images()
         self._remove_icons()
 
     def _wait_for_threads(self):
@@ -2536,24 +2548,18 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 sleep(.25)
             self.playSelection(restart=True)
 
-    def _remove_station_images(self):
-        for n in self._station_images:
-            if exists(n):
-                try:
-                    remove(n)
-                except:
-                    pass
-
     def _remove_icons(self):
         ''' remove the logos directory '''
-        if int(self._cnf.enable_notifications) >= 0 and \
-                self._cnf.use_station_icon and \
-                self._cnf.remove_station_icons and \
-                not platform.startswith('win'):
-            if self._cnf.logos_dir:
-                if exists(self._cnf.logos_dir):
-                    from shutil import rmtree
-                    rmtree(self._cnf.logos_dir, ignore_errors=True)
+        if self._graphic_terminal is not None:
+            # Never if we are at a graphics terminal
+            if int(self._cnf.enable_notifications) >= 0 and \
+                    self._cnf.use_station_icon and \
+                    self._cnf.remove_station_icons and \
+                    not platform.startswith('win'):
+                if self._cnf.logos_dir:
+                    if exists(self._cnf.logos_dir):
+                        from shutil import rmtree
+                        rmtree(self._cnf.logos_dir, ignore_errors=True)
 
     def _what_is_the_station_player(self):
         logger.error(f'{self.selection = }')
@@ -2623,7 +2629,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.playing = self._last_played_station_id
         else:
             self._get_the_stations_player(station_player)
-            self._remove_station_images()
             self._cnf.notification_image_file = None
             if self._cnf.enable_notifications and \
                     self._cnf.use_station_icon and \
@@ -2901,8 +2906,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         if url:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('+++ downloading icon...')
-            template_image = self._station_images[0] if url.endswith('.jpg') else self._station_images[1]
-            file_to_write = template_image.replace('station.', station_name.replace(' ', '_') + '.')
+            file_to_write = get_cached_icon_path(self._cnf.logos_dir, station_name, url)
             if path.exists(file_to_write):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('+++ icon download: aleready downloaded...')
@@ -2912,6 +2916,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('+++ icon download: asked to stop. Stopping...')
                 return
+            temp_file = tempfile.NamedTemporaryFile(delete=False, dir=self._cnf.logos_dir)
             try:
                 response = requests.get(url)
             except requests.exceptions.RequestException as e:
@@ -2924,7 +2929,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 return
             if response.status_code == 200:
                 try:
-                    with open(self._station_images[2], 'wb') as local_file:
+                    with open(temp_file.name, 'wb') as local_file:
                         for chunk in response.iter_content(chunk_size=128):
                             if stop():
                                 if logger.isEnabledFor(logging.DEBUG):
@@ -2935,21 +2940,18 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('+++ icon download: error saving icon. Stopping...')
                     return
-            if not (exists(self._station_images[0]) or exists(self._station_images[1])):
-                if stop():
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('+++ icon download: asked to stop. Stopping...')
-                    return
-                try:
-                    rename(self._station_images[2], file_to_write)
-                except:
-                    self._remove_station_images()
+            if stop():
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('+++ icon download: asked to stop. Stopping...')
+                return
+            try:
+                rename(temp_file.name, file_to_write)
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('+++ icon downloaded...')
-                update_icon_name_function(file_to_write)
-            else:
+            except:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('+++ icon downloaded, but already exists...')
+            update_icon_name_function(file_to_write)
 
     def _ask_to_delete_playlist(self):
         self._open_simple_message_by_key_and_mode(
@@ -3084,6 +3086,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self._theme_selector.changed_from_config = changed_from_config
         self._theme_selector.show()
         self._theme_selector.set_global_functions(self._global_functions)
+        self._display_icon_on_treminal()
 
     def _get_message_width_from_list(self, lines):
         mwidth = 0
@@ -3349,17 +3352,20 @@ ____Using |fallback| theme.''')
         self._messaging_win.simple_dialog = True
         self._open_message_win_by_key(*args)
         self._message_system_default_operation_mode = self.ws.MESSAGING_MODE
+        self._display_icon_on_treminal()
 
     def _open_simple_message_by_key(self, *args):
+        self._display_icon_on_treminal()
         # logger.error('args = "{}"'.format(args))
-        self._messaging_win.simple_dialog = True
         self._open_message_win_by_key(*args)
+        self._messaging_win.simple_dialog = True
 
     def _open_message_win_by_key(self, *args):
         # logger.error('args = "{}"'.format(args))
         self._messaging_win.set_text(self.bodyWin, *args)
         self.ws.operation_mode = self._message_system_default_operation_mode
         self._messaging_win.show()
+        self._display_icon_on_treminal()
 
     def _show_line_editor_help(self):
         if self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE, self.ws.SCHEDULE_EDIT_MODE) \
@@ -4372,6 +4378,7 @@ and |remove the file manually|.
             self.number_of_items = len(self.stations)
             self.selection = 0
             self.startPos = 0
+            logger.error('2')
             self.setupAndDrawScreen()
             # self.detect_if_player_exited = False
             self._align_stations_and_refresh(self.ws.operation_mode)
@@ -5250,6 +5257,7 @@ and |remove the file manually|.
             self._open_playlist(a_url)
 
     def _normal_mode_resize(self):
+        logger.error('\n\nRESET\n\n')
         if platform.startswith('win'):
             curses.resize_term(0, 0)
             try:
@@ -5287,11 +5295,14 @@ and |remove the file manually|.
         self._limited_width_mode = False
         if self.player.isPlaying():
             self.log.display_help_message = False
+        logger.error('3')
         self.setupAndDrawScreen()
+        self._display_icon_on_treminal(reset=True)
         if self.selection >= self.number_of_items - self.bodyMaxY and \
                 self.number_of_items > self.bodyMaxY:
             self.startPos = self.number_of_items - self.bodyMaxY
             self.refreshBody()
+        self._display_icon_on_treminal()
 
     def _reset_status_bar_right(self, random_request=False):
         self.jumpnr = ''
@@ -7212,6 +7223,7 @@ _____"|f|" to see the |free| keys you can use.
                         vlc_no_recording=self._show_win_no_record
                     )
                     self._change_player.show()
+                    self._display_icon_on_treminal()
 
             elif ( char == kbkey['open_remote_control'] or \
                   check_localized(char, (kbkey['open_remote_control'],))) and \
@@ -7225,6 +7237,7 @@ _____"|f|" to see the |free| keys you can use.
                         self._show_remote_control_server_not_active()
                 else:
                     self._print_netifaces_not_installed_error()
+                self._display_icon_on_treminal()
 
             elif char in (kbkey['html_help'], ) or \
                     check_localized(char, (kbkey['html_help'],)):
@@ -7263,6 +7276,7 @@ _____"|f|" to see the |free| keys you can use.
                         self._rename_playlist_dialog.title = ' Rename Register '
                     self._rename_playlist_dialog.show()
                     self.ws.operation_mode = self.ws.RENAME_PLAYLIST_MODE
+                self._display_icon_on_treminal()
 
             elif char == kbkey['new_playlist'] or \
                     check_localized(char, (kbkey['open_remote_control'],)):
@@ -7285,6 +7299,7 @@ _____"|f|" to see the |free| keys you can use.
                     self._rename_playlist_dialog.title = ' Create Playlist '
                     self._rename_playlist_dialog.show()
                     self.ws.operation_mode = self.ws.CREATE_PLAYLIST_MODE
+                    self._display_icon_on_treminal()
 
             elif char == kbkey['last_playlist'] or \
                     check_localized(char, (kbkey['last_playlist'],)):
@@ -9732,28 +9747,23 @@ _____"|f|" to see the |free| keys you can use.
             if char in (curses.KEY_DOWN, kbkey['j']) or \
                     check_localized(char, (kbkey['j'], )):
                 self._move_cursor_one_down()
-                self.icon_manager.on_station_change(
-                    station=self.stations[self.selection],
-                    operation_mode=self.ws.operation_mode,
-                    screen_size=self.bodyWin.getbegyx(),
-                    icon_duration=3
-                )
-                # self.outerBodyWin.refresh()
-                # self.bodyWin.refresh()
-                # self.stdscr.refresh()
+                self._display_icon_on_treminal()
                 return
 
             if char in (curses.KEY_UP, kbkey['k']) or \
                     check_localized(char, (kbkey['k'], )):
                 self._move_cursor_one_up()
+                self._display_icon_on_treminal()
                 return
 
             if char in (curses.KEY_PPAGE, ):
                 self._page_up()
+                self._display_icon_on_treminal()
                 return
 
             if char in (curses.KEY_NPAGE, ):
                 self._page_down()
+                self._display_icon_on_treminal()
                 return
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -10000,6 +10010,7 @@ _____"|f|" to see the |free| keys you can use.
                         adding=False)
                     self._station_editor.show(self.stations[self.selection])
                     self.ws.operation_mode = self.ws.EDIT_STATION_MODE
+                    self._display_icon_on_treminal()
 
                 elif char == kbkey['open_config'] or \
                         check_localized(char, (kbkey['open_config'], )):
@@ -10010,6 +10021,7 @@ _____"|f|" to see the |free| keys you can use.
                     else:
                         if self._cnf.locked:
                             self._open_simple_message_by_key('M_SESSION_LOCKED')
+                            self._display_icon_on_treminal()
                             return
 
                         self._old_config_encoding = self._cnf.opts['default_encoding'][1]
@@ -10025,6 +10037,7 @@ _____"|f|" to see the |free| keys you can use.
                             if logger.isEnabledFor(logging.DEBUG):
                                 logger.debug('Config saved before entering Config Window')
                         self._show_config_window()
+                    self._display_icon_on_treminal()
                     return
 
                 elif char in (kbkey['open_enc'], ) or \
@@ -10056,6 +10069,7 @@ _____"|f|" to see the |free| keys you can use.
                         this should display a selection list.
                     '''
                     self._open_radio_browser()
+                    self._display_icon_on_treminal()
                     return
 
                 # elif chk_key(char, kbkey['open_playlist'], self.outerBodyWin):
@@ -10069,6 +10083,7 @@ _____"|f|" to see the |free| keys you can use.
                         return
                     self._check_to_open_playlist()
                     self._do_display_notify()
+                    self._display_icon_on_treminal()
                     return
 
                 elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
@@ -10079,11 +10094,13 @@ _____"|f|" to see the |free| keys you can use.
                         self._stop_player()
                     self._start_player()
                     self._do_display_notify()
+                    self._display_icon_on_treminal()
                     return
 
                 elif char in (curses.KEY_LEFT, kbkey['h']) or \
                         check_localized(char, (kbkey['h'], )):
                     self._stop_player()
+                    self._display_icon_on_treminal()
                     return
 
                 elif char in (kbkey['pause'], ) or \
@@ -10095,6 +10112,7 @@ _____"|f|" to see the |free| keys you can use.
                         self._pause_player()
                     else:
                         self._stop_player()
+                    self._display_icon_on_treminal()
                     return
 
                 elif char in (kbkey['del'], curses.KEY_DC) or \
@@ -10102,6 +10120,7 @@ _____"|f|" to see the |free| keys you can use.
                     # TODO: make it impossible when session locked?
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
+                        self._display_icon_on_treminal()
                         return
                     if self.number_of_items > 0:
                         if self._cnf.locked:
@@ -10117,6 +10136,7 @@ _____"|f|" to see the |free| keys you can use.
                                 self._ask_to_remove_group()
                             else:
                                 self._ask_to_remove_station()
+                    self._display_icon_on_treminal()
                     return
 
                 elif char in (kbkey['s'], ) or \
@@ -10138,6 +10158,7 @@ _____"|f|" to see the |free| keys you can use.
                                     txt='___Playlist not modified!!!___',
                                     mode_to_set=self.ws.NORMAL_MODE,
                                     callback_function=self.refreshBody)
+                    self._display_icon_on_treminal()
                     return
 
                 elif char in (kbkey['random'], ) or \
@@ -10145,6 +10166,7 @@ _____"|f|" to see the |free| keys you can use.
                     self._reset_status_bar_right(random_request=True)
                     ''' Pick a random radio station '''
                     self.play_random()
+                    self._display_icon_on_treminal()
                     return
 
                 elif char in (kbkey['Reload'], ) or \
@@ -10165,6 +10187,7 @@ _____"|f|" to see the |free| keys you can use.
                         else:
                             self.ws.operation_mode = self.ws.PLAYLIST_RELOAD_CONFIRM_MODE
                             self._reload_playlist_after_confirmation(char)
+                    self._display_icon_on_treminal()
                     return
 
                 elif char in (kbkey['https'], ) or \
@@ -10178,6 +10201,7 @@ _____"|f|" to see the |free| keys you can use.
                         global_functions=self._global_functions
                     )
                     self._connection_type_edit.show()
+                    self._display_icon_on_treminal()
                     return
 
                 elif char in (kbkey['extra_p_pamars'], ) or \
@@ -10192,6 +10216,7 @@ _____"|f|" to see the |free| keys you can use.
                         global_functions=self._global_functions
                     )
                     self._player_select_win.show()
+                    self._display_icon_on_treminal()
                     return
 
                 elif char == kbkey['jump'] or \
@@ -10201,6 +10226,7 @@ _____"|f|" to see the |free| keys you can use.
                     ''' tag for jump '''
                     self._cnf.jump_tag = self.selection
                     self._update_status_bar_right(status_suffix=str(self._cnf.jump_tag + 1) + str(kbkey['jump']))
+                    self._display_icon_on_treminal()
                     return
 
                 elif char in (kbkey['st_up'], 21) or \
@@ -10211,6 +10237,7 @@ _____"|f|" to see the |free| keys you can use.
                         self._cnf.jump_tag = int(self.jumpnr) - 1
                     self._move_station(-1)
                     self._reset_status_bar_right()
+                    self._display_icon_on_treminal()
                     return
 
                 elif char in (kbkey['st_dn'], 4) or \
@@ -10221,6 +10248,7 @@ _____"|f|" to see the |free| keys you can use.
                         self._cnf.jump_tag = int(self.jumpnr) - 1
                     self._move_station(1)
                     self._reset_status_bar_right()
+                    self._display_icon_on_treminal()
                     return
 
             elif self.ws.operation_mode == self.ws.PLAYLIST_MODE:
@@ -10649,6 +10677,7 @@ _____"|f|" to see the |free| keys you can use.
             )
         self.ws.operation_mode = self.ws.OPEN_DIR_MODE
         self._open_dir_win.show(parent=self.bodyWin)
+        self._display_icon_on_treminal()
 
     def _show_dirs_list(self):
         source_path = files("pyradio")
