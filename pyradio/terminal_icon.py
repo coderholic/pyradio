@@ -59,7 +59,11 @@ class SimpleIconManager:
                 station is None or \
                 operation_mode != self.normal_mode:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('clearing icon 1')
+                logger.error(f'{icon_duration =  }')
+                logger.error(f'{icon_size =  }')
+                logger.error(f'{station =  }')
+                logger.error(f'{operation_mode =  }')
+                logger.debug('clearing icon 1\n\n')
             self.clear_icon()
             return
 
@@ -125,13 +129,13 @@ class SimpleIconManager:
             except Exception as e:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug(f'Could not display failure placeholder: {e}')
+            self.icon_is_on = True
         else:
             # request icon downloading
             self.icon_downloader.download_icon_async(icon_url, cached_path)
 
             # display downloading icon
             download_token_res = files('pyradio').joinpath('icons', 'download.png')
-            # ... existing download icon code ...
 
             # First check if it's already a real file in the filesystem
             try:
@@ -155,16 +159,39 @@ class SimpleIconManager:
             except Exception as e:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug(f'Could not display download placeholder: {e}')
+            self.icon_is_on = True
 
     def _display_icon_simple(self, icon_path, icon_size, adjust_for_radio_browser=None):
         """Display icon - main thread only, quick and safe"""
         try:
             half = icon_size // 2
+            logger.error(f'====== {icon_size = }')
+            logger.error(f'       {self.Y = }')
+            logger.error(f'       {half = }')
             icon_Y = 3 if adjust_for_radio_browser else 2
-            icon_X = self.X - icon_size - 1
+            while half >= self.Y - icon_Y - 2:
+                icon_size -= 2
+                if icon_size <= 4:
+                    break
+                half = icon_size // 2
 
+            icon_X = self.X - icon_size - 1
+            while icon_X <= 10:
+                icon_size -= 2
+                if icon_size <= 4:
+                    break
+                icon_X = self.X - icon_size - 1
+            half = icon_size // 2
+
+            icon_X = self.X - icon_size - 1
+            if icon_size < 4:
+                self.clear_icon()
+                return
+
+            logger.error(f'{icon_size = }')
             params = [
                 'kitten', 'icat', '--scale-up', '--no-trailing-newline',
+                '--transfer-mode=file',
                 '--place', f'{icon_size}x{half}@{icon_X}x{icon_Y}',
                 icon_path
             ]

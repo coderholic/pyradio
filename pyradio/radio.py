@@ -1686,11 +1686,15 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 )
             else:
                 self.icon_manager = DummyIconManager()
-
+        try:
+            screen_size = tuple(self.outerBodyWin.getmaxyx())
+        except AttributeError:
+            screen_size = (0, 0)
+            icon_size = 0
         self.icon_manager.on_station_change(
             station=None if reset else self.stations[self.selection],
             operation_mode=self.ws.operation_mode,
-            screen_size=tuple(self.outerBodyWin.getmaxyx()),
+            screen_size=screen_size,
             icon_size=self._icon_size,
             icon_duration=3,
             adjust_for_radio_browser=self._cnf._online_browser,
