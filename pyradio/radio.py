@@ -6736,6 +6736,20 @@ and |remove the file manually|.
         # logger.error('\n\nchar = {}\n\n'.format(char))
         # letter = get_unicode_and_cjk_char(self.outerBodyWin, char)
         # logger.error('\n\nletter = {}\n\n'.format(letter))
+        logger.error(f'{char = }')
+        logger.error(f'{self.jumpnr = }')
+        logger.error('kbkey["G"] = {}'.format(kbkey['G']))
+        # Workaround for graphical terminals insering escape codes
+        logger.error(f'{self._graphic_terminal = }')
+        if self._graphic_terminal and \
+                char not in range(49, 58) and \
+                (self.jumpnr and char != kbkey['G']):
+            logger.error('***** reset jump')
+            ''' Reset jumpnr '''
+            self._update_status_bar_right(status_suffix='')
+            self._do_display_notify()
+            self.jumpnr = ''
+            return
         l_char = None
         if char in (curses.KEY_RESIZE, ):
             self._i_am_resizing = True

@@ -163,6 +163,7 @@ class SimpleIconManager:
 
     def _display_icon_simple(self, icon_path, icon_size, adjust_for_radio_browser=None):
         """Display icon - main thread only, quick and safe"""
+        min_icon_size = 4
         try:
             half = icon_size // 2
             logger.error(f'====== {icon_size = }')
@@ -171,20 +172,20 @@ class SimpleIconManager:
             icon_Y = 3 if adjust_for_radio_browser else 2
             while half >= self.Y - icon_Y - 2:
                 icon_size -= 2
-                if icon_size <= 4:
+                if icon_size <= min_icon_size:
                     break
                 half = icon_size // 2
 
             icon_X = self.X - icon_size - 1
-            while icon_X <= 10:
+            while icon_X <= 30:
                 icon_size -= 2
-                if icon_size <= 4:
+                if icon_size <=min_icon_size:
                     break
                 icon_X = self.X - icon_size - 1
             half = icon_size // 2
 
             icon_X = self.X - icon_size - 1
-            if icon_size < 4:
+            if icon_size <min_icon_size:
                 self.clear_icon()
                 return
 
