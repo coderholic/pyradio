@@ -12,6 +12,16 @@ from os import path, sep, rename, listdir
 from sys import platform
 from collections import OrderedDict
 import json
+from pathlib import Path
+from shutil import copyfile
+try:
+    # Python ≥ 3.9
+    from importlib.resources import files, as_file
+    from importlib.abc import Traversable
+except ImportError:
+    # Python 3.7–3.8 (backport)
+    from importlib_resources import files, as_file
+    from importlib_resources.abc import Traversable
 
 from .common import CsvReadWrite, Station
 from .window_stack import Window_Stack_Constants
@@ -69,6 +79,7 @@ class PyRadioConfigWindow():
     _help_text.append(['If this options is enabled, a Desktop Notification will be displayed using the notification daemon / service.', '|', 'If enabled but no notification is displayed, please refer to', 'https://github.com/coderholic/pyradio/desktop-notification.md', '|', 'Valid values are:', '   -1: disabled ', '    0: enabled (no repetition) ', '    x: repeat every x seconds ', '|', 'Default value: -1'])
     _help_text.append(['Notice: Not applicable on Windows!', '|',  'Online Radio Directory Services (like RadioBrowser) will usually provide an icon for the stations they advertise.', '|', 'PyRadio can use this icon (provided that one exists and is of JPG or PNG format) while displaying Desktop Notifications.', '|', 'Setting this option to True, will enable the behavior above.', '|', 'If this option is False, the default icon will be used.', '|', 'Default value: True'])
     _help_text.append(['Notice: Not applicable on Windows!', '|', 'If the previous option is enabled, Stations Icons will be cached.', '|', 'If this option is set to True, all icons will be deleted at program exit.', '|', 'If set to False, the icons will be available for future use.', '|', 'Default value: True'])
+    _help_text.append('Icon size')
     _help_text.append(None)
     _help_text.append(['If this option is enabled, the current time will be displayed at the bottom left corner of the window at program startup.', '|', 'Adjust the time format in the next option to change how the current time is displayed.', '|', r'You can always hide it by pressing ' + to_str('open_extra') + to_str('toggle_time') +  '.', '|', 'Default value: False'])
     _help_text.append(['This is the time format to be used when the clock is visible.', '|', 'Available values are:', '   0: 24h, with seconds', '   1: 24h, no seconds', '   2: 12h, with am/pm and seconds', '   3: 12h, no am/pm, with seconds', '   4: 12h, with am/pm, no seconds', '   5: 12h, no am/pm, no seconds', '|', 'Default value: 1'])
@@ -202,12 +213,12 @@ class PyRadioConfigWindow():
         self._default_config_options = config.config_opts
 
         self._orig_redording_dir = self._config_options['recording_dir'][1]
-        # for n in self._default_config_options, \
-        #         self._saved_config_options, \
-        #         self._config_options:
-        #     logger.info('=============')
-        #     for k in n.keys():
-        #         logger.info('{}: {}'.format(k, n[k]))
+        for n in self._default_config_options, \
+                self._saved_config_options, \
+                self._config_options:
+            logger.info('=============')
+            for k in n.keys():
+                logger.info('{}: {}'.format(k, n[k]))
 
         self._old_theme = self._config_options['theme'][1]
         if logger.isEnabledFor(logging.INFO):
@@ -471,6 +482,7 @@ class PyRadioConfigWindow():
                     elif isinstance(it[1], bool):
                         self._win.addstr('{}'.format(it[1]), hcol)
                     else:
+                        logger.error(f'{it = }')
                         if it[1] is None:
                             ''' random station '''
                             self._win.addstr('{}'.format('Random'), hcol)
@@ -795,6 +807,7 @@ class PyRadioConfigWindow():
                 'remote_control_server_port',
                 'enable_notifications',
                 'connection_timeout',
+                'icon_size',
                 'calculated_color_factor',
                 'time_format',
                 'buffering',
@@ -1055,6 +1068,45 @@ class PyRadioConfigWindow():
                 t = int(val[1][1]) - 1
                 if t < 0:
                     t = len(TIME_FORMATS) - 1
+                self._config_options[val[0]][1] = str(t)
+                self._win.addstr(
+                    Y, 3 + len(val[1][0]),
+                    str(t) + ' ', curses.color_pair(6))
+                self._print_title()
+                self._win.refresh()
+                return -1, []
+
+        elif val[0] == 'icon_size':
+            if char in (curses.KEY_RIGHT, kbkey['l']) or \
+                    check_localized(char, (kbkey['l'], )):
+                t = int(val[1][1])
+                if t == 0:
+                    t = 2
+                if t < 60:
+                    t += 2
+                    self._config_options[val[0]][1] = str(t)
+                    self._win.addstr(
+                        Y, 3 + len(val[1][0]),
+                        str(t) + ' ', curses.color_pair(6))
+                    if t > 0:
+                        self._config_options['remove_station_icons'][1] = False
+                        try:
+                            self._win.addstr(
+                                Y-1, 3 + len(self._config_options['remove_station_icons'][0]),
+                                'False ', curses.color_pair(4))
+                        except:
+                            pass
+                    self._print_title()
+                    self._win.refresh()
+                return -1, []
+
+            elif char in (curses.KEY_LEFT, kbkey['h']) or \
+                    check_localized(char, (kbkey['h'], )):
+                t = int(val[1][1])
+                if t > 5:
+                    t -= 2
+                else:
+                    t = 0
                 self._config_options[val[0]][1] = str(t)
                 self._win.addstr(
                     Y, 3 + len(val[1][0]),
@@ -4466,45 +4518,45 @@ class PyRadioLocalized():
                 self._widgets[0].active = 1
             self._widgets[0].show()
 
-def _read_keys(self):
-    """Read the localized key mapping JSON file, either from data dir or package resource."""
-    error = False
-    self._keys = {}
+    def _read_keys(self):
+        """Read the localized key mapping JSON file, either from data dir or package resource."""
+        error = False
+        self._keys = {}
 
-    user_file = path.join(self._cnf.data_dir, f'lkb_{self.localize}.json')
-    package_res = files("pyradio").joinpath("keyboard", f'lkb_{self.localize}.json')
+        user_file = path.join(self._cnf.data_dir, f'lkb_{self.localize}.json')
+        package_res = files("pyradio").joinpath("keyboard", f'lkb_{self.localize}.json')
 
-    if path.exists(user_file):
-        # user file exists
-        try:
-            with open(user_file, 'r', encoding='utf-8', errors='ignore') as f:
-                self._keys = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError, TypeError, IOError) as e:
-            error = True
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug(f'Error reading user file {user_file}: {e}')
-
-    elif package_res.is_file():
-        # package resource, may be inside zip/wheel
-        try:
-            with as_file(package_res) as tmp_path:
-                with open(tmp_path, 'r', encoding='utf-8', errors='ignore') as f:
+        if path.exists(user_file):
+            # user file exists
+            try:
+                with open(user_file, 'r', encoding='utf-8', errors='ignore') as f:
                     self._keys = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError, TypeError, IOError) as e:
+            except (FileNotFoundError, json.JSONDecodeError, TypeError, IOError) as e:
+                error = True
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f'Error reading user file {user_file}: {e}')
+
+        elif package_res.is_file():
+            # package resource, may be inside zip/wheel
+            try:
+                with as_file(package_res) as tmp_path:
+                    with open(tmp_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        self._keys = json.load(f)
+            except (FileNotFoundError, json.JSONDecodeError, TypeError, IOError) as e:
+                error = True
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f'Error reading package resource {package_res}: {e}')
+
+        else:
             error = True
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug(f'Error reading package resource {package_res}: {e}')
 
-    else:
-        error = True
+        # fallback
+        if error or not self._keys:
+            keys = list(string.ascii_lowercase) + list(string.ascii_uppercase)
+            self._keys = {keys[i]: '' for i in range(len(keys))}
 
-    # fallback
-    if error or not self._keys:
-        keys = list(string.ascii_lowercase) + list(string.ascii_uppercase)
-        self._keys = {keys[i]: '' for i in range(len(keys))}
-
-    if logger.isEnabledFor(logging.DEBUG):
-        logger.debug(f'{self._keys = }')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'{self._keys = }')
 
     def _read_file_list(self):
         ''' Read layout file names from disk (not the content)
@@ -4544,7 +4596,7 @@ def _read_keys(self):
                 # Real filesystem directory
                 dir_path = Path(directory)
                 if dir_path.is_dir():
-                    for file in os.listdir(dir_path):
+                    for file in listdir(dir_path):
                         if file.startswith('lkb_') and file.endswith('.json'):
                             dict_filenames[file[4:-5]] = (
                                 str(dir_path / file),
@@ -5015,7 +5067,9 @@ def _read_keys(self):
                         self.lang = None
                     return 4
                 else:
-                    pass
+                    if self.localize == 'No Layout':
+                        self.localize = None
+                    return 0
                 return 1
         elif self._focus == 3:
             # cancel button

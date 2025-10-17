@@ -1,9 +1,11 @@
 import os
+import time
 import subprocess
 import threading
 import locale
 import logging
 import hashlib
+from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from os.path import exists, join
 try:
@@ -22,9 +24,10 @@ class DummyIconManager:
     def __init__(self):
         pass
 
-    def on_station_change(self, station, operation_mode, screen_size, icon_size, icon_duration, adjust_for_radio_browser):
+    def on_station_change(self, win, station, operation_mode, screen_size, icon_size, icon_duration, adjust_for_radio_browser):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Not a graphical terminal; cannot display icon...')
+        return None
 
 class SimpleIconManager:
     """
@@ -44,13 +47,13 @@ class SimpleIconManager:
         self.old_station_id = None
         self.old_adjust_for_radio_browser = None
 
-    def on_station_change(self, station, operation_mode, screen_size, icon_size, icon_duration, adjust_for_radio_browser):
+    def on_station_change(self, win, station, operation_mode, screen_size, icon_size, icon_duration, adjust_for_radio_browser):
         """
         Call this from your main keypress handler
         Returns quickly - never blocks
         """
         if self.graphics is None:
-            return
+            return None
         # Skip if disabled or wrong mode
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(f'{station = }')
@@ -65,8 +68,9 @@ class SimpleIconManager:
                 logger.error(f'{operation_mode =  }')
                 logger.debug('clearing icon 1\n\n')
             self.clear_icon()
-            return
+            return datetime.now()
 
+        self._win = win
         self.Y, self.X = screen_size
         station_id = station[0].strip()
         icon_url = station[3].strip()
@@ -91,7 +95,7 @@ class SimpleIconManager:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('clearing icon 3')
             self.clear_icon()
-            return
+            return datetime.now()
 
         # Check cache first (fast)
         cached_path = get_cached_icon_path(self.cache_dir, station_id, icon_url)
@@ -160,6 +164,7 @@ class SimpleIconManager:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug(f'Could not display download placeholder: {e}')
             self.icon_is_on = True
+            return datetime.now()
 
     def _display_icon_simple(self, icon_path, icon_size, adjust_for_radio_browser=None):
         """Display icon - main thread only, quick and safe"""
@@ -359,9 +364,3 @@ class TerminalIconDownloader:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'Cleared failed marker for retry: {failed_path}')
 
-def detect_graphic_terminal():
-    all_env_vars = dict(os.environ)
-    if 'KITTY_WINDOW_ID' in all_env_vars or \
-            'KITTY_PID' in all_env_vars:
-        return 'kitty'
-    return None

@@ -19,7 +19,7 @@ try:
 except ImportError:
     from importlib_resources import files, as_file   # backport για 3.7–3.8
 from .common import STATES, M_STRINGS
-from .cjkwrap import cjklen
+from .cjkwrap import cjklen, cjkslices
 
 locale.setlocale(locale.LC_ALL, "")
 
@@ -565,39 +565,27 @@ class Log():
                 ''' update main message '''
                 # logger.error('*** self.msg = "{}"'.format(self.msg))
                 if self.msg is not None and self.msg != '':
-                    # if self._x_start == 1:
-                    #     self.cursesScreen.erase()
-                    d_msg = ''
-                    if self._x_start == 1:
-                        self.cursesScreen.addstr(0, 0, ' ')
-                    else:
+                    try:
+                        d_msg = fix_chars(self.msg.strip())
+
+                        # Account for: space at start + 2 empty chars at end
+                        available_width = self.width - self._x_start - 1
+
+                        if available_width <= 0:
+                            return
+
+                        # Write the space for visual separation
                         self.cursesScreen.addstr(0, self._x_start-1, ' ')
-                    try:
-                        d_msg = fix_chars(self.msg.strip()[0: self.width])
-                        # logger.error('printing "{}" at x = {}'.format(d_msg, self._x_start))
-                        dd_msg = d_msg.strip()[:self.width -2]
-                        while cjklen(dd_msg) > self.width -2:
-                            dd_msg = dd_msg[:-1]
+
+                        # Write message with safe margins
+                        dd_msg, remaining = cjkslices(d_msg, available_width)
                         self.cursesScreen.addstr(0, self._x_start, dd_msg)
-                    except Exception as e:
-                        logger.error(e)
-                        try:
-                            if self._the_time is None:
-                                d_msg = fix_chars(self.msg.encode('utf-8', 'replace').strip()[0: self.width])
-                            else:
-                                d_msg = fix_chars(self.msg.encode('utf-8', 'replace').strip()[0: self.width - len(self._the_time) - 3])
-                            logger.error(f'printing "{d_msg}" at {self._x_start}')
-                            self.cursesScreen.addstr(0, self._x_start, d_msg)
-                        except:
-                            pass
-                            # logger.error('\n\n\n1 except\n{}\n\n\n'.format(msg))
-                            # if logger.isEnabledFor(logging.ERROR):
-                            #     logger.error('Error updating the Status Bar')
-                    try:
+
+                        # clrtoeol is generally safe - no need for nested try/except
                         self.cursesScreen.clrtoeol()
-                    except:
-                        logger.error('\n\n\n2 except\n\n\n')
-                        pass
+
+                    except Exception as e:
+                        logger.error(f"Status bar update error: {e}")
 
                     if msg:
                         if msg.startswith(M_STRINGS['vol_']) or msg.startswith(M_STRINGS['muted']):
@@ -659,11 +647,14 @@ class Log():
                             d_msg + ' ')
                     except:
                         pass
-                    self.cursesScreen.chgat(
-                        0, self._active_width - cjklen(d_msg) + 1,
-                        cjklen(d_msg) - 1,
-                        curses.color_pair(1)
-                    )
+                    try:
+                        self.cursesScreen.chgat(
+                            0, self._active_width - cjklen(d_msg) + 1,
+                            cjklen(d_msg) - 1,
+                            curses.color_pair(1)
+                        )
+                    except:
+                        pass
                     first_print = self._do_i_print_last_char(first_print)
                     self.cursesScreen.refresh()
                     self._active_width -= cjklen(d_msg)

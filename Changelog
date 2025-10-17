@@ -1,4 +1,13 @@
 2025-09-19 s-n-g
+    * version 0.9.3.11.21 - 0.9.3.12-beta21
+    * fixing [BUG] Inconsistency with RadioBrowser Config's vertical
+    navigation keybindings (j/k) - #309
+    * updating docs including "update title logging directory info in
+    pyradio.1" #308
+    * localized keyboard setting is actually being saved
+    * updating mpv windows download link
+
+2025-09-19 s-n-g
     * version 0.9.3.11.20 - 0.9.3.12-beta20
     * adding error messages for charset-normalizer module not found (#305)
     * fixing #307 - [BUG] TypeError: string indices must be integers, not 'str'

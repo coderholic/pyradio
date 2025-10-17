@@ -2436,12 +2436,12 @@ class RadioBrowserConfigWindow():
 
         elif char in (curses.KEY_UP, kbkey['j']) or \
                 check_localized(char, (kbkey['j'], )):
-            self._focus_previous()
+            self._focus_next()
             self.calculate_dirty()
 
         elif char in (curses.KEY_DOWN, kbkey['k']) or \
                 check_localized(char, (kbkey['k'], )):
-            self._focus_next()
+            self._focus_previous()
             self.calculate_dirty()
 
         else:

@@ -1276,6 +1276,8 @@ def read_config(pyradio_config):
     elif ret == -2:
         print(f'Config file is malformed: "[red]{pyradio_config.config_file}[/red]"')
         sys.exit(1)
+
+    pyradio_config.get_graphical_terminal()
     # for n in pyradio_config.opts.keys():
     #     print('{0}: {1}'.format(n, pyradio_config.opts[n]))
     if pyradio_config.xdg_compliant:

@@ -9,7 +9,7 @@ import collections
 import json
 from pathlib import Path
 # import socket
-from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, getpid, listdir, access, R_OK
+from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, getpid, listdir, access, R_OK, environ
 from sys import platform, exit
 from time import ctime, sleep
 from datetime import datetime
@@ -1360,6 +1360,7 @@ class PyRadioConfig(PyRadioStations):
         self.opts['enable_notifications'] = ['Enable notifications: ', '-1']
         self.opts['use_station_icon'] = ['  Use station icon: ', True]
         self.opts['remove_station_icons'] = ['  Remove cached icons: ', True]
+        self.opts['icon_size'] = ['  Graphic icon size: ', '0']
         self.opts['clock_title'] = ['Clock', '']
         self.opts['enable_clock'] = ['Display on startup: ', False]
         self.opts['time_format'] = ['Time format: ', '1']
@@ -1454,6 +1455,9 @@ class PyRadioConfig(PyRadioStations):
         self.profile_manager = None
         self.use_calculated_colors = False
 
+        self._icon_state = None
+        self._session_icon_size = -1
+
     def __init__(self, user_config_dir=None, headless=False):
         self.localize = None
         self._old_localize = None
@@ -1534,6 +1538,20 @@ class PyRadioConfig(PyRadioStations):
 
         self._read_notification_command()
         self.profile_manager = ProfileManager()
+
+    @property
+    def graphics_enabled(self):
+        # logger.error('self._icon_state.icon_enabled = {}'.format(self._icon_state.icon_enabled))
+        # logger.error('self._icon_state.icon_size = {}'.format(self._icon_state.icon_size))
+        return self._icon_state.icon_enabled and self._icon_state.icon_size > 0
+
+    @property
+    def graphics_icon_size(self):
+        return self._icon_state.icon_size
+
+    @property
+    def graphics_terminal(self):
+        return self._icon_state.terminal
 
     @property
     def continuous_playback(self):
@@ -1691,8 +1709,6 @@ class PyRadioConfig(PyRadioStations):
     @use_station_icon.setter
     def use_station_icon(self, val):
         self.opts['use_station_icon'][1] = val
-        self.opts['dirty_config'][1] = True
-
     @property
     def remove_station_icons(self):
         return self.opts['remove_station_icons'][1]
@@ -1700,6 +1716,17 @@ class PyRadioConfig(PyRadioStations):
     @remove_station_icons.setter
     def remove_station_icons(self, val):
         self.opts['remove_station_icons'][1] = val
+        self.opts['dirty_config'][1] = True
+
+    @property
+    def icon_size(self):
+        return self.opts['icon_size'][1]
+
+    @icon_size.setter
+    def icon_size(self, val):
+        self.opts['icon_size'][1] = val
+        if val > 0:
+            self.opts['remove_station_icons'][1] = False
         self.opts['dirty_config'][1] = True
 
     @property
@@ -1910,6 +1937,17 @@ class PyRadioConfig(PyRadioStations):
                 ))
         except Exception:
             return tuple()
+
+    @property
+    def icon_state(self):
+        return self._icon_state
+
+    def get_graphical_terminal(self):
+        self._icon_state = IconState(
+            lambda: self.opts['icon_size'][1],
+            lambda: self._session_icon_size
+        )
+        logger.error('icon enabled = {}'.format(self._icon_state.icon_enabled))
 
     def is_project_theme(self, a_theme_name):
         ''' Check if a theme name is in auto_update_frameworks
@@ -2547,6 +2585,12 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['remove_station_icons'][1] = False
                 else:
                     self.opts['remove_station_icons'][1] = True
+            elif sp[0] == 'icon_size':
+                try:
+                    t = int(sp[1])
+                except ValueError:
+                    t = 0
+                self.opts['icon_size'][1] = str(t)
             elif sp[0] == 'confirm_station_deletion':
                 if sp[1].lower() == 'false':
                     self.opts['confirm_station_deletion'][1] = False
@@ -2721,12 +2765,12 @@ class PyRadioConfig(PyRadioStations):
                     logger.info(f"Default playlist \"({self.opts['default_station'][1]}\") does not exist; reverting to \"stations\"")
                 self.opts['default_playlist'][1] = 'stations'
                 self.opts['default_station'][1] = 'False'
-        # # for n in self.opts.keys():
-        # #     logger.error('  {0}: {1} '.format(n, self.opts[n]))
-        # # for n in self.opts.keys():
-        # #     logger.error('  {0}: {1} '.format(n, self.opts[n]))
-        # for n in self.opts:
-        #     print('{0}: {1}'.format(n, self.opts[n]))
+        # for n in self.opts.keys():
+        #     logger.error('  {0}: {1} '.format(n, self.opts[n]))
+        # for n in self.opts.keys():
+        #     logger.error('  {0}: {1} '.format(n, self.opts[n]))
+        for n in self.opts:
+            print('{0}: {1}'.format(n, self.opts[n]))
 
         if not distro_config and self._fixed_recording_dir is not None:
             self.opts['recording_dir'][1] = self._fixed_recording_dir
@@ -3081,6 +3125,13 @@ class PyRadioConfig(PyRadioStations):
         if not from_command_line and \
                 logger.isEnabledFor(logging.DEBUG):
             logger.debug(f'saved params = {self.saved_params}')
+
+        # check again if graphical icon size > 0
+        if self.opts['icon_size'][1] != '0':
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('cached icons will not be removed, graphical icon enabled')
+            self.opts['remove_station_icons'][1] = False
+            self.opts['dirty_config'][1] = True
 
         # logger.info('\nsaved_params\n{}\n\n'.format(self.saved_params))
         if not self.opts['dirty_config'][1]:
@@ -4528,3 +4579,116 @@ class FavoritesManager:
             return 0, '___Added to favorites!___'
         return -2, '___Error writing favorites!___'
 
+
+class IconState():
+    def __init__(self, config_value, session_value):
+        self._config_value = config_value
+        self._session_value = session_value
+        self._terminal = self.detect_graphic_terminal()
+        logger.error('\n\nself.icon_size = {}'.format(self.icon_size))
+        logger.error('self._terminal = {}\n\n'.format(self._terminal))
+
+    @property
+    def icon_enabled(self):
+        if self._terminal is None:
+            return False
+        return self.icon_size > 0
+
+    def __str__(self):
+        if self:
+            return f"IconState(enabled=True, terminal={self._terminal}, size={self.icon_size})"
+        else:
+            return "IconState(enabled=False)"
+
+    @property
+    def icon_size(self):
+        config_value = int(self._config_value())
+        session_value = int(self._session_value())
+        # logger.error(f'{config_value = }')
+        # logger.error(f'{session_value = }')
+        return config_value if session_value == -1 else session_value
+
+    @property
+    def terminal(self):
+        return self._terminal
+
+    @staticmethod
+    def detect_graphic_terminal():
+        """Detect graphic terminal and return its type."""
+        all_env_vars = dict(environ)
+
+        # Kitty detection
+        if 'KITTY_WINDOW_ID' in all_env_vars or 'KITTY_PID' in all_env_vars:
+            return 'kitty'
+
+        # iTerm2 detection
+        if all_env_vars.get('TERM_PROGRAM') == 'iTerm.app':
+            return 'iterm2'
+
+        # WezTerm detection
+        if 'WEZTERM_EXECUTABLE' in all_env_vars:
+            return 'wezterm'
+
+        timg = IconState._check_timg_available()
+
+        # MLTerm detection
+        if 'MLTERM' in all_env_vars and \
+                timg:
+            return 'mlterm'
+
+        # foot detection
+        if 'TERM' in all_env_vars \
+                and all_env_vars['TERM'] in ('foot', 'footclient') \
+                and timg:
+            return 'foot'
+
+        # contour detection
+        if 'CONTOUR_PROFILE' in all_env_vars and \
+                timg:
+            return 'contour'
+
+        # Terminology detection
+        if 'TERMINOLOGY' in all_env_vars:
+            return 'terminology'
+
+        # XTerm with timg fallback
+        logger.error('XTERM_VERSION in all_env_vars = {}'.format('XTERM_VERSION' in all_env_vars))
+        logger.error('IconState._check_timg_available = {}'.format(IconState._check_timg_available()))
+        logger.error('IconState._check_xterm_vt340 = {}'.format(IconState._check_xterm_vt340()))
+        if 'XTERM_VERSION' in all_env_vars \
+                and timg \
+                and IconState._check_xterm_vt340():
+            return 'xterm'
+
+        return None
+
+    @staticmethod
+    def _check_timg_available():
+        """Check if timg is available for fallback."""
+        from shutil import which
+        return which('timg') is not None
+
+    @staticmethod
+    def _check_xterm_vt340():
+        try:
+            import termios
+            import tty
+        except ImportError:
+            return False
+        sys.stdout.write("\033[c")  # Primary DA request
+        sys.stdout.flush()
+
+        fd = sys.stdin.fileno()
+        old = termios.tcgetattr(fd)
+        tty.setcbreak(fd)
+        try:
+            resp = ""
+            while True:
+                ch = sys.stdin.read(1)
+                resp += ch
+                if ch == "c":
+                    break
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old)
+
+        return '?63;' in resp

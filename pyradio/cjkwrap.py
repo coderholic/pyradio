@@ -41,8 +41,10 @@ def is_wide(char):
     Return True if unicode_char is Fullwidth or Wide, False otherwise.
     Fullwidth and Wide CJK chars are double-width.
     """
-    return unicodedata.east_asian_width(char) in ('F', 'W')
-
+    try:
+        return unicodedata.east_asian_width(char) in ('F', 'W')
+    except TypeError:
+        return False
 
 def cjklen(text):
     """cjklen(object) -> integer

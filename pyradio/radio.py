@@ -58,7 +58,9 @@ from .simple_curses_widgets import SimpleCursesMenu
 from .messages_system import PyRadioMessagesSystem
 from .server import PyRadioServer, HAS_NETIFACES
 from .keyboard import kbkey, get_lkbkey, get_unicode_and_cjk_char, dequeue_input, input_queue, set_kb_letter, check_localized, add_l10n_to_functions_dict, set_kb_cjk
-from .terminal_icon import SimpleIconManager, DummyIconManager, detect_graphic_terminal
+from .terminal_icon import SimpleIconManager, DummyIconManager
+from .input_filter import TerminalInputFilter
+
 HAVE_CHARSET_NORMALIZER = True
 try:
     from .m3u import parse_m3u
@@ -513,6 +515,7 @@ class PyRadio():
                     do not display any message
         '''
         self._icon_size = 30
+        self._terminal_icon_time = None
         self.player = None
         # player data
         self._default_player_name = None
@@ -1676,11 +1679,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
 
     def _display_icon_on_treminal(self, reset=False):
+        pass
         if self.icon_manager is None:
-            self._graphic_terminal = detect_graphic_terminal()
-            if self._graphic_terminal:
+            if self._cnf.graphics_terminal:
                 self.icon_manager = SimpleIconManager(
-                    graphics=self._graphic_terminal,
+                    graphics=self._cnf.graphics_terminal,
                     normal_mode=self.ws.NORMAL_MODE,
                     cache_dir=join(self._cnf.cache_dir, 'logos')
                 )
@@ -1691,11 +1694,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         except AttributeError:
             screen_size = (0, 0)
             icon_size = 0
-        self.icon_manager.on_station_change(
+        self._terminal_icon_time = self.icon_manager.on_station_change(
+            win=lambda: self.bodyWin,
             station=None if reset else self.stations[self.selection],
             operation_mode=self.ws.operation_mode,
             screen_size=screen_size,
-            icon_size=self._icon_size,
+            icon_size=self._cnf.graphics_icon_size,
             icon_duration=3,
             adjust_for_radio_browser=self._cnf._online_browser,
         )
@@ -2260,67 +2264,107 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self._global_letter = None
             remaining_keys = 0
             self._accumulated_errors = None
-            # self.bodyWin.timeout(100)
+            input_drainer = TerminalInputFilter()
             while True:
+                if self._cnf.graphics_enabled:
+                    timeout = 100
+                    self.bodyWin.timeout(100)
+                    input_drainer.set_images_enabled(True)
+                else:
+                    timeout = -1
+                    self.bodyWin.timeout(-1)
+                    input_drainer.set_images_enabled(False)
                 try:
+                    # c = self.bodyWin.getch()
+                    c, char_type = input_drainer.drain_and_filter(self.bodyWin)
+                    if timeout == -1:
+                        self.bodyWin.timeout(-1)
+
+                    if c == -1:
+                        # logger.error('continue')
+                        continue
+                    # else:
+                    #     logger.error(f'drain returned {c = }')
+                    #     # remaining_keys += 1
+                    logger.error('\n\n****** c = {}\n\n'.format(c))
+
                     if self._do_launch_external_palyer:
                         self.keypress(kbkey['ext_player'])
                         self._do_launch_external_palyer = False
                         return
+
                         # curses.ungetch(kbkey['ext_player'])
                         # self._do_launch_external_palyer = False
-                    c = self.bodyWin.getch()
-                    # logger.error(f'{c = }')
 
-                    if c == -1:
-                        logger.error('continue')
-                        continue
 
-                    if remaining_keys > 0:
-                        # Skip processing for replayed keys
-                        remaining_keys -= 1
-                        ret = self.keypress(c)  # Handle shortcut
-                        if ret == -1:
-                            return
-                        continue
-
-                    # Process input through get_unicode_and_cjk_char
-                    if c == curses.KEY_RESIZE:
-                        letter = ''
-                    else:
+                    if char_type == 1:  # Unicode character
                         if platform.startswith('win'):
+                            letter = c
+                        else:
                             letter = chr(c)
-                            set_kb_letter(letter)
-                            set_kb_cjk(is_wide(letter))
-                        else:
-                            letter = get_unicode_and_cjk_char(self.bodyWin, c)
-                    # set_kb_letter(None)
-                    if letter:
-                        # set_kb_letter(letter)  # Save the decoded letter
-                        # Call keypress for single-byte shortcuts
-                        # if logger.isEnabledFor(logging.DEBUG):
-                        #     logger.debug('I have a letter!')
-                        if len(input_queue) == 0:  # Single-byte input
-                            ret = self.keypress(c)  # Handle shortcut
-                            if ret == -1:
-                                return
-                        else:
-                            # Set remaining_keys based on input_queue length for multi-byte input
-                            remaining_keys = len(input_queue)
                     else:
-                        # if logger.isEnabledFor(logging.DEBUG):
-                        #     logger.debug('I do NOT have a letter!')
-                        # Single-byte character or invalid input
-                        ret = self.keypress(c)  # Handle shortcut
-                        if ret == -1:
-                            return
-                    # if logger.isEnabledFor(logging.DEBUG):
-                    #     logger.debug('{}'.format(get_kb_letter()))
-                    # Replay input_queue into curses' input buffer
-                    while input_queue:
-                        # Re-insert input in reverse order
-                        deq = dequeue_input()
-                        curses.ungetch(deq)
+                        letter = ''
+                    # else:  # Regular ASCII (type 0)
+                    #     letter = chr(c) if 32 <= c <= 126 else ''  # Printable ASCII only
+                        # c = drain_getch(self.bodyWin)
+                        # c = self.bodyWin.getch()
+
+                    # Set keyboard state
+                    if letter:
+                        set_kb_letter(letter)
+                        set_kb_cjk(is_wide(letter))
+                    ret = self.keypress(c)  # Handle shortcut
+                    if ret == -1:
+                        return
+                    # c = drain_getch(self.bodyWin)
+                    # c = self.bodyWin.getch()
+
+                    # if remaining_keys > 0:
+                    #     # Skip processing for replayed keys
+                    #     remaining_keys -= 1
+                    #     ret = self.keypress(c)  # Handle shortcut
+                    #     if ret == -1:
+                    #         return
+                    #     continue
+
+                    # # Process input through get_unicode_and_cjk_char
+                    # if c == curses.KEY_RESIZE:
+                    #     letter = ''
+                    # else:
+                    #     if platform.startswith('win'):
+                    #         letter = chr(c)
+                    #         set_kb_letter(letter)
+                    #         set_kb_cjk(is_wide(letter))
+                    #     else:
+                    #         letter = get_unicode_and_cjk_char(self.bodyWin, c)
+                    # # set_kb_letter(None)
+                    # if letter:
+                    #     # set_kb_letter(letter)  # Save the decoded letter
+                    #     # Call keypress for single-byte shortcuts
+                    #     # if logger.isEnabledFor(logging.DEBUG):
+                    #     #     logger.debug('I have a letter!')
+                    #     if len(input_queue) == 0:  # Single-byte input
+                    #         ret = self.keypress(c)  # Handle shortcut
+                    #         if ret == -1:
+                    #             return
+                    #     else:
+                    #         # Set remaining_keys based on input_queue length for multi-byte input
+                    #         remaining_keys = len(input_queue)
+                    # else:
+                    #     # if logger.isEnabledFor(logging.DEBUG):
+                    #     #     logger.debug('I do NOT have a letter!')
+                    #     # Single-byte character or invalid input
+                    #     logger.error('keypress')
+                    #     ret = self.keypress(c)  # Handle shortcut
+                    #     if ret == -1:
+                    #         return
+                    # # if logger.isEnabledFor(logging.DEBUG):
+                    # #     logger.debug('{}'.format(get_kb_letter()))
+                    # # Replay input_queue into curses' input buffer
+                    # while input_queue:
+                    #     # Re-insert input in reverse order
+                    #     deq = dequeue_input()
+                    #     curses.ungetch(deq)
 
                 except KeyboardInterrupt:
                     # ok
@@ -2554,7 +2598,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
     def _remove_icons(self):
         ''' remove the logos directory '''
-        if self._graphic_terminal is not None:
+        if self._cnf.icon_state is not None:
             # Never if we are at a graphics terminal
             if int(self._cnf.enable_notifications) >= 0 and \
                     self._cnf.use_station_icon and \
@@ -6726,7 +6770,77 @@ and |remove the file manually|.
             return False
         return char in self._chars_to_bypass_for_search
 
+    def _exit_program_or_playlist_mode(self):
+        self._update_status_bar_right(status_suffix='')
+        if self.ws.operation_mode == self.ws.PLAYLIST_MODE:
+            ''' return to stations view '''
+            # logger.error('DE \n    self._cnf.open_register_list = {}\n'.format(self._cnf.open_register_list))
+            if self._cnf.open_register_list:
+                self.selections[self.ws.REGISTER_MODE] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
+                self.playlist_selections[self.ws.REGISTER_MODE] = [self.selection, self.startPos, self.playing]
+            else:
+                self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
+                self.playlist_selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing]
+            # self.ll('ESCAPE')
+            self.ws.close_window()
+            self._give_me_a_search_class(self.ws.operation_mode)
+            self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
+            self.stations = self._cnf.stations
+            self.number_of_items = len(self.stations)
+            self.refreshBody()
+            return True
+        else:
+            if self._cnf.is_register:
+                ''' go back to playlist history '''
+                self._open_playlist_from_history()
+                return True
+            elif self._cnf.browsing_station_service:
+                ''' go back to playlist history '''
+                if self._cnf.online_browser.is_config_dirty():
+                    self._ask_to_save_browser_config_to_exit()
+                else:
+                    self._open_playlist_from_history()
+                    sleep(1.5)
+                return True
+            ''' exit program '''
+            ''' stop updating the status bar '''
+            #with self.log.lock:
+            #    self.log.asked_to_stop = True
+            self.log.asked_to_stop = True
+            if self._cnf.dirty_playlist:
+                if self._cnf.auto_save_playlist:
+                    ''' save playlist and exit '''
+                    ret = self.saveCurrentPlaylist()
+                    #if ret == -1:
+                    #    # do not exit program
+                    #    return
+                else:
+                    ''' ask to save playlist '''
+                    self._print_save_modified_playlist(self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE)
+                    return
+            #else:
+            #    self._open_playlist()
+            if self.player:
+                # ok
+                self.detect_if_player_exited = False
+                self.stopPlayer(
+                    show_message=False,
+                    reset_playing=False
+                )
+            self.ctrl_c_handler(0,0)
+            self._cnf.EXTERNAL_PLAYER_OPTS = None
+            return False
+
     def keypress(self, char):
+        # if self._terminal_icon_time:
+        #     t_now = datetime.now()
+        #     if self._terminal_icon_time:
+        #         elapsed = t_now - self._terminal_icon_time
+        #         if elapsed.total_seconds() * 1000 < 150:
+        #             self.bodyWin.refresh()
+        #             return
+        # self._terminal_icon_time = None
+
         ''' PyRadio keypress '''
         # # logger.error('\n\nparams\n{}\n\n'.format(self._cnf.params))
         # # logger.error('\n\nsaved params\n{}\n\n'.format(self._cnf.saved_params))
@@ -6737,19 +6851,22 @@ and |remove the file manually|.
         # letter = get_unicode_and_cjk_char(self.outerBodyWin, char)
         # logger.error('\n\nletter = {}\n\n'.format(letter))
         logger.error(f'{char = }')
-        logger.error(f'{self.jumpnr = }')
-        logger.error('kbkey["G"] = {}'.format(kbkey['G']))
-        # Workaround for graphical terminals insering escape codes
-        logger.error(f'{self._graphic_terminal = }')
-        if self._graphic_terminal and \
-                char not in range(49, 58) and \
-                (self.jumpnr and char != kbkey['G']):
-            logger.error('***** reset jump')
-            ''' Reset jumpnr '''
-            self._update_status_bar_right(status_suffix='')
-            self._do_display_notify()
-            self.jumpnr = ''
-            return
+        # logger.error(f'{self.jumpnr = }')
+        # logger.error('kbkey["G"] = {}'.format(kbkey['G']))
+        # # Workaround for graphical terminals insering escape codes
+        # logger.error(f'{self._graphic_terminal = }')
+        # if self._graphic_terminal and \
+        #         char not in range(48, 58) and \
+        #         (self.jumpnr and \
+        #          char != kbkey['G'] and \
+        #          not check_localized(char, (kbkey['G'],))
+        #          ):
+        #     logger.error('***** reset jump')
+        #     ''' Reset jumpnr '''
+        #     self._update_status_bar_right(status_suffix='')
+        #     self._do_display_notify()
+        #     self.jumpnr = ''
+        #     return
         l_char = None
         if char in (curses.KEY_RESIZE, ):
             self._i_am_resizing = True
@@ -6782,6 +6899,7 @@ and |remove the file manually|.
             return
 
         if self.ws.operation_mode == self.ws.MESSAGING_MODE:
+            # keypress ok
             ret = self._messaging_win.keypress(char)
             if ret:
                 self.ws.close_window()
@@ -6834,12 +6952,15 @@ and |remove the file manually|.
             return
 
         if self.ws.operation_mode == self.ws.LOCALIZED_CONFIG_MODE:
+            # keypress ok
             ret = self._keyboard_localized_win.keypress(char)
             # logger.error(f'self.ws.LOCALIZED_CONFIG_MODE {ret = }')
             if ret in (-1, 0):
                 if ret == 0:
                     # new shortcuts saved
-                    pass
+                    if self._keyboard_localized_win.localize != self._cnf.localize:
+                        self._cnf.localize = self._keyboard_localized_win.localize
+                        self._cnf.dirty_config = True
                 self._keyboard_localized_win = None
                 self.ws.close_window()
                 self.refreshBody()
@@ -6855,6 +6976,7 @@ and |remove the file manually|.
             return
 
         if self.ws.operation_mode == self.ws.LOCALIZED_GET_LANG_NAME:
+            # keypress ok
             ret = self._keyboard_loc_get_name.keypress(char)
             # logger.error(f'self.ws.LOCALIZED_GET_LANG_NAME {ret = }')
             if ret == -1:
@@ -6898,6 +7020,7 @@ and |remove the file manually|.
 
         if self.ws.operation_mode == self.ws.KEYBOARD_CONFIG_MODE and \
                 not self.is_edit_keys_restriction_valid(char):
+            # keypress ok
             ret = self._keyboard_config_win.keypress(char)
             if ret in (-1, 0):
                 if ret == 0:
@@ -6976,6 +7099,7 @@ _____"|f|" to see the |free| keys you can use.
             self._cnf.open_a_dir(self._cnf.data_dir)
 
         elif self.ws.operation_mode == self.ws.OPEN_DIR_MODE:
+            # keypress ok
             ret = self._open_dir_win.keypress(char)
             ''' Returns:
                     -1 - Cancel
@@ -7297,7 +7421,7 @@ _____"|f|" to see the |free| keys you can use.
                 self._display_icon_on_treminal()
 
             elif char == kbkey['new_playlist'] or \
-                    check_localized(char, (kbkey['open_remote_control'],)):
+                    check_localized(char, (kbkey['new_playlist'],)):
                 ''' create new playlist '''
                 self._update_status_bar_right(status_suffix='')
                 if self._cnf.browsing_station_service:
@@ -7605,6 +7729,7 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode == self.ws.CHANGE_PLAYER_MODE:
+            # keypress ok
             ret = self._change_player.keypress(char)
             if ret is None:
                 self._change_player = None
@@ -7630,6 +7755,7 @@ _____"|f|" to see the |free| keys you can use.
             self.refreshBody()
 
         elif self.ws.operation_mode == self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE:
+            # keypress ok
             ret = self._remote_control_window.keypress(char)
             if ret == 0:
                 self.ws.close_window()
@@ -7734,6 +7860,7 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode == self.ws.SCHEDULE_EDIT_MODE:
+            # keypress not tested
             ret = self._simple_schedule.keypress(char)
             # logger.error('Got {}'.format(ret))
             # logger.error('Entry: {}'.format(self._simple_schedule.entry))
@@ -7796,6 +7923,7 @@ _____"|f|" to see the |free| keys you can use.
                         )
 
         elif self.ws.operation_mode == self.ws.BUFFER_SET_MODE:
+            # keypress ok
             ret, buf = self._buffering_win.keypress(char)
             if ret == 0:
                 return
@@ -7838,6 +7966,7 @@ _____"|f|" to see the |free| keys you can use.
                 self._playlist_select_win = None
                 self._station_select_win = None
                 self._browser_config_win = None
+            # keypress ok
             ret, ret_list = self._config_win.keypress(char)
             # logger.error('\n\n')
             # logger.error(f'{ret = }')
@@ -8159,6 +8288,7 @@ _____"|f|" to see the |free| keys you can use.
               char not in self._chars_to_bypass) or \
               self.ws.operation_mode == self.ws.IN_PLAYER_PARAMS_EDITOR:
 
+            # keypress ok
             ret = self._player_select_win.keypress(char)
             if ret >= 0:
                 if ret == 0:
@@ -8193,6 +8323,7 @@ _____"|f|" to see the |free| keys you can use.
                  char not in self._chars_to_bypass:
             ''' select station's encoding from main window '''
             restart_player = False
+            # keypress ok
             ret, ret_encoding = self._encoding_select_win.keypress(char)
             if ret >= 0:
                 if ret == 0:
@@ -8231,6 +8362,7 @@ _____"|f|" to see the |free| keys you can use.
             ''' In station editor '''
             # logger.error('DE char = {0} - {1}'.format(char, chr(char)))
             restart_player = False
+            # keypress ok
             ret = self._station_editor.keypress(char)
             if ret == -6:
                 self._print_ref_url_format_error()
@@ -8337,6 +8469,7 @@ _____"|f|" to see the |free| keys you can use.
         elif self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE):
             logger.error(f'\n\nchar = {char}\n\n')
             '''  Rename playlist '''
+            # keypress ok
             ret, self.old_filename, self.new_filename, copy, open_file, pl_create = self._rename_playlist_dialog.keypress(char)
             logger.error(f'{ret = }')
             # logger.error('DE\n\n **** ps.p {}\n\n'.format(self._cnf._ps._p))
@@ -8402,6 +8535,7 @@ _____"|f|" to see the |free| keys you can use.
         elif self.ws.operation_mode == self.ws.EDIT_STATION_ENCODING_MODE and \
                 char not in self._chars_to_bypass:
             ''' In station editor; select encoding for station '''
+            # keypress ok
             ret, ret_encoding = self._encoding_select_win.keypress(char)
             if ret >= 0:
                 if ret_encoding:
@@ -8415,6 +8549,7 @@ _____"|f|" to see the |free| keys you can use.
 
         elif self.ws.operation_mode == self.ws.EDIT_PROFILE_MODE and \
                 char not in self._chars_to_bypass:
+            # keypress not tested
             ret = self._station_profile_editor.keypress(char)
             if ret in (-1, 0):
                 if ret == 0:
@@ -8441,8 +8576,10 @@ _____"|f|" to see the |free| keys you can use.
                 self._global_functions[l_char]()
                 return
             if self._server_selection_window:
+                # keypress ok
                 ret = self._server_selection_window.keypress(char)
             else:
+                # keypress ok
                 ret = self._cnf._online_browser.keypress(char)
             #logger.error('DE BROWSER_SERVER_SELECTION_MODE ret = {}'.format(ret))
             if ret < 1:
@@ -8508,6 +8645,7 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode == self.ws.INSERT_RESOURCE_OPENER:
+            # keypress ok
             ret, new_opener = self._insert_resource_opener_win.keypress(char)
             if ret == -1:
                 self.ws.close_window()
@@ -8548,6 +8686,7 @@ _____"|f|" to see the |free| keys you can use.
                 self._open_message_win_by_key('M_RESOURCE_OPENER')
 
         elif self.ws.operation_mode == self.ws.INSERT_RECORDINGS_DIR_MODE:
+            # keypress ok
             ret, new_dir, self._asked_to_move_recordings_dir = self._insert_recording_dir_win.keypress(char)
             if ret == -1:
                 self.ws.close_window()
@@ -8590,8 +8729,10 @@ _____"|f|" to see the |free| keys you can use.
         elif self.ws.operation_mode == self.ws.RADIO_BROWSER_CONFIG_MODE:
             ''' handle browser config '''
             if self._cnf._online_browser:
+                # keypress ok
                 ret = self._cnf._online_browser.keypress(char)
             else:
+                # keypress ok
                 ret = self._browser_config_win.keypress(char)
             # logger.error('DE <<< RETURN FROM CONFIG ret = {} >>>'.format(ret))
 
@@ -8643,6 +8784,7 @@ _____"|f|" to see the |free| keys you can use.
                 return
 
             ''' handle browser search key press '''
+            # keypress ok
             ret = self._cnf._online_browser.keypress(char)
             if ret == 0:
                 ''' Ok, search term is valid '''
@@ -8694,6 +8836,7 @@ _____"|f|" to see the |free| keys you can use.
                     l_char = char
                 self._global_functions[l_char]()
                 return
+            # keypress ok
             ret = self._cnf._online_browser.keypress(char)
             if ret < 1:
                 self.ws.close_window()
@@ -8709,6 +8852,7 @@ _____"|f|" to see the |free| keys you can use.
         elif self.ws.operation_mode == self.ws.SELECT_ENCODING_MODE and \
                 char not in self._chars_to_bypass:
             ''' In Config window; select global encoding '''
+            # keypress ok
             ret, ret_encoding = self._encoding_select_win.keypress(char)
             if ret >= 0:
                 if ret == 0:
@@ -8723,6 +8867,7 @@ _____"|f|" to see the |free| keys you can use.
                 char not in self._chars_to_bypass and \
                 char not in self._chars_to_bypass_for_search:
             ''' In Config window; select playlist '''
+            # keypress not tested
             ret, ret_playlist = self._schedule_playlist_select_win.keypress(char)
             if ret >= 0:
                 if ret == 0:
@@ -8754,6 +8899,7 @@ _____"|f|" to see the |free| keys you can use.
                 char not in self._chars_to_bypass and \
                 char not in self._chars_to_bypass_for_search:
             ''' In Config window; select station '''
+            # keypress ok
             ret, ret_station = self._schedule_station_select_win.keypress(char)
             if ret >= 0:
                 if ret == 0:
@@ -8773,6 +8919,7 @@ _____"|f|" to see the |free| keys you can use.
                 char not in self._chars_to_bypass and \
                 char not in self._chars_to_bypass_for_search:
             ''' In Config window; select playlist '''
+            # keypress ok
             ret, ret_playlist = self._playlist_select_win.keypress(char)
             if ret >= 0:
                 if ret == 0:
@@ -8791,6 +8938,7 @@ _____"|f|" to see the |free| keys you can use.
                 char not in self._chars_to_bypass and \
                 char not in self._chars_to_bypass_for_search:
             ''' In Config window; select station '''
+            # keypress ok
             ret, ret_station = self._station_select_win.keypress(char)
             if ret >= 0:
                 if ret == 0:
@@ -8839,6 +8987,7 @@ _____"|f|" to see the |free| keys you can use.
                     check_localized(char, (kbkey['?'],)):
                 self._open_message_win_by_key('H_CONFIG_PLAYLIST')
             else:
+                # kyepress ok
                 ret, a_playlist = self._playlist_select_win.keypress(char)
                 if ret == 1:
                     self._playlist_select_win = None
@@ -8863,6 +9012,7 @@ _____"|f|" to see the |free| keys you can use.
                 char not in self._chars_to_bypass and \
                 char not in self._chars_to_bypass_for_search and \
                 char not in (kbkey['transp'],)):
+            # keypress ok
             theme_id, save_theme = self._theme_selector.keypress(char)
 
             #if self._cnf.theme_not_supported:
@@ -9174,6 +9324,7 @@ _____"|f|" to see the |free| keys you can use.
                 if ret is not None:
                     self._apply_search_result(ret, reapply=True)
             else:
+                # kyepress ok
                 self.keypress(kbkey['search'])
                 # curses.ungetch(kbkey['search'])
             return
@@ -9229,6 +9380,7 @@ _____"|f|" to see the |free| keys you can use.
                 if ret is not None:
                     self._apply_search_result(ret, reapply=True)
             else:
+                # kyepress ok
                 self.keypress(kbkey['search'])
                 # curses.ungetch(kbkey['search'])
             return
@@ -9236,6 +9388,7 @@ _____"|f|" to see the |free| keys you can use.
         elif self.ws.operation_mode in \
             [self._search_modes[x] for x in self._search_modes]:
             ''' serve search results '''
+            # keypress ok
             ret = self.search.keypress(self.search._edit_win, char)
             if ret == 0:
                 if self.ws.operation_mode in self.search_main_window_modes:
@@ -9295,6 +9448,7 @@ _____"|f|" to see the |free| keys you can use.
                 return
 
         elif self.ws.operation_mode == self.ws.GROUP_SELECTION_MODE:
+            # kyepress ok
             ret = self._group_selection_window.keypress(char)
             if ret <= 0:
                 if ret == 0:
@@ -9370,16 +9524,23 @@ _____"|f|" to see the |free| keys you can use.
                 return -1
             elif char in (curses.KEY_EXIT, kbkey['q'], 27) or \
                     check_localized(char, (kbkey['q'], )):
-                self.bodyWin.nodelay(True)
-                char = self.bodyWin.getch()
-                self.bodyWin.nodelay(False)
-                if char == -1:
-                    ''' ESCAPE '''
+                if self._cnf.graphics_enabled:
+                    # this is a pure ESCAPE
+                    logger.error('1.1')
                     self._cnf.save_config()
                     self.ws.close_window()
                     self.refreshBody()
-                    #return -1
-                    return
+                else:
+                    # check for ESCAPE
+                    logger.error('1.2')
+                    self.bodyWin.nodelay(True)
+                    char = self.bodyWin.getch()
+                    self.bodyWin.nodelay(False)
+                    if char == -1:
+                        ''' ESCAPE '''
+                        self._cnf.save_config()
+                        self.ws.close_window()
+                        self.refreshBody()
             return
 
         elif self.ws.operation_mode in (self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE,
@@ -9405,8 +9566,22 @@ _____"|f|" to see the |free| keys you can use.
                             if self._function_to_repeat:
                                 self._function_to_repeat()
                     else:
-                        if self._cnf.browsing_station_service:
-                            self._cnf.removed_playlist_history_item()
+                        if self._cnf.graphics_enabled:
+                            logger.error('2.1')
+                            # this is a pure ESCAPE
+                            if self._cnf.browsing_station_service:
+                                self._cnf.removed_playlist_history_item()
+                        else:
+                            # check for ESCAPE
+                            logger.error('2.2')
+                            self.bodyWin.nodelay(True)
+                            char = self.bodyWin.getch()
+                            self.bodyWin.nodelay(False)
+                            if char == -1:
+                                ''' ESCAPE '''
+                                if self._cnf.browsing_station_service:
+                                    self._cnf.remove_from_playlist_history()
+                                    self.refreshBody()
                 elif char in (kbkey['n'], ) or \
                         check_localized(char, ( kbkey['n'], )):
                     if self.ws.operation_mode == self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE:
@@ -9417,14 +9592,26 @@ _____"|f|" to see the |free| keys you can use.
                             self._function_to_repeat()
                 elif char in (curses.KEY_EXIT, kbkey['q'], 27) or \
                         check_localized(char, (kbkey['q'], )):
-                    self.bodyWin.nodelay(True)
-                    char = self.bodyWin.getch()
-                    self.bodyWin.nodelay(False)
-                    if char == -1:
-                        ''' ESCAPE '''
+                    if self._cnf.graphics_enabled:
+                        logger.error('3.1')
+                        # this is a pure ESCAPE
                         if self._cnf.browsing_station_service:
                             self._cnf.remove_from_playlist_history()
                         self.refreshBody()
+                    else:
+                        logger.error('3.2')
+                        # check for ESCAPE
+                        self.bodyWin.nodelay(True)
+                        char = self.bodyWin.getch()
+                        self.bodyWin.nodelay(False)
+                        if char == -1:
+                            ''' ESCAPE '''
+                            if self._cnf.browsing_station_service:
+                                self._cnf.remove_from_playlist_history()
+                            self.refreshBody()
+                    if self._cnf.browsing_station_service:
+                        self._cnf.remove_from_playlist_history()
+                    self.refreshBody()
             self._function_to_repeat = None
             self._cnf.remove_playlist_history_duplicates()
             return
@@ -9539,6 +9726,7 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode == self.ws.CONNECTION_MODE:
+            # keypress ok
             ret = self._connection_type_edit.keypress(char)
             if ret == -1:
                 ''' Cancel '''
@@ -9559,6 +9747,7 @@ _____"|f|" to see the |free| keys you can use.
             return
 
         elif self.ws.operation_mode == self.ws.PLAYER_PARAMS_MODE:
+            # keypress ok
             ret = self._player_select_win.keypress(char)
             if ret == -2:
                 ''' Cancel '''
@@ -9696,72 +9885,32 @@ _____"|f|" to see the |free| keys you can use.
                     (char in (kbkey['h'], curses.KEY_LEFT) or \
                     check_localized(char, (kbkey['h'],)))):
                 ''' exit program or playlist mode '''
-                self.bodyWin.nodelay(True)
-                char = self.bodyWin.getch()
-                self.bodyWin.nodelay(False)
-                if char == -1:
-                    ''' ESCAPE '''
-                    self._update_status_bar_right(status_suffix='')
-                    if self.ws.operation_mode == self.ws.PLAYLIST_MODE:
-                        ''' return to stations view '''
-                        # logger.error('DE \n    self._cnf.open_register_list = {}\n'.format(self._cnf.open_register_list))
-                        if self._cnf.open_register_list:
-                            self.selections[self.ws.REGISTER_MODE] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
-                            self.playlist_selections[self.ws.REGISTER_MODE] = [self.selection, self.startPos, self.playing]
-                        else:
-                            self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
-                            self.playlist_selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing]
-                        # self.ll('ESCAPE')
-                        self.ws.close_window()
-                        self._give_me_a_search_class(self.ws.operation_mode)
-                        self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
-                        self.stations = self._cnf.stations
-                        self.number_of_items = len(self.stations)
-                        self.refreshBody()
+                logger.error('\n\nself._cnf.graphics_enabled = {}\n\n'.format(self._cnf.graphics_enabled))
+                if self._cnf.graphics_enabled:
+                    logger.error('4.1')
+                    # this is a pure ESCAPE
+                    ret = self._exit_program_or_playlist_mode()
+                    logger.error(f'4. 1 {ret = }')
+                    if ret:
+                        logger.error('4.1 return')
                         return
-                    else:
-                        if self._cnf.is_register:
-                            ''' go back to playlist history '''
-                            self._open_playlist_from_history()
-                            return
-                        elif self._cnf.browsing_station_service:
-                            ''' go back to playlist history '''
-                            if self._cnf.online_browser.is_config_dirty():
-                                self._ask_to_save_browser_config_to_exit()
-                            else:
-                                self._open_playlist_from_history()
-                            return
-                        ''' exit program '''
-                        ''' stop updating the status bar '''
-                        #with self.log.lock:
-                        #    self.log.asked_to_stop = True
-                        self.log.asked_to_stop = True
-                        if self._cnf.dirty_playlist:
-                            if self._cnf.auto_save_playlist:
-                                ''' save playlist and exit '''
-                                ret = self.saveCurrentPlaylist()
-                                #if ret == -1:
-                                #    # do not exit program
-                                #    return
-                            else:
-                                ''' ask to save playlist '''
-                                self._print_save_modified_playlist(self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE)
-                                return
-                        #else:
-                        #    self._open_playlist()
-                        if self.player:
-                            # ok
-                            self.detect_if_player_exited = False
-                            self.stopPlayer(
-                                show_message=False,
-                                reset_playing=False
-                            )
-                        self.ctrl_c_handler(0,0)
-                        self._cnf.EXTERNAL_PLAYER_OPTS = None
-                        return -1
+                    logger.error('4.1 return -1')
+                    return -1
                 else:
-                    return
-
+                    logger.error('4.2')
+                    # check for ESCAPE
+                    self.bodyWin.nodelay(True)
+                    char = self.bodyWin.getch()
+                    self.bodyWin.nodelay(False)
+                    if char == -1:
+                        ''' ESCAPE '''
+                        ret = self._exit_program_or_playlist_mode()
+                        logger.error(f'4. 2 {ret = }')
+                        if ret:
+                            logger.error('4.2 return')
+                            return
+                        logger.error('4.2 return -1')
+                        return -1
             if char in (curses.KEY_DOWN, kbkey['j']) or \
                     check_localized(char, (kbkey['j'], )):
                 self._move_cursor_one_down()
@@ -12595,4 +12744,33 @@ _____"|f|" to see the |free| keys you can use.
         with open(output_file, 'w') as file:
             file.writelines(html_content)
 
+def drain_getch(win, timeout_ms=100, existing_timeout=-1):
+    """
+    Reads one key from window, filtering out stray escape sequences
+    (e.g. ALT+key) while preserving pure ESC.
+
+    - win: curses window
+    - timeout_ms: temporary timeout to use while draining
+    - existing_timeout: restore this when finished (-1 = blocking)
+    """
+    win.timeout(timeout_ms)
+    try:
+        ch = win.getch()
+        if ch == 27:  # ESC
+            nxt = win.getch()
+            logger.error('got ESCAPE')
+            if nxt == -1:
+                logger.error('5.1')
+                # pure ESC
+                return 27
+            else:
+                # consume rest of alt-sequence / CSI / icat noise
+                logger.error('5.2')
+                while nxt != -1:
+                    logger.error(f'consuming {nxt}')
+                    nxt = win.getch()
+                return -1
+        return ch
+    finally:
+        win.timeout(existing_timeout)
 # pymode:lint_ignore=W901

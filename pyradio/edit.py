@@ -3409,9 +3409,11 @@ class GetLocalizedLang():
                     self._widgets[0].string.strip():
                 self._lang = self._widgets[0].string.strip()
                 self._filename = path.join(self._cnf.data_dir, 'lkb_' + self._lang + '.json')
+                logger.error(f'{self._lang = }')
+                logger.error(f'{self._filename = }')
                 return 0
         elif self._focus == 2:
-            # candel
+            # cancel
             if char in (ord('\n'), ord('\r'), ord(' ')):
                 return -1
         return 1

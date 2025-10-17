@@ -367,7 +367,7 @@ echo -e "${cGreen} done${sReset}
 sync_install_py
 
 echo -e "${cBlue}Version:${cReset}"
-AVER=$(grep version pyproject.toml | sed -e 's/"//'g -e 's/version = //')
+AVER=$(grep version pyproject.toml | sed -e '2,$d' -e 's/"//'g -e 's/version = //')
 echo -en "${cBlue}  pyproject.toml${cReset}:  ${cGreen}"
 echo "version = \"$AVER\""
 
@@ -377,7 +377,6 @@ sed -i "s/version_info =.*/version_info = ($XVER)/" pyradio/__init__.py
 
 # update version in install.py
 sed -i "s/PyRadioInstallPyReleaseVersion = .*/PyRadioInstallPyReleaseVersion = '$AVER'/" pyradio/install.py
-
 echo -en "${cMagenta}     __init__.py${cReset}:  ${cRed}"
 grep '^version_info ' pyradio/__init__.py
 echo -en "${cMagenta}      install.py${cReset}:  ${cYellow}"

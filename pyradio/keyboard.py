@@ -225,29 +225,54 @@ def check_localized(char, k_list, return_key=False):
     # logger.error('\n\n')
     # logger.error(f'{k_list = }')
     # logger.error(f'{kb_letter = }')
-    if char and kb_letter and isinstance(k_list, Iterable) and lkbkey is not None:
-        # logger.error(f'{char = }')
-        # logger.error(f'{chr(char) = }')
-        for n in k_list:
-            # logger.error(f'k_list: {n = }')
-            # logger.error(f'k_list: {chr(n) = }')
-            # logger.error(f'*** { kb_letter =  }')
-            # logger.error(f'*** { lkbkey =  }')
-            if kb_letter in lkbkey:
-                x = lkbkey[kb_letter]
-                # logger.error(f'{x = }')
-                if x == chr(n):
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('localized char found: "{0}" => "{1}"'.format(kb_letter, x))
-                    # logger.error('\n\n')
-                    if return_key:
-                        # logger.info(f'returning {n}')
-                        return n
-                    # logger.info('returning True')
-                    return True
-            else:
-                # logger.error('kb_letter not in lkbkey')
-                continue
+    # logger.error(f'{lkbkey = }')
+    if platform.system().lower().startswith('win'):
+        if char and isinstance(k_list, Iterable) and lkbkey is not None:
+            # logger.error(f'{char = }')
+            # logger.error(f'{chr(char) = }')
+            for n in k_list:
+                # logger.error(f'k_list: {n = }')
+                # logger.error(f'*** { kb_letter =  }')
+                # logger.error(f'*** { lkbkey =  }')
+                key = chr(char)
+                # logger.error(f'*** { key =  }')
+                if char in lkbkey:
+                    if ord(lkbkey[char]) == n:
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('localized char found: {0} => "{1}"'.format(char, lkbkey[char]))
+                        # logger.error('\n\n')
+                        if return_key:
+                            # logger.info(f'returning {n}')
+                            return n
+                        # logger.info('returning True')
+                        return True
+                else:
+                    # logger.error('char not in lkbkey')
+                    continue
+    else:
+        if char and kb_letter and isinstance(k_list, Iterable) and lkbkey is not None:
+            # logger.error(f'{char = }')
+            # logger.error(f'{chr(char) = }')
+            for n in k_list:
+                # logger.error(f'k_list: {n = }')
+                # logger.error(f'k_list: {chr(n) = }')
+                # logger.error(f'*** { kb_letter =  }')
+                # logger.error(f'*** { lkbkey =  }')
+                if kb_letter in lkbkey:
+                    x = lkbkey[kb_letter]
+                    # logger.error(f'{x = }')
+                    if x == chr(n):
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('localized char found: "{0}" => "{1}"'.format(kb_letter, x))
+                        # logger.error('\n\n')
+                        if return_key:
+                            # logger.info(f'returning {n}')
+                            return n
+                        # logger.info('returning True')
+                        return True
+                else:
+                    # logger.error('kb_letter not in lkbkey')
+                    continue
     # logger.error('\n\n')
     if return_key:
         # logger.info('returning None')
@@ -381,7 +406,10 @@ def read_localized_keyboard(localize, data_dir):
         return
 
     # Reverse the keys and values
-    reversed_dict = {value: key for key, value in data.items()}
+    if platform.system().lower().startswith('win'):
+        reversed_dict = {ord(value): key for key, value in data.items()}
+    else:
+        reversed_dict = {value: key for key, value in data.items()}
 
     # logger.error('\n\nsetting lkbkey 2\n{}\n\n'.format(reversed_dict))
     set_lkbkey(reversed_dict)
@@ -636,12 +664,15 @@ def chk_key(char, key, win):
 
 def set_kb_letter(letter):
     global kb_letter
-    if letter and letter.isprintable():  # Check if the letter is printable
-        kb_letter = letter
-        # logger.error(f'>>> {kb_letter = }')  # Log the printable letter
-    else:
-        kb_letter = ''  # Ignore non-printable characters
-        # logger.error(f'>>> Ignored non-printable letter: {repr(letter)}')
+    try:
+        if letter and letter.isprintable():  # Check if the letter is printable
+            kb_letter = letter
+            # logger.error(f'>>> {kb_letter = }')  # Log the printable letter
+        else:
+            kb_letter = ''  # Ignore non-printable characters
+            # logger.error(f'>>> Ignored non-printable letter: {repr(letter)}')
+    except AttributeError:
+        kb_letter = ''
     if logger.isEnabledFor(logging.DEBUG) and kb_letter:
         logger.debug(f'setting {kb_letter = }')
 
