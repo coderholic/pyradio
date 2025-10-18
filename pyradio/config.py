@@ -2765,12 +2765,8 @@ class PyRadioConfig(PyRadioStations):
                     logger.info(f"Default playlist \"({self.opts['default_station'][1]}\") does not exist; reverting to \"stations\"")
                 self.opts['default_playlist'][1] = 'stations'
                 self.opts['default_station'][1] = 'False'
-        # for n in self.opts.keys():
-        #     logger.error('  {0}: {1} '.format(n, self.opts[n]))
-        # for n in self.opts.keys():
-        #     logger.error('  {0}: {1} '.format(n, self.opts[n]))
-        for n in self.opts:
-            print('{0}: {1}'.format(n, self.opts[n]))
+        # for n in self.opts:
+        #     print('{0}: {1}'.format(n, self.opts[n]))
 
         if not distro_config and self._fixed_recording_dir is not None:
             self.opts['recording_dir'][1] = self._fixed_recording_dir

@@ -2434,12 +2434,12 @@ class RadioBrowserConfigWindow():
             self._revert_to_default_params()
             self.calculate_dirty()
 
-        elif char in (curses.KEY_UP, kbkey['j']) or \
+        elif char in (curses.KEY_DOWN, kbkey['j']) or \
                 check_localized(char, (kbkey['j'], )):
             self._focus_next()
             self.calculate_dirty()
 
-        elif char in (curses.KEY_DOWN, kbkey['k']) or \
+        elif char in (curses.KEY_UP, kbkey['k']) or \
                 check_localized(char, (kbkey['k'], )):
             self._focus_previous()
             self.calculate_dirty()

@@ -1326,7 +1326,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 self._start_remote_control_server()
 
         self.stdscr.nodelay(0)
-        logger.error('1')
         self.setupAndDrawScreen(init_from_function_setup=True)
         self._screen_ready = True
 
@@ -1683,7 +1682,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         if self.icon_manager is None:
             if self._cnf.graphics_terminal:
                 self.icon_manager = SimpleIconManager(
-                    graphics=self._cnf.graphics_terminal,
+                    terminal=self._cnf.graphics_terminal,
                     normal_mode=self.ws.NORMAL_MODE,
                     cache_dir=join(self._cnf.cache_dir, 'logos')
                 )
@@ -2286,7 +2285,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     # else:
                     #     logger.error(f'drain returned {c = }')
                     #     # remaining_keys += 1
-                    logger.error('\n\n****** c = {}\n\n'.format(c))
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug(f'phase 2 input {c = }')
 
                     if self._do_launch_external_palyer:
                         self.keypress(kbkey['ext_player'])
@@ -4229,8 +4229,6 @@ and |remove the file manually|.
             self.outerBodyWin.addstr(self.player.PLAYER_NAME, curses.color_pair(4))
             self.outerBodyWin.addstr(']', curses.color_pair(13))
 
-
-
     def _open_playlist(self, a_url=None):
         ''' open playlist
 
@@ -4426,7 +4424,6 @@ and |remove the file manually|.
             self.number_of_items = len(self.stations)
             self.selection = 0
             self.startPos = 0
-            logger.error('2')
             self.setupAndDrawScreen()
             # self.detect_if_player_exited = False
             self._align_stations_and_refresh(self.ws.operation_mode)
@@ -5343,7 +5340,6 @@ and |remove the file manually|.
         self._limited_width_mode = False
         if self.player.isPlaying():
             self.log.display_help_message = False
-        logger.error('3')
         self.setupAndDrawScreen()
         self._display_icon_on_treminal(reset=True)
         if self.selection >= self.number_of_items - self.bodyMaxY and \
@@ -6850,7 +6846,7 @@ and |remove the file manually|.
         # logger.error('\n\nchar = {}\n\n'.format(char))
         # letter = get_unicode_and_cjk_char(self.outerBodyWin, char)
         # logger.error('\n\nletter = {}\n\n'.format(letter))
-        logger.error(f'{char = }')
+        # logger.error(f'{char = }')
         # logger.error(f'{self.jumpnr = }')
         # logger.error('kbkey["G"] = {}'.format(kbkey['G']))
         # # Workaround for graphical terminals insering escape codes
@@ -9526,13 +9522,11 @@ _____"|f|" to see the |free| keys you can use.
                     check_localized(char, (kbkey['q'], )):
                 if self._cnf.graphics_enabled:
                     # this is a pure ESCAPE
-                    logger.error('1.1')
                     self._cnf.save_config()
                     self.ws.close_window()
                     self.refreshBody()
                 else:
                     # check for ESCAPE
-                    logger.error('1.2')
                     self.bodyWin.nodelay(True)
                     char = self.bodyWin.getch()
                     self.bodyWin.nodelay(False)
@@ -9567,13 +9561,11 @@ _____"|f|" to see the |free| keys you can use.
                                 self._function_to_repeat()
                     else:
                         if self._cnf.graphics_enabled:
-                            logger.error('2.1')
                             # this is a pure ESCAPE
                             if self._cnf.browsing_station_service:
                                 self._cnf.removed_playlist_history_item()
                         else:
                             # check for ESCAPE
-                            logger.error('2.2')
                             self.bodyWin.nodelay(True)
                             char = self.bodyWin.getch()
                             self.bodyWin.nodelay(False)
@@ -9593,13 +9585,11 @@ _____"|f|" to see the |free| keys you can use.
                 elif char in (curses.KEY_EXIT, kbkey['q'], 27) or \
                         check_localized(char, (kbkey['q'], )):
                     if self._cnf.graphics_enabled:
-                        logger.error('3.1')
                         # this is a pure ESCAPE
                         if self._cnf.browsing_station_service:
                             self._cnf.remove_from_playlist_history()
                         self.refreshBody()
                     else:
-                        logger.error('3.2')
                         # check for ESCAPE
                         self.bodyWin.nodelay(True)
                         char = self.bodyWin.getch()
@@ -9887,17 +9877,12 @@ _____"|f|" to see the |free| keys you can use.
                 ''' exit program or playlist mode '''
                 logger.error('\n\nself._cnf.graphics_enabled = {}\n\n'.format(self._cnf.graphics_enabled))
                 if self._cnf.graphics_enabled:
-                    logger.error('4.1')
                     # this is a pure ESCAPE
                     ret = self._exit_program_or_playlist_mode()
-                    logger.error(f'4. 1 {ret = }')
                     if ret:
-                        logger.error('4.1 return')
                         return
-                    logger.error('4.1 return -1')
                     return -1
                 else:
-                    logger.error('4.2')
                     # check for ESCAPE
                     self.bodyWin.nodelay(True)
                     char = self.bodyWin.getch()
@@ -9907,9 +9892,7 @@ _____"|f|" to see the |free| keys you can use.
                         ret = self._exit_program_or_playlist_mode()
                         logger.error(f'4. 2 {ret = }')
                         if ret:
-                            logger.error('4.2 return')
                             return
-                        logger.error('4.2 return -1')
                         return -1
             if char in (curses.KEY_DOWN, kbkey['j']) or \
                     check_localized(char, (kbkey['j'], )):
@@ -12758,14 +12741,11 @@ def drain_getch(win, timeout_ms=100, existing_timeout=-1):
         ch = win.getch()
         if ch == 27:  # ESC
             nxt = win.getch()
-            logger.error('got ESCAPE')
             if nxt == -1:
-                logger.error('5.1')
                 # pure ESC
                 return 27
             else:
                 # consume rest of alt-sequence / CSI / icat noise
-                logger.error('5.2')
                 while nxt != -1:
                     logger.error(f'consuming {nxt}')
                     nxt = win.getch()

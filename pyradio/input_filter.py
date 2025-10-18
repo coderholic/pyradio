@@ -5,7 +5,12 @@ import logging
 from os import getenv
 import sys
 import argparse
-from curses import KEY_MIN, KEY_MAX
+import locale
+from curses import KEY_MIN, KEY_MAX, KEY_DOWN, KEY_UP, KEY_NPAGE, KEY_PPAGE, \
+    KEY_HOME, KEY_END, KEY_LEFT, KEY_RIGHT, KEY_DC, KEY_BACKSPACE
+from .keyboard import kbkey
+
+locale.setlocale(locale.LC_ALL, "")
 
 logger = logging.getLogger(__name__)
 
@@ -62,8 +67,8 @@ class TerminalInputFilter:
             (re.compile(rb'\d;\d{3}[A-Z]'), 'kitty_icat_specific'),
             (re.compile(rb'[\d;]+[A-Za-z]'), 'csi_like_no_escape'),
         ]
-
-        logger.info(f"Input filter initialized in {'FULL' if images_enabled else 'LIGHT'} mode")
+        if logger.isEnabledFor(logging.INFO):
+            logger.info(f"Input filter initialized in {'FULL' if images_enabled else 'LIGHT'} mode")
 
     def set_images_enabled(self, enabled):
         """Dynamically switch between full and light filtering modes."""
@@ -75,8 +80,8 @@ class TerminalInputFilter:
                 self.empirical_patterns if enabled
                 else self.light_mode_patterns
             )
-
-            logger.info(f"Input filter switched to {'FULL' if enabled else 'LIGHT'} mode")
+            if logger.isEnabledFor(logging.INFO):
+                logger.info(f"Input filter switched to {'FULL' if enabled else 'LIGHT'} mode")
             self.state = 'normal'
             self.sequence_buffer = []
 
@@ -88,12 +93,14 @@ class TerminalInputFilter:
         # Categorize known sequences for better debugging
         for pattern, category in self.empirical_categories:
             if pattern.search(sequence):
-                logger.error(f"Filtered {category} sequence from {source}: {sequence!r}")
+                if logger.isEnabledFor(logging.INFO):
+                    logger.error(f"Filtered {category} sequence from {source}: {sequence!r}")
                 return
 
         # Log unrecognized sequences to help improve the filter
         if len(sequence) > 1:
-            logger.warning(f"Unrecognized escape sequence from {source}: {sequence!r}")
+            if logger.isEnabledFor(logging.INFO):
+                logger.warning(f"Unrecognized escape sequence from {source}: {sequence!r}")
 
     def _process_state_machine_full(self, char):
         """
@@ -124,10 +131,6 @@ class TerminalInputFilter:
         elif self.state == 'escape':
             now = time.time()
             elapsed = (now - self.last_escape_time) * 1000 if self.last_escape_time else 0
-
-            logger.error(f'{elapsed = }')
-            x = int(getenv("ESCDELAY", 25)) + 5
-            logger.error(f'{x = }')
             # Standalone ESC detection - return ESC key if no sequence follows
             if elapsed > int(getenv("ESCDELAY", 25)) + 5:
                 self.state = 'normal'
@@ -204,7 +207,8 @@ class TerminalInputFilter:
 
         else:
             # Safety net: reset on unknown state
-            logger.warning(f"Unknown state {self.state}, resetting state machine")
+            if logger.isEnabledFor(logging.INFO):
+                logger.warning(f"Unknown state {self.state}, resetting state machine")
             self.state = 'normal'
             return None
 
@@ -273,15 +277,27 @@ class TerminalInputFilter:
         # Set temporary timeout to read all available input
         stdscr.timeout(self.timeout_ms)
 
+        last_key = None
         try:
             collected_chars = []
             while True:
                 try:
                     ch = stdscr.getch()
                     if ch == -1:  # No more input available
+                        # logger.error('got -1')
                         break
+                    if ch == last_key and self._is_navigation_key(ch):
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug(f"Immediate repeat detected: {ch}")
+                        # Return immediatelly, no waiting for buffer
+                        return ch, 0
+                    else:
+                        last_key = ch
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug(f'phase 1 input {ch = }')
                     collected_chars.append(ch)
                 except curses.error:
+                    logger.error('exception: {}'.format(curses.error))
                     break
 
             if not collected_chars:
@@ -289,7 +305,8 @@ class TerminalInputFilter:
 
             # Handle standalone ESC key detection
             if len(collected_chars) == 1 and collected_chars[0] == 27:
-                logger.debug("Standalone ESC key detected")
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug("Standalone ESC key detected")
                 return 27, 0
 
 
@@ -302,7 +319,8 @@ class TerminalInputFilter:
                         utf8_bytes = bytearray(ascii_only)
                         utf8_char = utf8_bytes.decode('utf-8')
                         if len(utf8_char) == 1:
-                            logger.debug(f"UTF-8 character detected: {utf8_char!r}")
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug(f"UTF-8 character detected: {utf8_char!r}")
                             return ord(utf8_char), 1
                     except (UnicodeDecodeError, ValueError):
                         # Not valid UTF-8, continue with normal processing
@@ -333,7 +351,8 @@ class TerminalInputFilter:
             # Log filtering activity for monitoring
             if len(valid_chars) != len(collected_chars):
                 filtered_count = len(collected_chars) - len(valid_chars)
-                logger.debug(f"Filtered {filtered_count}/{len(collected_chars)} characters: {collected_chars}")
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f"Filtered {filtered_count}/{len(collected_chars)} characters: {collected_chars}")
 
             # Return first valid character if available
             if valid_chars:
@@ -358,6 +377,25 @@ class TerminalInputFilter:
         finally:
             # Maintain non-blocking mode for continuous polling
             pass
+
+    def _is_navigation_key(self, char):
+        """Check if this is a navigation key that users commonly hold down"""
+        # Special navigation keys
+        if char in [
+                KEY_DOWN, KEY_UP, KEY_NPAGE, KEY_PPAGE, KEY_HOME,
+                KEY_END, KEY_LEFT, KEY_RIGHT, KEY_DC, KEY_BACKSPACE
+        ]:
+            return True
+
+        # ASCII navigation chars
+        if char in (kbkey['j'], kbkey['k']):
+            return True
+
+        # Any letter for customizable keybindings
+        if (97 <= char <= 122) or (65 <= char <= 90):  # a-z, A-Z
+            return True
+
+        return False
 
     def quick_drain(self, stdscr):
         """Quickly drain input buffer without filtering - useful for resetting input state."""

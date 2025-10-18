@@ -25,8 +25,8 @@ class DummyIconManager:
         pass
 
     def on_station_change(self, win, station, operation_mode, screen_size, icon_size, icon_duration, adjust_for_radio_browser):
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Not a graphical terminal; cannot display icon...')
+        # if logger.isEnabledFor(logging.DEBUG):
+        #     logger.debug('Not a graphical terminal; cannot display icon...')
         return None
 
 class SimpleIconManager:
@@ -34,10 +34,10 @@ class SimpleIconManager:
     NO THREADS - everything happens in main thread
     """
 
-    def __init__(self, graphics, normal_mode, cache_dir="~/.cache/pyradio/logos/"):
+    def __init__(self, terminal, normal_mode, cache_dir="~/.cache/pyradio/logos/"):
         self.icon_downloader = TerminalIconDownloader()
         self.icon_is_on = False
-        self.graphics = graphics
+        self.terminal = terminal
         self.normal_mode = normal_mode
         self.cache_dir = os.path.expanduser(cache_dir)
         self.last_station_id = None
@@ -52,7 +52,7 @@ class SimpleIconManager:
         Call this from your main keypress handler
         Returns quickly - never blocks
         """
-        if self.graphics is None:
+        if self.terminal is None:
             return None
         # Skip if disabled or wrong mode
         if logger.isEnabledFor(logging.DEBUG):
@@ -195,12 +195,12 @@ class SimpleIconManager:
                 return
 
             logger.error(f'{icon_size = }')
-            params = [
-                'kitten', 'icat', '--scale-up', '--no-trailing-newline',
-                '--transfer-mode=file',
-                '--place', f'{icon_size}x{half}@{icon_X}x{icon_Y}',
-                icon_path
-            ]
+            if self.terminal == 'kitty':
+                params = [
+                    'kitten', 'icat', '--scale-up', '--no-trailing-newline',
+                    '--place', f'{icon_size}x{half}@{icon_X}x{icon_Y}',
+                    icon_path
+                ]
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Executing: {}'.format(' '.join(params)))
             subprocess.run(params, stderr=subprocess.DEVNULL)
@@ -216,10 +216,11 @@ class SimpleIconManager:
         if self.icon_is_on:
             try:
                 # Clear the area where we display icons
-                subprocess.run([
-                    'kitten', 'icat',
-                    '--clear'
-                ], stderr=subprocess.DEVNULL, timeout=1)
+                if self.terminal == 'kitty':
+                    subprocess.run([
+                        'kitten', 'icat',
+                        '--clear'
+                    ], stderr=subprocess.DEVNULL, timeout=1)
                 self.icon_is_on = False
             except Exception as e:
                 if logger.isEnabledFor(logging.DEBUG):
