@@ -1554,6 +1554,10 @@ class PyRadioConfig(PyRadioStations):
         return self._icon_state.terminal
 
     @property
+    def graphics_programs(self):
+        return self._icon_state.programs
+
+    @property
     def continuous_playback(self):
         return self.opts['continuous_playback'][1]
 
@@ -4580,9 +4584,11 @@ class IconState():
     def __init__(self, config_value, session_value):
         self._config_value = config_value
         self._session_value = session_value
+        self._programs = self._detect_programs()
         self._terminal = self.detect_graphic_terminal()
         logger.error('\n\nself.icon_size = {}'.format(self.icon_size))
-        logger.error('self._terminal = {}\n\n'.format(self._terminal))
+        logger.error('self._terminal = {}'.format(self._terminal))
+        logger.error(f'{self._programs = }\n\n')
 
     @property
     def icon_enabled(self):
@@ -4608,8 +4614,12 @@ class IconState():
     def terminal(self):
         return self._terminal
 
-    @staticmethod
-    def detect_graphic_terminal():
+    @property
+    def programs(self):
+        return self._programs
+
+    def detect_graphic_terminal(self):
+
         """Detect graphic terminal and return its type."""
         all_env_vars = dict(environ)
 
@@ -4618,29 +4628,25 @@ class IconState():
             return 'kitty'
 
         # iTerm2 detection
-        if all_env_vars.get('TERM_PROGRAM') == 'iTerm.app':
+        if all_env_vars.get('TERM_PROGRAM') == 'iTerm.app' and self._programs['iterm2']:
             return 'iterm2'
 
         # WezTerm detection
-        if 'WEZTERM_EXECUTABLE' in all_env_vars:
+        if 'WEZTERM_EXECUTABLE' in all_env_vars and self._programs['iterm2']:
             return 'wezterm'
 
-        timg = IconState._check_timg_available()
-
         # MLTerm detection
-        if 'MLTERM' in all_env_vars and \
-                timg:
+        if 'MLTERM' in all_env_vars and self._programs['sixel']:
             return 'mlterm'
 
         # foot detection
         if 'TERM' in all_env_vars \
                 and all_env_vars['TERM'] in ('foot', 'footclient') \
-                and timg:
+                and self._programs['sixel']:
             return 'foot'
 
         # contour detection
-        if 'CONTOUR_PROFILE' in all_env_vars and \
-                timg:
+        if 'CONTOUR_PROFILE' in all_env_vars and self._programs['sixel']:
             return 'contour'
 
         # Terminology detection
@@ -4648,21 +4654,50 @@ class IconState():
             return 'terminology'
 
         # XTerm with timg fallback
-        logger.error('XTERM_VERSION in all_env_vars = {}'.format('XTERM_VERSION' in all_env_vars))
-        logger.error('IconState._check_timg_available = {}'.format(IconState._check_timg_available()))
-        logger.error('IconState._check_xterm_vt340 = {}'.format(IconState._check_xterm_vt340()))
+        # logger.error('XTERM_VERSION in all_env_vars = {}'.format('XTERM_VERSION' in all_env_vars))
+        # logger.error('IconState._check_timg_available = {}'.format(IconState._check_timg_available()))
+        # logger.error('IconState._check_xterm_vt340 = {}'.format(IconState._check_xterm_vt340()))
         if 'XTERM_VERSION' in all_env_vars \
-                and timg \
+                and self._programs['sixel'] \
                 and IconState._check_xterm_vt340():
             return 'xterm'
 
         return None
 
     @staticmethod
-    def _check_timg_available():
-        """Check if timg is available for fallback."""
+    def _detect_programs():
+        programs = {
+            'timg': IconState._check_program_available('timg'),
+            'chafa': IconState._check_program_available('chafa'),
+            'img2sixel': IconState._check_program_available('img2sixel'),
+            'viu': IconState._check_program_available('viu'),
+            'imgcat': IconState._check_program_available('imgcat'),
+            'catimg': IconState._check_program_available('catimg'),
+        }
+
+        # Priority order - return the KEY, not the path
+        sixel = ('timg' if programs['timg'] else
+                 'chafa' if programs['chafa'] else
+                 'viu' if programs['viu'] else
+                 'catimg' if programs['catimg'] else
+                 'img2sixel' if programs['img2sixel'] else None)
+
+        iterm2 = ('imgcat' if programs['imgcat'] else
+                  'timg' if programs['timg'] else
+                  'viu' if programs['viu'] else
+                  'chafa' if programs['chafa'] else None)
+
+        return {
+            'available': programs,  # {'timg': '/usr/bin/timg', ...}
+            'sixel': sixel,         # 'timg' (key)
+            'iterm2': iterm2        # 'timg' (key)
+        }
+
+    @staticmethod
+    def _check_program_available(program):
+        """Check if programs available for fallback."""
         from shutil import which
-        return which('timg') is not None
+        return which(program)
 
     @staticmethod
     def _check_xterm_vt340():

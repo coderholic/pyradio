@@ -4446,8 +4446,8 @@ class SimpleCursesLineEdit():
         #self._log_file='/home/spiros/edit.log'
         #self._log_file='C:\\Users\\spiros\\edit.log'
         #self.log = self._log
-        logger.error(f'{char = }')
-        logger.error(f'{chr(char) = }')
+        # logger.error(f'{char = }')
+        # logger.error(f'{chr(char) = }')
         l_char = None
         if not self._focused:
             return 1

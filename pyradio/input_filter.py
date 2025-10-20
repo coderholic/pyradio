@@ -295,6 +295,7 @@ class TerminalInputFilter:
                         last_key = ch
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug(f'phase 1 input {ch = }')
+                        logger.debug(f'phase 1 input {chr(ch) = }')
                     collected_chars.append(ch)
                 except curses.error:
                     logger.error('exception: {}'.format(curses.error))

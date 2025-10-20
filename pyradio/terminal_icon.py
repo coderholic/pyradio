@@ -34,10 +34,13 @@ class SimpleIconManager:
     NO THREADS - everything happens in main thread
     """
 
-    def __init__(self, terminal, normal_mode, cache_dir="~/.cache/pyradio/logos/"):
+    def __init__(self, terminal, programs, normal_mode, cache_dir="~/.cache/pyradio/logos/"):
+        self.run = None
+        self.needs_redraw = False
         self.icon_downloader = TerminalIconDownloader()
         self.icon_is_on = False
         self.terminal = terminal
+        self.programs = programs
         self.normal_mode = normal_mode
         self.cache_dir = os.path.expanduser(cache_dir)
         self.last_station_id = None
@@ -52,6 +55,7 @@ class SimpleIconManager:
         Call this from your main keypress handler
         Returns quickly - never blocks
         """
+        self.needs_redraw = False
         if self.terminal is None:
             return None
         # Skip if disabled or wrong mode
@@ -195,36 +199,118 @@ class SimpleIconManager:
                 return
 
             logger.error(f'{icon_size = }')
-            if self.terminal == 'kitty':
-                params = [
-                    'kitten', 'icat', '--scale-up', '--no-trailing-newline',
-                    '--place', f'{icon_size}x{half}@{icon_X}x{icon_Y}',
-                    icon_path
-                ]
+
+            subprocess.run(['tput', 'sc'], check=True)  # Save cursor position
+            subprocess.run(['tput', 'civis'], check=True)  # Hide cursor
+
+            # Position and display icon
+            subprocess.run(['tput', 'cup', str(icon_Y), str(icon_X)], check=True)
+
+
+            params = self._build_icon_command(icon_path, icon_size, icon_X, icon_Y)
+
+            # self._win().move(icon_Y-1, icon_X-1)
+            # self._win().refresh()
+            #self._win.move(icon_Y, icon_X)
+
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Executing: {}'.format(' '.join(params)))
             subprocess.run(params, stderr=subprocess.DEVNULL)
         except Exception as e:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'exception: {e}')
+        finally:
+            # Cursor management - Restore and keep hidden
+            try:
+                subprocess.run(['tput', 'rc'], check=True)  # Restore cursor
+                subprocess.run(['tput', 'civis'], check=True)  # Keep hidden
+            except Exception as e:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f'Cursor restore exception: {e}')
         self.icon_is_on = True
+
+    def _build_icon_command(self, icon_path, icon_size, icon_X, icon_Y):
+        """Build timg command for ALL terminals"""
+        base_params = [
+            'timg',
+            '-b', '#0000ff',  # Blue background
+            '-W',             # Fit width
+            '-U',             # Upscale
+            '-I',             # Force image mode
+            '-g', f'{icon_size}x{icon_size}',
+            icon_path
+        ]
+        return base_params
+
+        """Build the appropriate command based on terminal type and available programs"""
+        terminal = self.terminal
+
+        if terminal == 'kitty':
+            return [
+                'kitten', 'icat', '--scale-up', '--no-trailing-newline',
+                '--place', f'{icon_size}x{icon_size}@{icon_X}x{icon_Y}',
+                icon_path
+            ]
+
+        elif terminal == 'iterm2':
+            program_key = self.programs['iterm2']
+            if program_key == 'imgcat':
+                return ['imgcat', icon_path]
+            elif program_key == 'timg':
+                return ['timg', icon_path]  # Auto-detects iTerm2
+            elif program_key == 'viu':
+                return ['viu', icon_path]   # Auto-detects iTerm2
+            elif program_key == 'chafa':
+                return ['chafa', '--protocol', 'iterm', icon_path]
+
+        elif terminal in ['foot', 'mlterm', 'contour', 'xterm']:  # Sixel terminals
+            program_key = self.programs['sixel']
+            if program_key == 'timg':
+                return ['timg', '-b', '#444444',  '-W', '-U', '-ps', '-g', f'{icon_size}x{icon_size}', icon_path]
+            elif program_key == 'chafa':
+                return ['chafa', '--size', f'{icon_size}x{icon_size}', icon_path]
+            elif program_key == 'viu':
+                return ['viu', '-s', f'{icon_size}x{icon_size}', icon_path]
+            elif program_key == 'catimg':
+                return ['catimg', '-w', str(icon_size), icon_path]
+            elif program_key == 'img2sixel':
+                return ['img2sixel', '-w', str(icon_size), icon_path]
+
+        elif terminal == 'wezterm':
+            program_key = self.programs['iterm2']  # Uses iTerm2 protocol
+            if program_key == 'imgcat':
+                return ['wezterm', 'imgcat', icon_path]
+            elif program_key == 'timg':
+                return ['timg', icon_path]
+            elif program_key == 'viu':
+                return ['viu', icon_path]
+
+        elif terminal == 'terminology':
+            return ['tycat', '--size', f'{icon_size}x{icon_size}', icon_path]
+
+        return None  # No supported terminal/program
 
     def clear_icon(self):
         """Clear the currently displayed icon"""
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Icon cleared...')
+        if self.run:
+            self.run()
+
         if self.icon_is_on:
-            try:
-                # Clear the area where we display icons
-                if self.terminal == 'kitty':
-                    subprocess.run([
-                        'kitten', 'icat',
-                        '--clear'
-                    ], stderr=subprocess.DEVNULL, timeout=1)
+            """Clear the currently displayed icon"""
+            if self.icon_is_on:
+                self.needs_redraw = True  # Σηματοδοτούμε ότι χρειάζεται redraw
                 self.icon_is_on = False
-            except Exception as e:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug(f'exception: {e}')
+                    logger.debug('Icon clear requested - needs_redraw set')
+            # try:
+            #     self._win().touchwin()
+            #     self._win().refresh()
+            #     self.icon_is_on = False
+            #     if logger.isEnabledFor(logging.DEBUG):
+            #         logger.debug('Icon cleared via window redraw')
+            # except Exception as e:
+            #     if logger.isEnabledFor(logging.DEBUG):
+            #         logger.debug(f'Clear icon exception: {e}')
 
     def shutdown(self, wait=False):
         """Close the thread pool"""

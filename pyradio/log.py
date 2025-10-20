@@ -513,6 +513,11 @@ class Log():
                 ''' start normal execution '''
                 if msg:
                     logger.error(f'\nself.msg\n{self.msg}\nmsg\n{msg}')
+                    # this is a hack...
+                    if msg.startswith(M_STRINGS['muted'] + ' ' + M_STRINGS['playing_']) and \
+                            self.msg.startswith(M_STRINGS['title_']):
+                        msg = M_STRINGS['muted'] + ' ' + self.msg
+                        logger.error('replacing msg with {msg}')
                 if msg and self._player_stopped:
                     ''' Refuse to print anything if "Playback stopped"
                         was the last message printed

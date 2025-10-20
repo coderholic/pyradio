@@ -514,7 +514,6 @@ class PyRadio():
             in log.write, if _current_player_id != _active_player_id
                     do not display any message
         '''
-        self._icon_size = 30
         self._terminal_icon_time = None
         self.player = None
         # player data
@@ -1683,9 +1682,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             if self._cnf.graphics_terminal:
                 self.icon_manager = SimpleIconManager(
                     terminal=self._cnf.graphics_terminal,
+                    programs=self._cnf.graphics_programs,
                     normal_mode=self.ws.NORMAL_MODE,
                     cache_dir=join(self._cnf.cache_dir, 'logos')
                 )
+                # self.icon_manager.run = self.refreshBody
             else:
                 self.icon_manager = DummyIconManager()
         try:
@@ -7270,6 +7271,12 @@ _____"|f|" to see the |free| keys you can use.
             self._random_requested = False
             return
 
+        elif self._backslash_pressed and \
+                char == ord('R'):
+            self._backslash_pressed = False
+            self._update_status_bar_right(status_suffix='')
+            self._normal_mode_resize()
+            self.setupAndDrawScreen(init_from_function_setup=True)
         elif self._backslash_pressed and \
                 (char == kbkey['station_volume'] or \
                  check_localized(char, (kbkey['station_volume'],))):
