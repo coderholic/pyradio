@@ -1360,7 +1360,6 @@ class PyRadioConfig(PyRadioStations):
         self.opts['enable_notifications'] = ['Enable notifications: ', '-1']
         self.opts['use_station_icon'] = ['  Use station icon: ', True]
         self.opts['remove_station_icons'] = ['  Remove cached icons: ', True]
-        self.opts['icon_size'] = ['  Graphic icon size: ', '0']
         self.opts['clock_title'] = ['Clock', '']
         self.opts['enable_clock'] = ['Display on startup: ', False]
         self.opts['time_format'] = ['Time format: ', '1']
@@ -1455,9 +1454,6 @@ class PyRadioConfig(PyRadioStations):
         self.profile_manager = None
         self.use_calculated_colors = False
 
-        self._icon_state = None
-        self._session_icon_size = -1
-
     def __init__(self, user_config_dir=None, headless=False):
         self.localize = None
         self._old_localize = None
@@ -1538,24 +1534,6 @@ class PyRadioConfig(PyRadioStations):
 
         self._read_notification_command()
         self.profile_manager = ProfileManager()
-
-    @property
-    def graphics_enabled(self):
-        # logger.error('self._icon_state.icon_enabled = {}'.format(self._icon_state.icon_enabled))
-        # logger.error('self._icon_state.icon_size = {}'.format(self._icon_state.icon_size))
-        return self._icon_state.icon_enabled and self._icon_state.icon_size > 0
-
-    @property
-    def graphics_icon_size(self):
-        return self._icon_state.icon_size
-
-    @property
-    def graphics_terminal(self):
-        return self._icon_state.terminal
-
-    @property
-    def graphics_programs(self):
-        return self._icon_state.programs
 
     @property
     def continuous_playback(self):
@@ -1720,17 +1698,6 @@ class PyRadioConfig(PyRadioStations):
     @remove_station_icons.setter
     def remove_station_icons(self, val):
         self.opts['remove_station_icons'][1] = val
-        self.opts['dirty_config'][1] = True
-
-    @property
-    def icon_size(self):
-        return self.opts['icon_size'][1]
-
-    @icon_size.setter
-    def icon_size(self, val):
-        self.opts['icon_size'][1] = val
-        if val > 0:
-            self.opts['remove_station_icons'][1] = False
         self.opts['dirty_config'][1] = True
 
     @property
@@ -1941,17 +1908,6 @@ class PyRadioConfig(PyRadioStations):
                 ))
         except Exception:
             return tuple()
-
-    @property
-    def icon_state(self):
-        return self._icon_state
-
-    def get_graphical_terminal(self):
-        self._icon_state = IconState(
-            lambda: self.opts['icon_size'][1],
-            lambda: self._session_icon_size
-        )
-        logger.error('icon enabled = {}'.format(self._icon_state.icon_enabled))
 
     def is_project_theme(self, a_theme_name):
         ''' Check if a theme name is in auto_update_frameworks
@@ -2589,12 +2545,6 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['remove_station_icons'][1] = False
                 else:
                     self.opts['remove_station_icons'][1] = True
-            elif sp[0] == 'icon_size':
-                try:
-                    t = int(sp[1])
-                except ValueError:
-                    t = 0
-                self.opts['icon_size'][1] = str(t)
             elif sp[0] == 'confirm_station_deletion':
                 if sp[1].lower() == 'false':
                     self.opts['confirm_station_deletion'][1] = False
@@ -3125,13 +3075,6 @@ class PyRadioConfig(PyRadioStations):
         if not from_command_line and \
                 logger.isEnabledFor(logging.DEBUG):
             logger.debug(f'saved params = {self.saved_params}')
-
-        # check again if graphical icon size > 0
-        if self.opts['icon_size'][1] != '0':
-            if logger.isEnabledFor(logging.INFO):
-                logger.info('cached icons will not be removed, graphical icon enabled')
-            self.opts['remove_station_icons'][1] = False
-            self.opts['dirty_config'][1] = True
 
         # logger.info('\nsaved_params\n{}\n\n'.format(self.saved_params))
         if not self.opts['dirty_config'][1]:
@@ -4579,147 +4522,3 @@ class FavoritesManager:
             return 0, '___Added to favorites!___'
         return -2, '___Error writing favorites!___'
 
-
-class IconState():
-    def __init__(self, config_value, session_value):
-        self._config_value = config_value
-        self._session_value = session_value
-        self._programs = self._detect_programs()
-        self._terminal = self.detect_graphic_terminal()
-        logger.error('\n\nself.icon_size = {}'.format(self.icon_size))
-        logger.error('self._terminal = {}'.format(self._terminal))
-        logger.error(f'{self._programs = }\n\n')
-
-    @property
-    def icon_enabled(self):
-        if self._terminal is None:
-            return False
-        return self.icon_size > 0
-
-    def __str__(self):
-        if self:
-            return f"IconState(enabled=True, terminal={self._terminal}, size={self.icon_size})"
-        else:
-            return "IconState(enabled=False)"
-
-    @property
-    def icon_size(self):
-        config_value = int(self._config_value())
-        session_value = int(self._session_value())
-        # logger.error(f'{config_value = }')
-        # logger.error(f'{session_value = }')
-        return config_value if session_value == -1 else session_value
-
-    @property
-    def terminal(self):
-        return self._terminal
-
-    @property
-    def programs(self):
-        return self._programs
-
-    def detect_graphic_terminal(self):
-
-        """Detect graphic terminal and return its type."""
-        all_env_vars = dict(environ)
-
-        # Kitty detection
-        if 'KITTY_WINDOW_ID' in all_env_vars or 'KITTY_PID' in all_env_vars:
-            return 'kitty'
-
-        # iTerm2 detection
-        if all_env_vars.get('TERM_PROGRAM') == 'iTerm.app' and self._programs['iterm2']:
-            return 'iterm2'
-
-        # WezTerm detection
-        if 'WEZTERM_EXECUTABLE' in all_env_vars and self._programs['iterm2']:
-            return 'wezterm'
-
-        # MLTerm detection
-        if 'MLTERM' in all_env_vars and self._programs['sixel']:
-            return 'mlterm'
-
-        # foot detection
-        if 'TERM' in all_env_vars \
-                and all_env_vars['TERM'] in ('foot', 'footclient') \
-                and self._programs['sixel']:
-            return 'foot'
-
-        # contour detection
-        if 'CONTOUR_PROFILE' in all_env_vars and self._programs['sixel']:
-            return 'contour'
-
-        # Terminology detection
-        if 'TERMINOLOGY' in all_env_vars:
-            return 'terminology'
-
-        # XTerm with timg fallback
-        # logger.error('XTERM_VERSION in all_env_vars = {}'.format('XTERM_VERSION' in all_env_vars))
-        # logger.error('IconState._check_timg_available = {}'.format(IconState._check_timg_available()))
-        # logger.error('IconState._check_xterm_vt340 = {}'.format(IconState._check_xterm_vt340()))
-        if 'XTERM_VERSION' in all_env_vars \
-                and self._programs['sixel'] \
-                and IconState._check_xterm_vt340():
-            return 'xterm'
-
-        return None
-
-    @staticmethod
-    def _detect_programs():
-        programs = {
-            'timg': IconState._check_program_available('timg'),
-            'chafa': IconState._check_program_available('chafa'),
-            'img2sixel': IconState._check_program_available('img2sixel'),
-            'viu': IconState._check_program_available('viu'),
-            'imgcat': IconState._check_program_available('imgcat'),
-            'catimg': IconState._check_program_available('catimg'),
-        }
-
-        # Priority order - return the KEY, not the path
-        sixel = ('timg' if programs['timg'] else
-                 'chafa' if programs['chafa'] else
-                 'viu' if programs['viu'] else
-                 'catimg' if programs['catimg'] else
-                 'img2sixel' if programs['img2sixel'] else None)
-
-        iterm2 = ('imgcat' if programs['imgcat'] else
-                  'timg' if programs['timg'] else
-                  'viu' if programs['viu'] else
-                  'chafa' if programs['chafa'] else None)
-
-        return {
-            'available': programs,  # {'timg': '/usr/bin/timg', ...}
-            'sixel': sixel,         # 'timg' (key)
-            'iterm2': iterm2        # 'timg' (key)
-        }
-
-    @staticmethod
-    def _check_program_available(program):
-        """Check if programs available for fallback."""
-        from shutil import which
-        return which(program)
-
-    @staticmethod
-    def _check_xterm_vt340():
-        try:
-            import termios
-            import tty
-        except ImportError:
-            return False
-        sys.stdout.write("\033[c")  # Primary DA request
-        sys.stdout.flush()
-
-        fd = sys.stdin.fileno()
-        old = termios.tcgetattr(fd)
-        tty.setcbreak(fd)
-        try:
-            resp = ""
-            while True:
-                ch = sys.stdin.read(1)
-                resp += ch
-                if ch == "c":
-                    break
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old)
-
-        return '?63;' in resp
