@@ -1962,12 +1962,16 @@ class ExtraParameters():
         '''
         # logger.error('DE\n')
         # logger.error('DE working params = {}'.format(self._working_params))
+        # logger.error('DE self._profiles_from_files = {}'.format(self._profiles_from_files))
         for a_param_set in self._profiles_from_files:
-            for a_param in self._profiles_from_files[a_param_set]:
-                if a_param not in self._items_dict[a_param_set]:
-                    self._items_dict[a_param_set].append(a_param)
-            if self._items_dict[a_param_set][0] in self._items_dict[a_param_set][1:]:
-                self._items_dict[a_param_set]  = self._items_dict[a_param_set][1:]
+            # logger.error(f'{a_param_set = }')
+            if self._profiles_from_files[a_param_set]:
+                for a_param in self._profiles_from_files[a_param_set]:
+                    # logger.error('a_param = {}'.format(a_param))
+                    if a_param not in self._items_dict[a_param_set]:
+                        self._items_dict[a_param_set].append(a_param)
+                if self._items_dict[a_param_set][0] in self._items_dict[a_param_set][1:]:
+                    self._items_dict[a_param_set]  = self._items_dict[a_param_set][1:]
 
     def _list_to_dict(self):
         ''' convert self._items_dict to self._working_params '''

@@ -1602,10 +1602,13 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self._messaging_win.erase()
         self.refreshBody()
 
-    def refreshBody(self, start=0):
+    def refreshBody(self, start=0, display_terminal_icon=True):
         # if self.ws.operation_mode == self.ws.INSERT_RECORDINGS_DIR_MODE:
         #     logger.error(f'{self.ws.previous_operation_mode = }')
         #     self._messaging_win.erase()
+        logger.error('1')
+        if display_terminal_icon == False:
+            self.bodyWin.erase()
         if self.player.ctrl_c_pressed:
             return
         if self._limited_height_mode or self._limited_width_mode:
@@ -1639,6 +1642,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         # logger.error('DE window mode = {}'.format(self.ws.window_mode))
         # logger.error('DE operation mode = {}'.format(self.ws.operation_mode))
         # logger.error('DE Browser search mode = {}'.format(self.ws.BROWSER_SEARCH_MODE))
+        logger.error('2')
         if self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE and \
                 self._i_am_resizing:
             if logger.isEnabledFor(logging.DEBUG):
@@ -1671,9 +1675,14 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                             logger.debug('Asking to update stations.csv!!!')
                         self._need_to_update_stations_csv = 3
                         self._ask_to_update_stations_csv()
+        logger.error('3')
 
         self._update_history_positions_in_list()
-        self._display_icon_on_treminal()
+        if display_terminal_icon:
+            logger.info('---> d1')
+            self._display_icon_on_treminal()
+            logger.error('4')
+        logger.error('5')
 
 
     def _display_icon_on_treminal(self, reset=False):
@@ -1681,6 +1690,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         if self.icon_manager is None:
             if self._cnf.graphics_terminal:
                 self.icon_manager = SimpleIconManager(
+                    terminal_buffer=self.stdscr,
                     terminal=self._cnf.graphics_terminal,
                     programs=self._cnf.graphics_programs,
                     normal_mode=self.ws.NORMAL_MODE,
@@ -1703,6 +1713,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             icon_duration=3,
             adjust_for_radio_browser=self._cnf._online_browser,
         )
+        if self.icon_manager:
+            if self.icon_manager.needs_redraw \
+                    and self.icon_manager.icon_is_on:
+                logger.error('\n\nRefresh body to hide terminal icon\n\n')
+                self.icon_manager.needs_redraw = False
+                self.refreshBody(display_terminal_icon=False)
 
     def refreshNoDepencency(self):
         col = curses.color_pair(13)
@@ -2281,7 +2297,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                         self.bodyWin.timeout(-1)
 
                     if c == -1:
-                        # logger.error('continue')
+                        # if self.icon_manager:
+                        #     if self.icon_manager.needs_redraw:
+                        #         logger.error('\n\nRefresh body to hide terminal icon\n\n')
+                        #         self.icon_manager.needs_redraw = False
+                        #         self.refreshBody(display_terminal_icon=False)
+                        # # logger.error('continue')
                         continue
                     # else:
                     #     logger.error(f'drain returned {c = }')
@@ -3135,6 +3156,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self._theme_selector.changed_from_config = changed_from_config
         self._theme_selector.show()
         self._theme_selector.set_global_functions(self._global_functions)
+        logger.info('---> d2')
         self._display_icon_on_treminal()
 
     def _get_message_width_from_list(self, lines):
@@ -3401,10 +3423,12 @@ ____Using |fallback| theme.''')
         self._messaging_win.simple_dialog = True
         self._open_message_win_by_key(*args)
         self._message_system_default_operation_mode = self.ws.MESSAGING_MODE
-        self._display_icon_on_treminal()
+        # logger.info('---> d3')
+        # self._display_icon_on_treminal()
 
     def _open_simple_message_by_key(self, *args):
-        self._display_icon_on_treminal()
+        # logger.info('---> d4')
+        # self._display_icon_on_treminal()
         # logger.error('args = "{}"'.format(args))
         self._open_message_win_by_key(*args)
         self._messaging_win.simple_dialog = True
@@ -3414,7 +3438,8 @@ ____Using |fallback| theme.''')
         self._messaging_win.set_text(self.bodyWin, *args)
         self.ws.operation_mode = self._message_system_default_operation_mode
         self._messaging_win.show()
-        self._display_icon_on_treminal()
+        # logger.info('---> d5')
+        # self._display_icon_on_treminal()
 
     def _show_line_editor_help(self):
         if self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE, self.ws.SCHEDULE_EDIT_MODE) \
@@ -4244,6 +4269,9 @@ and |remove the file manually|.
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Opening RadioBrowser...')
             # TODO
+            if self.icon_manager:
+                if self._cnf.graphics_terminal != 'kitty':
+                    self.icon_manager.icon_is_on = False
             if HAS_REQUESTS:
                 if HAS_DNSPYTHON:
                     self._show_connect_to_server_message()
@@ -5342,11 +5370,13 @@ and |remove the file manually|.
         if self.player.isPlaying():
             self.log.display_help_message = False
         self.setupAndDrawScreen()
+        logger.info('---> d6')
         self._display_icon_on_treminal(reset=True)
         if self.selection >= self.number_of_items - self.bodyMaxY and \
                 self.number_of_items > self.bodyMaxY:
             self.startPos = self.number_of_items - self.bodyMaxY
             self.refreshBody()
+        logger.info('---> d7')
         self._display_icon_on_treminal()
 
     def _reset_status_bar_right(self, random_request=False):
@@ -7368,6 +7398,7 @@ _____"|f|" to see the |free| keys you can use.
                         vlc_no_recording=self._show_win_no_record
                     )
                     self._change_player.show()
+                    logger.info('---> d8')
                     self._display_icon_on_treminal()
 
             elif ( char == kbkey['open_remote_control'] or \
@@ -7382,6 +7413,7 @@ _____"|f|" to see the |free| keys you can use.
                         self._show_remote_control_server_not_active()
                 else:
                     self._print_netifaces_not_installed_error()
+                logger.info('---> d9')
                 self._display_icon_on_treminal()
 
             elif char in (kbkey['html_help'], ) or \
@@ -7421,6 +7453,7 @@ _____"|f|" to see the |free| keys you can use.
                         self._rename_playlist_dialog.title = ' Rename Register '
                     self._rename_playlist_dialog.show()
                     self.ws.operation_mode = self.ws.RENAME_PLAYLIST_MODE
+                logger.info('---> d10')
                 self._display_icon_on_treminal()
 
             elif char == kbkey['new_playlist'] or \
@@ -7444,6 +7477,7 @@ _____"|f|" to see the |free| keys you can use.
                     self._rename_playlist_dialog.title = ' Create Playlist '
                     self._rename_playlist_dialog.show()
                     self.ws.operation_mode = self.ws.CREATE_PLAYLIST_MODE
+                    logger.info('---> d11')
                     self._display_icon_on_treminal()
 
             elif char == kbkey['last_playlist'] or \
@@ -9904,22 +9938,26 @@ _____"|f|" to see the |free| keys you can use.
             if char in (curses.KEY_DOWN, kbkey['j']) or \
                     check_localized(char, (kbkey['j'], )):
                 self._move_cursor_one_down()
+                logger.info('---> d12')
                 self._display_icon_on_treminal()
                 return
 
             if char in (curses.KEY_UP, kbkey['k']) or \
                     check_localized(char, (kbkey['k'], )):
                 self._move_cursor_one_up()
+                logger.info('---> d13')
                 self._display_icon_on_treminal()
                 return
 
             if char in (curses.KEY_PPAGE, ):
                 self._page_up()
+                logger.info('---> d14')
                 self._display_icon_on_treminal()
                 return
 
             if char in (curses.KEY_NPAGE, ):
                 self._page_down()
+                logger.info('---> d15')
                 self._display_icon_on_treminal()
                 return
 
@@ -10167,6 +10205,7 @@ _____"|f|" to see the |free| keys you can use.
                         adding=False)
                     self._station_editor.show(self.stations[self.selection])
                     self.ws.operation_mode = self.ws.EDIT_STATION_MODE
+                    logger.info('---> d16')
                     self._display_icon_on_treminal()
 
                 elif char == kbkey['open_config'] or \
@@ -10178,6 +10217,7 @@ _____"|f|" to see the |free| keys you can use.
                     else:
                         if self._cnf.locked:
                             self._open_simple_message_by_key('M_SESSION_LOCKED')
+                            logger.info('---> d17')
                             self._display_icon_on_treminal()
                             return
 
@@ -10194,6 +10234,7 @@ _____"|f|" to see the |free| keys you can use.
                             if logger.isEnabledFor(logging.DEBUG):
                                 logger.debug('Config saved before entering Config Window')
                         self._show_config_window()
+                    logger.info('---> d18')
                     self._display_icon_on_treminal()
                     return
 
@@ -10226,6 +10267,7 @@ _____"|f|" to see the |free| keys you can use.
                         this should display a selection list.
                     '''
                     self._open_radio_browser()
+                    logger.info('---> d19')
                     self._display_icon_on_treminal()
                     return
 
@@ -10240,6 +10282,7 @@ _____"|f|" to see the |free| keys you can use.
                         return
                     self._check_to_open_playlist()
                     self._do_display_notify()
+                    logger.info('---> d20')
                     self._display_icon_on_treminal()
                     return
 
@@ -10251,12 +10294,14 @@ _____"|f|" to see the |free| keys you can use.
                         self._stop_player()
                     self._start_player()
                     self._do_display_notify()
+                    logger.info('---> d21')
                     self._display_icon_on_treminal()
                     return
 
                 elif char in (curses.KEY_LEFT, kbkey['h']) or \
                         check_localized(char, (kbkey['h'], )):
                     self._stop_player()
+                    logger.info('---> d22')
                     self._display_icon_on_treminal()
                     return
 
@@ -10269,6 +10314,7 @@ _____"|f|" to see the |free| keys you can use.
                         self._pause_player()
                     else:
                         self._stop_player()
+                    logger.info('---> d23')
                     self._display_icon_on_treminal()
                     return
 
@@ -10277,6 +10323,7 @@ _____"|f|" to see the |free| keys you can use.
                     # TODO: make it impossible when session locked?
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
+                        logger.info('---> d24')
                         self._display_icon_on_treminal()
                         return
                     if self.number_of_items > 0:
@@ -10293,6 +10340,7 @@ _____"|f|" to see the |free| keys you can use.
                                 self._ask_to_remove_group()
                             else:
                                 self._ask_to_remove_station()
+                    logger.info('---> d25')
                     self._display_icon_on_treminal()
                     return
 
@@ -10315,6 +10363,7 @@ _____"|f|" to see the |free| keys you can use.
                                     txt='___Playlist not modified!!!___',
                                     mode_to_set=self.ws.NORMAL_MODE,
                                     callback_function=self.refreshBody)
+                    logger.info('---> d26')
                     self._display_icon_on_treminal()
                     return
 
@@ -10323,6 +10372,7 @@ _____"|f|" to see the |free| keys you can use.
                     self._reset_status_bar_right(random_request=True)
                     ''' Pick a random radio station '''
                     self.play_random()
+                    logger.info('---> d27')
                     self._display_icon_on_treminal()
                     return
 
@@ -10344,6 +10394,7 @@ _____"|f|" to see the |free| keys you can use.
                         else:
                             self.ws.operation_mode = self.ws.PLAYLIST_RELOAD_CONFIRM_MODE
                             self._reload_playlist_after_confirmation(char)
+                    logger.info('---> d28')
                     self._display_icon_on_treminal()
                     return
 
@@ -10358,6 +10409,7 @@ _____"|f|" to see the |free| keys you can use.
                         global_functions=self._global_functions
                     )
                     self._connection_type_edit.show()
+                    logger.info('---> d29')
                     self._display_icon_on_treminal()
                     return
 
@@ -10373,6 +10425,7 @@ _____"|f|" to see the |free| keys you can use.
                         global_functions=self._global_functions
                     )
                     self._player_select_win.show()
+                    logger.info('---> d30')
                     self._display_icon_on_treminal()
                     return
 
@@ -10383,6 +10436,7 @@ _____"|f|" to see the |free| keys you can use.
                     ''' tag for jump '''
                     self._cnf.jump_tag = self.selection
                     self._update_status_bar_right(status_suffix=str(self._cnf.jump_tag + 1) + str(kbkey['jump']))
+                    logger.info('---> d31')
                     self._display_icon_on_treminal()
                     return
 
@@ -10394,6 +10448,7 @@ _____"|f|" to see the |free| keys you can use.
                         self._cnf.jump_tag = int(self.jumpnr) - 1
                     self._move_station(-1)
                     self._reset_status_bar_right()
+                    logger.info('---> d32')
                     self._display_icon_on_treminal()
                     return
 
@@ -10405,6 +10460,7 @@ _____"|f|" to see the |free| keys you can use.
                         self._cnf.jump_tag = int(self.jumpnr) - 1
                     self._move_station(1)
                     self._reset_status_bar_right()
+                    logger.info('---> d33')
                     self._display_icon_on_treminal()
                     return
 
@@ -10834,6 +10890,7 @@ _____"|f|" to see the |free| keys you can use.
             )
         self.ws.operation_mode = self.ws.OPEN_DIR_MODE
         self._open_dir_win.show(parent=self.bodyWin)
+        logger.info('---> d34')
         self._display_icon_on_treminal()
 
     def _show_dirs_list(self):

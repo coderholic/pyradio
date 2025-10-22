@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 class DummyIconManager:
     def __init__(self):
-        pass
+        self.needs_redraw = False
 
     def on_station_change(self, win, station, operation_mode, screen_size, icon_size, icon_duration, adjust_for_radio_browser):
         # if logger.isEnabledFor(logging.DEBUG):
@@ -34,7 +34,9 @@ class SimpleIconManager:
     NO THREADS - everything happens in main thread
     """
 
-    def __init__(self, terminal, programs, normal_mode, cache_dir="~/.cache/pyradio/logos/"):
+    def __init__(self, terminal_buffer, terminal, programs, normal_mode, cache_dir="~/.cache/pyradio/logos/"):
+        self._last_cleared_operation_mode = -2
+        self.stdrc = terminal_buffer
         self.run = None
         self.needs_redraw = False
         self.icon_downloader = TerminalIconDownloader()
@@ -88,17 +90,24 @@ class SimpleIconManager:
             # clear the existing icon
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('parameters changed, clearing previous icon')
-            if icon_url and station:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('clearing icon 2')
-                self.clear_icon()
+            # if icon_url and station:
+            #     if logger.isEnabledFor(logging.DEBUG):
+            #         logger.debug('clearing icon 2')
+            #     self.clear_icon()
         if not icon_url:
             # clear previous icon
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('no URL, clearing previous icon')
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('clearing icon 3')
-            self.clear_icon()
+                logger.debug(f'clearing icon 3: {self._last_cleared_operation_mode = } / {operation_mode = }')
+                logger.error(f'{self.icon_is_on = }')
+            # if self._last_cleared_operation_mode != operation_mode \
+            #         or self.icon_is_on:
+            #     self.clear_icon(force=self.terminal != 'kitty')
+            if self.icon_is_on:
+                self.clear_icon(force=self.terminal != 'kitty')
+            # self.clear_icon(force=self.terminal != 'kitty')
+            self._last_cleared_operation_mode = operation_mode
             return datetime.now()
 
         # Check cache first (fast)
@@ -146,6 +155,7 @@ class SimpleIconManager:
             download_token_res = files('pyradio').joinpath('icons', 'download.png')
 
             # First check if it's already a real file in the filesystem
+            self._last_cleared_operation_mode = -2
             try:
                 # Try to use it directly if it exists as a real file
                 if exists(str(download_token_res)):
@@ -173,6 +183,9 @@ class SimpleIconManager:
     def _display_icon_simple(self, icon_path, icon_size, adjust_for_radio_browser=None):
         """Display icon - main thread only, quick and safe"""
         min_icon_size = 4
+        retries = 5
+        cursor_saved = False
+
         try:
             half = icon_size // 2
             logger.error(f'====== {icon_size = }')
@@ -188,46 +201,130 @@ class SimpleIconManager:
             icon_X = self.X - icon_size - 1
             while icon_X <= 30:
                 icon_size -= 2
-                if icon_size <=min_icon_size:
+                if icon_size <= min_icon_size:
                     break
                 icon_X = self.X - icon_size - 1
             half = icon_size // 2
 
             icon_X = self.X - icon_size - 1
-            if icon_size <min_icon_size:
+            if icon_size < min_icon_size:
                 self.clear_icon()
                 return
 
             logger.error(f'{icon_size = }')
 
-            subprocess.run(['tput', 'sc'], check=True)  # Save cursor position
-            subprocess.run(['tput', 'civis'], check=True)  # Hide cursor
+            # Cursor save with retry logic
+            for attempt in range(retries):  # Try retries times
+                try:
+                    subprocess.run(['tput', 'sc'], check=True, timeout=1)
+                    cursor_saved = True
+                    break  # Success - exit retry loop
+                except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+                    if attempt == retries-1:  # Final attempt failed
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug(f'tput sc failed after {retries} attempts')
+                        self.clear_icon()
+                        return
+                    time.sleep(0.1)  # Wait before retry
 
-            # Position and display icon
-            subprocess.run(['tput', 'cup', str(icon_Y), str(icon_X)], check=True)
+            # Only continue if cursor was successfully saved
+            if not cursor_saved:
+                self.clear_icon()
+                return
 
+            for attempt in range(retries):  # Try retries times
+                try:
+                    subprocess.run(['tput', 'civis'], check=True, timeout=1)
+                    break  # Success - exit retry loop
+                except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+                    if attempt == retries-1:  # Final attempt failed
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug(f'tput civis failed after {retries} attempts')
+                        # Continue anyway - this is not critical
 
-            params = self._build_icon_command(icon_path, icon_size, icon_X, icon_Y)
+            # Attempt cursor positioning with verification
+            position_success = False
+            for attempt in range(retries):
+                try:
+                    # Set position
+                    subprocess.run(['tput', 'cup', str(icon_Y), str(icon_X)],
+                                 check=True, timeout=1)
+                    time.sleep(0.02)
 
-            # self._win().move(icon_Y-1, icon_X-1)
-            # self._win().refresh()
-            #self._win.move(icon_Y, icon_X)
+                    # Verify position (you need to implement get_cursor_position)
+                    current_y, current_x = self.get_cursor_position()
+                    if (current_y, current_x) == (icon_Y, icon_X):
+                        position_success = True
+                        break  # Success!
+                    else:
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug(f'Cursor verification failed: expected ({icon_Y},{icon_X}), got ({current_y},{current_x})')
 
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Executing: {}'.format(' '.join(params)))
-            subprocess.run(params, stderr=subprocess.DEVNULL)
+                except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+                    if attempt == retries-1:  # Last attempt
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug(f'Cursor positioning failed after {retries} attempts')
+                        self.clear_icon()
+                        return
+
+            # Only display image if positioning was successful
+            if position_success:
+                params = self._build_icon_command(icon_path, icon_size, icon_X, icon_Y)
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Executing: {}'.format(' '.join(params)))
+                subprocess.run(params, stderr=subprocess.DEVNULL, timeout=5)
+                self.icon_is_on = True
+
         except Exception as e:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug(f'exception: {e}')
+                logger.debug(f'Exception in _display_icon_simple: {e}')
+            self.clear_icon()
         finally:
-            # Cursor management - Restore and keep hidden
+            # Cursor management - Restore only if we saved it
+            if cursor_saved:
+                try:
+                    subprocess.run(['tput', 'rc'], check=True)  # Restore cursor
+                    subprocess.run(['tput', 'civis'], check=True)  # Keep hidden
+                except Exception as e:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug(f'Cursor restore exception: {e}')
+
+    def get_cursor_position(self):
+        """Get current cursor position (row, col) - returns 0-based coordinates"""
+        try:
+            import termios
+            import tty
+            import sys
+
+            old_settings = termios.tcgetattr(sys.stdin)
+
             try:
-                subprocess.run(['tput', 'rc'], check=True)  # Restore cursor
-                subprocess.run(['tput', 'civis'], check=True)  # Keep hidden
-            except Exception as e:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug(f'Cursor restore exception: {e}')
-        self.icon_is_on = True
+                tty.setraw(sys.stdin.fileno())
+                sys.stdout.write('\033[6n')
+                sys.stdout.flush()
+
+                response = ''
+                while True:
+                    char = sys.stdin.read(1)
+                    response += char
+                    if char == 'R':
+                        break
+
+                import re
+                match = re.search(r'\033\[(\d+);(\d+)R', response)
+                if match:
+                    # Convert from 1-based to 0-based
+                    row = int(match.group(1)) - 1
+                    col = int(match.group(2)) - 1
+                    return row, col
+
+            finally:
+                termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+
+        except Exception as e:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'Cursor position query failed: {e}')
+        return None, None
 
     def _build_icon_command(self, icon_path, icon_size, icon_X, icon_Y):
         """Build timg command for ALL terminals"""
@@ -290,27 +387,32 @@ class SimpleIconManager:
 
         return None  # No supported terminal/program
 
-    def clear_icon(self):
-        """Clear the currently displayed icon"""
-        if self.run:
-            self.run()
+    def clear_icon(self, force=False):
+        """Clear icon using terminal-specific methods"""
+        if force or self.icon_is_on:
+            logger.error('icon is on!')
+            try:
+                if self.terminal == 'kitty':
+                    # For Kitty - this is the only thing that works
+                    subprocess.run([
+                        'kitten', 'icat', '--clear'
+                    ], stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, timeout=2)
+                    self.needs_redraw = False
+                    self.icon_is_on = False
+                else:
+                    # For all terminals - redraw
+                    self.needs_redraw = True
 
-        if self.icon_is_on:
-            """Clear the currently displayed icon"""
-            if self.icon_is_on:
-                self.needs_redraw = True  # Σηματοδοτούμε ότι χρειάζεται redraw
-                self.icon_is_on = False
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Icon clear requested - needs_redraw set')
-            # try:
-            #     self._win().touchwin()
-            #     self._win().refresh()
-            #     self.icon_is_on = False
-            #     if logger.isEnabledFor(logging.DEBUG):
-            #         logger.debug('Icon cleared via window redraw')
-            # except Exception as e:
-            #     if logger.isEnabledFor(logging.DEBUG):
-            #         logger.debug(f'Clear icon exception: {e}')
+                    logger.debug(f'Icon clear for {self.terminal}')
+
+            except Exception as e:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f'Clear exception: {e}')
+                # Fallback for all (except kitty)
+                self.needs_redraw = True
+        else:
+            logger.error('icon if off!')
 
     def shutdown(self, wait=False):
         """Close the thread pool"""
