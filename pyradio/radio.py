@@ -2231,93 +2231,60 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self._global_letter = None
             remaining_keys = 0
             self._accumulated_errors = None
-            input_drainer = TerminalInputFilter()
             while True:
                 try:
-                    # c = self.bodyWin.getch()
-                    c, char_type = input_drainer.drain_and_filter(self.bodyWin)
-
-                    if logger.isEnabledFor(logging.DEBUG) \
-                            and c > -1:
-                        logger.debug(f'phase 2 input {c = }')
-
                     if self._do_launch_external_palyer:
                         self.keypress(kbkey['ext_player'])
                         self._do_launch_external_palyer = False
                         return
 
-                        # curses.ungetch(kbkey['ext_player'])
-                        # self._do_launch_external_palyer = False
+                    c = self.bodyWin.getch()
 
+                    if remaining_keys > 0:
+                        # Skip processing for replayed keys
+                        remaining_keys -= 1
+                        ret = self.keypress(c)  # Handle shortcut
+                        if ret == -1:
+                            return
+                        continue
 
-                    if char_type == 1:  # Unicode character
+                    # Process input through get_unicode_and_cjk_char
+                    if c == curses.KEY_RESIZE:
+                        letter = ''
+                    else:
                         if platform.startswith('win'):
                             letter = c
+                            set_kb_letter(c)
                         else:
-                            letter = chr(c)
-                    else:
-                        letter = ''
-                    # else:  # Regular ASCII (type 0)
-                    #     letter = chr(c) if 32 <= c <= 126 else ''  # Printable ASCII only
-                        # c = drain_getch(self.bodyWin)
-                        # c = self.bodyWin.getch()
-
-                    # Set keyboard state
+                            letter = get_unicode_and_cjk_char(self.bodyWin, c)
+                    # set_kb_letter(None)
                     if letter:
-                        set_kb_letter(letter)
-                        set_kb_cjk(is_wide(letter))
-                    ret = self.keypress(c)  # Handle shortcut
-                    if ret == -1:
-                        return
-                    # c = drain_getch(self.bodyWin)
-                    # c = self.bodyWin.getch()
-
-                    # if remaining_keys > 0:
-                    #     # Skip processing for replayed keys
-                    #     remaining_keys -= 1
-                    #     ret = self.keypress(c)  # Handle shortcut
-                    #     if ret == -1:
-                    #         return
-                    #     continue
-
-                    # # Process input through get_unicode_and_cjk_char
-                    # if c == curses.KEY_RESIZE:
-                    #     letter = ''
-                    # else:
-                    #     if platform.startswith('win'):
-                    #         letter = chr(c)
-                    #         set_kb_letter(letter)
-                    #         set_kb_cjk(is_wide(letter))
-                    #     else:
-                    #         letter = get_unicode_and_cjk_char(self.bodyWin, c)
-                    # # set_kb_letter(None)
-                    # if letter:
-                    #     # set_kb_letter(letter)  # Save the decoded letter
-                    #     # Call keypress for single-byte shortcuts
-                    #     # if logger.isEnabledFor(logging.DEBUG):
-                    #     #     logger.debug('I have a letter!')
-                    #     if len(input_queue) == 0:  # Single-byte input
-                    #         ret = self.keypress(c)  # Handle shortcut
-                    #         if ret == -1:
-                    #             return
-                    #     else:
-                    #         # Set remaining_keys based on input_queue length for multi-byte input
-                    #         remaining_keys = len(input_queue)
-                    # else:
-                    #     # if logger.isEnabledFor(logging.DEBUG):
-                    #     #     logger.debug('I do NOT have a letter!')
-                    #     # Single-byte character or invalid input
-                    #     logger.error('keypress')
-                    #     ret = self.keypress(c)  # Handle shortcut
-                    #     if ret == -1:
-                    #         return
-                    # # if logger.isEnabledFor(logging.DEBUG):
-                    # #     logger.debug('{}'.format(get_kb_letter()))
-                    # # Replay input_queue into curses' input buffer
-                    # while input_queue:
-                    #     # Re-insert input in reverse order
-                    #     deq = dequeue_input()
-                    #     curses.ungetch(deq)
+                        # set_kb_letter(letter)  # Save the decoded letter
+                        # Call keypress for single-byte shortcuts
+                        # if logger.isEnabledFor(logging.DEBUG):
+                        #     logger.debug('I have a letter!')
+                        if len(input_queue) == 0:  # Single-byte input
+                            ret = self.keypress(c)  # Handle shortcut
+                            if ret == -1:
+                                return
+                        else:
+                            # Set remaining_keys based on input_queue length for multi-byte input
+                            remaining_keys = len(input_queue)
+                    else:
+                        # if logger.isEnabledFor(logging.DEBUG):
+                        #     logger.debug('I do NOT have a letter!')
+                        # Single-byte character or invalid input
+                        logger.error('keypress')
+                        ret = self.keypress(c)  # Handle shortcut
+                        if ret == -1:
+                            return
+                    # if logger.isEnabledFor(logging.DEBUG):
+                    #     logger.debug('{}'.format(get_kb_letter()))
+                    # Replay input_queue into curses' input buffer
+                    while input_queue:
+                        # Re-insert input in reverse order
+                        deq = dequeue_input()
+                        curses.ungetch(deq)
 
                 except KeyboardInterrupt:
                     # ok
