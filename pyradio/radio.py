@@ -58,7 +58,6 @@ from .simple_curses_widgets import SimpleCursesMenu
 from .messages_system import PyRadioMessagesSystem
 from .server import PyRadioServer, HAS_NETIFACES
 from .keyboard import kbkey, get_lkbkey, get_unicode_and_cjk_char, dequeue_input, input_queue, set_kb_letter, check_localized, add_l10n_to_functions_dict, set_kb_cjk
-from .input_filter import TerminalInputFilter
 
 HAVE_CHARSET_NORMALIZER = True
 try:
@@ -2259,7 +2258,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                             letter = get_unicode_and_cjk_char(self.bodyWin, c)
                     # set_kb_letter(None)
                     if letter:
-                        # set_kb_letter(letter)  # Save the decoded letter
                         # Call keypress for single-byte shortcuts
                         # if logger.isEnabledFor(logging.DEBUG):
                         #     logger.debug('I have a letter!')
@@ -2274,7 +2272,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                         # if logger.isEnabledFor(logging.DEBUG):
                         #     logger.debug('I do NOT have a letter!')
                         # Single-byte character or invalid input
-                        logger.error('keypress')
                         ret = self.keypress(c)  # Handle shortcut
                         if ret == -1:
                             return
@@ -9787,7 +9784,6 @@ _____"|f|" to see the |free| keys you can use.
                 if char == -1:
                     ''' ESCAPE '''
                     ret = self._exit_program_or_playlist_mode()
-                    logger.error(f'4. 2 {ret = }')
                     if ret:
                         return
                     return -1
