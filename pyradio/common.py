@@ -1282,7 +1282,7 @@ def get_cached_icon_path(cache_dir, station_name, icon_url):
     """
     # Old filename (based on station name)
     old_filename = f"{station_name.replace(' ', '_')}."
-    ext = 'jpg' if icon_url.endswith('.jpg', '.jpeg') else 'png'
+    ext = 'jpg' if icon_url.endswith(('.jpg', '.jpeg')) else 'png'
     path1 = join(cache_dir, old_filename + ext)
 
     # New filename (based on icon URL hash)

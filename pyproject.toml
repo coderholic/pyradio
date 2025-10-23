@@ -1,6 +1,6 @@
 [project]
 name = "pyradio"
-version = "0.9.3.11.19"
+version = "0.9.3.11.20"
 authors = [
   { name="Ben Dowling", email="ben.m.dowling@gmail.com" },
   { name="Spiros Georgaras", email="sng@hellug.gr" },

@@ -2089,7 +2089,6 @@ class PyRadioConfig(PyRadioStations):
         #     self.info += '({})'.format(self._distro)
         return ret
 
-
     def remove_remote_control_server_report_file(self):
         if path.exists(self.remote_control_server_report_file):
             try:

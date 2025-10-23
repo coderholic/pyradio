@@ -1,19 +1,18 @@
-2025-09-19 s-n-g
-    * version 0.9.3.11.21 - 0.9.3.12-beta21
-    * fixing [BUG] Inconsistency with RadioBrowser Config's vertical
-    navigation keybindings (j/k) - #309
-    * updating docs including "update title logging directory info in
-    pyradio.1" #308
-    * localized keyboard setting is actually being saved
-    * updating mpv windows download link
-
-2025-09-19 s-n-g
+2025-09-23 s-n-g
     * version 0.9.3.11.20 - 0.9.3.12-beta20
     * adding error messages for charset-normalizer module not found (#305)
     * fixing #307 - [BUG] TypeError: string indices must be integers, not 'str'
+    * fixing a bug that would lead to a crash when trying to display the
+      "Player Extra Parameters" (def. key "Z")
+    * updating docs including "update title logging directory info in
+      pyradio.1" #308
+    * fixing [BUG] Inconsistency with RadioBrowser Config's vertical
+      navigation keybindings (j/k) - #309
+    * localized keyboard setting is actually being saved
+    * localized keyboard now works on Windows
+    * enabling include-package-data and setuptools-scm in pyproject.toml
     * fix(resources): support running from zip/wheel via importlib.resources
       This makes PyRadio fully functional even when distributed as a wheel/zip
-    * enabling include-package-data and setuptools-scm in pyproject.toml
     * updating mpv windows download link
 
 2025-09-19 s-n-g

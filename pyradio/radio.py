@@ -5213,7 +5213,6 @@ and |remove the file manually|.
             self._open_playlist(a_url)
 
     def _normal_mode_resize(self):
-        logger.error('\n\nRESET\n\n')
         if platform.startswith('win'):
             curses.resize_term(0, 0)
             try:
