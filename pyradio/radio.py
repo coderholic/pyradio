@@ -58,7 +58,7 @@ from .simple_curses_widgets import SimpleCursesMenu
 from .messages_system import PyRadioMessagesSystem
 from .server import PyRadioServer, HAS_NETIFACES
 from .keyboard import kbkey, get_lkbkey, get_unicode_and_cjk_char, dequeue_input, input_queue, set_kb_letter, check_localized, add_l10n_to_functions_dict, set_kb_cjk
-
+from .tts import TTSManager
 HAVE_CHARSET_NORMALIZER = True
 try:
     from .m3u import parse_m3u
@@ -2129,6 +2129,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             except KeyboardInterrupt:
                 pass
         else:
+            self.tts = TTSManager()
             ''' start update detection and notification thread '''
             if CAN_CHECK_FOR_UPDATES:
                 if self._cnf.locked:
@@ -2383,6 +2384,10 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self._remove_icons()
 
     def _wait_for_threads(self):
+        if hasattr(self, 'tts') and self.tts:
+            logger.debug("Stopping TTS threads...")
+            # Phase 1: Immediate interruption (non-blocking)
+            self.tts.shutdown()
         self.log._stop_desktop_notification_thread = True
         if self._watch_theme_thread:
             self.stop_watch_theme_thread = True
@@ -2409,6 +2414,13 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         if self._simple_schedule:
             self._simple_schedule.exit()
             self._simple_schedule = None
+        if hasattr(self, 'tts') and self.tts:
+            # Phase 2: Wait for TTS to fully stop (with timeout)
+            clean_shutdown = self.tts.wait_for_shutdown(timeout=2.0)
+            if clean_shutdown:
+                logger.debug("TTS threads stopped cleanly")
+            else:
+                logger.warning("TTS threads forced to stop")
 
     def _goto_playing_station(self, changing_playlist=False):
         ''' make sure playing station is visible '''
@@ -6735,6 +6747,12 @@ and |remove the file manually|.
             self._cnf.EXTERNAL_PLAYER_OPTS = None
             return False
 
+    def _speak_selection(self):
+        if self.ws.operation_mode == self.ws.NORMAL_MODE:
+            self.tts.speak(f'Selected station: {self.stations[self.selection][0]}')
+        elif self.ws.operation_mode == self.ws.PLAYLIST_MODE:
+            self.tts.speak(f'Selected playlist: {self.stations[self.selection][0]}')
+
     def keypress(self, char):
         ''' PyRadio keypress '''
         # # logger.error('\n\nparams\n{}\n\n'.format(self._cnf.params))
@@ -9789,19 +9807,23 @@ _____"|f|" to see the |free| keys you can use.
             if char in (curses.KEY_DOWN, kbkey['j']) or \
                     check_localized(char, (kbkey['j'], )):
                 self._move_cursor_one_down()
+                self._speak_selection()
                 return
 
             if char in (curses.KEY_UP, kbkey['k']) or \
                     check_localized(char, (kbkey['k'], )):
                 self._move_cursor_one_up()
+                self._speak_selection()
                 return
 
             if char in (curses.KEY_PPAGE, ):
                 self._page_up()
+                self._speak_selection()
                 return
 
             if char in (curses.KEY_NPAGE, ):
                 self._page_down()
+                self._speak_selection()
                 return
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
