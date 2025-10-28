@@ -58,7 +58,7 @@ from .simple_curses_widgets import SimpleCursesMenu
 from .messages_system import PyRadioMessagesSystem
 from .server import PyRadioServer, HAS_NETIFACES
 from .keyboard import kbkey, get_lkbkey, get_unicode_and_cjk_char, dequeue_input, input_queue, set_kb_letter, check_localized, add_l10n_to_functions_dict, set_kb_cjk
-from .tts import TTSManager
+from .tts import TTSManager, Priority
 HAVE_CHARSET_NORMALIZER = True
 try:
     from .m3u import parse_m3u
@@ -263,7 +263,6 @@ class SelectPlayer():
 
 class PyRadio():
     player = None
-    ws = Window_Stack()
 
     _i_am_resizing = False
     _redisplay_list = []
@@ -512,6 +511,7 @@ class PyRadio():
             in log.write, if _current_player_id != _active_player_id
                     do not display any message
         '''
+        self.ws = Window_Stack(self._speak_selection)
         self.player = None
         # player data
         self._default_player_name = None
@@ -1047,7 +1047,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             # self._remote_control_server._send_text('Volume set!')
             self.player.set_volume(vol)
             sleep(.1)
-            return f'Volume set to: {vol}'
+            return M_STRINGS['volume_set'] + f'{vol}'
         else:
             if self.player.muted:
                 return 'Player is Muted!'
@@ -1251,7 +1251,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self._cnf,
             lambda: self._current_player_id,
             lambda: self._active_player_id,
-            lambda: self._remote_control_server
+            lambda: self._remote_control_server,
+            lambda: self.tts
         )
         self.log.program_restart = self.program_restart
         self.program_restart = False
@@ -1287,6 +1288,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.player.log = self.log
             self.player.handle_old_referer = self._handle_old_referer
             self.player.update_bitrate = self._update_bitrate
+            self.player.tts = lambda: self.tts
             if self._request_recording:
                 if not (platform.startswith('win') and \
                         self.player.PLAYER_NAME == 'vlc'):
@@ -2216,6 +2218,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 self._print_handle_foreign_playlist()
 
             self._cnf.setup_mouse()
+
+            self._speak_selection()
 
             if not self._cnf.use_themes \
                     and not self._cnf.no_themes_notification_shown \
@@ -4191,7 +4195,8 @@ and |remove the file manually|.
                         if not self._cnf._online_browser.initialize():
                             ''' browser cannot be opened '''
                             self._cnf.remove_from_playlist_history()
-                            self.ws.close_window()
+                            self.ws.close_window(no_tts=True)
+                            self._speak_high('Error, cannot connect to Radio Browser')
                             self._print_service_connection_error()
                             self._cnf.browsing_station_service = False
                             self._cnf.online_browser = None
@@ -4202,6 +4207,7 @@ and |remove the file manually|.
 
                         ''' make sure we don't send a wrong click '''
                         self._cnf._online_browser.search()
+                        self._speak_selection()
                     else:
                         self._cnf.remove_from_playlist_history()
                         self._open_simple_message_by_key(
@@ -4635,6 +4641,7 @@ and |remove the file manually|.
                 #     self._cnf.save_last_playlist()
             if result:
                 self._normal_mode_resize()
+                self._speak_selection()
         return result
 
     def _get_station_id(self, find):
@@ -6659,6 +6666,7 @@ and |remove the file manually|.
         self.player.update_bitrate = self._update_bitrate
         self.player.log = self.log
         self.player.handle_old_referer = self._handle_old_referer
+        self.player.tts = lambda: self.tts
         if not (self.player.PLAYER_NAME == 'vlc' and \
                 platform.startswith('win')):
             self.player.recording = to_record
@@ -6747,11 +6755,17 @@ and |remove the file manually|.
             self._cnf.EXTERNAL_PLAYER_OPTS = None
             return False
 
+    def _speak_high(self, msg):
+        self.tts.queue_speech(msg, Priority.HIGH)
+
+    def _speak_normal(self, msg):
+        self.tts.queue_speech(msg, Priority.NORMAL)
+
     def _speak_selection(self):
         if self.ws.operation_mode == self.ws.NORMAL_MODE:
-            self.tts.speak(f'Selected station: {self.stations[self.selection][0]}')
+            self.tts.queue_speech(f'{self.selection+1}. {self.stations[self.selection][0]}', Priority.NORMAL)
         elif self.ws.operation_mode == self.ws.PLAYLIST_MODE:
-            self.tts.speak(f'Selected playlist: {self.stations[self.selection][0]}')
+            self.tts.queue_speech(f'{self.selection+1}. {self.stations[self.selection][0]}', Priority.NORMAL)
 
     def keypress(self, char):
         ''' PyRadio keypress '''
@@ -9760,6 +9774,7 @@ _____"|f|" to see the |free| keys you can use.
                 self._update_status_bar_right()
                 if self.number_of_items > 0:
                     self.setStation(-1)
+                    self._speak_selection()
                     self.refreshBody()
                 return
 
@@ -9768,6 +9783,7 @@ _____"|f|" to see the |free| keys you can use.
                 self._jump_to_jumpnr(char)
                 self.refreshBody()
                 self._reset_status_bar_right()
+                self._speak_selection()
                 return
 
             if char in map(ord, map(str, range(0, 10))):
@@ -9786,6 +9802,7 @@ _____"|f|" to see the |free| keys you can use.
                 self._update_status_bar_right()
                 self.setStation(0)
                 self.refreshBody()
+                self._speak_selection()
                 return
 
             if char in (curses.KEY_EXIT, kbkey['q'], 27)  or \

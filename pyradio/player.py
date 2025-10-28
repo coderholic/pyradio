@@ -15,6 +15,7 @@ import json
 import socket
 from shutil import copyfile as shutil_copy_file
 import locale
+from .tts import Priority
 locale.setlocale(locale.LC_ALL, "")
 # this is for windows...
 try:
@@ -339,6 +340,8 @@ class Player():
     currently_recording = False
 
     enable_per_station_volume = True
+
+    tts = None
 
     def __init__(self,
                  config,
@@ -2129,6 +2132,7 @@ class Player():
         self.playback_is_on = False
         self.delay_thread = None
         self.outputStream.write(msg_id=STATES.CONNECT, msg=M_STRINGS['station_'] + name + M_STRINGS['station-open'], counter='')
+        self._speak(f'Playing station: {name}', Priority.NORMAL)
         if logger.isEnabledFor(logging.INFO):
             logger.info('Selected Station: ' + name)
         if encoding:
@@ -2306,6 +2310,10 @@ class Player():
             # logger.error('=======================\n\n')
         if referer_file:
             self.handle_old_referer(referer, referer_file)
+
+    def _speak(self, msg, priority):
+        if self.tts and self.tts():
+            self.tts().queue_speech(msg, priority)
 
     def _sendCommand(self, command):
         ''' send keystroke command to player '''
@@ -3923,7 +3931,10 @@ class VlcPlayer(Player):
             sleep(1)
             self.get_volume(repeat=True)
         self.actual_volume = self.volume
-        self.volume = int(100 * self.actual_volume / self.max_volume)
+        try:
+            self.volume = int(100 * int(self.actual_volume) / int(self.max_volume))
+        except Exception as e:
+            logger.error(f'exception: {e}')
         # logger.error('Final')
         # logger.error('self.actual_volume = {}'.format(self.actual_volume))
         # logger.error('self.volume = {}'.format(self.volume))

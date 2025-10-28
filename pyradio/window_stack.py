@@ -252,7 +252,8 @@ class Window_Stack_Constants():
 
 class Window_Stack(Window_Stack_Constants):
 
-    def __init__(self):
+    def __init__(self, speak_selection):
+        self._speak_selection = speak_selection
         self._dq = deque()
         super(Window_Stack_Constants, self).__init__()
         self._dq.append([self.NORMAL_MODE, self.NORMAL_MODE])
@@ -341,7 +342,11 @@ class Window_Stack(Window_Stack_Constants):
             return self.MODE_NAMES[intToFind]
         return 'UNKNOWN'
 
-    def close_window(self):
+    def close_window(self, no_tts=False):
+        last = -2
+        logger.error('\n\n')
+        logger.error(f'{self._dq = }')
+        logger.error('\n\n')
         if len(self._dq) == 1 and self._dq[0] != [self.NORMAL_MODE, self.NORMAL_MODE]:
             self._dq[0] = [self.NORMAL_MODE, self.NORMAL_MODE]
             if logger.isEnabledFor(logging.DEBUG):
@@ -349,6 +354,10 @@ class Window_Stack(Window_Stack_Constants):
 
         if len(self._dq) > 1:
             tmp = self._dq.pop()
+            if tmp[0] != self._dq[-1][0]:
+                logger.error('\n\nspeak!\n\n')
+                if not no_tts:
+                    self._speak_selection()
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'CLOSE MODE: {self.mode_name(tmp[0])} -> {self.mode_name(self._dq[-1][0])} - {list(self._dq)}')
         else:

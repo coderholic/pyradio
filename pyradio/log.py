@@ -20,6 +20,7 @@ except ImportError:
     from importlib_resources import files, as_file   # backport για 3.7–3.8
 from .common import STATES, M_STRINGS
 from .cjkwrap import cjklen, cjkslices
+from .tts import Priority
 
 locale.setlocale(locale.LC_ALL, "")
 
@@ -246,7 +247,8 @@ class Log():
                  config,
                  current_player_id,
                  active_player_id,
-                 get_web_song_title
+                 get_web_song_title,
+                 tts
                  ):
         self.program_restart = False
         self.error_msg = False
@@ -314,6 +316,7 @@ class Log():
         self._stop_thread = False
         self.timer = None
         self._started_station_name = None
+        self.tts = tts
 
     def __del__(self):
         self._stop_desktop_notification_thread = True
@@ -411,6 +414,20 @@ class Log():
               error_msg=False,
               notify_function=None):
         with self.lock:
+            try:
+                if self.tts and self.tts():
+                    if msg_id == STATES.TITLE \
+                            and msg and msg.startswith(M_STRINGS['title_']):
+                        self.tts().queue_speech(msg.replace(':', ',',1))
+                        pass
+                    elif msg_id == STATES.VOLUME:
+                        logger.error(f'{msg = }')
+                        s_msg = msg.split(']')[0].split(' ')[-1]
+                        logger.error(f'{s_msg = }')
+                        self.tts().queue_speech(M_STRINGS['volume_set'] + s_msg.split('%')[0] + ' percent', Priority.HIGH)
+            except AttributeError:
+                pass
+
             current_player_id = self._current_player_id()
             active_player_id = self._active_player_id()
 

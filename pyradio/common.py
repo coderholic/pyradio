@@ -68,6 +68,7 @@ M_STRINGS = {
 	'press-?': ' Press ? for help',
 	'error-str': 'error',
 	'vol_': 'Vol: ',
+    'volume_set': 'Volume set to ',
     'error-403': 'Server returned "Forbidden" (error 403)',
     'error-404': 'Station does not exist (error 404)',
     'error-503': 'Service not available (error 503)',
