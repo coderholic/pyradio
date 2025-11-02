@@ -993,11 +993,10 @@ class Player():
                                     self.volume = ''.join(c for c in sp[-1].split()[0] if c.isdigit())
 
                                     self_show_volume = self.show_volume
-                                    with recording_lock:
-                                        self_oldUserInput_Title = self.oldUserInput['Title']
-                                        # IMPORTANT: do this here, so that vlc actual_volume
-                                        # gets updated in _format_volume_string
-                                        string_to_show = self._format_volume_string(subsystemOut) + self._format_title_string(self.oldUserInput['Title'])
+                                    self_oldUserInput_Title = self.oldUserInput['Title']
+                                    # IMPORTANT: do this here, so that vlc actual_volume
+                                    # gets updated in _format_volume_string
+                                    string_to_show = self._format_volume_string(subsystemOut) + self._format_title_string(self.oldUserInput['Title'])
 
                                 if self_show_volume and self_oldUserInput_Title:
                                     self.outputStream.write(msg_id=STATES.VOLUME, msg=string_to_show, counter='')
@@ -4007,9 +4006,7 @@ class VlcPlayer(Player):
         pvol = int(100 * self.actual_volume / self.max_volume)
         if pvol > 0:
             avol = '[' + M_STRINGS['vol_'] + f'{pvol}%] '
-            with recording_lock:
-                title = self.oldUserInput['Title']
-            if self.show_volume and title:
+            if self.show_volume and self.oldUserInput['Title']:
                 self.outputStream.write(msg_id=STATES.VOLUME, msg=avol + self.oldUserInput['Title'], counter='')
                 self.threadUpdateTitle()
 
