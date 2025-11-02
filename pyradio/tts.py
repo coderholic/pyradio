@@ -14,6 +14,11 @@ import os
 import shlex
 import queue
 from enum import Enum
+if platform.system().lower().startswith('win'):
+    try:
+        import win32com.client
+    except:
+        pass
 from .common import M_STRINGS
 
 logger = logging.getLogger(__name__)
@@ -169,7 +174,7 @@ class TTSLinux(TTSBase):
         self.max_retries = 2
 
     def _execute_speech(self, text, priority=Priority.NORMAL):
-        logger.error('\n\npriority = {}\n\n'.format(priority.name))
+        # logger.error('priority = {}\n\n'.format(priority.name))
         """Execute speech with priority-based blocking behavior"""
         try:
             if priority == Priority.HIGH:
@@ -289,48 +294,56 @@ class TTSLinux(TTSBase):
             return True
 
 class TTSWindows(TTSBase):
-    """Windows TTS implementation"""
+    """Windows TTS implementation using win32com and SAPI"""
+
+    def __init__(self, config):
+        super().__init__(config)
+        self.speaker = win32com.client.Dispatch("SAPI.SpVoice")
+        self.speaker.Volume = 100
+        self.current_stream = None
+        self._lock = threading.RLock()
+        logger.info("Windows TTS initialized with SAPI.SpVoice")
 
     def _execute_speech(self, text, priority=Priority.NORMAL):
-        """Execute speech on Windows"""
-        try:
-            cmd = self.config.get_command(self.system, text)
-            if isinstance(cmd, str):
-                cmd = shlex.split(cmd)
+        """Execute speech with proper priority handling"""
+        with self._lock:
+            try:
+                # Stop any current speech
+                self.stop()
 
-            # Use Popen for process control
-            self._current_process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                shell=True  # Needed for PowerShell on Windows
-            )
+                # Speak the new text (flags=1 for async)
+                self.current_stream = self.speaker.Speak(text, 1)
+                self.state = TTSState.SPEAKING
 
-            # Wait for completion
-            self._current_process.wait(timeout=30)
-            return True
+                if priority == Priority.HIGH:
+                    # For HIGH priority, wait for completion with shutdown check
+                    logger.debug("Waiting for HIGH priority speech completion")
+                    while not self.speaker.WaitUntilDone(self.current_stream):  # 100ms intervals
+                        if self.state == TTSState.SHUTTING_DOWN:
+                            self.stop()
+                            return False
+                    self.current_stream = None
+                    self.state = TTSState.IDLE
+                    return True
+                else:
+                    # For NORMAL priority, return immediately
+                    # The speech will continue in background
+                    return True
 
-        except subprocess.TimeoutExpired:
-            if logger.isEnabledFor(logging.WARNING):
-                logger.warning("Windows TTS timeout")
-            if self._current_process:
-                self._current_process.terminate()
-            return False
-        except Exception as e:
-            if logger.isEnabledFor(logging.ERROR):
+            except Exception as e:
                 logger.error(f"Windows TTS error: {e}")
-            return False
+                return False
 
     def stop(self):
         """Stop current speech"""
         with self._lock:
-            if self._current_process and self._current_process.poll() is None:
-                self._current_process.terminate()
-                try:
-                    self._current_process.wait(timeout=1)
-                except subprocess.TimeoutExpired:
-                    self._current_process.kill()
-            time.sleep(self.speech_delay)
+            try:
+                self.speaker.Speak("", 2)  # flags=2 for immediate stop
+                self.current_stream = None
+                self.state = TTSState.IDLE
+                time.sleep(self.speech_delay)
+            except Exception as e:
+                logger.error(f"Windows TTS stop error: {e}")
 
     def shutdown(self):
         """Phase 1: Immediate shutdown (non-blocking)"""
@@ -341,10 +354,7 @@ class TTSWindows(TTSBase):
     def wait_for_shutdown(self, timeout=2.0):
         """Phase 2: Wait for complete shutdown (blocking)"""
         with self._lock:
-            if self._current_process and self._current_process.poll() is None:
-                self._current_process.terminate()
-            self._current_process = None
-            self.state = TTSState.IDLE
+            self.stop()
             return True
 
 class TTSMacOS(TTSBase):
@@ -416,6 +426,7 @@ class TTSManager:
     """
 
     def __init__(self, enabled=True):
+        self.stop_after_high = False
         self.enabled = enabled
         self.config = TTSConfig()
         self.system = platform.system()
@@ -460,6 +471,7 @@ class TTSManager:
                 self.available = self._check_macos_availability()
 
             if self.available:
+                logger.error('1')
                 self.engine = self._create_engine()
                 if logger.isEnabledFor(logging.INFO):
                     logger.info(f"TTS initialized successfully for {self.system}")
@@ -513,30 +525,15 @@ class TTSManager:
             return False
 
     def _check_windows_availability(self):
-        """Check if PowerShell TTS is available on Windows"""
+        """Check if Windows TTS is available via SAPI"""
         try:
-            # Check PowerShell version and TTS capabilities
-            ps_test = subprocess.run([
-                'powershell', '-Command',
-                'Get-Host | Select-Object Version'
-            ], capture_output=True, timeout=10, shell=True)
-
-            if ps_test.returncode != 0:
-                if logger.isEnabledFor(logging.WARNING):
-                    logger.warning("PowerShell not available or not working")
-                return False
-
-            # Test TTS functionality
-            tts_test = subprocess.run([
-                'powershell', '-Command',
-                'Add-Type -AssemblyName System.Speech; exit 0'
-            ], capture_output=True, timeout=10, shell=True)
-
-            return tts_test.returncode == 0
-
+            speaker = win32com.client.Dispatch("SAPI.SpVoice")
+            # Test with empty speech
+            speaker.Speak("", 1)
+            return True
         except Exception as e:
-            if logger.isEnabledFor(logging.WARNING):
-                logger.warning(f"Windows TTS check failed: {e}")
+            logger.error('5')
+            logger.error(f"Windows TTS availability check failed: {e}")
             return False
 
     def _check_macos_availability(self):
@@ -576,7 +573,6 @@ class TTSManager:
                 # 1. Process HIGH priority queue first
                 try:
                     high_request = self.high_priority_queue.get(timeout=0.1)
-                    logger.error('\n\n******* high_request = {}\n\n'.format(high_request))
                     self._execute_request(high_request)
 
                     # After HIGH completes, check for pending title
@@ -588,7 +584,6 @@ class TTSManager:
                 # 2. Process NORMAL priority queue
                 try:
                     normal_request = self.normal_priority_queue.get(timeout=0.1)
-                    logger.error('\n\n*******  normal_request= {}\n\n'.format(normal_request))
 
                     # PLATFORM-SPECIFIC: Anti-stutter delay
                     if self.system == "Linux":
@@ -629,6 +624,9 @@ class TTSManager:
                 if self.engine.state != TTSState.SHUTTING_DOWN:
                     self.engine.state = TTSState.IDLE
                 self._current_request = None
+        if self.stop_after_high and request.priority == Priority.HIGH:
+            self.set_enabled(False)
+            self.stop_after_high = False
 
     def _wait_with_interruption(self, delay):
         """Wait with interruption checks for anti-stutter"""
@@ -835,14 +833,36 @@ class TTSManager:
         self.enabled = enabled
 
         if enabled and not old_state:
-            # Turning ON - initialize if needed
-            if not self.engine:
-                self._initialize_tts()
-                self._start_worker()
+            # Completely reinitialize TTS
+            self.shutdown()
+            self.wait_for_shutdown()
+
+            # Clear queues for restart
+            while not self.high_priority_queue.empty():
+                try:
+                    self.high_priority_queue.get_nowait()
+                except queue.Empty:
+                    break
+            while not self.normal_priority_queue.empty():
+                try:
+                    self.normal_priority_queue.get_nowait()
+                except queue.Empty:
+                    break
+
+            # Reset all state
+            self._shutdown_flag = False
+            self.engine = None
+            self.available = False
+
+            self._initialize_tts()
+            self._start_worker()
+            logger.error(f'TTS reinitialized - {self.engine = }')
+
         elif not enabled and old_state:
             # Turning OFF - shutdown gracefully
             self.shutdown()
             self.wait_for_shutdown()
+            self.engine = None
 
     def is_available(self):
         """Check if TTS is available and enabled"""

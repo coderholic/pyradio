@@ -1360,6 +1360,8 @@ class PyRadioConfig(PyRadioStations):
         self.opts['enable_notifications'] = ['Enable notifications: ', '-1']
         self.opts['use_station_icon'] = ['  Use station icon: ', True]
         self.opts['remove_station_icons'] = ['  Remove cached icons: ', True]
+        self.opts['tts_title'] = ['TTS', '']
+        self.opts['enable_tts'] = ['  Enable TTS: ', False]
         self.opts['clock_title'] = ['Clock', '']
         self.opts['enable_clock'] = ['Display on startup: ', False]
         self.opts['time_format'] = ['Time format: ', '1']
@@ -1691,6 +1693,7 @@ class PyRadioConfig(PyRadioStations):
     @use_station_icon.setter
     def use_station_icon(self, val):
         self.opts['use_station_icon'][1] = val
+
     @property
     def remove_station_icons(self):
         return self.opts['remove_station_icons'][1]
@@ -1698,6 +1701,15 @@ class PyRadioConfig(PyRadioStations):
     @remove_station_icons.setter
     def remove_station_icons(self, val):
         self.opts['remove_station_icons'][1] = val
+        self.opts['dirty_config'][1] = True
+
+    @property
+    def enable_tts(self):
+        return self.opts['enable_tts'][1]
+
+    @enable_tts.setter
+    def enable_tts(self, val):
+        self.opts['enable_tts'][1] = val
         self.opts['dirty_config'][1] = True
 
     @property
@@ -2423,7 +2435,7 @@ class PyRadioConfig(PyRadioStations):
 
         try:
             if distro_config:
-                # config μέσα στο package (system / wheel)
+                # config file in package (system / wheel)
                 cfg_res = files('pyradio').joinpath('config')
                 with as_file(cfg_res) as cfg_path:
                     with open(cfg_path, 'r', encoding='utf-8') as cfgfile:
@@ -2432,7 +2444,7 @@ class PyRadioConfig(PyRadioStations):
             else:
                 file_to_read = self.config_file
                 if not path.exists(file_to_read):
-                    # user config δεν υπάρχει
+                    # user config does not exist
                     self._make_sure_dirs_exist()
                     self._first_read = False
                     return
@@ -2544,6 +2556,11 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['remove_station_icons'][1] = False
                 else:
                     self.opts['remove_station_icons'][1] = True
+            elif sp[0] == 'enable_tts':
+                if sp[1].lower() == 'false':
+                    self.opts['enable_tts'][1] = False
+                else:
+                    self.opts['enable_tts'][1] = True
             elif sp[0] == 'confirm_station_deletion':
                 if sp[1].lower() == 'false':
                     self.opts['confirm_station_deletion'][1] = False
@@ -2709,6 +2726,7 @@ class PyRadioConfig(PyRadioStations):
             self.opts['enable_mouse'][1] = False
             self.opts['calculated_color_factor'][1] = '0'
             self.opts['enable_clock'][1] = False
+            self.opts['enable_tts'][1] = False
 
         ''' check if default playlist exists '''
         if self.opts['default_playlist'][1] != 'stations':

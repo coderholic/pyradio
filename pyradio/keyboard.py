@@ -153,6 +153,7 @@ kbkey_orig['change_player']            = ( ord('m')               , 'Cahnge medi
 kbkey_orig['hist_top']                 = ( ord(']')               , 'Open first opened playlist')
 kbkey_orig['buffer']                   = ( ord('b')               , 'Toggle buffering')
 kbkey_orig['toggle_time']              = ( ord('t')               , 'Toggle displaying time')
+kbkey_orig['toggle_tts']               = ( ord('T')               , 'Toggle TTS')
 kbkey_orig['open_buffer']              = ( ord('B')               , 'Open buffering window')
 kbkey_orig['last_playlist']            = ( ord('l')               , 'Toggle Open last playlist')
 kbkey_orig['clear_reg']                = ( ord('c')               , 'Clear current register')

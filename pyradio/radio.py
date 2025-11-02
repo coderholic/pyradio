@@ -466,6 +466,7 @@ class PyRadio():
     _keyboard_localized_win  = None
     _keyboard_loc_get_name  = None
 
+    _enable_tts = False
 
     try:
         handled_signals = {
@@ -511,6 +512,7 @@ class PyRadio():
             in log.write, if _current_player_id != _active_player_id
                     do not display any message
         '''
+        self._enable_tts = pyradio_config.enable_tts
         self.ws = Window_Stack(self._speak_selection)
         self.player = None
         # player data
@@ -2131,7 +2133,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             except KeyboardInterrupt:
                 pass
         else:
-            self.tts = TTSManager()
+            self.tts = TTSManager(self._cnf.enable_tts)
             ''' start update detection and notification thread '''
             if CAN_CHECK_FOR_UPDATES:
                 if self._cnf.locked:
@@ -2856,6 +2858,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             msg=self.player.PLAYER_NAME + ': ' + player_start_stop_token[msg_key],
             help_msg=True, suffix=self._status_suffix, counter=''
         )
+        if state == STATES.CONNECT_ERROR:
+            self.tts.queue_speech(player_start_stop_token[msg_key], Priority.HIGH)
         self._current_player_id = self._next_current_player_id
         logger.error(f'increasing {self._current_player_id = }')
         self._prepare_next_current_player_id()
@@ -6763,9 +6767,9 @@ and |remove the file manually|.
 
     def _speak_selection(self):
         if self.ws.operation_mode == self.ws.NORMAL_MODE:
-            self.tts.queue_speech(f'{self.selection+1}. {self.stations[self.selection][0]}', Priority.NORMAL)
+            self.tts.queue_speech(f'{self.selection+1}, {self.stations[self.selection][0]}', Priority.NORMAL)
         elif self.ws.operation_mode == self.ws.PLAYLIST_MODE:
-            self.tts.queue_speech(f'{self.selection+1}. {self.stations[self.selection][0]}', Priority.NORMAL)
+            self.tts.queue_speech(f'{self.selection+1}, {self.stations[self.selection][0]}', Priority.NORMAL)
 
     def keypress(self, char):
         ''' PyRadio keypress '''
@@ -7262,7 +7266,24 @@ _____"|f|" to see the |free| keys you can use.
                 self.ws.operation_mode in (self.ws.NORMAL_MODE,
                 self.ws.PLAYLIST_MODE):
 
-            if char == kbkey['toggle_time'] or \
+            if char == kbkey['toggle_tts'] or \
+                    check_localized(char, (kbkey['toggle_tts'],)):
+                self._backslash_pressed = False
+                self._update_status_bar_right(status_suffix='')
+                self._enable_tts = not self._enable_tts
+                if not self._enable_tts:
+                    self.tts.stop_after_high = True
+                    self.tts.queue_speech('T T S disabled', Priority.HIGH)
+                    return
+                self.tts.set_enabled(False)
+                sleep(0.1)
+                self.tts = None
+                self.tts = TTSManager(enabled=True)
+                # self.tts.set_enabled(self._enable_tts)
+                if self._enable_tts:
+                    self.tts.queue_speech('T T S enabled', Priority.HIGH)
+
+            elif char == kbkey['toggle_time'] or \
                     check_localized(char, (kbkey['toggle_time'],)):
                 self._cnf.active_enable_clock = not self._cnf.active_enable_clock
                 if self._cnf.active_enable_clock:
@@ -7272,8 +7293,6 @@ _____"|f|" to see the |free| keys you can use.
                     )
                 else:
                     self.log.stop_timer()
-                self._backslash_pressed = False
-                self._update_status_bar_right(status_suffix='')
 
             elif char == kbkey['open_dirs'] or \
                     check_localized(char, (kbkey['open_dirs'],)):

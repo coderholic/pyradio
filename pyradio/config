@@ -126,13 +126,9 @@ use_station_icon = True
 # Default value: True
 remove_station_icons = True
 
-# Display Station Icons in the terminal
-# This is supported by a handful of terminals. If a capable terminal is
-# detected, this option will disable (default) or enable image display,
-# in which case, it will declare the maximum image size (in characters).
-#
-# Default value: 0 (disabled)
-icon_size = 0
+# TTS
+# Default value: False
+enable_tts = False
 
 # Titles logging
 # If this option is True, PyRadio will start logging song titles to a log file
