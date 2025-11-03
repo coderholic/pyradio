@@ -302,7 +302,8 @@ class TTSWindows(TTSBase):
         self.speaker.Volume = 100
         self.current_stream = None
         self._lock = threading.RLock()
-        logger.info("Windows TTS initialized with SAPI.SpVoice")
+        if logger.isEnabledFor(logging.INFO):
+            logger.info("Windows TTS initialized with SAPI.SpVoice")
 
     def _execute_speech(self, text, priority=Priority.NORMAL):
         """Execute speech with proper priority handling"""
@@ -312,13 +313,16 @@ class TTSWindows(TTSBase):
                 self.stop()
 
                 # Speak the new text (flags=1 for async)
+                self.speaker.Volume = 50
+                self.speaker.Rate = 0
                 self.current_stream = self.speaker.Speak(text, 1)
                 self.state = TTSState.SPEAKING
 
                 if priority == Priority.HIGH:
                     # For HIGH priority, wait for completion with shutdown check
-                    logger.debug("Waiting for HIGH priority speech completion")
-                    while not self.speaker.WaitUntilDone(self.current_stream):  # 100ms intervals
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug("Waiting for HIGH priority speech completion")
+                    while not self.speaker.WaitUntilDone(self.current_stream):
                         if self.state == TTSState.SHUTTING_DOWN:
                             self.stop()
                             return False
@@ -331,7 +335,8 @@ class TTSWindows(TTSBase):
                     return True
 
             except Exception as e:
-                logger.error(f"Windows TTS error: {e}")
+                if logger.isEnabledFor(logging.ERROR):
+                    logger.error(f"Windows TTS error: {e}")
                 return False
 
     def stop(self):
@@ -360,62 +365,97 @@ class TTSWindows(TTSBase):
 class TTSMacOS(TTSBase):
     """macOS TTS implementation"""
 
+    def __init__(self, config):
+        super().__init__(config)
+        self._current_process = None
+        self._lock = threading.RLock()
+
     def _execute_speech(self, text, priority=Priority.NORMAL):
-        """Execute speech on macOS"""
+        """Execute speech on macOS with proper interruption"""
+        with self._lock:
+            try:
+                # Stop any current speech first
+                self._stop_current_speech()
+
+                cmd = self.config.get_command(self.system, text)
+                if isinstance(cmd, str):
+                    cmd = shlex.split(cmd)
+
+                # Start new speech process
+                self._current_process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                )
+                self.state = TTSState.SPEAKING
+
+                if priority == Priority.HIGH:
+                    # For HIGH priority, wait for completion
+                    return self._wait_for_completion()
+                else:
+                    # For NORMAL priority, return immediately
+                    # The process will continue in background
+                    return True
+
+            except Exception as e:
+                if logger.isEnabledFor(logging.ERROR):
+                    logger.error(f"macOS TTS error: {e}")
+                return False
+
+    def _stop_current_speech(self):
+        """Stop any currently running speech process"""
+        if self._current_process and self._current_process.poll() is None:
+            self._current_process.terminate()
+            try:
+                self._current_process.wait(timeout=0.5)
+            except subprocess.TimeoutExpired:
+                self._current_process.kill()
+                self._current_process.wait()
+        # Additional cleanup: kill any stray say processes
+        subprocess.run(['pkill', '-9', 'say'],
+                      stdout=subprocess.DEVNULL,
+                      stderr=subprocess.DEVNULL,
+                      timeout=5)
+
+    def _wait_for_completion(self):
+        """Wait for current process to complete with shutdown checking"""
         try:
-            cmd = self.config.get_command(self.system, text)
-            if isinstance(cmd, str):
-                cmd = shlex.split(cmd)
+            while self._current_process and self._current_process.poll() is None:
+                if self.state == TTSState.SHUTTING_DOWN:
+                    self._stop_current_speech()
+                    return False
+                time.sleep(0.1)
 
-            # Use Popen for process control
-            self._current_process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
+            return self._current_process.returncode == 0 if self._current_process else False
 
-            # Wait for completion
-            self._current_process.wait(timeout=30)
-            return True
-
-        except subprocess.TimeoutExpired:
-            if logger.isEnabledFor(logging.WARNING):
-                logger.warning("macOS TTS timeout")
-            if self._current_process:
-                self._current_process.terminate()
-            return False
         except Exception as e:
             if logger.isEnabledFor(logging.ERROR):
-                logger.error(f"macOS TTS error: {e}")
+                logger.error(f"Error waiting for speech completion: {e}")
             return False
 
     def stop(self):
         """Stop current speech"""
         with self._lock:
-            if self._current_process and self._current_process.poll() is None:
-                self._current_process.terminate()
-                try:
-                    self._current_process.wait(timeout=1)
-                except subprocess.TimeoutExpired:
-                    self._current_process.kill()
-            # Kill any say processes that might be stuck
-            subprocess.run(
-                ['pkill', '-9', 'say'],
-                capture_output=True
-            )
+            self._stop_current_speech()
             time.sleep(self.speech_delay)
+            self.state = TTSState.IDLE
 
     def shutdown(self):
         """Phase 1: Immediate shutdown (non-blocking)"""
         with self._lock:
             self.state = TTSState.SHUTTING_DOWN
-            self.stop()
+            self._stop_current_speech()
 
     def wait_for_shutdown(self, timeout=2.0):
         """Phase 2: Wait for complete shutdown (blocking)"""
+        start_time = time.time()
         with self._lock:
-            if self._current_process and self._current_process.poll() is None:
-                self._current_process.terminate()
+            while (self._current_process and
+                   self._current_process.poll() is None and
+                   (time.time() - start_time) < timeout):
+                time.sleep(0.1)
+
+            self._stop_current_speech()
             self._current_process = None
             self.state = TTSState.IDLE
             return True
@@ -471,7 +511,6 @@ class TTSManager:
                 self.available = self._check_macos_availability()
 
             if self.available:
-                logger.error('1')
                 self.engine = self._create_engine()
                 if logger.isEnabledFor(logging.INFO):
                     logger.info(f"TTS initialized successfully for {self.system}")
@@ -532,8 +571,8 @@ class TTSManager:
             speaker.Speak("", 1)
             return True
         except Exception as e:
-            logger.error('5')
-            logger.error(f"Windows TTS availability check failed: {e}")
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error(f"Windows TTS availability check failed: {e}")
             return False
 
     def _check_macos_availability(self):
@@ -574,9 +613,6 @@ class TTSManager:
                 try:
                     high_request = self.high_priority_queue.get(timeout=0.1)
                     self._execute_request(high_request)
-
-                    # After HIGH completes, check for pending title
-                    self._process_pending_title()
                     continue
                 except queue.Empty:
                     pass
@@ -585,17 +621,21 @@ class TTSManager:
                 try:
                     normal_request = self.normal_priority_queue.get(timeout=0.1)
 
-                    # PLATFORM-SPECIFIC: Anti-stutter delay
-                    if self.system == "Linux":
-                        # Linux: No delay needed - speech-dispatcher handles interruptions
+                    # PLATFORM-SPECIFIC: Anti-stutter and interruption
+                    if self.system == "Darwin":  # macOS
+                        # For macOS, always stop current speech before new NORMAL
+                        if self._wait_with_interruption(0.1):
+                            self._execute_request(normal_request)
+                    elif self.system == "Linux":
+                        # Linux: No delay needed
                         self._execute_request(normal_request)
                     else:
-                        # Windows/macOS: Apply anti-stutter delay with interruption check
+                        # Windows: Apply anti-stutter delay
                         if self._wait_with_interruption(0.3):
                             self._execute_request(normal_request)
 
                 except queue.Empty:
-                    time.sleep(0.01)  # Small sleep to prevent busy waiting
+                    time.sleep(0.01)
 
             except Exception as e:
                 if logger.isEnabledFor(logging.ERROR):

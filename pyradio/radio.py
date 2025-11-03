@@ -7728,6 +7728,7 @@ _____"|f|" to see the |free| keys you can use.
                 self.selection = self.startPos
                 self.refreshBody()
             self._do_display_notify()
+            self._speak_selection()
             return
 
         elif (char == kbkey['screen_middle'] or \
@@ -7742,6 +7743,7 @@ _____"|f|" to see the |free| keys you can use.
                       self.selection = self.startPos + int((self.bodyMaxY - 1) / 2)
                   self.refreshBody()
               self._do_display_notify()
+              self._speak_selection()
               return
 
         elif (char == kbkey['screen_bottom'] or \
@@ -7756,6 +7758,7 @@ _____"|f|" to see the |free| keys you can use.
                     self.selection = self.startPos + self.bodyMaxY - 1
                 self.refreshBody()
             self._do_display_notify()
+            self._speak_selection()
             return
 
         elif ( char in (kbkey['t'], ) or \
