@@ -7226,21 +7226,21 @@ _____"|f|" to see the |free| keys you can use.
                             ''' inform no change '''
                             if (logger.isEnabledFor(logging.DEBUG)):
                                 logger.debug('Volume is -1. Aborting...')
-                            ret_string = 'Station Volume: no initial value set...'
+                            ret_string = 'Station volume: no initial value set...'
                         elif self.player.volume == -2:
                             if (logger.isEnabledFor(logging.DEBUG)):
                                 logger.debug('Error saving volume...')
-                            ret_string = 'Station Volume: NOT saved (Error writing file)'
+                            ret_string = 'Station volume: NOT saved (Error writing file)'
                         else:
                             if (logger.isEnabledFor(logging.DEBUG)):
                                 logger.debug(f'Volume is {self.player.volume}%. Saving...')
                             if self.stations[self.selection][Station.volume] != self.player.volume:
-                                ret_string = f'Station Volume: {self.player.volume}% saved'
+                                ret_string = f'Station volume: {self.player.volume}% saved'
                                 self.stations[self.selection][Station.volume] = self.player.volume
                                 self._cnf.dirty_playlist = True
                                 self.saveCurrentPlaylist(report_success=False)
                             else:
-                                ret_string = 'Station Volume: already saved!'
+                                ret_string = 'Station volume: already saved!'
 
                         self.log.write(msg_id=STATES.VOLUME, msg=ret_string)
                         self.player.threadUpdateTitle()

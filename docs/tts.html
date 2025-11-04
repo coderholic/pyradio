@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PyRadio Text-to-Speech Support</title>
+    <style> 
+    body {padding: 2em;} 
+    @media screen and (max-width: 770px) { 
+        body {padding: 10px;} 
+    }
+    body {max-width: 750px; margin: auto;} 
+    h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
+    h3 {margin-top: 2em; color: SaddleBrown; text-decoration: underline SaddleBrown} 
+    h4 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 1em;} 
+    h4:before {content: "# "; font-weight: bold; vertical-align: middle;} 
+    h5 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 1em;;} 
+    h5:before {content: "## "; font-weight: bold; vertical-align: middle;} 
+    p, table, ol, ul {margin-left: .8em;} 
+    STRONG {color: SaddleBrown;} 
+    dl {margin: 2em;} 
+    dd {margin: 1em;} 
+    dt {font-weight: bold;} 
+    TABLE {border: 1px solid SaddleBrown; border-collapse: collapse; margin-left: auto; margin-right: auto; border-radius: 5px; -moz-border-radius: 5px; border-collapse:separate; box-shadow: 5px 5px 15px #888888;} 
+    TH {text-align: left; vertical-align: top; padding: 5px;color: SaddleBrown;border: 1px solid SaddleBrown; background-color: SaddleBrown; color: white;} 
+    TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
+    pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; overflow: auto; box-shadow: 5px 5px 15px #C7C7C7;} 
+    .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} 
+    img{display: block; margin-left: auto; margin-right: auto; max-width: 750px; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
+    .indented {text-indent: -1.5em; padding-left: 1.5em; margin-left: 1em;} 
+    a{ color: SaddleBrown;}
+a:visited{color: SaddleBrown;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+</header>
+<h1 style="color: SaddleBrown" id="pyradio-text-to-speech-support">PyRadio Text-to-Speech Support</h1>
+<h2 id="overview">Overview <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p><strong>PyRadio</strong> now features comprehensive Text-to-Speech (TTS) support, providing auditory feedback for an enhanced radio streaming experience. This intelligent system delivers contextual information about station navigation, playback status, and system events.</p>
+<h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<!-- vim-markdown-toc Marked -->
+<ul>
+<li><a href="#features">Features</a></li>
+<li><a href="#activation">Activation</a>
+<ul>
+<li><a href="#permanent-activation">Permanent Activation</a></li>
+<li><a href="#temporary-activation">Temporary Activation</a></li>
+</ul></li>
+<li><a href="#platform-implementation">Platform Implementation</a>
+<ul>
+<li><a href="#linux">Linux</a></li>
+<li><a href="#windows">Windows</a></li>
+<li><a href="#macos">macOS</a></li>
+</ul></li>
+<li><a href="#language-support">Language Support</a>
+<ul>
+<li><a href="#voice-characteristics">Voice Characteristics</a></li>
+<li><a href="#platform-specific-strategy">Platform-Specific Strategy</a></li>
+</ul></li>
+<li><a href="#technical-features">Technical Features</a>
+<ul>
+<li><a href="#smart-queue-management">Smart Queue Management</a></li>
+<li><a href="#intelligent-behavior">Intelligent Behavior</a></li>
+</ul></li>
+<li><a href="#usage-guidelines">Usage Guidelines</a>
+<ul>
+<li><a href="#for-english-dominant-users">For English-Dominant Users</a></li>
+<li><a href="#for-multi-language-content">For Multi-Language Content</a></li>
+</ul></li>
+<li><a href="#configuration-philosophy">Configuration Philosophy</a></li>
+<li><a href="#current-status-&amp;-roadmap">Current Status &amp; Roadmap</a></li>
+</ul>
+<!-- vim-markdown-toc -->
+<p class="indented">[ <a href="index.html#text-to-speech-support">Return to main doc</a> ]</p>
+<h2 id="features">Features <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>The TTS system provides spoken feedback for:</p>
+<ul>
+<li><strong>Station Information</strong>: Station names and numbers during navigation</li>
+<li><strong>Playback Status</strong>: Start of playback and connection establishment<br />
+</li>
+<li><strong>Media Context</strong>: Song titles when available in stream metadata</li>
+<li><strong>System Events</strong>: Connection errors and important status changes</li>
+<li><strong>Audio Control</strong>: Volume adjustment feedback</li>
+</ul>
+<h2 id="activation">Activation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<h3 id="permanent-activation">Permanent Activation</h3>
+<p>Enable TTS permanently through the configuration menu: <strong>Config → TTS → Enable TTS</strong></p>
+<h3 id="temporary-activation">Temporary Activation</h3>
+<p>Toggle TTS during runtime by pressing <strong>\T</strong> (backslash + T). This setting is session-only and resets when restarting PyRadio.</p>
+<h2 id="platform-implementation">Platform Implementation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<h3 id="linux">Linux</h3>
+<p>Utilizes <strong>speech-dispatcher</strong> configured for English language by default. Provides robust, interruptible speech synthesis with priority-based queue management.</p>
+<h3 id="windows">Windows</h3>
+<p>Leverages <strong>Windows SAPI (Speech API)</strong> with automatic selection of English voices when available. Features immediate speech interruption and consistent volume control.</p>
+<h3 id="macos">macOS</h3>
+<p>Employs the native <strong>say command</strong> using the system’s default voice. Most macOS voices support multiple languages natively, handling mixed-language content seamlessly.</p>
+<h2 id="language-support">Language Support <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<h3 id="voice-characteristics">Voice Characteristics</h3>
+<p>TTS voices generally fall into two categories:</p>
+<p><strong>Monolingual Voices</strong> (typical on Linux/Windows):</p>
+<ul>
+<li>Specialized in one language</li>
+<li>System messages sound clear in English</li>
+<li><strong>Non-English characters may be mispronounced or skipped entirely</strong></li>
+</ul>
+<p><strong>Multilingual Voices</strong> (common on macOS):</p>
+<ul>
+<li>Automatic language detection and switching</li>
+<li>Handle mixed-language content naturally</li>
+<li>Provide authentic pronunciation for both system messages and station names</li>
+</ul>
+<h3 id="platform-specific-strategy">Platform-Specific Strategy</h3>
+<ul>
+<li><strong>Linux</strong>: English-configured for consistent system messaging</li>
+<li><strong>Windows</strong>: Auto-selects English voices while respecting system preferences<br />
+</li>
+<li><strong>macOS</strong>: Uses default system voice - typically multilingual by design</li>
+</ul>
+<h2 id="technical-features">Technical Features <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<h3 id="smart-queue-management">Smart Queue Management</h3>
+<ul>
+<li>Priority-based processing (HIGH for alerts, NORMAL for navigation)</li>
+<li>Pending title queuing after high-priority interruptions</li>
+<li>Volume adjustment debouncing</li>
+<li>Platform-optimized anti-stutter protection</li>
+</ul>
+<h3 id="intelligent-behavior">Intelligent Behavior</h3>
+<ul>
+<li>Critical alerts receive immediate priority</li>
+<li>Song titles are queued and spoken after high-priority interruptions</li>
+<li>Rapid navigation triggers queue optimization</li>
+<li>Volume changes are consolidated to prevent speech spam</li>
+</ul>
+<h2 id="usage-guidelines">Usage Guidelines <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<h3 id="for-english-dominant-users">For English-Dominant Users</h3>
+<ul>
+<li>Default configuration works optimally</li>
+<li>System messages and international station names sound natural</li>
+</ul>
+<h3 id="for-multi-language-content">For Multi-Language Content</h3>
+<ul>
+<li><strong>macOS</strong>: Handles mixed content seamlessly with multilingual voices</li>
+<li><strong>Windows/Linux</strong>: <strong>Non-English characters in station names may not be pronounced correctly</strong></li>
+<li>Consider using English names for frequently-accessed stations</li>
+</ul>
+<h2 id="configuration-philosophy">Configuration Philosophy <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>The system is optimized for English while respecting platform conventions:</p>
+<ul>
+<li><strong>English-optimized voice selection on Linux and Windows</strong></li>
+<li><strong>Multilingual voice support on macOS</strong></li>
+<li>Maintains your preferred speech rate and volume</li>
+<li>Platform-native experience throughout</li>
+</ul>
+<h2 id="current-status-roadmap">Current Status &amp; Roadmap <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>This TTS implementation is actively developed. Planned enhancements include:</p>
+<ul>
+<li>Comprehensive help system narration</li>
+<li>Detailed interface element descriptions</li>
+<li>Enhanced context-aware speech patterns</li>
+<li>Extended configuration options</li>
+</ul>
+</body>
+</html>

@@ -15,7 +15,11 @@ import json
 import socket
 from shutil import copyfile as shutil_copy_file
 import locale
-from .tts import Priority
+try:
+    from .tts import Priority
+except ImportError:
+    pass
+
 locale.setlocale(locale.LC_ALL, "")
 # this is for windows...
 try:

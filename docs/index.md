@@ -76,6 +76,7 @@ Command line internet radio player.
 * [Remote Control Server](#remote-control-server)
     * [Remote Control Client](#remote-control-client)
 * [Playing a station in the terminal](#playing-a-station-in-the-terminal)
+* [Text-to-Speech Support](#text-to-speech-support)
 * [Debug mode](#debug-mode)
 * [Reporting bugs](#reporting-bugs)
 * [Packaging PyRadio](#packaging-pyradio)
@@ -1302,6 +1303,12 @@ After the player stops, **PyRadio** will stop as well.
 **Note:** On Windows, **mpv** and **VLC** will open a new player window instead of executing in the terminal.
 
 In addition, a command line parameter has been added "*-x*" ("*--exteranl-player*") which when used in conjuction with the "*-p*" ("*--play*") command line parameter, will instruct **PyRadio** to play a station and terminate after the playback stops.
+
+## Text-to-Speech Support
+
+**PyRadio** now features comprehensive Text-to-Speech (TTS) support, providing auditory feedback for an enhanced radio streaming experience. This intelligent system delivers contextual information about station navigation, playback status, and system events.
+
+More info about the implementation and status at the [relevant page](tts.md).
 
 ## Debug mode
 

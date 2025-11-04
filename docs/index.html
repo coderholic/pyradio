@@ -151,6 +151,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#remote-control-client">Remote Control Client</a></li>
 </ul></li>
 <li><a href="#playing-a-station-in-the-terminal">Playing a station in the terminal</a></li>
+<li><a href="#text-to-speech-support">Text-to-Speech Support</a></li>
 <li><a href="#debug-mode">Debug mode</a></li>
 <li><a href="#reporting-bugs">Reporting bugs</a></li>
 <li><a href="#packaging-pyradio">Packaging PyRadio</a></li>
@@ -2464,6 +2465,9 @@ Apr 18 (Mon) 15:38 | === Logging stopped</pre>
 <p>After the player stops, <strong>PyRadio</strong> will stop as well.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> On Windows, <strong>mpv</strong> and <strong>VLC</strong> will open a new player window instead of executing in the terminal.</p>
 <p>In addition, a command line parameter has been added “<em>-x</em>” (“<em>–exteranl-player</em>”) which when used in conjuction with the “<em>-p</em>” (“<em>–play</em>”) command line parameter, will instruct <strong>PyRadio</strong> to play a station and terminate after the playback stops.</p>
+<h2 id="text-to-speech-support">Text-to-Speech Support <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p><strong>PyRadio</strong> now features comprehensive Text-to-Speech (TTS) support, providing auditory feedback for an enhanced radio streaming experience. This intelligent system delivers contextual information about station navigation, playback status, and system events.</p>
+<p>More info about the implementation and status at the <a href="tts.html">relevant page</a>.</p>
 <h2 id="debug-mode">Debug mode <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>Adding the “<strong>-d</strong>” option to the command line will instruct <strong>PyRadio</strong> to enter <em>Debug mode</em>, which means that it will print debug messages to a file. This file will always reside in the user’s home directory and will be named <em>pyradio.log</em>.</p>
 <p>In case of a bug or a glitch, please include this file to the issue you will <a target="_blank" href="https://github.com/coderholic/pyradio/issues">open at github</a>.</p>

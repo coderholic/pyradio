@@ -159,7 +159,8 @@ for afile in index.md \
     rec-dir.md \
     buffering.md \
     m3u.md \
-    validate_playlist.md
+    validate_playlist.md \
+    tts.md
 do
     sed -i -e "s/'s-/s-/g" -e "s/s'-/s-/g"  "$afile"
     git add "$afile"
@@ -208,6 +209,8 @@ do
         echo '% PyRadio M3U Playlist Support' > tmp.md
     elif [ "$afile" = "validate_playlist.md" ];then
         echo '% PyRadio Playlist Validation Guide' > tmp.md
+    elif [ "$afile" = "tts.md" ];then
+        echo '% PyRadio Text-to-Speech Support' > tmp.md
     fi
     cat ${afile} >> tmp.md
     pandoc --wrap=none -s -t html tmp.md -o ${out} || {

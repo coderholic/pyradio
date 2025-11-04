@@ -159,8 +159,8 @@ kbkey_orig['last_playlist']            = ( ord('l')               , 'Toggle Open
 kbkey_orig['clear_reg']                = ( ord('c')               , 'Clear current register')
 kbkey_orig['clear_all_reg']            = ( ord('C')               , 'Clear all registers')
 kbkey_orig['unnamed']                  = ( ord('u')               , 'Show unnamed register')
-kbkey_orig['html_help']                = ( ord('h')               , 'Open html help')
-kbkey_orig['station_volume']           = ( ord('v')               , 'Set station volume')
+kbkey_orig['html_help']                = ( ord('h')               , 'Display html help')
+kbkey_orig['station_volume']           = ( ord('v')               , 'Save station volume')
 kbkey_orig['toggle_station_volume']    = ( ord('V')               , 'Toggle use of station volume')
 
 # ! RadioBrowser Keys:

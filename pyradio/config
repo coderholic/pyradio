@@ -127,6 +127,9 @@ use_station_icon = True
 remove_station_icons = True
 
 # TTS
+# Enables PyRadio Text-to-Speech feature, provided that such a feature is 
+# already supported by the system.
+#
 # Default value: False
 enable_tts = False
 

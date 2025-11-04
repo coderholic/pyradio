@@ -186,6 +186,8 @@ Esc|, |{q}                                      |*|  Exit alternative mode.
 {html_help}                                     |*|  Display |H|TML help.
 {station_volume}								|*|  Save station |v|olume.
 {toggle_station_volume} 						|*|  Toggle use of station |V|olume.
+{toggle_time}                                   |*|  Toggle time display.
+{toggle_tts}                                    |*|  Toggle Text-to-Speech.
 
 !Copy mode ({add_to_reg})
 Enter                                           |*|  Copy station to unnamed register.

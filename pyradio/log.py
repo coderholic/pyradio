@@ -421,10 +421,13 @@ class Log():
                         self.tts().queue_speech(msg.replace(':', ',',1))
                         pass
                     elif msg_id == STATES.VOLUME:
-                        logger.error(f'{msg = }')
-                        s_msg = msg.split(']')[0].split(' ')[-1]
-                        logger.error(f'{s_msg = }')
-                        self.tts().queue_speech(M_STRINGS['volume_set'] + s_msg.split('%')[0] + ' percent', Priority.HIGH)
+                        if msg.startswith('['):
+                            logger.error(f'{msg = }')
+                            s_msg = msg.split(']')[0].split(' ')[-1]
+                            logger.error(f'{s_msg = }')
+                            self.tts().queue_speech(M_STRINGS['volume_set'] + s_msg, Priority.HIGH)
+                        else:
+                            self.tts().queue_speech(msg, Priority.HIGH)
             except AttributeError:
                 pass
 

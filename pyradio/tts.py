@@ -179,10 +179,10 @@ class TTSLinux(TTSBase):
         try:
             if priority == Priority.HIGH:
                 # HIGH priority: blocking execution with -w flag
-                cmd = ['spd-say', '-w', text]  # -w for wait
+                cmd = ['spd-say', '-l', 'en', '-w', text]  # -w for wait
             else:
                 # NORMAL priority: non-blocking execution
-                cmd = ['spd-say', text]
+                cmd = ['spd-say', '-l', 'en', text]
 
             # Execute the command
             logger.error(f'===> waiting... "{cmd}" with {priority.name = }')
@@ -299,11 +299,54 @@ class TTSWindows(TTSBase):
     def __init__(self, config):
         super().__init__(config)
         self.speaker = win32com.client.Dispatch("SAPI.SpVoice")
+
+        # Try to set an English voice
+        english_voice = self._get_english_voice()
+        if english_voice:
+            self.speaker.Voice = english_voice
+            if logger.isEnabledFor(logging.INFO):
+                logger.info("Windows TTS initialized with English voice")
+        else:
+            if logger.isEnabledFor(logging.WARNING):
+                logger.warning("No English voice found, using system default")
+
         self.speaker.Volume = 100
         self.current_stream = None
         self._lock = threading.RLock()
-        if logger.isEnabledFor(logging.INFO):
-            logger.info("Windows TTS initialized with SAPI.SpVoice")
+
+    def _get_english_voice(self):
+        """Find and return an English voice from available voices"""
+        try:
+            voices = self.speaker.GetVoices()
+
+            # Priority 1: Look for voices with English indicators in description
+            for i in range(voices.Count):
+                voice = voices.Item(i)
+                voice_description = voice.GetDescription().lower()
+
+                # Check for English language indicators
+                english_indicators = [
+                    'en-', 'english', ' united states',
+                    ' us ', ' uk ', 'british', 'american'
+                ]
+
+                if any(indicator in voice_description for indicator in english_indicators):
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug(f"Found English voice: {voice_description}")
+                    return voice
+
+            # Priority 2: If no specific English voice found, use first available
+            if voices.Count > 0:
+                first_voice = voices.Item(0)
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f"Using first available voice: {first_voice.GetDescription()}")
+                return first_voice
+
+        except Exception as e:
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error(f"Error finding English voice: {e}")
+
+        return None
 
     def _execute_speech(self, text, priority=Priority.NORMAL):
         """Execute speech with proper priority handling"""
@@ -312,9 +355,11 @@ class TTSWindows(TTSBase):
                 # Stop any current speech
                 self.stop()
 
-                # Speak the new text (flags=1 for async)
+                # Set voice properties for consistent experience
                 self.speaker.Volume = 50
                 self.speaker.Rate = 0
+
+                # Speak the new text (flags=1 for async)
                 self.current_stream = self.speaker.Speak(text, 1)
                 self.state = TTSState.SPEAKING
 
@@ -322,10 +367,13 @@ class TTSWindows(TTSBase):
                     # For HIGH priority, wait for completion with shutdown check
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug("Waiting for HIGH priority speech completion")
-                    while not self.speaker.WaitUntilDone(self.current_stream):
+
+                    # Wait for speech completion with shutdown checks
+                    while self.current_stream and not self.speaker.WaitUntilDone(100):  # 100ms chunks
                         if self.state == TTSState.SHUTTING_DOWN:
                             self.stop()
                             return False
+
                     self.current_stream = None
                     self.state = TTSState.IDLE
                     return True
@@ -348,7 +396,8 @@ class TTSWindows(TTSBase):
                 self.state = TTSState.IDLE
                 time.sleep(self.speech_delay)
             except Exception as e:
-                logger.error(f"Windows TTS stop error: {e}")
+                if logger.isEnabledFor(logging.ERROR):
+                    logger.error(f"Windows TTS stop error: {e}")
 
     def shutdown(self):
         """Phase 1: Immediate shutdown (non-blocking)"""
@@ -724,6 +773,8 @@ class TTSManager:
 
         if not text or not text.strip():
             return False
+        if '%' in text:
+            text = text.replace('%', ' precent')
 
         # Volume debouncing logic
         if (priority == Priority.HIGH and
