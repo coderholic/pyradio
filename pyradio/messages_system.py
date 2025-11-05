@@ -188,6 +188,14 @@ Esc|, |{q}                                      |*|  Exit alternative mode.
 {toggle_station_volume} 						|*|  Toggle use of station |V|olume.
 {toggle_time}                                   |*|  Toggle time display.
 {toggle_tts}                                    |*|  Toggle Text-to-Speech.
+{open_remote_control}                           |*|  Open "PyRadio Remote Control" window.
+{open_dirs}                                     |*|  Open dirs in file manager
+{buffer}                                        |*|  Toggle buffering.
+{open_buffer}                                   |*|  Open buffering window.
+{unnamed}                                       |*|  Show unnamed register.
+{last_playlist}                                 |*| Toggle Open last playlist.
+{toggle_time}                                   |*| Toggle displaying time.
+{clear_reg}                                     |*| Clear current register.
 
 !Copy mode ({add_to_reg})
 Enter                                           |*|  Copy station to unnamed register.
@@ -592,6 +600,7 @@ kb2str(r'''{open_extra}       |*| Open previous playlist.
 {hist_top}                    |*| Open first opened playlist.
 {buffer} {open_buffer}        |*| Set player |b|uffering.
 {toggle_time}                 |*| Toggle |t|ime display.
+{toggle_tts}                  |*|  Toggle TTS.
 {last_playlist}               |*| Toggle |Open last playlist|.
 {change_player}               |*| Cahnge |m|edia player.
 {new_playlist}                |*| Create a |n|ew playlist.
@@ -612,6 +621,7 @@ kb2str(r'''{open_extra}       |*| Open previous playlist.
 {hist_top}                    |*| Open first opened playlist.
 {buffer} {open_buffer}        |*| Set player |b|uffering.
 {toggle_time}                 |*| Toggle |t|ime display.
+{toggle_tts}                  |*|  Toggle TTS.
 {last_playlist}               |*| Toggle |Open last playlist|.
 {change_player}               |*| Cahnge |m|edia player.
 {new_playlist}                |*| Create a |n|ew playlist.
@@ -636,6 +646,8 @@ kb2str(r'''{rename_playlist}  |*| |R|ename current register.
 {open_dirs}                   |*| |O|pen dirs in file manager.
 {station_volume}			  |*|  Save station |v|olume.
 {toggle_station_volume} 	  |*|  Toggle use of station |V|olume.
+{toggle_time}                 |*| Toggle |t|ime display.
+{toggle_tts}                  |*|  Toggle TTS.
 
 Any other key exits current mode.
 '''

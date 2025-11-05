@@ -5,6 +5,7 @@ import logging
 from sys import platform
 from os import path, environ, listdir, getenv
 from shutil import which
+from platform import system
 from .install import get_a_linux_resource_opener
 try:
     import psutil
@@ -29,6 +30,10 @@ def convert_to_md(a_file):
 
 def is_graphical_environment_running():
     global HAS_GRAPHICAL_ENV
+    this_system = system()
+    if this_system == 'Darwin' or this_system == 'Windows':
+        HAS_GRAPHICAL_ENV = 1
+        return True
     if getenv('TERM') == 'linux':
         HAS_GRAPHICAL_ENV = 2
         return False

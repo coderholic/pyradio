@@ -775,6 +775,8 @@ class TTSManager:
             return False
         if '%' in text:
             text = text.replace('%', ' precent')
+        if priority == Priority.HIGH and ' (error ' in text:
+            text = text.split(' (error ')[0]
 
         # Volume debouncing logic
         if (priority == Priority.HIGH and

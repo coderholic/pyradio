@@ -2739,6 +2739,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             logger.info('*** Start of playback NOT detected!!! ***')
         self.player.stop_mpv_status_update_thread = True
         self.log.write(msg_id=STATES.CONNECT_ERROR, msg=self.player.PLAYER_NAME  + ': ' + M_STRINGS['error-1001'])
+        self._speak_high(M_STRINGS['error-1001'])
         self.player.connecting = False
         if self._random_requested and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -7293,6 +7294,7 @@ _____"|f|" to see the |free| keys you can use.
                     )
                 else:
                     self.log.stop_timer()
+                self._update_status_bar_right(status_suffix='')
 
             elif char == kbkey['open_dirs'] or \
                     check_localized(char, (kbkey['open_dirs'],)):

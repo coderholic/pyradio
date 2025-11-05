@@ -1679,7 +1679,7 @@ class PyRadioConfig(PyRadioStations):
     def enable_notifications(self):
         if is_graphical_environment_running():
             return self.opts['enable_notifications'][1]
-        return False
+        return '-1'
 
     @enable_notifications.setter
     def enable_notifications(self, val):
