@@ -1,3 +1,9 @@
+2025-11-06 s-n-g
+    * version 0.9.3.11.21 - 0.9.3.12-beta21
+    * fixing #312 - VLC crashes PyRadio after the radio station starts playing
+    * fixing several minor bugs
+    * adding basic TTS support (enabled from config or the toggle option \T)
+
 2025-10-23 s-n-g
     * version 0.9.3.11.20 - 0.9.3.12-beta20
     * adding error messages for charset-normalizer module not found (#305)

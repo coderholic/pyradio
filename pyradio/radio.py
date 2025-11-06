@@ -512,6 +512,7 @@ class PyRadio():
             in log.write, if _current_player_id != _active_player_id
                     do not display any message
         '''
+
         self._enable_tts = pyradio_config.enable_tts
         self.ws = Window_Stack(self._speak_selection)
         self.player = None
@@ -6767,9 +6768,8 @@ and |remove the file manually|.
         self.tts.queue_speech(msg, Priority.NORMAL)
 
     def _speak_selection(self):
-        if self.ws.operation_mode == self.ws.NORMAL_MODE:
-            self.tts.queue_speech(f'{self.selection+1}, {self.stations[self.selection][0]}', Priority.NORMAL)
-        elif self.ws.operation_mode == self.ws.PLAYLIST_MODE:
+        if self._enable_tts and \
+                self.ws.operation_mode in (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
             self.tts.queue_speech(f'{self.selection+1}, {self.stations[self.selection][0]}', Priority.NORMAL)
 
     def keypress(self, char):

@@ -54,7 +54,7 @@ Toggle TTS during runtime by pressing **\\T** (backslash + T). This setting is s
 ## Platform Implementation
 
 ### Linux
-Utilizes **speech-dispatcher** configured for English language by default. Provides robust, interruptible speech synthesis with priority-based queue management.
+Utilizes [speech-dispatcher](https://freebsoft.org/speechd) configured for English language by default. Provides robust, interruptible speech synthesis with priority-based queue management.
 
 ### Windows  
 Leverages **Windows SAPI (Speech API)** with automatic selection of English voices when available. Features immediate speech interruption and consistent volume control.
