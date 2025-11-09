@@ -749,7 +749,7 @@ kb2strL(r'''
 |{}|'s configuration has been altered
 but not saved. Do you want to save it now?
 
-Press |{y}| to save it or |n| to disregard it.
+Press |{y}| to save it or |{n}| to disregard it.
 '''
 )),
 
@@ -1730,8 +1730,10 @@ unintentionally disrupt functionality.
                 pass
         self.simple_dialog = False
         self._txt = {}
+        return text
 
-    def __init__(self, config, op_mode, prev_op_mode):
+    def __init__(self, config, op_mode, prev_op_mode, speak_high):
+        self._speak_high = speak_high
         self._args = None
         self._txt = None
         self._active_token = None

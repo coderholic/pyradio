@@ -70,6 +70,10 @@ a:visited{color: SaddleBrown;}
 <li><a href="#for-multi-language-content">For Multi-Language Content</a></li>
 </ul></li>
 <li><a href="#configuration-philosophy">Configuration Philosophy</a></li>
+<li><a href="#configuration-options">Configuration Options</a>
+<ul>
+<li><a href="#volume">Volume</a></li>
+</ul></li>
 <li><a href="#current-status-&amp;-roadmap">Current Status &amp; Roadmap</a></li>
 </ul>
 <!-- vim-markdown-toc -->
@@ -153,6 +157,15 @@ a:visited{color: SaddleBrown;}
 <li>Maintains your preferred speech rate and volume</li>
 <li>Platform-native experience throughout</li>
 </ul>
+<h2 id="configuration-options">Configuration Options <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<h3 id="volume">Volume</h3>
+<p>The TTS volume can be adjusted independently of audio playback volume:</p>
+<ul>
+<li><strong>Linux</strong>: Uses spd-say with volume range from <strong>-100 to +100</strong> (relative to base volume)</li>
+<li><strong>Windows</strong>: Uses SAPI with volume range from <strong>0 to 100</strong> (absolute)</li>
+<li><strong>macOS</strong>: Volume control is not supported - uses system speech volume</li>
+</ul>
+<p>This option can be found in the configuration menu under <strong>Config → TTS → Volume</strong>.</p>
 <h2 id="current-status-roadmap">Current Status &amp; Roadmap <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>This TTS implementation is actively developed. Planned enhancements include:</p>
 <ul>

@@ -26,6 +26,8 @@
     * [For English-Dominant Users](#for-english-dominant-users)
     * [For Multi-Language Content](#for-multi-language-content)
 * [Configuration Philosophy](#configuration-philosophy)
+* [Configuration Options](#configuration-options)
+    * [Volume](#volume)
 * [Current Status & Roadmap](#current-status-&-roadmap)
 
 <!-- vim-markdown-toc -->
@@ -120,6 +122,18 @@ The system is optimized for English while respecting platform conventions:
 - Maintains your preferred speech rate and volume
 - Platform-native experience throughout
 
+## Configuration Options
+
+### Volume
+
+The TTS volume can be adjusted independently of audio playback volume:
+
+- **Linux**: Uses `spd-say` with volume range from **-100 to +100** (relative to base volume)
+- **Windows**: Uses SAPI with volume range from **0 to 100** (absolute)
+- **macOS**: Volume control is not supported - uses system speech volume
+
+This option can be found in the configuration menu under **Config → TTS → Volume**.
+
 ## Current Status & Roadmap
 
 This TTS implementation is actively developed. Planned enhancements include:
@@ -128,4 +142,3 @@ This TTS implementation is actively developed. Planned enhancements include:
 - Detailed interface element descriptions
 - Enhanced context-aware speech patterns
 - Extended configuration options
-

@@ -141,8 +141,13 @@ class TTSRequest:
 class TTSBase:
     """Base class for TTS implementations"""
 
-    def __init__(self, config):
+    def __init__(self, config, volume):
         self.config = config
+        self.volume = volume
+        # try:
+        #     x = int(self.volume)
+        # except ValueError:
+        #     self.volume = '50'
         self.system = platform.system()
         self.state = TTSState.IDLE
         self._current_process = None
@@ -168,8 +173,8 @@ class TTSBase:
 class TTSLinux(TTSBase):
     """Linux TTS implementation using user-configured command"""
 
-    def __init__(self, config):
-        super().__init__(config)
+    def __init__(self, config, volume):
+        super().__init__(config, volume)
         self.retry_count = 0
         self.max_retries = 2
 
@@ -179,10 +184,10 @@ class TTSLinux(TTSBase):
         try:
             if priority == Priority.HIGH:
                 # HIGH priority: blocking execution with -w flag
-                cmd = ['spd-say', '-l', 'en', '-w', text]  # -w for wait
+                cmd = ['spd-say', '-l', 'en', '-i', self.volume(), '-w', text]  # -w for wait
             else:
                 # NORMAL priority: non-blocking execution
-                cmd = ['spd-say', '-l', 'en', text]
+                cmd = ['spd-say', '-l', 'en', '-i', self.volume(), text]
 
             # Execute the command
             logger.error(f'===> waiting... "{cmd}" with {priority.name = }')
@@ -296,8 +301,8 @@ class TTSLinux(TTSBase):
 class TTSWindows(TTSBase):
     """Windows TTS implementation using win32com and SAPI"""
 
-    def __init__(self, config):
-        super().__init__(config)
+    def __init__(self, config, volume):
+        super().__init__(config, volume)
         self.speaker = win32com.client.Dispatch("SAPI.SpVoice")
 
         # Try to set an English voice
@@ -310,7 +315,7 @@ class TTSWindows(TTSBase):
             if logger.isEnabledFor(logging.WARNING):
                 logger.warning("No English voice found, using system default")
 
-        self.speaker.Volume = 100
+        self.speaker.Volume = self.volume()
         self.current_stream = None
         self._lock = threading.RLock()
 
@@ -414,8 +419,8 @@ class TTSWindows(TTSBase):
 class TTSMacOS(TTSBase):
     """macOS TTS implementation"""
 
-    def __init__(self, config):
-        super().__init__(config)
+    def __init__(self, config, volume):
+        super().__init__(config, volume)
         self._current_process = None
         self._lock = threading.RLock()
 
@@ -514,9 +519,10 @@ class TTSManager:
     Main TTS manager with priority-based queue and title preservation
     """
 
-    def __init__(self, enabled=True):
+    def __init__(self, enabled=True, volume=50):
         self.stop_after_high = False
         self.enabled = enabled
+        self.volume = volume
         self.config = TTSConfig()
         self.system = platform.system()
         self.available = False
@@ -552,12 +558,12 @@ class TTSManager:
     def _initialize_tts(self):
         """Initialize TTS with proper availability checking"""
         try:
-            if self.system == "Linux":
-                self.available = self._check_linux_availability()
-            elif self.system == "Windows":
+            if self.system == "Windows":
                 self.available = self._check_windows_availability()
             elif self.system == "Darwin":
                 self.available = self._check_macos_availability()
+            else:
+                self.available = self._check_linux_availability()
 
             if self.available:
                 self.engine = self._create_engine()
@@ -574,16 +580,16 @@ class TTSManager:
 
     def _create_engine(self):
         """Create the appropriate TTS engine for the current platform"""
-        if self.system == "Linux":
-            return TTSLinux(self.config)
-        elif self.system == "Windows":
-            return TTSWindows(self.config)
+        if self.system == "Windows":
+            return TTSWindows(self.config, self.volume)
         elif self.system == "Darwin":
-            return TTSMacOS(self.config)
+            return TTSMacOS(self.config, self.volume)
         else:
-            if logger.isEnabledFor(logging.WARNING):
-                logger.warning(f"Unsupported platform: {self.system}")
-            return None
+            return TTSLinux(self.config, self.volume)
+        # if ret is None:
+        #     if logger.isEnabledFor(logging.WARNING):
+        #         logger.warning(f"Unsupported platform: {self.system}")
+        #     return None
 
     def _check_linux_availability(self):
         """Check if spd-say is available on Linux"""

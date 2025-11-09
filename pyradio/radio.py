@@ -513,6 +513,7 @@ class PyRadio():
                     do not display any message
         '''
 
+        self._tts_volume = pyradio_config.tts_volume
         self._enable_tts = pyradio_config.enable_tts
         self.ws = Window_Stack(self._speak_selection)
         self.player = None
@@ -869,7 +870,8 @@ class PyRadio():
         self._messaging_win = PyRadioMessagesSystem(
                 self._cnf,
                 lambda: self.ws.operation_mode,
-                lambda: self.ws.previous_operation_mode
+                lambda: self.ws.previous_operation_mode,
+                lambda: self._speak_high
         )
 
         ''' keep resource opener from Opener Selection window.
@@ -2134,7 +2136,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             except KeyboardInterrupt:
                 pass
         else:
-            self.tts = TTSManager(self._cnf.enable_tts)
+            self.tts = TTSManager(self._cnf.enable_tts, volume=lambda: self._tts_volume)
             ''' start update detection and notification thread '''
             if CAN_CHECK_FOR_UPDATES:
                 if self._cnf.locked:
@@ -3344,7 +3346,9 @@ ____Using |fallback| theme.''')
 
     def _open_message_win_by_key(self, *args):
         # logger.error('args = "{}"'.format(args))
-        self._messaging_win.set_text(self.bodyWin, *args)
+        text = self._messaging_win.set_text(self.bodyWin, *args)
+        # self._speak_high(''.join(text).replace('|', '').replace('ESC', 'escape'))
+        logger.error('\n\ntext =\n{}\n\n'.format(text))
         self.ws.operation_mode = self._message_system_default_operation_mode
         self._messaging_win.show()
 
@@ -7279,7 +7283,7 @@ _____"|f|" to see the |free| keys you can use.
                 self.tts.set_enabled(False)
                 sleep(0.1)
                 self.tts = None
-                self.tts = TTSManager(enabled=True)
+                self.tts = TTSManager(enabled=True, volume=lambda: self._tts_volume)
                 # self.tts.set_enabled(self._enable_tts)
                 if self._enable_tts:
                     self.tts.queue_speech('T T S enabled', Priority.HIGH)
@@ -8022,6 +8026,7 @@ _____"|f|" to see the |free| keys you can use.
                     self._cnf.backup_player_params[0] = self._cnf.params[self._cnf.PLAYER_NAME][:]
                     ret = self._cnf.save_config()
                     if ret == -1:
+                        # self._speak_high(msg[0])
                         ''' Error saving config '''
                         if self.player.isPlaying():
                             self.stopPlayer()
@@ -8030,6 +8035,9 @@ _____"|f|" to see the |free| keys you can use.
                         self.log.write(msg_id=STATES.ANY, msg=msg[0], help_msg=False, suffix=self._status_suffix)
                         self._print_config_save_error()
                     elif ret == 0:
+                        if self._enable_tts:
+                            self.tts.queue_speech('Config saved successfully', Priority.HIGH)
+                        # self._speak_high(msg[1])
                         ''' Config saved successfully '''
 
                         ''' update functions dicts '''
@@ -8152,6 +8160,18 @@ _____"|f|" to see the |free| keys you can use.
                                 self._cnf.buffering_data = []
                             else:
                                 self._update_config_buffering_data(reset=False)
+
+                        # update TTS
+                        logger.error('\n\n\n')
+                        logger.error(f'{self._cnf.enable_tts = }')
+                        logger.error(f'{self._enable_tts = }')
+                        logger.error('\n\n\n')
+                        if self._enable_tts != self._cnf.enable_tts:
+                            self._enable_tts = self._cnf.enable_tts
+                            self.tts.set_enabled(self._enable_tts)
+                            if self._enable_tts:
+                                self.tts.queue_speech('Config saved successfully', Priority.HIGH)
+                        self._tts_volume = self._cnf.tts_volume
                     elif ret == 1:
                         ''' config not modified '''
                         self._show_notification_with_delay(

@@ -133,6 +133,13 @@ remove_station_icons = True
 # Default value: False
 enable_tts = False
 
+# TTS Volume
+# This is the volume to be used by the TTS engine
+# It applies to Linux and Windows only
+#
+# Default value: 50
+tts_volume = 50
+
 # Titles logging
 # If this option is True, PyRadio will start logging song titles to a log file
 # at startup, provided that the station playing does provide title data.

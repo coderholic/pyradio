@@ -1361,7 +1361,8 @@ class PyRadioConfig(PyRadioStations):
         self.opts['use_station_icon'] = ['  Use station icon: ', True]
         self.opts['remove_station_icons'] = ['  Remove cached icons: ', True]
         self.opts['tts_title'] = ['TTS', '']
-        self.opts['enable_tts'] = ['  Enable TTS: ', False]
+        self.opts['enable_tts'] = ['Enable TTS: ', False]
+        self.opts['tts_volume'] = ['  Volume: ', '50']
         self.opts['clock_title'] = ['Clock', '']
         self.opts['enable_clock'] = ['Display on startup: ', False]
         self.opts['time_format'] = ['Time format: ', '1']
@@ -1710,6 +1711,16 @@ class PyRadioConfig(PyRadioStations):
     @enable_tts.setter
     def enable_tts(self, val):
         self.opts['enable_tts'][1] = val
+        self.opts['dirty_config'][1] = True
+
+    @property
+    def tts_volume(self):
+        ''' connection timeout as string '''
+        return self.opts['tts_volume'][1]
+
+    @tts_volume.setter
+    def tts_volume(self, val):
+        self.opts['tts_volume'][1] = val
         self.opts['dirty_config'][1] = True
 
     @property
@@ -2561,6 +2572,8 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['enable_tts'][1] = False
                 else:
                     self.opts['enable_tts'][1] = True
+            elif sp[0] == 'tts_volume':
+                    self.opts['tts_volume'][1] = sp[1]
             elif sp[0] == 'confirm_station_deletion':
                 if sp[1].lower() == 'false':
                     self.opts['confirm_station_deletion'][1] = False
@@ -3138,31 +3151,6 @@ class PyRadioConfig(PyRadioStations):
             with open(self.config_file, 'w', encoding='utf-8') as cfgfile:
                 if out:
                     cfgfile.write('\n'.join(out) + '\n')
-                # cfgfile.write(txt.format(
-                #     self.opts['player'][1],
-                #     self.opts['open_last_playlist'][1],
-                #     self.opts['default_playlist'][1],
-                #     self.opts['default_station'][1],
-                #     self.opts['default_encoding'][1],
-                #     self.opts['enable_mouse'][1],
-                #     self.opts['enable_notifications'][1],
-                #     self.opts['use_station_icon'][1],
-                #     rec_dir,
-                #     self.opts['connection_timeout'][1],
-                #     self.opts['force_http'][1],
-                #     theme,
-                #     trnsp,
-                #     self.opts['force_transparency'][1],
-                #     calcf,
-                #     self.opts['confirm_station_deletion'][1],
-                #     self.opts['confirm_playlist_reload'][1],
-                #     self.opts['auto_save_playlist'][1],
-                #     self.show_no_themes_message,
-                #     self.show_recording_start_message,
-                #     self.remote_control_server_ip,
-                #     self.remote_control_server_port,
-                #     self.remote_control_server_auto_start
-                # ))
 
             ''' write extra player parameters to file '''
             if path.exists(self.player_params_file):
