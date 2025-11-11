@@ -41,7 +41,8 @@ logger = logging.getLogger(__name__)
 class PyRadioConfigWindow():
     _title = 'PyRadio Configuration'
 
-    _tts_volume_date = (0, 0, 0)
+    _tts_volume_data = (0, 0, 0)
+    _tts_rate_data = (0, 0, 0)
     _help_text = []
     _help_text.append(None)
     _help_text.append(['Specify the player to use with PyRadio, or the player detection order.', '|',
@@ -86,10 +87,18 @@ class PyRadioConfigWindow():
         _help_text.append(['This option will not be used by the TTS engine.', '|', 'Adjust the System Volume instead.'])
     elif platform.startswith('win'):
         _help_text.append(['This is the volume to be used by the TTS engine.', '|', 'Valid values: 0 (silent) - 100', '|', 'Default value: 50'])
-        _tts_volume_date = (0, 100, 5)
+        _tts_volume_data = (0, 100, 5)
     else:
-        _help_text.append(['This is the volume to be used by the speech dispatcher, provided that the engine selected supports it.', '|', 'Valid values: -100,+100', '|', 'Default value: 50'])
-        _tts_volume_date = (-100, 100, 10)
+        _help_text.append(['This is the volume to be used by the speech dispatcher, provided that the engine selected supports it.', '|', 'Valid values: -100 - +100', '|', 'Default value: 50'])
+        _tts_volume_data = (-100, 100, 10)
+    if platform.startswith('dar'):
+        _help_text.append(['This option will not be used by the TTS engine.', '|', 'Adjust the System Volume instead.'])
+    elif platform.startswith('win'):
+        _help_text.append(['This is the rate (speech speed) to be used by the TTS engine.', '|', 'Valid values: -10 - +10', '|', 'Default value: 0'])
+        _tts_rate_data = (-10, 10, 1)
+    else:
+        _help_text.append(['This is the rate (speech speed) to be used by the speech dispatcher, provided that the engine selected supports it.', '|', 'Valid values: -100 - +100', '|', 'Default value: 0'])
+        _tts_rate_data = (-100, 100, 1)
     _help_text.append(None)
     _help_text.append(['If this option is enabled, the current time will be displayed at the bottom left corner of the window at program startup.', '|', 'Adjust the time format in the next option to change how the current time is displayed.', '|', r'You can always hide it by pressing ' + to_str('open_extra') + to_str('toggle_time') +  '.', '|', 'Default value: False'])
     _help_text.append(['This is the time format to be used when the clock is visible.', '|', 'Available values are:', '   0: 24h, with seconds', '   1: 24h, no seconds', '   2: 12h, with am/pm and seconds', '   3: 12h, no am/pm, with seconds', '   4: 12h, with am/pm, no seconds', '   5: 12h, no am/pm, no seconds', '|', 'Default value: 1'])
@@ -823,6 +832,7 @@ class PyRadioConfigWindow():
                 'buffering',
                 'mplayer_save_br',
                 'tts_volume',
+                'tts_rate',
             ) and char in (
                 curses.KEY_LEFT,
                 curses.KEY_RIGHT,
@@ -1137,10 +1147,10 @@ class PyRadioConfigWindow():
             if char in (curses.KEY_RIGHT, kbkey['l']) or \
                     check_localized(char, (kbkey['l'], )):
                 t = int(val[1][1])
-                if t < self._tts_volume_date[1]:
-                    t += self._tts_volume_date[2]
-                    if t > self._tts_volume_date[1]:
-                        t = self._tts_volume_date[1]
+                if t < self._tts_volume_data[1]:
+                    t += self._tts_volume_data[2]
+                    if t > self._tts_volume_data[1]:
+                        t = self._tts_volume_data[1]
                     self._config_options[val[0]][1] = str(t)
                     self._win.addstr(
                         Y, 3 + len(val[1][0]),
@@ -1152,10 +1162,41 @@ class PyRadioConfigWindow():
             elif char in (curses.KEY_LEFT, kbkey['h']) or \
                     check_localized(char, (kbkey['h'], )):
                 t = int(val[1][1])
-                if t > self._tts_volume_date[0]:
-                    t -= self._tts_volume_date[2]
-                if t < self._tts_volume_date[0]:
-                    t = self._tts_volume_date[0]
+                if t > self._tts_volume_data[0]:
+                    t -= self._tts_volume_data[2]
+                if t < self._tts_volume_data[0]:
+                    t = self._tts_volume_data[0]
+                self._config_options[val[0]][1] = str(t)
+                self._win.addstr(
+                    Y, 3 + len(val[1][0]),
+                    str(t) + ' ', curses.color_pair(6))
+                self._print_title()
+                self._win.refresh()
+                return -1, []
+
+        elif val[0] == 'tts_rate':
+            if char in (curses.KEY_RIGHT, kbkey['l']) or \
+                    check_localized(char, (kbkey['l'], )):
+                t = int(val[1][1])
+                if t < self._tts_rate_data[1]:
+                    t += self._tts_rate_data[2]
+                    if t > self._tts_rate_data[1]:
+                        t = self._tts_rate_data[1]
+                    self._config_options[val[0]][1] = str(t)
+                    self._win.addstr(
+                        Y, 3 + len(val[1][0]),
+                        str(t) + ' ', curses.color_pair(6))
+                    self._print_title()
+                    self._win.refresh()
+                return -1, []
+
+            elif char in (curses.KEY_LEFT, kbkey['h']) or \
+                    check_localized(char, (kbkey['h'], )):
+                t = int(val[1][1])
+                if t > self._tts_rate_data[0]:
+                    t -= self._tts_rate_data[2]
+                if t < self._tts_rate_data[0]:
+                    t = self._tts_rate_data[0]
                 self._config_options[val[0]][1] = str(t)
                 self._win.addstr(
                     Y, 3 + len(val[1][0]),

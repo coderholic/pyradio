@@ -58,7 +58,8 @@ from .simple_curses_widgets import SimpleCursesMenu
 from .messages_system import PyRadioMessagesSystem
 from .server import PyRadioServer, HAS_NETIFACES
 from .keyboard import kbkey, get_lkbkey, get_unicode_and_cjk_char, dequeue_input, input_queue, set_kb_letter, check_localized, add_l10n_to_functions_dict, set_kb_cjk
-from .tts import TTSManager, Priority
+from .tts import TTSManager, TTSManagerDummy, Priority
+from .tts_text import tts_transform_to_string
 HAVE_CHARSET_NORMALIZER = True
 try:
     from .m3u import parse_m3u
@@ -514,6 +515,7 @@ class PyRadio():
         '''
 
         self._tts_volume = pyradio_config.tts_volume
+        self._tts_rate = pyradio_config.tts_rate
         self._enable_tts = pyradio_config.enable_tts
         self.ws = Window_Stack(self._speak_selection)
         self.player = None
@@ -2136,7 +2138,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             except KeyboardInterrupt:
                 pass
         else:
-            self.tts = TTSManager(self._cnf.enable_tts, volume=lambda: self._tts_volume)
+            self.tts = TTSManager(
+                enabled=self._cnf.enable_tts,
+                volume=lambda: self._tts_volume,
+                rate=lambda: self._tts_rate
+            )
             ''' start update detection and notification thread '''
             if CAN_CHECK_FOR_UPDATES:
                 if self._cnf.locked:
@@ -3346,39 +3352,58 @@ ____Using |fallback| theme.''')
 
     def _open_message_win_by_key(self, *args):
         # logger.error('args = "{}"'.format(args))
-        text = self._messaging_win.set_text(self.bodyWin, *args)
+        caption, text, priority = self._messaging_win.set_text(self.bodyWin, *args)
         # self._speak_high(''.join(text).replace('|', '').replace('ESC', 'escape'))
         logger.error('\n\ntext =\n{}\n\n'.format(text))
         self.ws.operation_mode = self._message_system_default_operation_mode
+        if self._enable_tts:
+            self._message_box_tts_thread = threading.Thread(
+                target=self._tts_queue_speech,
+                args=(
+                    caption, text, priority
+                )
+            )
+            self._message_box_tts_thread.start()
+            self.ws.stop_dialog_speech = self.tts.stop_dialog_speech
         self._messaging_win.show()
+
+    def _tts_queue_speech(self, caption, text, priority):
+        if caption:
+            text = [f'Window: {caption}.'] + text
+        logger.error(f'\n\n{text = }\n\n')
+        if priority == Priority.DIALOG:
+            tts_text = tts_transform_to_string(text)
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'{tts_text = }')
+            self.tts.queue_speech(tts_text, priority)
 
     def _show_line_editor_help(self):
         if self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE, self.ws.SCHEDULE_EDIT_MODE) \
                 or  self.ws.previous_operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE, self.ws.SCHEDULE_EDIT_MODE):
             if platform.lower().startswith('darwin'):
-                txt = r'''Left| / |Right            |*| Move to next / previous character.
-                HOME|, |^A| / |END|,i |^E           |*| Move to start / end of line.
-                ^W| / |^K                           |*| Clear to start / end of line.
-                ^U                                  |*| Clear line.
-                DEL|, |^D                           |*| Delete character.
-                Backspace|, |^H                     |*| Backspace (delete previous character).
-                Up| / |Down                         |*| Go to previous / next field.
-                \?| / |\\                           |*| Insert a "|?|" or a "|\|", respectively.
-                Esc                                 |*| Cancel operation.
+                txt = r'''Left| / |Right            <*> Move to next / previous character.
+                HOME|, |^A| / |END|,i |^E           <*> Move to start / end of line.
+                ^W| / |^K                           <*> Clear to start / end of line.
+                ^U                                  <*> Clear line.
+                DEL|, |^D                           <*> Delete character.
+                Backspace|, |^H                     <*> Backspace (delete previous character).
+                Up| / |Down                         <*> Go to previous / next field.
+                \?| / |\\                           <*> Insert a "|?|" or a "|\|", respectively.
+                Esc                                 <*> Cancel operation.
 
                 Global functions work when preceded with a "|\|".
                 '''
             else:
-                txt = r'''Left| / |Right            |*| Move to next / previous character.
-                M-F| / |M-B                         |*| Move to next / previous word.
-                HOME|, |^A| / |END|, |^E            |*| Move to start / end of line.
-                ^W| / |M-D|, |^K                    |*| Clear to start / end of line.
-                ^U                                  |*| Clear line.
-                DEL|, |^D                           |*| Delete character.
-                Backspace|, |^H                     |*| Backspace (delete previous character).
-                Up| / |Down                         |*| Go to previous / next field.
-                \?| / |\\                           |*| Insert a "|?|" or a "|\|", respectively.
-                Esc                                 |*| Cancel operation.
+                txt = r'''Left| / |Right            <*> Move to next / previous character.
+                M-F| / |M-B                         <*> Move to next / previous word.
+                HOME|, |^A| / |END|, |^E            <*> Move to start / end of line.
+                ^W| / |M-D|, |^K                    <*> Clear to start / end of line.
+                ^U                                  <*> Clear line.
+                DEL|, |^D                           <*> Delete character.
+                Backspace|, |^H                     <*> Backspace (delete previous character).
+                Up| / |Down                         <*> Go to previous / next field.
+                \?| / |\\                           <*> Insert a "|?|" or a "|\|", respectively.
+                Esc                                 <*> Cancel operation.
 
                 Global functions work when preceded with a "|\|".
                 '''
@@ -3389,33 +3414,33 @@ ____Using |fallback| theme.''')
                 )
         else:
             if platform.lower().startswith('darwin'):
-                txt = r'''Left| / |Right            |*| Move to next / previous character.
-                HOME|, |^A| / |END|, |^E            |*| Move to start / end of line.
-                ^W| / |^K                           |*| Clear to start / end of line.
-                ^U                                  |*| Clear line.
-                DEL|, |^D                           |*| Delete character.
-                Backspace|, |^H                     |*| Backspace (delete previous character).
-                Up| / |Down                         |*| Go to previous / next field.
-                \?| / |\\                           |*| Insert a "|?|" or a "|\|", respectively.
-                \p                                  |*| Enable |p|aste mode to correctly paste
-                                                    |*| URLs (and stations' names).
-                Esc                                 |*| Cancel operation.
+                txt = r'''Left| / |Right            <*> Move to next / previous character.
+                HOME|, |^A| / |END|, |^E            <*> Move to start / end of line.
+                ^W| / |^K                           <*> Clear to start / end of line.
+                ^U                                  <*> Clear line.
+                DEL|, |^D                           <*> Delete character.
+                Backspace|, |^H                     <*> Backspace (delete previous character).
+                Up| / |Down                         <*> Go to previous / next field.
+                \?| / |\\                           <*> Insert a "|?|" or a "|\|", respectively.
+                \p                                  <*> Enable |p|aste mode to correctly paste
+                                                    <*> URLs (and stations' names).
+                Esc                                 <*> Cancel operation.
 
                 Global functions work when preceded with a "|\|".
                 '''
             else:
-                txt = r'''Left| / |Right            |*| Move to next / previous character.
-                M-F| / |M-B                         |*| Move to next / previous word.
-                HOME|, |^A| / |END|, |^E            |*| Move to start / end of line.
-                ^W| / |M-D|, |^K                    |*| Clear to start / end of line.
-                ^U                                  |*| Clear line.
-                DEL|, |^D                           |*| Delete character.
-                Backspace|, |^H                     |*| Backspace (delete previous character).
-                Up| / |Down                         |*| Go to previous / next field.
-                \?| / |\\                           |*| Insert a "|?|" or a "|\|", respectively.
-                \p                                  |*| Enable |p|aste mode to correctly paste
-                                                    |*| URLs (and stations' names).
-                Esc                                 |*| Cancel operation.
+                txt = r'''Left| / |Right            <*> Move to next / previous character.
+                M-F| / |M-B                         <*> Move to next / previous word.
+                HOME|, |^A| / |END|, |^E            <*> Move to start / end of line.
+                ^W| / |M-D|, |^K                    <*> Clear to start / end of line.
+                ^U                                  <*> Clear line.
+                DEL|, |^D                           <*> Delete character.
+                Backspace|, |^H                     <*> Backspace (delete previous character).
+                Up| / |Down                         <*> Go to previous / next field.
+                \?| / |\\                           <*> Insert a "|?|" or a "|\|", respectively.
+                \p                                  <*> Enable |p|aste mode to correctly paste
+                                                    <*> URLs (and stations' names).
+                Esc                                 <*> Cancel operation.
 
                 Global functions work when preceded with a "|\|".
                 '''
@@ -3433,45 +3458,45 @@ ____Using |fallback| theme.''')
             self._show_line_editor_help()
             return None
         elif self._player_select_win.focus:
-            txt = r'''TAB                           |*| Move selection to |Extra Parameters| column.
-                     Up|, |j|, |Down|, |k           |*| Change player selection.
-                     Enter|, |Space                 |*|
-                     Right|, |l                     |*| Enable / disable player.
-                     ^U| / |^D                      |*| Move player |u|p or |d|own.
-                     r                              |*| Revert to saved values.
-                     s                              |*| Save players (selection and parameters).
-                     Esc|, |q|, |Left|, |h          |*| Cancel.
+            txt = r'''TAB                           <*> Move selection to |Extra Parameters| column.
+                     Up|, |j|, |Down|, |k           <*> Change player selection.
+                     Enter|, |Space                 <*>
+                     Right|, |l                     <*> Enable / disable player.
+                     ^U| / |^D                      <*> Move player |u|p or |d|own.
+                     r                              <*> Revert to saved values.
+                     s                              <*> Save players (selection and parameters).
+                     Esc|, |q|, |Left|, |h          <*> Cancel.
                      %Global functions (with \ on Line editor)
-                     -|/|+| or |,|/|.               |*| Change volume.
-                     m| / |v                        |*| |M|ute player / Save |v|olume.
-                     W| / |w                        |*| Toggle title log / like a station.'''
+                     -|/|+| or |,|/|.               <*> Change volume.
+                     m| / |v                        <*> |M|ute player / Save |v|olume.
+                     W| / |w                        <*> Toggle title log / like a station.'''
         else:
             if self._player_select_win.from_config:
-                txt = r''' TAB                      |*| Move selection to |Player Selection| column.
-                         Up|, |j|, |Down|, |k       |*|
-                         PgUp|, |PgDn               |*| Change selection.
-                         g| / |G                    |*| Move to first / last item.
-                         Enter|, |Space             |*|
-                         Right|, |l                 |*| Activate current selection.
-                         a| / |e| / |x|, |DEL       |*| |A|dd / |e|dit / |d|elete item.
-                         r                          |*| Revert to saved values.
-                         s                          |*| Save players (selection and parameters).
-                         Esc|, |q|, |Left|, |h      |*| Cancel.
+                txt = r''' TAB                      <*> Move selection to |Player Selection| column.
+                         Up|, |j|, |Down|, |k       <*>
+                         PgUp|, |PgDn               <*> Change selection.
+                         g| / |G                    <*> Move to first / last item.
+                         Enter|, |Space             <*>
+                         Right|, |l                 <*> Activate current selection.
+                         a| / |e| / |x|, |DEL       <*> |A|dd / |e|dit / |d|elete item.
+                         r                          <*> Revert to saved values.
+                         s                          <*> Save players (selection and parameters).
+                         Esc|, |q|, |Left|, |h      <*> Cancel.
                          %Global functions (with \ on Line editor)
-                         -|/|+| or |,|/|.           |*| Change volume.
-                         m| / |v                    |*| |M|ute player / Save |v|olume.
-                         W| / |w                    |*| Toggle title log / like a station.'''
+                         -|/|+| or |,|/|.           <*> Change volume.
+                         m| / |v                    <*> |M|ute player / Save |v|olume.
+                         W| / |w                    <*> Toggle title log / like a station.'''
             else:
-                txt = r'''Up|, |j|, |Down|, |k      |*|
-                         PgUp|, |PgDn               |*| Change selection.
-                         g| / |G                    |*| Move to first / last item.
-                         Enter|,|Space              |*|
-                         Right|,|l                  |*| Activate current selection.
-                         Esc|, |q|, |Left|, |h      |*| Cancel.
+                txt = r'''Up|, |j|, |Down|, |k      <*>
+                         PgUp|, |PgDn               <*> Change selection.
+                         g| / |G                    <*> Move to first / last item.
+                         Enter|,|Space              <*>
+                         Right|,|l                  <*> Activate current selection.
+                         Esc|, |q|, |Left|, |h      <*> Cancel.
                          %Global functions (with \ on Line editor)
-                         -|/|+| or |,|/|.           |*| Change volume.
-                         m| / |v                    |*| |M|ute player / Save |v|olume.
-                         W| / |w                    |*| Toggle title log / like a station.'''
+                         -|/|+| or |,|/|.           <*> Change volume.
+                         m| / |v                    <*> |M|ute player / Save |v|olume.
+                         W| / |w                    <*> Toggle title log / like a station.'''
         return 'Player Extra Parameters Help', txt
 
     def _show_unnamed_register(self):
@@ -5389,13 +5414,15 @@ and |remove the file manually|.
                                       reset_metrics=True):
         self._messaging_win.set_a_message(
                 'D_WITH_DELAY',
-                ('', txt)
+                ('', txt, Priority.HIGH)
                 )
         self._open_simple_message_by_key_and_mode(
                 mode_to_set,
                 'D_WITH_DELAY',
+                Priority.HIGH
                 )
         th = threading.Timer(delay, callback_function)
+        logger.error(f'{self.ws.stop_tts = }')
         th.start()
         th.join()
 
@@ -7279,12 +7306,17 @@ _____"|f|" to see the |free| keys you can use.
                 if not self._enable_tts:
                     self.tts.stop_after_high = True
                     self.tts.queue_speech('T T S disabled', Priority.HIGH)
+                    self.tts = None
+                    self.tts = TTSManagerDummy()
                     return
                 self.tts.set_enabled(False)
                 sleep(0.1)
                 self.tts = None
-                self.tts = TTSManager(enabled=True, volume=lambda: self._tts_volume)
-                # self.tts.set_enabled(self._enable_tts)
+                self.tts = TTSManager(
+                    enabled=True,
+                    volume=lambda: self._tts_volume,
+                    rate=lambda: self._tts_rate
+                )
                 if self._enable_tts:
                     self.tts.queue_speech('T T S enabled', Priority.HIGH)
 
@@ -8166,12 +8198,13 @@ _____"|f|" to see the |free| keys you can use.
                         logger.error(f'{self._cnf.enable_tts = }')
                         logger.error(f'{self._enable_tts = }')
                         logger.error('\n\n\n')
+                        self._tts_volume = self._cnf.tts_volume
+                        self._tts_rate = self._cnf.tts_rate
                         if self._enable_tts != self._cnf.enable_tts:
                             self._enable_tts = self._cnf.enable_tts
                             self.tts.set_enabled(self._enable_tts)
                             if self._enable_tts:
                                 self.tts.queue_speech('Config saved successfully', Priority.HIGH)
-                        self._tts_volume = self._cnf.tts_volume
                     elif ret == 1:
                         ''' config not modified '''
                         self._show_notification_with_delay(

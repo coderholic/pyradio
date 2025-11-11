@@ -140,6 +140,13 @@ enable_tts = False
 # Default value: 50
 tts_volume = 50
 
+# TTS Rate
+# This is the rate (speed) to be used by the TTS engine
+# It applies to Linux and Windows only
+#
+# Default value: 50
+tts_rate = 0
+
 # Titles logging
 # If this option is True, PyRadio will start logging song titles to a log file
 # at startup, provided that the station playing does provide title data.

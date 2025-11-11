@@ -253,6 +253,7 @@ class Window_Stack_Constants():
 class Window_Stack(Window_Stack_Constants):
 
     def __init__(self, speak_selection):
+        self.stop_dialog_speech = None
         self._speak_selection = speak_selection
         self._dq = deque()
         super(Window_Stack_Constants, self).__init__()
@@ -343,6 +344,11 @@ class Window_Stack(Window_Stack_Constants):
         return 'UNKNOWN'
 
     def close_window(self, no_tts=False):
+        logger.error(f'{self.stop_dialog_speech = }')
+        if self.stop_dialog_speech:
+            logger.error('running stop_dialog_speech')
+            self.stop_dialog_speech()
+            self.stop_dialog_speech = None
         last = -2
         logger.error('\n\n')
         logger.error(f'{self._dq = }')

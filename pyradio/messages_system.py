@@ -9,6 +9,7 @@ from sys import platform
 from .window_stack import Window_Stack_Constants
 from .keyboard import kbkey, kb2str, kb2strL, check_localized
 from .common import M_STRINGS
+from .tts import Priority
 
 locale.setlocale(locale.LC_ALL, "")
 
@@ -86,9 +87,9 @@ class PyRadioMessagesSystem():
 
         'H_MAIN': ('PyRadio Help',
 kb2str(r'''__Welcome to |PyRadio Main Help
-__You can use the following keys to navigate: |{j}| (|Up|), |{k}| (|Down|),
-|PgUp| (|^B|), |PgDn| (|^F|) to scroll up/down.
-__You can also use |Home| (|{g}|) / |End| (|{G}|) to scroll to the top / bottom.
+__You can use the following keys to navigate: |{j}| or |Up|, |{k}| or |Down|,
+|PgUp| or |^B|, |PgDn| or |^F| to scroll up/down.
+__You can also use |Home| or |{g}| and |End| or |{G}| to scroll to the top / bottom.
 
 __You will have noticed an |upward arrow| at the top right corner of
 this window; it indicates that the text is |scrollable| and the keys
@@ -106,131 +107,131 @@ ____field (and |Sh-Tab| to the previous one). In these cases, |{tab}| and |{stab
 ____can also be used, respectively.
 
 !Gerneral Help
-Up|, |{j}|, |PgUp|,                                     |*|
-Down|, |{k}|, |PgDown                                   |*|  Change station selection.
-<n>{g}| / |<n>{G}                                       |*|  Jump to first /last or |n|-th station.
-{screen_top} {screen_middle} {screen_bottom}            |*|  Go to top / middle / bottom of screen.
-{goto_playing}                                          |*|  Go to |P|laying station.
-Enter|, |Right|, |{l}                                   |*|  Play selected station.
-{ext_player}                                            |*|  E|x|ternal player playback.
-{p_next}| / |{p_prev}                                   |*|  Play |N|ext or |P|revious station.
-{info}                                                  |*|  Display station |i|nfo (when playing).
-{random}                                                |*|  Select and play a random station.
-{pause}|, |Left|, |{h}                                  |*|  Stop / start playing selected station.
-{fav}                                                   |*|  Add station to favorites.
-Esc|, |{q}                                              |*|  Quit.
+Up|, |{j}|, |PgUp|,                                     <*>
+Down|, |{k}|, |PgDown                                   <*>  Change station selection.
+<n>{g}| / |<n>{G}                                       <*>  Jump to first /last or |n|-th station.
+{screen_top} {screen_middle} {screen_bottom}            <*>  Go to top / middle / bottom of screen.
+{goto_playing}                                          <*>  Go to |P|laying station.
+Enter|, |Right|, |{l}                                   <*>  Play selected station.
+{ext_player}                                            <*>  E|x|ternal player playback.
+{p_next}| / |{p_prev}                                   <*>  Play |N|ext or |P|revious station.
+{info}                                                  <*>  Display station |i|nfo (when playing).
+{random}                                                <*>  Select and play a random station.
+{pause}|, |Left|, |{h}                                  <*>  Stop / start playing selected station.
+{fav}                                                   <*>  Add station to favorites.
+Esc|, |{q}                                              <*>  Quit.
 
 !Volume management
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         |*|  Change volume.
-{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume.
+{v_dn2}| / |{v_up1} or |{v_dn1}| / |{v_up2}     <*>  Change volume.
+{mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
 
 !Misc
-{open_playlist}| / |{s}| / |{reload}            |*|  |O|pen / |S|ave / |R|eload playlist.
-{t}| / |{transp}| / | {t_calc_col}              |*|  Change |t|heme / |T|ransparency / Calc. Background.
-{open_config}                                   |*|  Open |C|onfiguration window.
+{open_playlist}| / |{s}| / |{reload}            <*>  |O|pen / |S|ave / |R|eload playlist.
+{t}| / |{transp}| / | {t_calc_col}              <*>  Change |t|heme / |T|ransparency / Calc. Background.
+{open_config}                                   <*>  Open |C|onfiguration window.
 
 !Searching
-{search} |/ |{search_next}| / |{search_prev}    |*|  Search, go to next / previous result.
+{search} |/ |{search_next}| / |{search_prev}    <*>  Search, go to next / previous result.
 
 !Stations' history
-{hist_prev} |/| {hist_next}                     |*|  Move to previous / next station.
+{hist_prev} |/| {hist_next}                     <*>  Move to previous / next station.
 
 !Moving stations
-{jump}                                          |*| Create a |J|ump tag.
-<n>{st_up}|, |<n>{st_dn}                        |*| Move station |U|p / |D|own.
-                                                |*| If a |jump tag| exists, move it there.
+{jump}                                          <*> Create a |J|ump tag.
+<n>{st_up}|, |<n>{st_dn}                        <*> Move station |U|p / |D|own.
+                                                <*> If a |jump tag| exists, move it there.
 !Group Management
-{add} {append}                                  |*|  Add a |Group| (sets |URL| to "|-|").
-{gr_prev} |/ |{gr_next}                         |*|  Go to previous / next |Group|.
-{gr}                                            |*|  Open the |Group Selection| window.
+{add} {append}                                  <*>  Add a |Group| (sets |URL| to "|-|").
+{gr_prev} |/ |{gr_next}                         <*>  Go to previous / next |Group|.
+{gr}                                            <*>  Open the |Group Selection| window.
 
 !Player Customization
-{https}                                         |*|  Toggle |Force http connections|
-{extra_p_pamars}                                |*|  Extra player parameters
+{https}                                         <*>  Toggle |Force http connections|
+{extra_p_pamars}                                <*>  Extra player parameters
 
 !Title Logger
-{t_tag}                                         |*|  Toggle Logger on/off
-{tag}                                           |*|  Tag a station as liked
+{t_tag}                                         <*>  Toggle Logger on/off
+{tag}                                           <*>  Tag a station as liked
 
 !Recording
-{rec}                                           |*|  Enable / disable |recording|.
-{pause}                                         |*|  Pause / resume playback.
+{rec}                                           <*>  Enable / disable |recording|.
+{pause}                                         <*>  Pause / resume playback.
 
 !Change Player
-{open_extra}{change_player}                     |*|  Open the |Player Selection| window.
+{open_extra}{change_player}                     <*>  Open the |Player Selection| window.
 
 !Remote Control Server
-{open_extra}{s}                                 |*|  Start/Stop the |Server|.
+{open_extra}{s}                                 <*>  Start/Stop the |Server|.
 
 !Playlist editing
-{add}| / |{append}                              |*|  Add / append new station.
-{edit}                                          |*|  Edit current station.
-{open_enc}                                      |*|  Change station's encoding.
-{paste}                                         |*|  Paste unnamed register.
-DEL|, |{del}                                    |*|  Delete selected station.
+{add}| / |{append}                              <*>  Add / append new station.
+{edit}                                          <*>  Edit current station.
+{open_enc}                                      <*>  Change station's encoding.
+{paste}                                         <*>  Paste unnamed register.
+DEL|, |{del}                                    <*>  Delete selected station.
 
 !Alternative modes
-{open_extra}                                    |*|  Enter |Extra Commands| mode.
-{add_to_reg}                                    |*|  Enter |Copy| mode.
-{open_regs}                                     |*|  Enter |Register| mode.
-Esc|, |{q}                                      |*|  Exit alternative mode.
+{open_extra}                                    <*>  Enter |Extra Commands| mode.
+{add_to_reg}                                    <*>  Enter |Copy| mode.
+{open_regs}                                     <*>  Enter |Register| mode.
+Esc|, |{q}                                      <*>  Exit alternative mode.
 
 !Extra Command mode ({open_extra})
-{open_extra}                                    |*|  Open previous playlist.
-{hist_top}                                      |*|  Open first opened playlist.
-{change_player}                                 |*|  Change |m|edia player.
-{new_playlist}                                  |*|  Create a |n|ew playlist.
-{paste}                                         |*|  Select playlist / register to |p|aste to.
-{rename_playlist}                               |*|  |R|ename current playlist.
-{clear_all_reg}                                 |*|  |C|lear all registers.
-{html_help}                                     |*|  Display |H|TML help.
-{station_volume}								|*|  Save station |v|olume.
-{toggle_station_volume} 						|*|  Toggle use of station |V|olume.
-{toggle_time}                                   |*|  Toggle time display.
-{toggle_tts}                                    |*|  Toggle Text-to-Speech.
-{open_remote_control}                           |*|  Open "PyRadio Remote Control" window.
-{open_dirs}                                     |*|  Open dirs in file manager
-{buffer}                                        |*|  Toggle buffering.
-{open_buffer}                                   |*|  Open buffering window.
-{unnamed}                                       |*|  Show unnamed register.
-{last_playlist}                                 |*| Toggle Open last playlist.
-{toggle_time}                                   |*| Toggle displaying time.
-{clear_reg}                                     |*| Clear current register.
+{open_extra}                                    <*>  Open previous playlist.
+{hist_top}                                      <*>  Open first opened playlist.
+{change_player}                                 <*>  Change |m|edia player.
+{new_playlist}                                  <*>  Create a |n|ew playlist.
+{paste}                                         <*>  Select playlist / register to |p|aste to.
+{rename_playlist}                               <*>  |R|ename current playlist.
+{clear_all_reg}                                 <*>  |C|lear all registers.
+{html_help}                                     <*>  Display |H|TML help.
+{station_volume}                                <*>  Save station |v|olume.
+{toggle_station_volume}                         <*>  Toggle use of station |V|olume.
+{toggle_time}                                   <*>  Toggle time display.
+{toggle_tts}                                    <*>  Toggle Text-to-Speech.
+{open_remote_control}                           <*>  Open "PyRadio Remote Control" window.
+{open_dirs}                                     <*>  Open dirs in file manager
+{buffer}                                        <*>  Toggle buffering.
+{open_buffer}                                   <*>  Open buffering window.
+{unnamed}                                       <*>  Show unnamed register.
+{last_playlist}                                 <*> Toggle Open last playlist.
+{toggle_time}                                   <*> Toggle displaying time.
+{clear_reg}                                     <*> Clear current register.
 
 !Copy mode ({add_to_reg})
-Enter                                           |*|  Copy station to unnamed register.
-a-z| / |0-9                                     |*|  Copy station to named register.
+Enter                                           <*>  Copy station to unnamed register.
+a-z| / |0-9                                     <*>  Copy station to named register.
 
 !Registe mode ({open_regs})
-{open_regs}                                     |*|  Open registers list.
-a-z| / |0-9                                     |*|  Open named register.
+{open_regs}                                     <*>  Open registers list.
+a-z| / |0-9                                     <*>  Open named register.
 
 !Windows Only
-{F8}                                            |*|  Players management.
-{F9}                                            |*|  Show |EXE| location.
-{F10}                                           |*|  Uninstall |PyRadio|.
+{F8}                                            <*>  Players management.
+{F9}                                            <*>  Show |EXE| location.
+{F10}                                           <*>  Uninstall |PyRadio|.
 
 !Mouse Support (if enabled)
-Click                                           |*|  Change selection.
-Double click                                    |*|  Start / stop the player.
-Middle click                                    |*|  Toggle mute.
-Wheel                                           |*|  Page up / down.
-Shift-Wheel                                     |*|  Adjust volume.
+Click                                           <*>  Change selection.
+Double click                                    <*>  Start / stop the player.
+Middle click                                    <*>  Toggle mute.
+Wheel                                           <*>  Page up / down.
+Shift-Wheel                                     <*>  Adjust volume.
 
 <!--rb-->!RadioBrowser
-{open_online}                                       |*|  Open |RadioBrowser|.
-{open_config}                                       |*|  Open |c|onfig window.
-{rb_server}                                         |*|  Select server to |c|onnect to.
-{s}                                                 |*|  |S|earch for stations.
-{rb_p_first}| / |{rb_p_prev}| / |{rb_p_next}        |*|  Fetch first / previous / next page.
-{rb_sort}                                           |*|  |S|ort search results.
-{rb_info}                                           |*|  Database Station |I|nfo (current selection).
-{rb_vote}                                           |*|  |V|ote for station.
-{q} Escape {open_extra}{open_extra}                 |*|  Close Browser (go back in history).
+{open_online}                                       <*>  Open |RadioBrowser|.
+{open_config}                                       <*>  Open |c|onfig window.
+{rb_server}                                         <*>  Select server to |c|onnect to.
+{s}                                                 <*>  |S|earch for stations.
+{rb_p_first}| / |{rb_p_prev}| / |{rb_p_next}        <*>  Fetch first / previous / next page.
+{rb_sort}                                           <*>  |S|ort search results.
+{rb_info}                                           <*>  Database Station |I|nfo (current selection).
+{rb_vote}                                           <*>  |V|ote for station.
+{q} Escape {open_extra}{open_extra}                 <*>  Close Browser (go back in history).
 
 Search history navigation works with normal keys as well
 __(|^N| is the same as |n| when not in a line editor).
-''')),
+'''), Priority.HELP),
 
 'D_STATION_DELETE_ASK': ('Station Deletion',
 kb2strL(r'''
@@ -240,7 +241,7 @@ Are you sure you want to delete station:
 Press "|{y}|" to confirm, "|{Y}|" to confirm and not
 be asked again, or any other key to cancel
 
-''')),
+'''), Priority.DIALOG),
 
 'D_ASK_TO_SAVE_CONFIG': ('Config Modified',
 kb2strL(r'''
@@ -251,7 +252,7 @@ disregard the changes, or any other key to
  remain in the |Configuration Editor|.
 
 '''.replace('{s}', chr(kbkey['s']))
-)),
+), Priority.DIALOG),
 
 'D_STATION_DELETE_ASK_LOCKED': ('Station Deletion',
 kb2strL(r'''
@@ -260,7 +261,7 @@ Are you sure you want to delete station:
 
 Press "|{y}|" to confirm, or any other key to cancel
 
-''')),
+'''), Priority.DIALOG),
 
     'M_STATION_INFO_ERROR': ('Station Info Error',
 r'''
@@ -271,7 +272,7 @@ the station when connecting to it.
 Please play a station to get its info, (or
 wait until one actually starts playing).
 
-'''
+''', Priority.DIALOG
 ),
 
 'M_PLAYING_STATION_CHANGE_MODE': ('Station not available',
@@ -279,32 +280,32 @@ r'''
 The station playing does not exist
 _____in the current playlist.
 
-'''
+''', Priority.DIALOG
 ),
 
-    'M_STATION_INFO': ('',),
+    'M_STATION_INFO': ('', Priority.DIALOG),
 
-    'M_DB_INFO': ('',),
+    'M_DB_INFO': ('', Priority.DIALOG),
 
-    'D_WITH_DELAY': ('',),
+    'D_WITH_DELAY': ('', Priority.DIALOG),
 
     'H_PLAYLIST': ('Playlist Help',
-kb2str(r'''Up|, |{j}|, |PgUp|,                  |*|
-Down|, |{k}|, |PgDown                           |*|Change playlist selection.
-<n>{g}| / |<n>{G}                               |*|Jump to first / last or n-th item.
-{screen_middle}| / |{goto_playing}              |*|Jump to |M|iddle / loaded playlist.
-Enter|, |Right|, |{l}                           |*|Open selected playlist.
-{del}                                           |*|Delete current playlist.
-{reload}                                        |*|Re-read playlists from disk.
-{open_regs}                                     |*|Toggle between playlists / registers.
-{search} |/ |{search_next}| / |{search_prev}    |*|  Search, go to next / previous result.
-{open_extra}                                    |*|Enter |Extra Commands| mode.
-Esc|, |{q}|, |Left|, |{h}                       |*|Cancel.
+kb2str(r'''Up|, |{j}|, |PgUp|,                  <*>
+Down|, |{k}|, |PgDown                           <*>Change playlist selection.
+<n>{g}| / |<n>{G}                               <*>Jump to first / last or n-th item.
+{screen_middle}| / |{goto_playing}              <*>Jump to |M|iddle / loaded playlist.
+Enter|, |Right|, |{l}                           <*>Open selected playlist.
+{del}                                           <*>Delete current playlist.
+{reload}                                        <*>Re-read playlists from disk.
+{open_regs}                                     <*>Toggle between playlists / registers.
+{search} |/ |{search_next}| / |{search_prev}    <*>  Search, go to next / previous result.
+{open_extra}                                    <*>Enter |Extra Commands| mode.
+Esc|, |{q}|, |Left|, |{h}                       <*>Cancel.
 %Global functions (with \ on Line editor)
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         |*|  Change volume.
-{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume.
-{t_tag}| / |{tag}                               |*|Toggle title log / like a station.'''
-)),
+{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*>  Change volume.
+{mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
+{t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
+), Priority.DIALOG),
 
 
     'M_PLAYLIST_READ': ('',
@@ -312,7 +313,7 @@ r'''
 ___Reading playlists.___
 ____Please wait...
 
-'''
+''', Priority.DIALOG
 ),
 
     'D_PLAYLIST_RELOAD_CONFIRM': ('Playlist Reload',
@@ -324,7 +325,7 @@ Press "|{y}|" to confirm, "|{Y}|" to confirm and not
 be asked again, or any other key to cancel
 
 '''
-)),
+), Priority.DIALOG),
 
     'D_PLAYLIST_RELOAD_CONFIRM_LOCKED': ('Playlist Reload',
 kb2strL(r'''
@@ -334,7 +335,7 @@ PyRadio. Do you still want to reload it?
 Press "|{y}|" to confirm, or any other key to cancel
 
 '''
-)),
+), Priority.DIALOG),
 
     'M_PLAYLIST_LOAD_ERROR': ('Error',
 ),
@@ -348,7 +349,7 @@ lost. Do you still want to reload it?
 Press "|{y}|" to confirm, or "|{n}|" to cancel
 
 '''
-)),
+), Priority.DIALOG),
 
     'D_PLAYLIST_DIRTY_CONFIRM': ('Playlist Reload',
 kb2strL(r'''
@@ -360,7 +361,7 @@ Press "|{y}|" to confirm, "|{Y}|" to confirm and not be
 asked again, or "|{n}|" to cancel
 
 '''
-)),
+), Priority.DIALOG),
 
     'D_PLAYLIST_MODIFIED': ('Playlist Modified',
 kb2strL(r'''
@@ -375,7 +376,7 @@ be asked again, "|{n}|" to reject, or "|{q}|" or
 "|ESCAPE|" to cancel
 
 '''
-)),
+), Priority.DIALOG),
 
     'D_PLAYLIST_MODIFIED_LOCKED': ('Playlist Modified',
 kb2strL(r'''
@@ -389,7 +390,7 @@ Press "|{y}|" to confirm, "|{n}|" to reject,
 or "|{q}|" or "|ESCAPE|" to cancel
 
 '''
-)),
+), Priority.DIALOG),
 
     'M_PLAYLIST_SAVE_ERR_1': ('Error'
 r'''
@@ -398,7 +399,7 @@ Saving current playlist |failed|!
 Could not open file for writing
 "|{}|"
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_PLAYLIST_SAVE_ERR_2': ('Error'
@@ -411,7 +412,7 @@ You will find a copy of the saved playlist in
 PyRadio will open this file when the playlist
 is opened in the future.
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_PLAYLIST_NOT_FOUND_ERROR': ('Error',
@@ -422,7 +423,7 @@ This means that the playlist file was deleted
 (or renamed) some time after you opened the
 Playlist Selection window.
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_PLAYLIST_RECOVERY_ERROR_1': ('Error',
@@ -435,7 +436,7 @@ file, and then rename the |TXT| file to |CSV|.
 Unfortunately, deleting the |CSV| file has failed,
 so you have to manually address the issue.
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_PLAYLIST_RECOVERY_ERROR_2': ('Error',
@@ -447,7 +448,7 @@ try to rename this file to |CSV|.
 Unfortunately, renaming this file has failed, so
 you have to manually address the issue.
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_PLAYLIST_NOT_SAVED': ('Playlist Modified',
@@ -456,7 +457,7 @@ Current playlist is modified and cannot be renamed.
 
 Please save the playlist and try again.
 
-'''
+''', Priority.DIALOG
 ),
 
         'D_PLAYLIST_DELETE_ASK': ('Playlist Deletion',
@@ -469,7 +470,7 @@ is no way to get it back.
 Press "|{y}|" to confirm, or any other key to cancel
 
 '''
-)),
+), Priority.DIALOG),
 
         'M_PLAYLIST_DELETE_ERROR': ('Playlist Deletion Error',
 r'''
@@ -478,7 +479,7 @@ Cannot delete the playlist:
 
 Please close all other porgrams and try again...
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_PLAYLIST_RELOAD_ERROR': ('Error',
@@ -489,26 +490,26 @@ You have probably edited the playlist with an
 external program. Please re-edit it and make
 sure that you save a valid |CSV| file.
 
-'''
+''', Priority.DIALOG
 ),
 
         'H_THEME': ('Theme Help',
-kb2str(r'''Up| ,|{j}|, |PgUp|,                  |*|
-Down|, |{k}|, |PgDown                           |*| Change theme selection.
-{g}| / |<n>{G}                                  |*| Jump to first or n-th / last theme.
-Enter|, |Right|, |{l}                           |*| Apply selected theme.
-{pause}                                         |*| Apply theme and make it default.
-{watch_theme}                                   |*| Make theme default and watch it for
-|                                               |*| changes (|User Themes| only).
-{transp}                                        |*| Toggle theme transparency.
-{reload}                                        |*| Rescan disk for user themes.
-{search} |/ |{search_next}| / |{search_prev}    |*| Search, go to next / previous result.
-Esc|, |{q}|, |Left|, |{h}                       |*| Close window.
+kb2str(r'''Up| ,|{j}|, |PgUp|,                  <*>
+Down|, |{k}|, |PgDown                           <*> Change theme selection.
+{g}| / |<n>{G}                                  <*> Jump to first or n-th / last theme.
+Enter|, |Right|, |{l}                           <*> Apply selected theme.
+{pause}                                         <*> Apply theme and make it default.
+{watch_theme}                                   <*> Make theme default and watch it for
+|                                               <*> changes (|User Themes| only).
+{transp}                                        <*> Toggle theme transparency.
+{reload}                                        <*> Rescan disk for user themes.
+{search} |/ |{search_next}| / |{search_prev}    <*> Search, go to next / previous result.
+Esc|, |{q}|, |Left|, |{h}                       <*> Close window.
 %Global functions (with \ on Line editor)
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         |*| Change volume.
-{mute}| / |{s_vol}                              |*| |M|ute player / Save |v|olume.
-{t_tag}| / |{tag}                               |*| Toggle title log / like a station.'''
-)),
+{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*> Change volume.
+{mute}| / |{s_vol}                              <*> |M|ute player / Save |v|olume.
+{t_tag}| / |{tag}                               <*> Toggle title log / like a station.'''
+), Priority.HELP),
 
     'D_THEME_CREATE_NEW_ASK': ('Read-only Theme',
 kb2strL(r'''
@@ -519,21 +520,21 @@ new theme instead?
 Press "|{y}|" to accept or any other key to cancel.
 
 '''
-)),
+), Priority.DIALOG),
 
         'H_GROUP': ('Group Selection Help',
-kb2str(r'''Up|, |{j}|, |PgUp|,                      |*|
-Down|, |{k}|, |PgDown                               |*| Change Group Header selection.
-{g} {G}                                             |*| Go to first / last Group Header.
-{screen_top} {screen_middle} {screen_bottom}        |*| Go to top / middle / bottom of screen.
-{search} {search_next} {search_prev}                |*| Perform search.
-{pause}|, |Left|, |Enter                            |*| Select a Group Header.
-Esc|, |{q}                                          |*| Cancel.
+kb2str(r'''Up|, |{j}|, |PgUp|,                      <*>
+Down|, |{k}|, |PgDown                               <*> Change Group Header selection.
+{g} {G}                                             <*> Go to first / last Group Header.
+{screen_top} {screen_middle} {screen_bottom}        <*> Go to top / middle / bottom of screen.
+{search} {search_next} {search_prev}                <*> Perform search.
+{pause}|, |Left|, |Enter                            <*> Select a Group Header.
+Esc|, |{q}                                          <*> Cancel.
 %Global functions
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}             |*| Change volume.
-{mute}| / |{s_vol}                                  |*| |M|ute player / Save |v|olume.
-{t_tag}| / |{tag}                                   |*| Toggle title log / like a station.'''
-)),
+{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}             <*> Change volume.
+{mute}| / |{s_vol}                                  <*> |M|ute player / Save |v|olume.
+{t_tag}| / |{tag}                                   <*> Toggle title log / like a station.'''
+), Priority.HELP),
 
     'D_GROUP_DELETE_ASK': ('Group Deletion',
 kb2strL(r'''
@@ -543,24 +544,24 @@ Are you sure you want to delete this group header:
 Press "|{y}|" to confirm, or any other key to cancel
 
 '''
-)),
+), Priority.DIALOG),
 
     'H_YANK': ('Copy Mode Help',
-r'''Enter                           |*| Copy station to unnamed register.
-a-z| / |0-9                         |*| Copy station to named register.
+r'''Enter                           <*> Copy station to unnamed register.
+a-z| / |0-9                         <*> Copy station to named register.
 
 Any other key exits current mode.
 
-'''
+''', Priority.DIALOG
 ),
 
     'H_REGISTERS': ('Registers Mode Help',
-r'''Enter                           |*| Open registers list.
-a-z| / |0-9                         |*| Open named register.
+r'''Enter                           <*> Open registers list.
+a-z| / |0-9                         <*> Open named register.
 
 Any other key exits current mode.
 
-'''
+''', Priority.DIALOG
 ),
 
     'D_REGISTER_CLEAR': ('Clear register',
@@ -573,7 +574,7 @@ This action is not recoverable!
 Press "|{y}|" to confirm, or "|{n}|" to cancel
 
 '''
-)),
+), Priority.DIALOG),
 
     'D_REGISTERS_CLEAR_ALL': ('Clear All Registers',
 kb2strL(r'''
@@ -585,93 +586,93 @@ This action is not recoverable!
 Press "|{y}|" to confirm, or "|{n}|" to cancel
 
 '''
-)),
+), Priority.DIALOG),
 
     'M_REGISTER_SAVE_ERROR': ('Error',
 r'''
 Error saving register file:
 __"|{}|"
 
-'''
+''', Priority.DIALOG
 ),
 
     'H_EXTRA': ('Extra Commands Help',
-kb2str(r'''{open_extra}       |*| Open previous playlist.
-{hist_top}                    |*| Open first opened playlist.
-{buffer} {open_buffer}        |*| Set player |b|uffering.
-{toggle_time}                 |*| Toggle |t|ime display.
-{toggle_tts}                  |*|  Toggle TTS.
-{last_playlist}               |*| Toggle |Open last playlist|.
-{change_player}               |*| Cahnge |m|edia player.
-{new_playlist}                |*| Create a |n|ew playlist.
-{paste}                       |*| Select playlist / register to |p|aste to.
-{rename_playlist}             |*| |R|ename current playlist.
-{clear_all_reg}               |*| |C|lear all registers.
-{unnamed}                     |*| Show |U|nnamed Register.
-{open_dirs}                   |*| |O|pen dirs in file manager.
-{station_volume}			  |*|  Save station |v|olume.
-{toggle_station_volume} 	  |*|  Toggle use of station |V|olume.
+kb2str(r'''{open_extra}       <*> Open previous playlist.
+{hist_top}                    <*> Open first opened playlist.
+{buffer} {open_buffer}        <*> Set player |b|uffering.
+{toggle_time}                 <*> Toggle |t|ime display.
+{toggle_tts}                  <*>  Toggle TTS.
+{last_playlist}               <*> Toggle |Open last playlist|.
+{change_player}               <*> Cahnge |m|edia player.
+{new_playlist}                <*> Create a |n|ew playlist.
+{paste}                       <*> Select playlist / register to |p|aste to.
+{rename_playlist}             <*> |R|ename current playlist.
+{clear_all_reg}               <*> |C|lear all registers.
+{unnamed}                     <*> Show |U|nnamed Register.
+{open_dirs}                   <*> |O|pen dirs in file manager.
+{station_volume}              <*>  Save station |v|olume.
+{toggle_station_volume}       <*>  Toggle use of station |V|olume.
 
 Any other key exits current mode.
 '''
-)),
+), Priority.HELP),
 
     'H_EXTRA_REG': ('Extra Commands Help',
-kb2str(r'''{open_extra}       |*| Open previous playlist.
-{hist_top}                    |*| Open first opened playlist.
-{buffer} {open_buffer}        |*| Set player |b|uffering.
-{toggle_time}                 |*| Toggle |t|ime display.
-{toggle_tts}                  |*|  Toggle TTS.
-{last_playlist}               |*| Toggle |Open last playlist|.
-{change_player}               |*| Cahnge |m|edia player.
-{new_playlist}                |*| Create a |n|ew playlist.
-{paste}                       |*| Select playlist / register to |p|aste to.
-{rename_playlist}             |*| |R|ename current playlist.
-{clear_reg}                   |*| Clear |c|urrent register.
-{unnamed}                     |*| Show |U|nnamed Register.
-{open_dirs}                   |*| |O|pen dirs in file manager.
-{station_volume}			  |*|  Save station |v|olume.
-{toggle_station_volume} 	  |*|  Toggle use of station |V|olume.
+kb2str(r'''{open_extra}       <*> Open previous playlist.
+{hist_top}                    <*> Open first opened playlist.
+{buffer} {open_buffer}        <*> Set player |b|uffering.
+{toggle_time}                 <*> Toggle |t|ime display.
+{toggle_tts}                  <*>  Toggle TTS.
+{last_playlist}               <*> Toggle |Open last playlist|.
+{change_player}               <*> Cahnge |m|edia player.
+{new_playlist}                <*> Create a |n|ew playlist.
+{paste}                       <*> Select playlist / register to |p|aste to.
+{rename_playlist}             <*> |R|ename current playlist.
+{clear_reg}                   <*> Clear |c|urrent register.
+{unnamed}                     <*> Show |U|nnamed Register.
+{open_dirs}                   <*> |O|pen dirs in file manager.
+{station_volume}              <*>  Save station |v|olume.
+{toggle_station_volume}       <*>  Toggle use of station |V|olume.
 
 Any other key exits current mode.
 '''
-)),
+), Priority.HELP),
 
     'H_EXTRA_REGISTERS_LIST': ('Extra Commands Help',
-kb2str(r'''{rename_playlist}  |*| |R|ename current register.
-{paste}                       |*| |P|aste to current register.
-{clear_reg}                   |*| Clear |c|urrent register.
-{clear_all_reg}               |*| |C|lear all registers.
-{unnamed}                     |*| Show |U|nnamed Register.
-{open_dirs}                   |*| |O|pen dirs in file manager.
-{station_volume}			  |*|  Save station |v|olume.
-{toggle_station_volume} 	  |*|  Toggle use of station |V|olume.
-{toggle_time}                 |*| Toggle |t|ime display.
-{toggle_tts}                  |*|  Toggle TTS.
+kb2str(r'''{rename_playlist}  <*> |R|ename current register.
+{paste}                       <*> |P|aste to current register.
+{clear_reg}                   <*> Clear |c|urrent register.
+{clear_all_reg}               <*> |C|lear all registers.
+{unnamed}                     <*> Show |U|nnamed Register.
+{open_dirs}                   <*> |O|pen dirs in file manager.
+{station_volume}              <*>  Save station |v|olume.
+{toggle_station_volume}       <*>  Toggle use of station |V|olume.
+{toggle_time}                 <*> Toggle |t|ime display.
+{toggle_tts}                  <*>  Toggle TTS.
 
 Any other key exits current mode.
 '''
-)),
+), Priority.HELP),
 
     'H_EXTRA_PLAYLIST': ('Extra Commands Help',
-kb2str(r'''{new_playlist}     |*| Create a |n|ew playlist.
-{paste}                       |*| |P|aste to current playlist.
-{rename_playlist}             |*| |R|ename current playlist.
-{unnamed}                     |*| Show |U|nnamed Register.
-{open_dirs}                   |*| |O|pen dirs in file manager.
+kb2str(r'''{new_playlist}     <*> Create a |n|ew playlist.
+{paste}                       <*> |P|aste to current playlist.
+{rename_playlist}             <*> |R|ename current playlist.
+{unnamed}                     <*> Show |U|nnamed Register.
+{open_dirs}                   <*> |O|pen dirs in file manager.
 
 |Any other key exits current mode.
 '''
-)),
+), Priority.HELP),
 
     'D_RB_OPEN': ('',
 r'''Connecting to service.
-____Please wait...'''
+____Please wait...''', Priority.DIALOG
 ),
 
     'D_RB_SEARCH': ('',
 r'''__Performing search.__
- ____Please wait...'''
+ ____Please wait...''', Priority.DIALOG
 ),
 
     'M_RB_UNKNOWN_SERVICE': ('Unknown Service',
@@ -685,7 +686,7 @@ is not implemented (yet?)
 If you want to help implementing it, please open an
 issue at "|https://github.com/coderholic/pyradio/issues|".
 
-'''
+''', Priority.DIALOG
 ),
 
     'H_RB_NO_PING': ('Servers Unreachable',
@@ -694,46 +695,46 @@ r'''No server responds to ping.
 You will be able to edit the config file, but
 you will not be able to select a default server.
 
-'''
+''', Priority.DIALOG
 ),
 
     'H_RB_SEARCH': ('RadioBrowser Search Help',
-kb2str(r'''Tab| / |Sh-Tab           |*| Go to next / previous field.
-{j}|, |Up| / |{k}|, |Down           |*| Go to next / previous field vertivally.
-{h}|, |Left| / |{l}|, |Right        |*|
-                                    |*| Go to next / previous field (when
-                                    |*| applicable). Also, change counter value.
-{pause}                             |*| Toggle check buttons.
-                                    |*| Toggle multiple selection.
-Enter                               |*| Perform search / cancel (on push buttons).
-{s}                                 |*| Perform search (not on Line editor).
-Esc                                 |*| Cancel operation.
+kb2str(r'''Tab| / |Sh-Tab           <*> Go to next / previous field.
+{j}|, |Up| / |{k}|, |Down           <*> Go to next / previous field vertivally.
+{h}|, |Left| / |{l}|, |Right        <*>
+                                    <*> Go to next / previous field (when
+                                    <*> applicable). Also, change counter value.
+{pause}                             <*> Toggle check buttons.
+                                    <*> Toggle multiple selection.
+Enter                               <*> Perform search / cancel (on push buttons).
+{s}                                 <*> Perform search (not on Line editor).
+Esc                                 <*> Cancel operation.
 _
 Search history navigation works with normal keys as well
 __(|^N| is the same as |n| when not in a line editor).
 %Global functions (with \ on Line editor)
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         |*|  Change volume.
-{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume.
-{t_tag}| / |{tag}                               |*|Toggle title log / like a station.'''
-)),
+{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*>  Change volume.
+{mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
+{t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
+), Priority.HELP),
 
     'H_RB_CONFIG': ('RadioBrowser Config Help',
-kb2str(r'''Tab| / |Sh-Tab|,                |*|
-{j}|, |Up| / |{k}|, |Down                  |*| Go to next / previous field.
-{h}|, |Left| / |{l}|, |Right               |*| Change |auto save| and |counters| value.
-                                           |*| Navigate through |Search Terms|.
-{g}|, |{G}|, |Home|, |End|,                |*|
-PgUp|, |PgDn                               |*| Navigate through |Search Terms|.
-{pause}|, |Enter                           |*| Toggle |auto save|  value.
-                                           |*| Open |Server Selection| window.
-{revert_saved}| / |{revert_def}                             |*| Revert to |saved| / |default| values.
-{s}                                        |*| Save config.
-Esc                                        |*| Exit without saving.
+kb2str(r'''Tab| / |Sh-Tab|,                <*>
+{j}|, |Up| / |{k}|, |Down                  <*> Go to next / previous field.
+{h}|, |Left| / |{l}|, |Right               <*> Change |auto save| and |counters| value.
+                                           <*> Navigate through |Search Terms|.
+{g}|, |{G}|, |Home|, |End|,                <*>
+PgUp|, |PgDn                               <*> Navigate through |Search Terms|.
+{pause}|, |Enter                           <*> Toggle |auto save|  value.
+                                           <*> Open |Server Selection| window.
+{revert_saved}| / |{revert_def}                             <*> Revert to |saved| / |default| values.
+{s}                                        <*> Save config.
+Esc                                        <*> Exit without saving.
 %Global functions (with \ on Line editor)
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}    |*|  Change volume.
-{mute}| / |{s_vol}                         |*|  |M|ute player / Save |v|olume.
-{t_tag}| / |{tag}                          |*|Toggle title log / like a station.'''
-)),
+{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}    <*>  Change volume.
+{mute}| / |{s_vol}                         <*>  |M|ute player / Save |v|olume.
+{t_tag}| / |{tag}                          <*>Toggle title log / like a station.'''
+), Priority.HELP),
 
     'D_RB_ASK_TO_SAVE_CONFIG': ('Online Browser Config not Saved!',
 kb2strL(r'''
@@ -742,7 +743,7 @@ but not saved. Do you want to save it now?
 
 Press |{y}| to save it or |n| to disregard it.
 '''
-)),
+), Priority.DIALOG),
 
     'D_RB_ASK_TO_SAVE_CONFIG_FROM_CONFIG': ('Online Browser Config not Saved!',
 kb2strL(r'''
@@ -751,7 +752,7 @@ but not saved. Do you want to save it now?
 
 Press |{y}| to save it or |{n}| to disregard it.
 '''
-)),
+), Priority.DIALOG),
 
     'D_RB_ASK_TO_SAVE_CONFIG_TO_EXIT': ('Online Browser Config not Saved!',
 kb2strL(r'''
@@ -760,7 +761,7 @@ but not saved. Do you want to save it now?
 
 Press |{y}| to save it or |{n}| to disregard it.
 '''
-)),
+), Priority.DIALOG),
 
     'M_RB_CONFIG_SAVE_ERROR': ('Config Saving Error',
 r'''
@@ -769,7 +770,7 @@ ___Saving your configuration has failed!!!___
 ___Please make sure there is enought free space in___
 ___the file system and try again.___
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_RB_CONFIG_SAVE_ERROR_WIN': ('Config Saving Error',
@@ -781,7 +782,7 @@ ___is not opened in another application and that___
 ___there is enough free space in the drive and ___
 ___try again.___
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_RB_VOTE_RESULT': ('Station Vote Result',
@@ -792,7 +793,7 @@ ____|{0}|
 Voting result:
 ____|{1}|
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_RB_VOTE': ('',
@@ -800,7 +801,7 @@ r'''
 ___Voting for station._____
 _____Please wait...'
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_RB_EDIT_URL_ERROR': ('Error',
@@ -810,7 +811,7 @@ ____Errorenous Station Data provided!___
 _________Station URL is invalid!___
 ___Please provide a valid Station URL.___
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_RB_EDIT_INCOMPLETE_ERROR': ('Error',
@@ -820,7 +821,7 @@ ____Incomplete Station Data provided!___
 _________Station URL is empty!___
 ___Please provide a valid Station URL.___
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_RB_EDIT_NAME_ERROR': ('Error',
@@ -829,7 +830,7 @@ ___Incomplete Station Data provided!___
 
 ____Please provide a Station Name.___
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_RB_EDIT_ICON_ERROR': ('Error',
@@ -839,7 +840,7 @@ ______Errorenous Station Data provided!___
 ________Station Icon URL is invalid!___
 ___Please provide a valid Station Icon URL.___
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_RB_EDIT_ICON_FORMAT_ERROR': ('Error',
@@ -850,7 +851,7 @@ ________Station Icon URL is invalid!___
 ____It must point to a JPG or a PNG file.__
 ___Please provide a valid Station Icon URL.___
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_RB_EDIT_REF_ERROR': ('Error',
@@ -860,7 +861,7 @@ ______Errorenous Referrer Data provided!___
 ________Referrer URL is invalid!___
 ___Please provide a valid Referrer URL.___
 
-'''
+''', Priority.DIALOG
 ),
 
     'D_ASK_TO_UPDATE_STATIONS_CSV': ('Stations update',
@@ -876,86 +877,86 @@ for this version, or any other key to close this window
 and be asked next time you execute |PyRadio|.
 
 '''
-)),
+), Priority.DIALOG),
 
     'M_UPDATE_STATIONS_RESULT': ('', ''),
 
     'H_CONFIG': ('Configuration Help',
-kb2str(r'''Up|, |{j}|, |PgUp|,                  |*|
-Down|, |{k}|, |PgDown                           |*| Change option selection.
-{g}|, |Home| / |{G}|, |End                      |*| Jump to first / last option.
-Enter|, |{pause}|, |Right|, |{l}                |*| Change option value.
-{revert_saved}                                  |*| Revert to saved values.
-{search} |/ |{search_next}| / |{search_prev}    |*|  Search, go to next / previous result.
-{revert_def}                                    |*| Load default values.
-{s}                                             |*| Save config.
-Esc|, |{q}|, |Left|, |{h}                       |*| Cancel.
+kb2str(r'''Up|, |{j}|, |PgUp|,                  <*>
+Down|, |{k}|, |PgDown                           <*> Change option selection.
+{g}|, |Home| / |{G}|, |End                      <*> Jump to first / last option.
+Enter|, |{pause}|, |Right|, |{l}                <*> Change option value.
+{revert_saved}                                  <*> Revert to saved values.
+{search} |/ |{search_next}| / |{search_prev}    <*>  Search, go to next / previous result.
+{revert_def}                                    <*> Load default values.
+{s}                                             <*> Save config.
+Esc|, |{q}|, |Left|, |{h}                       <*> Cancel.
 %Global functions (with \ on Line editor)
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         |*|  Change volume.
-{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume.
-{t_tag}| / |{tag}                               |*|Toggle title log / like a station.'''
-)),
+{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*>  Change volume.
+{mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
+{t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
+), Priority.HELP),
 
     'H_CONFIG_STATION': ('Station Selection Help',
-kb2str(r'''Up|, |{j}|, |PgUp|,                   |*|
-Down|, |{k}|, |PgDown                            |*| Change station selection.
-{g}| / |<n>G                                     |*| Jump to first or n-th / last station.
-{screen_middle}                                  |*| Jump to the middle of the list.
-Enter|, |{pause}|,                               |*|
-Right|, |{l}                                     |*| Select default station.
-{search} |/ |{search_next}| / |{search_prev}     |*|  Search, go to next / previous result.
-{revert_saved}                                   |*| Revert to saved value.
-Esc|, |{q}|, |Left|, |{h}                        |*| Canel.
+kb2str(r'''Up|, |{j}|, |PgUp|,                   <*>
+Down|, |{k}|, |PgDown                            <*> Change station selection.
+{g}| / |<n>G                                     <*> Jump to first or n-th / last station.
+{screen_middle}                                  <*> Jump to the middle of the list.
+Enter|, |{pause}|,                               <*>
+Right|, |{l}                                     <*> Select default station.
+{search} |/ |{search_next}| / |{search_prev}     <*>  Search, go to next / previous result.
+{revert_saved}                                   <*> Revert to saved value.
+Esc|, |{q}|, |Left|, |{h}                        <*> Canel.
 %Global functions (with \ on Line editor)
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}          |*|  Change volume.
-{mute}| / |{s_vol}                               |*|  |M|ute player / Save |v|olume.
-{t_tag}| / |{tag}                                |*|Toggle title log / like a station.'''
-)),
+{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}          <*>  Change volume.
+{mute}| / |{s_vol}                               <*>  |M|ute player / Save |v|olume.
+{t_tag}| / |{tag}                                <*>Toggle title log / like a station.'''
+), Priority.HELP),
 
     'H_CONFIG_PLAYER': ('Player Selection Help',
-kb2str(r'''TAB|                                 |*| Move selection to |Extra Parameters| column.
-Up|, |{j}|, |Down|, |{k}|                       |*| Change player selection.
-Enter|, |{pause}|,                              |*|
-Right|, |{l}                                    |*| Enable / disable player.
-^U| / |^D|                                      |*| Move player |u|p or |d|own.
-{revert_saved}|                                 |*| Revert to saved values.
-{s}|                                            |*| Accept changes (player and parameters).
-|                                               |*| |Notice|: Changes will be saved only after pressing
-|                                               |*| ________"|{s}|" in the main |Configurationw Window|.
-Esc|, |{q}|, |Left|, |{h}                       |*| Canel.
+kb2str(r'''TAB|                                 <*> Move selection to |Extra Parameters| column.
+Up|, |{j}|, |Down|, |{k}|                       <*> Change player selection.
+Enter|, |{pause}|,                              <*>
+Right|, |{l}                                    <*> Enable / disable player.
+^U| / |^D|                                      <*> Move player |u|p or |d|own.
+{revert_saved}|                                 <*> Revert to saved values.
+{s}|                                            <*> Accept changes (player and parameters).
+|                                               <*> |Notice|: Changes will be saved only after pressing
+|                                               <*> ________"|{s}|" in the main |Configurationw Window|.
+Esc|, |{q}|, |Left|, |{h}                       <*> Canel.
 %Global functions (with \ on Line editor)
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         |*|  Change volume.
-{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume.
-{t_tag}| / |{tag}                               |*|Toggle title log / like a station.'''
-)),
+{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*>  Change volume.
+{mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
+{t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
+), Priority.HELP),
 
     'H_CONFIG_PLAYLIST': ('Playlist Selection Help',
-kb2str(r'''Up|, |{j}|, |PgUp|,                  |*|
-Down|, |{k}|, |PgDown                           |*| Change playlist selection.
-{g}| / |<n>[G}                                  |*| Jump to first or n-th / last playlist.
-Enter|, |{pause}|,                              |*|
-Right|, |{l}                                    |*| Select default playlist.
-{search} |/ |{search_next}| / |{search_prev}    |*|  Search, go to next / previous result.
-{revert_saved}                                  |*| Revert to saved value.
-Esc|, |{q}|, |Left|, |{h}                       |*| Canel.
+kb2str(r'''Up|, |{j}|, |PgUp|,                  <*>
+Down|, |{k}|, |PgDown                           <*> Change playlist selection.
+{g}| / |<n>[G}                                  <*> Jump to first or n-th / last playlist.
+Enter|, |{pause}|,                              <*>
+Right|, |{l}                                    <*> Select default playlist.
+{search} |/ |{search_next}| / |{search_prev}    <*>  Search, go to next / previous result.
+{revert_saved}                                  <*> Revert to saved value.
+Esc|, |{q}|, |Left|, |{h}                       <*> Canel.
 %Global functions (with \ on Line editor)
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         |*|  Change volume.
-{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume.
-{t_tag}| / |{tag}                               |*|Toggle title log / like a station.'''
-)),
+{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*>  Change volume.
+{mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
+{t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
+), Priority.HELP),
 
     'H_CONFIG_ENCODING': ('Encoding Selection Help',
-kb2str(r'''Arrows|, |{h}|, |{j}|, |{k}|,        |*|
-{l}|, |PgUp|, |,PgDn                            |*|
-{g}|, |Home|, |{G}|, |End                       |*| Change encoding selection.
-Enter|, |{pause}|, |{s}                         |*| Save encoding.
-{revert_saved} {revert_def}                     |*| Revert to station / config value.
-Esc|, |{q}                                      |*| Cancel.
+kb2str(r'''Arrows|, |{h}|, |{j}|, |{k}|,        <*>
+{l}|, |PgUp|, |,PgDn                            <*>
+{g}|, |Home|, |{G}|, |End                       <*> Change encoding selection.
+Enter|, |{pause}|, |{s}                         <*> Save encoding.
+{revert_saved} {revert_def}                     <*> Revert to station / config value.
+Esc|, |{q}                                      <*> Cancel.
 %Global functions
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         |*|  Change volume.
-{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume.
-{t_tag}| / |{tag}                               |*|Toggle title log / like a station.'''
-)),
+{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*>  Change volume.
+{mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
+{t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
+), Priority.HELP),
 
     'M_CONFIG_SAVE_ERROR': ('Error Saving Config',
 r'''An error occured while saving the configuration file!
@@ -963,90 +964,90 @@ r'''An error occured while saving the configuration file!
 |PyRadio| will try to |restore| your previous settings,
 but in order to do so, it has to |terminate now!
 
-'''
+''', Priority.DIALOG
 ),
 
     'H_DIR': ('Open Directory Help',
-kb2str(r'''Up|, |{j}|, |PgUp|,                  |*|
-Down|, |{k}|, |PgDown                           |*| Change Directory selection.
-{g} {G}                                         |*| Go to first / last Directory.
-{pause}|, |Right|,                              |*|
-{l}|, |Enter                                    |*| Open a Directory.
-1| - |{}                                        |*| Open corresponding Directory.
-Esc|, |{q}                                      |*| Cancel.
+kb2str(r'''Up|, |{j}|, |PgUp|,                  <*>
+Down|, |{k}|, |PgDown                           <*> Change Directory selection.
+{g} {G}                                         <*> Go to first / last Directory.
+{pause}|, |Right|,                              <*>
+{l}|, |Enter                                    <*> Open a Directory.
+1| - |{}                                        <*> Open corresponding Directory.
+Esc|, |{q}                                      <*> Cancel.
 %Global functions
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         |*|  Change volume.
-{mute}| / |{s_vol}                              |*|  |M|ute player / Save |v|olume.
-{t_tag}| / |{tag}                               |*|Toggle title log / like a station.'''
-)),
+{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*>  Change volume.
+{mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
+{t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
+), Priority.HELP),
 
     'H_SEARCH': ('Search Help',
-kb2str(r'''Left| / |Right           |*| Move to next / previous character.
-Up| / |Down                         |*| Cycle within history.
-M-F| / |M-B                         |*| Move to next / previous word.
-Home|, |^A| / |End|, |^E            |*| Move to start / end of line.
-^W| / |M-D|, |^K                    |*| Clear to start / end of line.
-^U                                  |*| Clear line.
-^X                                  |*| Remove history item.
-Del|, |^D                           |*| Delete character.
-Backspace|, |^H                     |*| Backspace (delete previous character).
-Up|, |^P| / |Down|, |^N             |*| Get previous / next history item.
-\?| / |\\                           |*| Insert a "|?|" or a "|\|", respectively.
-Enter| / |Esc                       |*| Perform / cancel search.
+kb2str(r'''Left| / |Right           <*> Move to next / previous character.
+Up| / |Down                         <*> Cycle within history.
+M-F| / |M-B                         <*> Move to next / previous word.
+Home|, |^A| / |End|, |^E            <*> Move to start / end of line.
+^W| / |M-D|, |^K                    <*> Clear to start / end of line.
+^U                                  <*> Clear line.
+^X                                  <*> Remove history item.
+Del|, |^D                           <*> Delete character.
+Backspace|, |^H                     <*> Backspace (delete previous character).
+Up|, |^P| / |Down|, |^N             <*> Get previous / next history item.
+\?| / |\\                           <*> Insert a "|?|" or a "|\|", respectively.
+Enter| / |Esc                       <*> Perform / cancel search.
 
 Global functions work when preceded with a "|\|".
 '''
-)),
+), Priority.HELP),
 
     'H_SEARCH_DARWIN': ('Search Help',
-kb2str(r'''Left| / |Right           |*| Move to next / previous character.
-Home|, |^A| / |End|, |^E            |*| Move to start / end of line.
-^W| / |^K                           |*| Clear to start / end of line.
-^U                                  |*| Clear line.
-Del|, |^D                           |*| Delete character.
-Backspace|, |^H                     |*| Backspace (delete previous character).
-Up|, |^P| / |Down|, |^N             |*| Get previous / next history item.
-\?| / |\\                           |*| Insert a "|?|" or a "|\|", respectively.
-Enter| / |Esc                       |*| Perform / cancel search.
+kb2str(r'''Left| / |Right           <*> Move to next / previous character.
+Home|, |^A| / |End|, |^E            <*> Move to start / end of line.
+^W| / |^K                           <*> Clear to start / end of line.
+^U                                  <*> Clear line.
+Del|, |^D                           <*> Delete character.
+Backspace|, |^H                     <*> Backspace (delete previous character).
+Up|, |^P| / |Down|, |^N             <*> Get previous / next history item.
+\?| / |\\                           <*> Insert a "|?|" or a "|\|", respectively.
+Enter| / |Esc                       <*> Perform / cancel search.
 
 Global functions work when preceded with a "|\|".
 '''
-)),
+), Priority.HELP),
 
     'H_EXTERNAL_LINE_EDITOR': ('',),
 
     'H_LINE_EDITOR': ('Line Editor Help',
-kb2str(r'''Left| / |Right           |*| Move to next / previous character.
-Home|, |^A| / |End|, |^E            |*| Move to start / end of line.
-^W| / |^K                           |*| Clear to start / end of line.
-^U                                  |*| Clear line.
-Del|, |^D                           |*| Delete character.
-Backspace|, |^H                     |*| Backspace (delete previous character).
-Up| / |Down                         |*| Go to previous / next field.
-\?| / |\\                           |*| Insert a "|?|" or a "|\\|", respectively.
-Esc                                 |*| Cancel operation.
+kb2str(r'''Left| / |Right           <*> Move to next / previous character.
+Home|, |^A| / |End|, |^E            <*> Move to start / end of line.
+^W| / |^K                           <*> Clear to start / end of line.
+^U                                  <*> Clear line.
+Del|, |^D                           <*> Delete character.
+Backspace|, |^H                     <*> Backspace (delete previous character).
+Up| / |Down                         <*> Go to previous / next field.
+\?| / |\\                           <*> Insert a "|?|" or a "|\\|", respectively.
+Esc                                 <*> Cancel operation.
 
 Global functions work when preceded with a "|\|".
 
 '''
-)),
+), Priority.HELP),
 
     'H_LINE_EDITOR_DARWIN': ('Line Editor Help',
-kb2str(r'''Left| / |Right           |*| Move to next / previous character.
-M-F| / |M-B                         |*| Move to next / previous word.
-Home|, |^A| / |END|, |^E            |*| Move to start / end of line.
-^W| / |M-D|,|^K                     |*| Clear to start / end of line.
-^U                                  |*| Clear line.
-Del|, |^D                           |*| Delete character.
-Backspace|, |^H                     |*| Backspace (delete previous character).
-Up| / |Down                         |*| Go to previous / next field.
-\?| / |\\                           |*| Insert a "|?|" or a "|\\|", respectively.
-Esc                                 |*| Cancel operation.
+kb2str(r'''Left| / |Right           <*> Move to next / previous character.
+M-F| / |M-B                         <*> Move to next / previous word.
+Home|, |^A| / |END|, |^E            <*> Move to start / end of line.
+^W| / |M-D|,|^K                     <*> Clear to start / end of line.
+^U                                  <*> Clear line.
+Del|, |^D                           <*> Delete character.
+Backspace|, |^H                     <*> Backspace (delete previous character).
+Up| / |Down                         <*> Go to previous / next field.
+\?| / |\\                           <*> Insert a "|?|" or a "|\\|", respectively.
+Esc                                 <*> Cancel operation.
 
 Global functions work when preceded with a "|\|".
 
 '''
-)),
+), Priority.HELP),
 
     'M_SESSION_LOCKED': (M_STRINGS['session-locked-title'],
 '''
@@ -1060,7 +1061,7 @@ If you are sure this is the |only| active |PyRadio|
 instance, exit |PyRadio| now and execute the following
 command: |pyradio --unlock|
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_NO_PLAYLIST': ('Error',
@@ -1070,7 +1071,7 @@ r'''
 This should |never| have happened; |PyRadio| is missing its
 default playlist. Therefore, it has to |terminate| now.
 It will re-create it the next time it is lounched.
-'''
+''', Priority.DIALOG
 ),
 
     'D_RC_ACTIVE': ('Remote Control Enabled',
@@ -1081,7 +1082,7 @@ Text Address: |http://{0}
 _Web Address: |http://{0}/html____
 
 Press "|{s}|" to stop the server, or'''.replace('{s}', chr(kbkey['s']))
-),
+, Priority.DIALOG),
 
     'M_RC_START_ERROR': ('Server Error',
 r'''
@@ -1095,7 +1096,7 @@ is already using the requested |Server Port|.
 Close this window, press "|\s|", select a |different
 |port| and try to start the |Server| again.
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_RC_DEAD_ERROR': ('Server Error',
@@ -1104,7 +1105,7 @@ The Remote Control Server |terminated| with
 message:
 __|{}
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_RC_LOCKED': ('Not Available',
@@ -1112,19 +1113,19 @@ r'''
 ______This session is |locked|, so the
 __|Remote Control Server| cannot be started!__
 
-'''
+''', Priority.DIALOG
 ),
 
-    'D_UPDATE_NOTIFICATION': ('',
+    'D_UPDATE_NOTIFICATION': ('New Release!',
 kb2strL(r'''
-A new |PyRadio| release (|{0}|) is available!
+|PyRadio| release |{0}| is available!
 
 You are strongly encouraged to update now, so that
 you enjoy new features and bug fixes.
 
 Press |{y}| to update or any other key to cancel.
 '''
-)),
+), Priority.DIALOG),
 
     'M_UPDATE_NOTIFICATION_OK': ('Update Notification',
 r'''
@@ -1135,7 +1136,7 @@ procedure can start.
 
 Press any key to exit |PyRadio|.
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_UPDATE_NOTIFICATION_OK_WIN': ('Update Notification',
@@ -1148,7 +1149,7 @@ When Explorer opens please double click on
 
 Press any key to exit |PyRadio|.
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_REC_ENABLED': ('Recording Enable',
@@ -1161,14 +1162,14 @@ A |[R]| indicates that a station is actually
 |being recorded| to a file.
 
 Press |{x}| to not show this message again, or'''.replace('{x}', chr(kbkey['no_show']))
-),
+, Priority.DIALOG),
 
     'M_REC_DISABLED': ('Recording Disabled',
 r'''
 Recording will actually continue until
 you stop the playback of the station!
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_REC_NOT_SUPPORTED': ('Recording not supported!',
@@ -1185,7 +1186,7 @@ If none of them is installed, close this window and
 press |F8| to get to the player installation window.
 
 '''.replace('|F8|', chr(kbkey['F8']))
-),
+, Priority.DIALOG),
 
     'M_REC_IS_ON_NO_DIR': ('Recording is active',
 r'''
@@ -1197,7 +1198,7 @@ station is not allowed.
 Please stop the playback of the station (effectively
 stopping the recording) and try again.
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_REC_IS_ON_NO_DIR_HEADLESS': ('Recording is active',
@@ -1211,7 +1212,7 @@ station is not allowed.
 Please stop the playback of the station (effectively
 stopping the recording) and try again.
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_RESOURCE_OPENER': ('Resource Opener Help',
@@ -1229,7 +1230,7 @@ To set a |Custom Opener|, insert its name (either absolute path
 to its executable or its name, if it is in your |PATH|), followed
 by any parameter required, for example: "|/usr/bin/gio open|",
 "|mimeopen -n|", "|xdg-open|".
-'''
+''', Priority.HELP
 ),
 
     'M_REC_DIR_HELP': ('Recordings Dir Help',
@@ -1249,7 +1250,7 @@ ___directory to the new location and optionally rename it.
 3. |already exists and is not empty|
 ___|PyRadio| will |move| the original directory |inside| the new
 ___directory and optionally rename it.
-'''
+''', Priority.HELP
 ),
 
     'M_REC_DIR_MOVE': ('',
@@ -1257,7 +1258,7 @@ r'''
 ______Moving |Recordings Directory______
 ____________Please wait...
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_REC_DIR_MOVE_ERROR': ('Error',
@@ -1270,7 +1271,7 @@ to
 
 Press any key to open the directories in file explorer...
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_MANAGE_PLAYERS_WIN': ('Players Management',
@@ -1280,7 +1281,7 @@ Players management |enabled|!
 |PyRadio| will now terminate so that you can
 |manage| installed players.
 
-'''
+''', Priority.DIALOG
 ),
 
     'D_UNINSTALL_WIN': ('Uninstall PyRadio',
@@ -1291,21 +1292,21 @@ Please press |{y}| to confirm or any other key
 to decline.
 
 '''
-)),
+), Priority.DIALOG),
 
     'M_REMOVE_OLD_INSTALLATION': ('PyRadio',
 r'''
 |PyRadio| will now try to remove any files found on your
 system belonging to a pre |0.8.9.15| installation.
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_SHOW_UNNAMED_REGISTER': ('Unnamed Register',
 r'''
 ___{}___
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_CHANGE_PLAYER_ONE_ERROR': ('PyRadio',
@@ -1317,7 +1318,7 @@ If you have already installed any other player
 (|{0}| or |{1}|), please make sure its executable
 is in your PATH.
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_CHANGE_PLAYER_THE_SAME_ERROR': ('PyRadio',
@@ -1329,14 +1330,14 @@ the one that's already active.
 
 Please try selecting a different |Media Player|.
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_NOT_IMPLEMENTED': ('PyRadio',
 r'''
 ___This feature has not been implemented yet...___
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_FOREIGN': ('Foreign playlist',
@@ -1348,7 +1349,7 @@ already exists in the config directory.
 This playlist was saved as:
 __"|{1}|"
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_FOREIGN_ERROR': ('Error',
@@ -1358,7 +1359,7 @@ Foreign playlist copying |failed|!
 Make sure the file is not open with another
 application and try to load it again
 
-'''
+''', Priority.DIALOG
 ),
 
     'D_FOREIGN_ASK': ('Foreign playlist',
@@ -1372,7 +1373,7 @@ Do you want to copy it in the config directory?
 
 Press "|{y}|" to confirm or "|{n}|" to reject
 
-''')
+'''), Priority.DIALOG
 ),
 
     'M_NO_THEMES': ('Themes Disabled',
@@ -1386,7 +1387,7 @@ For more info, please refer to:
 |https://github.com/coderholic/pyradio/#virtual-terminal-restrictions
 
 Press "|{x}|" to never display this message in the future, or
-'''.replace('{x}', chr(kbkey['no_show']))
+'''.replace('{x}', chr(kbkey['no_show'])), Priority.DIALOG
 ),
 
     'M_REQUESTS_ERROR':('Module Error',
@@ -1400,7 +1401,7 @@ Exit |PyRadio| now, install the module (named
 |python-requests| or |python{}-requests|) and try
 executing |PyRadio| again.
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_NETIFACES_ERROR':('Module Error',
@@ -1414,7 +1415,7 @@ Exit |PyRadio| now, install the module (named
 |python-netifaces| or |python{}-netifaces|) and try
 executing |PyRadio| again.
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_DNSPYTHON_ERROR':('Module Error',
@@ -1428,7 +1429,7 @@ Exit |PyRadio| now, install the module (named
 |python-dnspython| or |python{}-dnspython|) and try
 executing |PyRadio| again.
 
-'''
+''', Priority.DIALOG
 ),
 
     'X_THEME_DOWN_FAIL': ('',
@@ -1436,7 +1437,7 @@ r'''
 ____|Theme download failed!!!|____
 _____Loading |default| theme..._____
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_PARAMETER_ERROR': ('Parameter Set Error',
@@ -1449,7 +1450,7 @@ You can press "|{Z}|" to access them, after you
 close this window.
 
 '''.replace('{Z}', chr(kbkey['extra_p_pamars']))
-),
+, Priority.DIALOG),
 
     'X_PLAYER_CHANGED':('',
 r'''
@@ -1461,40 +1462,40 @@ __"|{1}|".
 This change may lead to changing the player used,
 and will take effect next time you open |PyRadio|.
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_SCHEDULE_INFO': ('Schedule Entry Info',
 r'''{}
-'''
+''', Priority.DIALOG
 ),
 
     'M_SCHEDULE_ERROR': ('Schedule Error',
 r'''
 ___|{}___
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_SCHEDULE_EDIT_HELP': ('Schedule Editor Help',
-kb2str(r'''Tab|, |L| / |Sh-Tab|, |H             |*|Go to next / previous field.
-{j}|, |Up| / |{k}|, |Down                       |*|Go to next / previous field vertivally.
-                                                |*|Go to next / previous field (when
-                                                |*|applicable). Also, change counter value.
-{pause}                                         |*|Toggle check buttons.
-n                                               |*|Set current date and time to section.
-0|-|9                                           |*|Add hours to |Start| or |Stop| section.
-t| / |f                                         |*|Copy date/time |t|o/|f|rom complementary field.
-i                                               |*|Validate entry and show dates.
-Enter                                           |*|Perform search / cancel (on push buttons).
-s                                               |*|Perform search (not on Line editor).
-Esc                                             |*|Cancel operation.
+kb2str(r'''Tab|, |L| / |Sh-Tab|, |H             <*>Go to next / previous field.
+{j}|, |Up| / |{k}|, |Down                       <*>Go to next / previous field vertivally.
+                                                <*>Go to next / previous field (when
+                                                <*>applicable). Also, change counter value.
+{pause}                                         <*>Toggle check buttons.
+n                                               <*>Set current date and time to section.
+0|-|9                                           <*>Add hours to |Start| or |Stop| section.
+t| / |f                                         <*>Copy date/time |t|o/|f|rom complementary field.
+i                                               <*>Validate entry and show dates.
+Enter                                           <*>Perform search / cancel (on push buttons).
+s                                               <*>Perform search (not on Line editor).
+Esc                                             <*>Cancel operation.
 
 %Global functions
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         |*| Change volume.
-{mute}| / |{s_vol}                              |*| |M|ute player / Save |v|olume.
-{t_tag}| / |{tag}                               |*|Toggle title log / like a station.'''
-)),
+{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*> Change volume.
+{mute}| / |{s_vol}                              <*> |M|ute player / Save |v|olume.
+{t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
+), Priority.HELP),
 
     'M_KEYBOARD_HELP':('Keyboard Shortcuts Help',
 r'''
@@ -1508,21 +1509,21 @@ __|New|____  Latest change (not saved yet).
 The following action are available:
 ''' + self._format_columns(kb2str(
 r'''
-__|Arrow Keys|, |{j}|, |{k}|,            |*|
-__|PgUp|, |PgDown|                       |*| Move up, down, etc.
-__|Tab|, |{tab}| / |Sh-Tab|, |{stab}|    |*| Move to next / previous field.
-__|{g}| / |{G}|                          |*| Go to top / bottom of the list.
-__|[| / |]|                              |*| Move between sections.
-__{search} |/ |{search_next}| / |{search_prev}    |*|  Search, go to next / previous result.
-__|{revert_def}| / |{revert_saved}|      |*| Revert to default / saved shortcuts.
-__|x|                                    |*| Revert current item to saved value.
-__|f|                                    |*| Show |free| keys.
-__|Enter|, |{pause}|,                    |*|
-__|Right|, |{l}|                         |*| Enter |editing mode| (insert new shortcut).
-__|Esc|                                  |*|Exit |editing mode|.
-__|0|                                    |*| Switch between |c|ocnflicting items.
-                                         |*|Available in |editing mode| as well.
-__|{?}|                                  |*|Display this help screen.
+__|Arrow Keys|, |{j}|, |{k}|,            <*>
+__|PgUp|, |PgDown|                       <*> Move up, down, etc.
+__|Tab|, |{tab}| / |Sh-Tab|, |{stab}|    <*> Move to next / previous field.
+__|{g}| / |{G}|                          <*> Go to top / bottom of the list.
+__|[| / |]|                              <*> Move between sections.
+__{search} |/ |{search_next}| / |{search_prev}    <*>  Search, go to next / previous result.
+__|{revert_def}| / |{revert_saved}|      <*> Revert to default / saved shortcuts.
+__|x|                                    <*> Revert current item to saved value.
+__|f|                                    <*> Show |free| keys.
+__|Enter|, |{pause}|,                    <*>
+__|Right|, |{l}|                         <*> Enter |editing mode| (insert new shortcut).
+__|Esc|                                  <*>Exit |editing mode|.
+__|0|                                    <*> Switch between |c|ocnflicting items.
+                                         <*>Available in |editing mode| as well.
+__|{?}|                                  <*>Display this help screen.
 ''')) + r'''
 
 To change a |Keyboard Shortcut|, just enter the |editing mode|. This will
@@ -1555,7 +1556,7 @@ error, please |report| this incident to us, at this URL:
 ____|https://github.com/coderholic/pyradio/issues
 
 Thank you for your cooperation.
-'''
+''', Priority.HELP
 ),
 
     'M_INVALID_KEY_ERROR':('Invalid Key',
@@ -1565,7 +1566,7 @@ The key pressed is |invalid|!
 Please do not use any keys like |Home|, |End|,
 |PgUp|, |PgDown|, |Arrow Keys|, etc. here.
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_INVALID_TYPE_KEY_ERROR':('Invalid Key',
@@ -1575,7 +1576,7 @@ The key pressed is |invalid|!
 Please use ASCII characters, punctuation and
 Control characters |only| for |PyRadio Shortcuts|.
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_NOT_CTRL_KEY_ERROR':('Invalid Key',
@@ -1590,7 +1591,7 @@ Keep in mind that the shortcut's equivalent key
 will also work on non-line editor widgets (|n| will
 work for |Ctrl-N|, for example).
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_KEYBOARD_FILE_SAVE_ERROR':('Error Saving File',
@@ -1601,7 +1602,7 @@ The configuration file could not be saved!
 |PyRadio| will open the directory in your file manager
 so you can resolve the issue and try again.
 
-'''
+''', Priority.DIALOG
 ),
 
     'M_LOC_HELP': ('Localized Shortcuts Help',
@@ -1636,7 +1637,7 @@ __• Your personalized layout will take priority during runtime.
 To set the default layout to use, just press |space|, |Enter|, |{l}| or
 the |Left Arror| while you are in the "|Available Layouts|" field.
 '''.replace('{add}', chr(kbkey['add'])).replace('{edit}', chr(kbkey['edit'])).replace('{l}', chr(kbkey['l']))
-),
+, Priority.HELP),
 
     'M_LOC_READ_ONLY': ('Read-Only Warning',
 r'''You are attempting to edit a |read-only| layout.
@@ -1652,7 +1653,7 @@ _____by the package.
 Proceed with caution to ensure your customizations do not
 unintentionally disrupt functionality.
 
-'''
+''', Priority.DIALOG
 ),
 
         }
@@ -1698,9 +1699,9 @@ unintentionally disrupt functionality.
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Redisplaying last Messaging System Active key...')
         else:
-            self._caption, text, max_len = self._get_txt(*args)
+            self._caption, text, max_len, priority = self._get_txt(*args)
             if text is None:
-                return
+                return None, 0
             if max_len < self._main_win_width or \
                     self.active_message_key in ('M_STATION_INFO', 'M_DB_INFO'):
                 self._maxX = max_len
@@ -1730,7 +1731,7 @@ unintentionally disrupt functionality.
                 pass
         self.simple_dialog = False
         self._txt = {}
-        return text
+        return self._caption.strip(), text, priority
 
     def __init__(self, config, op_mode, prev_op_mode, speak_high):
         self._speak_high = speak_high
@@ -1812,13 +1813,23 @@ unintentionally disrupt functionality.
             Format is:
                 (
                     Help Window Caption,
-                    r text (string)
+                    r text (string),
+                    priority
                 )
         '''
-        cap, out = self._txt[self.active_message_key]
+        logger.error(f'{args = }')
+        # try:
+        #     cap, out = self._txt[self.active_message_key]
+        # except ValueError:
+        #     cap, out, priority = self._txt[self.active_message_key]
+
+        logger.error('\n\nself._txt[self.active_message_key] = {}\n\n'.format(self._txt[self.active_message_key]))
+
+        cap, out, priority = self._txt[self.active_message_key]
         # logger.info('--> out\n{}'.format(out))
         if out is None:
-            return None, None, 0
+            logger.error('return None, None, 0, 0')
+            return None, None, 0, 0
 
         ''' apply per item customization / variables '''
         if self.active_message_key == 'H_MAIN' and \
@@ -1877,7 +1888,7 @@ unintentionally disrupt functionality.
                         logger.debug('column from self._columns = {}'.format(column))
                 else:
                     for n in cleaned_text:
-                        x = n.split('|*|')
+                        x = n.split('<*>')
                         if len(x) == 2:
                             first_column.append(x[0].strip().replace('%', '').replace('|', ''))
                             first_column[-1] = self._remove_start_char(first_column[-1], '!')
@@ -1895,7 +1906,7 @@ unintentionally disrupt functionality.
             else:
                 # logger.error(f'{cleaned_text = }')
                 for n in cleaned_text:
-                    x = n.split('|*|')
+                    x = n.split('<*>')
                     if len(x) == 2:
                         first_column.append(x[0].strip().replace('|', ''))
                         first_column[-1] = self._remove_start_char(first_column[-1], '!')
@@ -1922,7 +1933,11 @@ unintentionally disrupt functionality.
             mmax = len(cap) + 6
         '''
         # logger.error('\n\n===> mmax = {}\n\n'.format(mmax))
-        return cap, cleaned_text, mmax
+        logger.error('cap = {}'.format(cap))
+        logger.error('mmax = {}'.format(mmax))
+        logger.error('cleaned_text = {}'.format(cleaned_text))
+        logger.error('priority = {}'.format(priority))
+        return cap, cleaned_text, mmax, priority
 
     def _get_active_message_key(self, *args):
         if args:
@@ -2093,7 +2108,7 @@ unintentionally disrupt functionality.
                 self._pad.addstr(out[1:] + ' ', self.col_highlight)
                 self._pad.addstr('─' * (self._maxX - len(out[1:]) - 9), self.col_box)
             else:
-                lines = out.split('|*|')
+                lines = out.split('<*>')
                 lines = [x.strip() for x in lines]
                 if len(lines) == 2:
                     # keys list
@@ -2129,8 +2144,8 @@ unintentionally disrupt functionality.
         max_left_length = 0
 
         for line in lines:
-            # Split by '|*|' and strip whitespace
-            parts = [part.strip() for part in line.split('|*|')]
+            # Split by '<*>' and strip whitespace
+            parts = [part.strip() for part in line.split('<*>')]
             if len(parts) != 2:
                 continue  # Skip lines that don't conform to expected format
 

@@ -27,6 +27,8 @@ class Priority(Enum):
     """Priority levels for speech requests"""
     NORMAL = 1    # Interruptible - navigation, titles
     HIGH = 2      # Non-interruptible - critical alerts, playback status
+    DIALOG = 3    # Interruptible HIGH - dialog messages
+    HELP = 4      # Help messages
 
 class TTSState(Enum):
     """TTS system states"""
@@ -141,40 +143,42 @@ class TTSRequest:
 class TTSBase:
     """Base class for TTS implementations"""
 
-    def __init__(self, config, volume):
+    def __init__(self, config, volume, rate):
         self.config = config
         self.volume = volume
-        # try:
-        #     x = int(self.volume)
-        # except ValueError:
-        #     self.volume = '50'
+        self.rate = rate
         self.system = platform.system()
         self.state = TTSState.IDLE
         self._current_process = None
         self._lock = threading.RLock()
         self.speech_delay = 0.3  # Anti-stutter delay
 
-    def _execute_speech(self, text, priority=Priority.NORMAL):
-        """Execute the speech command - to be implemented by platform-specific classes"""
-        raise NotImplementedError
+        # External stop mechanism for DIALOG interruption
+        self._external_stop_requested = threading.Event()
+        self._external_stop_lock = threading.RLock()
 
-    def stop(self):
-        """Stop current speech"""
-        raise NotImplementedError
+    def request_external_stop(self):
+        """Request external stop - to be checked during DIALOG execution"""
+        with self._external_stop_lock:
+            self._external_stop_requested.set()
 
-    def shutdown(self):
-        """Phase 1: Immediate shutdown (non-blocking)"""
-        raise NotImplementedError
+    def _clear_external_stop(self):
+        """Clear external stop flag"""
+        with self._external_stop_lock:
+            self._external_stop_requested.clear()
 
-    def wait_for_shutdown(self, timeout=2.0):
-        """Phase 2: Wait for complete shutdown (blocking)"""
-        raise NotImplementedError
+    def _should_stop_externally(self, priority):
+        """Check if external stop was requested (only for DIALOG priority)"""
+        if priority != Priority.DIALOG:
+            return False
+        with self._external_stop_lock:
+            return self._external_stop_requested.is_set()
 
 class TTSLinux(TTSBase):
     """Linux TTS implementation using user-configured command"""
 
-    def __init__(self, config, volume):
-        super().__init__(config, volume)
+    def __init__(self, config, volume, rate):
+        super().__init__(config, volume,rate)
         self.retry_count = 0
         self.max_retries = 2
 
@@ -182,12 +186,15 @@ class TTSLinux(TTSBase):
         # logger.error('priority = {}\n\n'.format(priority.name))
         """Execute speech with priority-based blocking behavior"""
         try:
-            if priority == Priority.HIGH:
+            # Clear external stop flag for consistency with other platforms
+            self._clear_external_stop()
+
+            if priority in (Priority.HIGH, Priority.DIALOG):
                 # HIGH priority: blocking execution with -w flag
-                cmd = ['spd-say', '-l', 'en', '-i', self.volume(), '-w', text]  # -w for wait
+                cmd = ['spd-say', '-l', 'en', '-i', self.volume(), '-r', self.rate(), '-w', text]  # -w for wait
             else:
                 # NORMAL priority: non-blocking execution
-                cmd = ['spd-say', '-l', 'en', '-i', self.volume(), text]
+                cmd = ['spd-say', '-l', 'en', '-i', self.volume(), '-r', self.rate(), text]
 
             # Execute the command
             logger.error(f'===> waiting... "{cmd}" with {priority.name = }')
@@ -301,8 +308,8 @@ class TTSLinux(TTSBase):
 class TTSWindows(TTSBase):
     """Windows TTS implementation using win32com and SAPI"""
 
-    def __init__(self, config, volume):
-        super().__init__(config, volume)
+    def __init__(self, config, volume, rate):
+        super().__init__(config, volume, rate)
         self.speaker = win32com.client.Dispatch("SAPI.SpVoice")
 
         # Try to set an English voice
@@ -359,22 +366,28 @@ class TTSWindows(TTSBase):
             try:
                 # Stop any current speech
                 self.stop()
+                self._clear_external_stop()  # Clear previous stop requests
 
                 # Set voice properties for consistent experience
-                self.speaker.Volume = 50
-                self.speaker.Rate = 0
+                self.speaker.Volume = int(self.volume())
+                self.speaker.Rate = int(self.rate())
 
                 # Speak the new text (flags=1 for async)
                 self.current_stream = self.speaker.Speak(text, 1)
                 self.state = TTSState.SPEAKING
 
-                if priority == Priority.HIGH:
-                    # For HIGH priority, wait for completion with shutdown check
+                if priority in (Priority.HIGH, Priority.DIALOG):
+                    # For HIGH/DIALOG priority, wait for completion with interruption checks
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug("Waiting for HIGH priority speech completion")
+                        logger.debug(f"Waiting for {priority.name} speech completion")
 
-                    # Wait for speech completion with shutdown checks
-                    while self.current_stream and not self.speaker.WaitUntilDone(100):  # 100ms chunks
+                    # Wait for speech completion with interruption checks
+                    while self.current_stream and not self.speaker.WaitUntilDone(50):  # 50ms chunks for responsiveness
+                        # Check for external stop (only for DIALOG)
+                        if self._should_stop_externally(priority):
+                            self.stop()
+                            return False
+                        # Check for shutdown
                         if self.state == TTSState.SHUTTING_DOWN:
                             self.stop()
                             return False
@@ -384,7 +397,6 @@ class TTSWindows(TTSBase):
                     return True
                 else:
                     # For NORMAL priority, return immediately
-                    # The speech will continue in background
                     return True
 
             except Exception as e:
@@ -419,8 +431,8 @@ class TTSWindows(TTSBase):
 class TTSMacOS(TTSBase):
     """macOS TTS implementation"""
 
-    def __init__(self, config, volume):
-        super().__init__(config, volume)
+    def __init__(self, config, volume, rate):
+        super().__init__(config, volume, rate)
         self._current_process = None
         self._lock = threading.RLock()
 
@@ -430,6 +442,7 @@ class TTSMacOS(TTSBase):
             try:
                 # Stop any current speech first
                 self._stop_current_speech()
+                self._clear_external_stop()  # Clear previous stop requests
 
                 cmd = self.config.get_command(self.system, text)
                 if isinstance(cmd, str):
@@ -443,12 +456,11 @@ class TTSMacOS(TTSBase):
                 )
                 self.state = TTSState.SPEAKING
 
-                if priority == Priority.HIGH:
-                    # For HIGH priority, wait for completion
-                    return self._wait_for_completion()
+                if priority in (Priority.HIGH, Priority.DIALOG):
+                    # For HIGH/DIALOG priority, wait for completion with interruption
+                    return self._wait_for_completion(priority)
                 else:
                     # For NORMAL priority, return immediately
-                    # The process will continue in background
                     return True
 
             except Exception as e:
@@ -471,10 +483,15 @@ class TTSMacOS(TTSBase):
                       stderr=subprocess.DEVNULL,
                       timeout=5)
 
-    def _wait_for_completion(self):
-        """Wait for current process to complete with shutdown checking"""
+    def _wait_for_completion(self, priority):
+        """Wait for current process to complete with interruption checking"""
         try:
             while self._current_process and self._current_process.poll() is None:
+                # Check for external stop (only for DIALOG)
+                if self._should_stop_externally(priority):
+                    self._stop_current_speech()
+                    return False
+                # Check for shutdown
                 if self.state == TTSState.SHUTTING_DOWN:
                     self._stop_current_speech()
                     return False
@@ -514,15 +531,39 @@ class TTSMacOS(TTSBase):
             self.state = TTSState.IDLE
             return True
 
+class TTSManagerDummy:
+
+    def __init__(self):
+        self.enabled = False
+
+    def queue_speech(self, text, priority=Priority.NORMAL):
+        return
+
+    def stop(self):
+        return
+
+    def set_enabled(self, enable):
+        return
+
+    def shutdown(self):
+        return
+
+    def wait_for_shutdown(self, timeout):
+        return
+
+    def stop_dialog_speech(self):
+        return
+
 class TTSManager:
     """
     Main TTS manager with priority-based queue and title preservation
     """
 
-    def __init__(self, enabled=True, volume=50):
+    def __init__(self, volume, rate, enabled=True):
         self.stop_after_high = False
         self.enabled = enabled
         self.volume = volume
+        self.rate = rate
         self.config = TTSConfig()
         self.system = platform.system()
         self.available = False
@@ -581,11 +622,11 @@ class TTSManager:
     def _create_engine(self):
         """Create the appropriate TTS engine for the current platform"""
         if self.system == "Windows":
-            return TTSWindows(self.config, self.volume)
+            return TTSWindows(self.config, self.volume, self.rate)
         elif self.system == "Darwin":
-            return TTSMacOS(self.config, self.volume)
+            return TTSMacOS(self.config, self.volume, self.rate)
         else:
-            return TTSLinux(self.config, self.volume)
+            return TTSLinux(self.config, self.volume, self.rate)
         # if ret is None:
         #     if logger.isEnabledFor(logging.WARNING):
         #         logger.warning(f"Unsupported platform: {self.system}")
@@ -659,6 +700,16 @@ class TTSManager:
         self._worker_thread.start()
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("TTS worker thread started")
+
+    def stop_dialog_speech(self):
+        """Stop currently speaking DIALOG priority speech"""
+        if self.engine:
+            if platform.system() == 'Linux':
+                self.stop()
+            else:
+                self.engine.request_external_stop()
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("Requested stop for DIALOG speech")
 
     def _process_queues(self):
         """Process speech queues with platform-specific behavior"""
@@ -812,7 +863,7 @@ class TTSManager:
         request = TTSRequest(text, priority)
 
         try:
-            if priority == Priority.HIGH:
+            if priority in (Priority.HIGH, Priority.DIALOG):
                 # HIGH priority handling
                 if self._should_reset_title(text):
                     self.pending_title = None
@@ -862,7 +913,7 @@ class TTSManager:
                     # Regular NORMAL request
                     if not self.high_priority_queue.empty() or (
                         self._current_request and
-                        self._current_request.priority == Priority.HIGH
+                        self._current_request.priority in (Priority.HIGH, Priority.DIALOG)
                     ):
                         # HIGH is playing or queued, reject regular NORMAL
                         if logger.isEnabledFor(logging.WARNING):
