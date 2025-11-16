@@ -887,7 +887,8 @@ Down|, |{k}|, |PgDown                           <*> Change option selection.
 {g}|, |Home| / |{G}|, |End                      <*> Jump to first / last option.
 Enter|, |{pause}|, |Right|, |{l}                <*> Change option value.
 {revert_saved}                                  <*> Revert to saved values.
-{search} |/ |{search_next}| / |{search_prev}    <*>  Search, go to next / previous result.
+{search} |/ |{search_next}| / |{search_prev}    <*> Search, go to next / previous result.
+t                                               <*> TTS test.
 {revert_def}                                    <*> Load default values.
 {s}                                             <*> Save config.
 Esc|, |{q}|, |Left|, |{h}                       <*> Cancel.

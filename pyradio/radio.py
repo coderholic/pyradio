@@ -8041,6 +8041,16 @@ _____"|f|" to see the |free| keys you can use.
                 self._station_select_win.refresh_win()
                 self._station_select_win.setStation(self._config_win._config_options['default_station'][1])
 
+            elif ret == 1110:
+                ''' no TTS '''
+                self._show_notification_with_delay(
+                        delay=2.5,
+                        txt='______TTS not available!!!______\n',
+                        mode_to_set=self.ws.operation_mode,
+                        callback_function=self.refreshBody)
+                        # callback_function=self.refreshBody_after_Message)
+                return
+
             elif ret >= 0:
                 msg = ( 'Error saving config. Press any key to exit...',
                         'Config saved successfully!!!',
@@ -8055,6 +8065,7 @@ _____"|f|" to see the |free| keys you can use.
                     self.bodyWin.box()
                     self._print_body_header()
                     self.refreshBody()
+
                 if ret == 0:
                     # recalculate buffering data
                     self._update_config_buffering_data(reset=False)
@@ -8218,6 +8229,7 @@ _____"|f|" to see the |free| keys you can use.
                                 txt='___Config not modified!!!___',
                                 mode_to_set=self.ws.NORMAL_MODE,
                                 callback_function=self.refreshBody)
+
                 elif ret == self.ws.RADIO_BROWSER_CONFIG_MODE:
                     ''' open RadioBrowser  browser config '''
                     self.ws.operation_mode = self.ws.RADIO_BROWSER_CONFIG_MODE
@@ -8263,6 +8275,9 @@ _____"|f|" to see the |free| keys you can use.
 
                 else:
                     ''' restore transparency, if necessary '''
+                    if self._config_win.tmp_tts is not None:
+                        self._config_win.tmp_tts.shutdown()
+                        self._config_win.tmp_tts.wait_for_shutdown()
                     if self._config_win._config_options['use_transparency'][1] != self._config_win._saved_config_options['use_transparency'][1]:
                         self._toggle_transparency(changed_from_config_window=False,
                                 force_value=self._config_win._saved_config_options['use_transparency'][1])
@@ -8294,6 +8309,7 @@ _____"|f|" to see the |free| keys you can use.
                 self._encoding_select_win = None
                 self._playlist_select_win = None
                 self._station_select_win = None
+                self._config_win.tmp_tts = None
                 self._config_win = None
             return
 

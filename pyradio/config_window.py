@@ -33,6 +33,7 @@ from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalP
 from .client import PyRadioClient
 from .keyboard import kbkey, kbkey_orig, ctrl_code_to_string, is_valid_char, is_invalid_key, is_ctrl_key, conflicts, read_keyboard_shortcuts, check_localized, LetterDisplay, get_kb_letter, to_str, add_l10n_to_functions_dict, remove_l10n_from_global_functions
 from .log import TIME_FORMATS
+from .tts import TTSManager, Priority
 
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
@@ -161,6 +162,7 @@ class PyRadioConfigWindow():
             show_confirm_cancel_config_changes=None,
             global_functions=None
             ):
+        self.tmp_tts = None
         self._max_start = 0
         self._column = 0
         self._column = 0
@@ -831,6 +833,7 @@ class PyRadioConfigWindow():
                  7  show headless communication error
                  8  show keyboard config window
                  9  show alternative keyboard window
+              1110  TTS not available
         '''
         l_char = None
         if self.too_small:
@@ -841,6 +844,20 @@ class PyRadioConfigWindow():
         val = list(self._config_options.items())[self.selection]
         # logger.error(f'{val = }')
         Y = self.selection - self._start + 1
+
+        if char == ord('t'):
+            if self.tmp_tts is None:
+                self.tmp_tts = TTSManager(
+                    enabled=True,
+                    volume=lambda: self._config_options['tts_volume'][1],
+                    rate=lambda: self._config_options['tts_rate'][1],
+                    pitch=lambda: self._config_options['tts_pitch'][1],
+                )
+                if not self.tmp_tts.available:
+                    return 1110, []
+            if self.tmp_tts.available:
+                self.tmp_tts.queue_speech('This is a sample text (spoken to check your settings)', Priority.NORMAL)
+            return -1, []
 
         if char in self._local_functions:
             if not (val[0] in (
