@@ -143,10 +143,11 @@ class TTSRequest:
 class TTSBase:
     """Base class for TTS implementations"""
 
-    def __init__(self, config, volume, rate):
+    def __init__(self, config, volume, rate, pitch):
         self.config = config
         self.volume = volume
         self.rate = rate
+        self.pitch = pitch
         self.system = platform.system()
         self.state = TTSState.IDLE
         self._current_process = None
@@ -177,8 +178,8 @@ class TTSBase:
 class TTSLinux(TTSBase):
     """Linux TTS implementation using user-configured command"""
 
-    def __init__(self, config, volume, rate):
-        super().__init__(config, volume,rate)
+    def __init__(self, config, volume, rate, pitch):
+        super().__init__(config, volume, rate, pitch)
         self.retry_count = 0
         self.max_retries = 2
 
@@ -191,10 +192,13 @@ class TTSLinux(TTSBase):
 
             if priority in (Priority.HIGH, Priority.DIALOG):
                 # HIGH priority: blocking execution with -w flag
-                cmd = ['spd-say', '-l', 'en', '-i', self.volume(), '-r', self.rate(), '-w', text]  # -w for wait
+                cmd = ['spd-say', '-l', 'en', '-i', self.volume(),
+                       '-r', self.rate(), '-p', self.pitch(), '-w', text
+                       ]  # -w for wait
             else:
                 # NORMAL priority: non-blocking execution
-                cmd = ['spd-say', '-l', 'en', '-i', self.volume(), '-r', self.rate(), text]
+                cmd = ['spd-say', '-l', 'en', '-i', self.volume(),
+                       '-r', self.rate(), '-p', self.pitch(), text]
 
             # Execute the command
             logger.error(f'===> waiting... "{cmd}" with {priority.name = }')
@@ -308,8 +312,8 @@ class TTSLinux(TTSBase):
 class TTSWindows(TTSBase):
     """Windows TTS implementation using win32com and SAPI"""
 
-    def __init__(self, config, volume, rate):
-        super().__init__(config, volume, rate)
+    def __init__(self, config, volume, rate, pitch):
+        super().__init__(config, volume, rate, pitch)
         self.speaker = win32com.client.Dispatch("SAPI.SpVoice")
 
         # Try to set an English voice
@@ -373,6 +377,7 @@ class TTSWindows(TTSBase):
                 self.speaker.Rate = int(self.rate())
 
                 # Speak the new text (flags=1 for async)
+                logger.error(f'executing: "{text}"')
                 self.current_stream = self.speaker.Speak(text, 1)
                 self.state = TTSState.SPEAKING
 
@@ -431,8 +436,8 @@ class TTSWindows(TTSBase):
 class TTSMacOS(TTSBase):
     """macOS TTS implementation"""
 
-    def __init__(self, config, volume, rate):
-        super().__init__(config, volume, rate)
+    def __init__(self, config, volume, rate, pitch):
+        super().__init__(config, volume, rate, pitch)
         self._current_process = None
         self._lock = threading.RLock()
 
@@ -444,10 +449,12 @@ class TTSMacOS(TTSBase):
                 self._stop_current_speech()
                 self._clear_external_stop()  # Clear previous stop requests
 
-                cmd = self.config.get_command(self.system, text)
+                # cmd = self.config.get_command(self.system, text)
+                cmd = ['say', '-r', self.rate(), text]
                 if isinstance(cmd, str):
                     cmd = shlex.split(cmd)
 
+                logger.error(f'executing: "{cmd}" with priority {priority.name}')
                 # Start new speech process
                 self._current_process = subprocess.Popen(
                     cmd,
@@ -559,11 +566,12 @@ class TTSManager:
     Main TTS manager with priority-based queue and title preservation
     """
 
-    def __init__(self, volume, rate, enabled=True):
+    def __init__(self, volume, rate, pitch, enabled=True):
         self.stop_after_high = False
         self.enabled = enabled
         self.volume = volume
         self.rate = rate
+        self.pitch = pitch
         self.config = TTSConfig()
         self.system = platform.system()
         self.available = False
@@ -573,6 +581,7 @@ class TTSManager:
         self.high_priority_queue = queue.Queue()
         self.normal_priority_queue = queue.Queue()
         self.pending_title = None
+        self._last_spoken_title = None
         self.title_token = self.config.get_title_token()
         self.reset_tokens = self.config.get_reset_tokens()
 
@@ -622,11 +631,11 @@ class TTSManager:
     def _create_engine(self):
         """Create the appropriate TTS engine for the current platform"""
         if self.system == "Windows":
-            return TTSWindows(self.config, self.volume, self.rate)
+            return TTSWindows(self.config, self.volume, self.rate, self.pitch)
         elif self.system == "Darwin":
-            return TTSMacOS(self.config, self.volume, self.rate)
+            return TTSMacOS(self.config, self.volume, self.rate, self.pitch)
         else:
-            return TTSLinux(self.config, self.volume, self.rate)
+            return TTSLinux(self.config, self.volume, self.rate, self.pitch)
         # if ret is None:
         #     if logger.isEnabledFor(logging.WARNING):
         #         logger.warning(f"Unsupported platform: {self.system}")
@@ -758,10 +767,25 @@ class TTSManager:
             self.engine.state = TTSState.SPEAKING
 
         try:
-            success = self.engine._execute_speech(request.text, request.priority)
+            prefix = ''
+            pitch = self.pitch()
+            logger.error(f'{pitch = }')
+            if pitch != '0':
+                if platform.system().lower().startswith('darwin'):
+                    prefix = f'[[pbas {pitch}]]'
+                elif platform.system().lower().startswith('win'):
+                    prefix = f'<pitch absmiddle="{pitch}"/>'
+            logger.error(f'{prefix = }')
+            success = self.engine._execute_speech(
+                prefix+request.text,
+                request.priority
+            )
             if not success:
                 if logger.isEnabledFor(logging.WARNING):
                     logger.warning(f"Failed to speak: {request.text[:50]}...")
+            else:
+                if self._is_title(request.text):
+                    self._last_spoken_title = request.text
         except Exception as e:
             if logger.isEnabledFor(logging.ERROR):
                 logger.error(f"Speech execution error: {e}")
@@ -867,6 +891,8 @@ class TTSManager:
                 # HIGH priority handling
                 if self._should_reset_title(text):
                     self.pending_title = None
+                    # Reset if changinf title
+                    self._last_spoken_title = None
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug(f"Reset pending title due to: {text[:50]}...")
 
@@ -898,6 +924,12 @@ class TTSManager:
                 self._last_navigation_time = current_time
 
                 if self._is_title(text):
+                    # Check if this title is the same as the one previously spoken
+                    if text == self._last_spoken_title:
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug(f"Ignoring repeated title: {text[:50]}...")
+                        return True
+
                     # Title handling - always preserve the latest title
                     self.pending_title = text
                     if logger.isEnabledFor(logging.WARNING):

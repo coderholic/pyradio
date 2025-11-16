@@ -1364,6 +1364,7 @@ class PyRadioConfig(PyRadioStations):
         self.opts['enable_tts'] = ['Enable TTS: ', False]
         self.opts['tts_volume'] = ['  Volume: ', '50']
         self.opts['tts_rate'] = ['  Rate: ', '0']
+        self.opts['tts_pitch'] = ['  Pitch: ', '0']
         self.opts['clock_title'] = ['Clock', '']
         self.opts['enable_clock'] = ['Display on startup: ', False]
         self.opts['time_format'] = ['Time format: ', '1']
@@ -1732,6 +1733,16 @@ class PyRadioConfig(PyRadioStations):
     @tts_rate.setter
     def tts_rate(self, val):
         self.opts['tts_rate'][1] = val
+        self.opts['dirty_config'][1] = True
+
+    @property
+    def tts_pitch(self):
+        ''' connection timeout as string '''
+        return self.opts['tts_pitch'][1]
+
+    @tts_pitch.setter
+    def tts_pitch(self, val):
+        self.opts['tts_pitch'][1] = val
         self.opts['dirty_config'][1] = True
 
     @property
@@ -2587,6 +2598,8 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['tts_volume'][1] = sp[1]
             elif sp[0] == 'tts_rate':
                     self.opts['tts_rate'][1] = sp[1]
+            elif sp[0] == 'tts_pitch':
+                    self.opts['tts_pitch'][1] = sp[1]
             elif sp[0] == 'confirm_station_deletion':
                 if sp[1].lower() == 'false':
                     self.opts['confirm_station_deletion'][1] = False

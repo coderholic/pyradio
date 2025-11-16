@@ -38,11 +38,18 @@ locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
 
+SYSTEM = 'Linux'
+if platform.startswith('dar'):
+    SYSTEM = 'Mac'
+elif platform.startswith('win'):
+    SYSTEM = 'Win'
+
 class PyRadioConfigWindow():
     _title = 'PyRadio Configuration'
 
     _tts_volume_data = (0, 0, 0)
     _tts_rate_data = (0, 0, 0)
+    _tts_pitch_data = (0, 0, 0)
     _help_text = []
     _help_text.append(None)
     _help_text.append(['Specify the player to use with PyRadio, or the player detection order.', '|',
@@ -83,22 +90,35 @@ class PyRadioConfigWindow():
     _help_text.append(['Notice: Not applicable on Windows!', '|', 'If the previous option is enabled, Stations Icons will be cached.', '|', 'If this option is set to True, all icons will be deleted at program exit.', '|', 'If set to False, the icons will be available for future use.', '|', 'Default value: True'])
     _help_text.append(None)
     _help_text.append(['PyRadio now features comprehensive Text-to-Speech (TTS) support, providing auditory feedback for an enhanced radio streaming experience.', '|', 'This system delivers contextual information about station navigation, playback status, and system events.', '|', 'The TTS function cal also be termporarily toggled by pressing ' + to_str('open_extra') + to_str('toggle_tts') + '.', '|', 'Default value: False'])
-    if platform.startswith('dar'):
+    # TTS Volume
+    if SYSTEM == 'Mac':
         _help_text.append(['This option will not be used by the TTS engine.', '|', 'Adjust the System Volume instead.'])
-    elif platform.startswith('win'):
+    elif SYSTEM == 'Win':
         _help_text.append(['This is the volume to be used by the TTS engine.', '|', 'Valid values: 0 (silent) - 100', '|', 'Default value: 50'])
         _tts_volume_data = (0, 100, 5)
     else:
         _help_text.append(['This is the volume to be used by the speech dispatcher, provided that the engine selected supports it.', '|', 'Valid values: -100 - +100', '|', 'Default value: 50'])
         _tts_volume_data = (-100, 100, 10)
-    if platform.startswith('dar'):
-        _help_text.append(['This option will not be used by the TTS engine.', '|', 'Adjust the System Volume instead.'])
-    elif platform.startswith('win'):
+    # TTS Rate
+    if SYSTEM == 'Mac':
+        _help_text.append(['This is the rate (words per minute) to be used by the TTS engine.', '|', 'Please keep in mind that some voices seem to be ignoring this setting.', '|', '|', 'Valid values: 50 - 200', 'Default value: 0 (default rate for the voice)'])
+        _tts_rate_data = (50, 200, 5)
+    elif SYSTEM == 'Win':
         _help_text.append(['This is the rate (speech speed) to be used by the TTS engine.', '|', 'Valid values: -10 - +10', '|', 'Default value: 0'])
         _tts_rate_data = (-10, 10, 1)
     else:
         _help_text.append(['This is the rate (speech speed) to be used by the speech dispatcher, provided that the engine selected supports it.', '|', 'Valid values: -100 - +100', '|', 'Default value: 0'])
         _tts_rate_data = (-100, 100, 1)
+    # TTS Pitch
+    if SYSTEM == 'Mac':
+        _help_text.append(['This is the pitch (words per minute) to be used by the TTS engine.', '|', 'Please keep in mind that some voices seem to be ignoring this setting.', '|', '|', 'Valid values: 0 - 127', '|', 'Default value: 0 (disabled)'])
+        _tts_pitch_data = (0, 127, 1)
+    elif SYSTEM == 'Win':
+        _help_text.append(['This is the pitch (speech speed) to be used by the TTS engine.', '|', 'Valid values: -10 - +10', '|', 'Default value: 0'])
+        _tts_pitch_data = (-10, 10, 1)
+    else:
+        _help_text.append(['This is the pitch to be used by the speech dispatcher, provided that the engine selected supports it.', '|', 'Valid values: -100 - +100', '|', 'Default value: 0'])
+        _tts_pitch_data = (-100, 100, 1)
     _help_text.append(None)
     _help_text.append(['If this option is enabled, the current time will be displayed at the bottom left corner of the window at program startup.', '|', 'Adjust the time format in the next option to change how the current time is displayed.', '|', r'You can always hide it by pressing ' + to_str('open_extra') + to_str('toggle_time') +  '.', '|', 'Default value: False'])
     _help_text.append(['This is the time format to be used when the clock is visible.', '|', 'Available values are:', '   0: 24h, with seconds', '   1: 24h, no seconds', '   2: 12h, with am/pm and seconds', '   3: 12h, no am/pm, with seconds', '   4: 12h, with am/pm, no seconds', '   5: 12h, no am/pm, no seconds', '|', 'Default value: 1'])
@@ -833,6 +853,7 @@ class PyRadioConfigWindow():
                 'mplayer_save_br',
                 'tts_volume',
                 'tts_rate',
+                'tts_pitch',
             ) and char in (
                 curses.KEY_LEFT,
                 curses.KEY_RIGHT,
@@ -854,8 +875,7 @@ class PyRadioConfigWindow():
             self._global_functions[l_char]()
 
         elif val[0] == 'resource_opener':
-            if not (platform.startswith('win') or \
-                platform.startswith('dar')):
+            if not (SYSTEM == 'Win' or SYSTEM == 'Mac'):
                 return Window_Stack_Constants.INSERT_RESOURCE_OPENER, []
             return -1, []
 
@@ -1154,7 +1174,7 @@ class PyRadioConfigWindow():
                     self._config_options[val[0]][1] = str(t)
                     self._win.addstr(
                         Y, 3 + len(val[1][0]),
-                        str(t) + ' ', curses.color_pair(6))
+                        str(t) + '    ', curses.color_pair(6))
                     self._print_title()
                     self._win.refresh()
                 return -1, []
@@ -1169,7 +1189,7 @@ class PyRadioConfigWindow():
                 self._config_options[val[0]][1] = str(t)
                 self._win.addstr(
                     Y, 3 + len(val[1][0]),
-                    str(t) + ' ', curses.color_pair(6))
+                    str(t) + '    ', curses.color_pair(6))
                 self._print_title()
                 self._win.refresh()
                 return -1, []
@@ -1178,14 +1198,52 @@ class PyRadioConfigWindow():
             if char in (curses.KEY_RIGHT, kbkey['l']) or \
                     check_localized(char, (kbkey['l'], )):
                 t = int(val[1][1])
-                if t < self._tts_rate_data[1]:
-                    t += self._tts_rate_data[2]
-                    if t > self._tts_rate_data[1]:
-                        t = self._tts_rate_data[1]
+                t += self._tts_rate_data[2]
+                if t < self._tts_rate_data[0]:
+                    t = self._tts_rate_data[0]
+                if t > self._tts_rate_data[1]:
+                    t = self._tts_rate_data[1]
+                self._config_options[val[0]][1] = str(t)
+                self._win.addstr(
+                    Y, 3 + len(val[1][0]),
+                    str(t) + '    ', curses.color_pair(6))
+                self._print_title()
+                self._win.refresh()
+                return -1, []
+
+            elif char in (curses.KEY_LEFT, kbkey['h']) or \
+                    check_localized(char, (kbkey['h'], )):
+                t = int(val[1][1])
+
+                t -= self._tts_rate_data[2]
+                if t > self._tts_rate_data[1]:
+                    t = self._tts_rate_data[1]
+                if t < self._tts_rate_data[0]:
+                    if SYSTEM == 'Mac':
+                        t = 0
+                    else:
+                        if t < self._tts_rate_data[0]:
+                            t = self._tts_rate_data[0]
+                self._config_options[val[0]][1] = str(t)
+                self._win.addstr(
+                    Y, 3 + len(val[1][0]),
+                    str(t) + '    ', curses.color_pair(6))
+                self._print_title()
+                self._win.refresh()
+                return -1, []
+
+        elif val[0] == 'tts_pitch':
+            if char in (curses.KEY_RIGHT, kbkey['l']) or \
+                    check_localized(char, (kbkey['l'], )):
+                t = int(val[1][1])
+                if t < self._tts_pitch_data[1]:
+                    t += self._tts_pitch_data[2]
+                    if t > self._tts_pitch_data[1]:
+                        t = self._tts_pitch_data[1]
                     self._config_options[val[0]][1] = str(t)
                     self._win.addstr(
                         Y, 3 + len(val[1][0]),
-                        str(t) + ' ', curses.color_pair(6))
+                        str(t) + '    ', curses.color_pair(6))
                     self._print_title()
                     self._win.refresh()
                 return -1, []
@@ -1193,14 +1251,19 @@ class PyRadioConfigWindow():
             elif char in (curses.KEY_LEFT, kbkey['h']) or \
                     check_localized(char, (kbkey['h'], )):
                 t = int(val[1][1])
-                if t > self._tts_rate_data[0]:
-                    t -= self._tts_rate_data[2]
-                if t < self._tts_rate_data[0]:
-                    t = self._tts_rate_data[0]
+                logger.error(f'{self._tts_pitch_data = }')
+                t -= self._tts_pitch_data[2]
+                if t > self._tts_pitch_data[1]:
+                    t = self._tts_pitch_data[1]
+                if t < self._tts_pitch_data[0]:
+                    if SYSTEM == 'Linux' or SYSTEM == 'Win':
+                        t = self._tts_pitch_data[0]
+                    else:
+                        t = 0
                 self._config_options[val[0]][1] = str(t)
                 self._win.addstr(
                     Y, 3 + len(val[1][0]),
-                    str(t) + ' ', curses.color_pair(6))
+                    str(t) + '    ', curses.color_pair(6))
                 self._print_title()
                 self._win.refresh()
                 return -1, []
@@ -2289,7 +2352,8 @@ class PyRadioSelectPlayer():
         '''
         self.mlength = 13
         self._parameters_editing_error_function=parameters_editing_error_function
-        self._char = ' [X] ' if platform.lower().startswith('win') else ' [✔] '
+        # self._char = ' [X] ' if platform.lower().startswith('win') else ' [✔] '
+        self._char = ' [X] ' if SYSTEM == 'Win' else ' [✔] '
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('current players = {}'.format(player))
         self._cnf = config

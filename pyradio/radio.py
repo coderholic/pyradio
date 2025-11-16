@@ -516,6 +516,7 @@ class PyRadio():
 
         self._tts_volume = pyradio_config.tts_volume
         self._tts_rate = pyradio_config.tts_rate
+        self._tts_pitch = pyradio_config.tts_pitch
         self._enable_tts = pyradio_config.enable_tts
         self.ws = Window_Stack(self._speak_selection)
         self.player = None
@@ -2141,7 +2142,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.tts = TTSManager(
                 enabled=self._cnf.enable_tts,
                 volume=lambda: self._tts_volume,
-                rate=lambda: self._tts_rate
+                rate=lambda: self._tts_rate,
+                pitch=lambda: self._tts_pitch
             )
             ''' start update detection and notification thread '''
             if CAN_CHECK_FOR_UPDATES:
@@ -3373,6 +3375,8 @@ ____Using |fallback| theme.''')
         logger.error(f'\n\n{text = }\n\n')
         if priority == Priority.DIALOG:
             tts_text = tts_transform_to_string(text)
+            if tts_text.endswith(' or'):
+                tts_text += ' any key to close the window.'
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'{tts_text = }')
             self.tts.queue_speech(tts_text, priority)
@@ -5422,7 +5426,7 @@ and |remove the file manually|.
                 Priority.HIGH
                 )
         th = threading.Timer(delay, callback_function)
-        logger.error(f'{self.ws.stop_tts = }')
+        logger.error(f'{self.ws.stop_dialog_speech  = }')
         th.start()
         th.join()
 
@@ -7315,7 +7319,8 @@ _____"|f|" to see the |free| keys you can use.
                 self.tts = TTSManager(
                     enabled=True,
                     volume=lambda: self._tts_volume,
-                    rate=lambda: self._tts_rate
+                    rate=lambda: self._tts_rate,
+                    pitch=lambda: self._tts_pitch
                 )
                 if self._enable_tts:
                     self.tts.queue_speech('T T S enabled', Priority.HIGH)
@@ -8200,7 +8205,9 @@ _____"|f|" to see the |free| keys you can use.
                         logger.error('\n\n\n')
                         self._tts_volume = self._cnf.tts_volume
                         self._tts_rate = self._cnf.tts_rate
-                        if self._enable_tts != self._cnf.enable_tts:
+                        self._tts_pitch = self._cnf.tts_pitch
+                        if not self._enable_tts and \
+                                self._enable_tts != self._cnf.enable_tts:
                             self._enable_tts = self._cnf.enable_tts
                             self.tts.set_enabled(self._enable_tts)
                             if self._enable_tts:
