@@ -1365,6 +1365,7 @@ class PyRadioConfig(PyRadioStations):
         self.opts['tts_volume'] = ['  Volume: ', '50']
         self.opts['tts_rate'] = ['  Rate: ', '0']
         self.opts['tts_pitch'] = ['  Pitch: ', '0']
+        self.opts['tts_verbosity'] = ['Verbosity: ', 'default']
         self.opts['clock_title'] = ['Clock', '']
         self.opts['enable_clock'] = ['Display on startup: ', False]
         self.opts['time_format'] = ['Time format: ', '1']
@@ -1743,6 +1744,20 @@ class PyRadioConfig(PyRadioStations):
     @tts_pitch.setter
     def tts_pitch(self, val):
         self.opts['tts_pitch'][1] = val
+        self.opts['dirty_config'][1] = True
+
+    @property
+    def tts_verbosity(self):
+        ''' connection timeout as string '''
+        return self.opts['tts_verbosity'][1]
+
+    @tts_verbosity.setter
+    def tts_verbosity(self, val):
+        if val in ('default', 'punctuation'):
+            set_val = val
+        else:
+            set_val = 'default'
+        self.opts['tts_verbosity'][1] = set_val
         self.opts['dirty_config'][1] = True
 
     @property
@@ -2595,11 +2610,13 @@ class PyRadioConfig(PyRadioStations):
                 else:
                     self.opts['enable_tts'][1] = True
             elif sp[0] == 'tts_volume':
-                    self.opts['tts_volume'][1] = sp[1]
+                self.opts['tts_volume'][1] = sp[1]
             elif sp[0] == 'tts_rate':
-                    self.opts['tts_rate'][1] = sp[1]
+                self.opts['tts_rate'][1] = sp[1]
             elif sp[0] == 'tts_pitch':
-                    self.opts['tts_pitch'][1] = sp[1]
+                self.opts['tts_pitch'][1] = sp[1]
+            elif sp[0] == 'tts_verbosity':
+                self.opts['tts_verbosity'][1] = 'punctuation' if sp[1].lower() == 'punctuation' else 'default'
             elif sp[0] == 'confirm_station_deletion':
                 if sp[1].lower() == 'false':
                     self.opts['confirm_station_deletion'][1] = False
@@ -3011,9 +3028,9 @@ class PyRadioConfig(PyRadioStations):
         elif a_key == 'auto_update_theme':
             return None if self.config_opts[a_key][-1] == auto else a_key + ' = ' + str(auto)
         elif a_key == 'recording_dir':
-            comment = r'''# Please do not change this paramter manually
-# Use the in program Window instead
-# (Config / General Options / Recordings dir)
+            comment = r'''# Please do not change the recording_dir paramter manually
+# Use the following program option instead:
+#     Config / General Options / Recordings dir
 '''
             # logger.error('\n\nself.config_opts[a_key][-1]: {} == rec_dir: {}\n\n'.format(self.config_opts[a_key][-1], rec_dir))
             if self._dir_to_shorthand(self.config_opts[a_key][-1]) == rec_dir or \

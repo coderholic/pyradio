@@ -517,6 +517,7 @@ class PyRadio():
         self._tts_volume = pyradio_config.tts_volume
         self._tts_rate = pyradio_config.tts_rate
         self._tts_pitch = pyradio_config.tts_pitch
+        self._tts_verbosity = pyradio_config.tts_verbosity
         self._enable_tts = pyradio_config.enable_tts
         self.ws = Window_Stack(self._speak_selection)
         self.player = None
@@ -2143,7 +2144,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 enabled=self._cnf.enable_tts,
                 volume=lambda: self._tts_volume,
                 rate=lambda: self._tts_rate,
-                pitch=lambda: self._tts_pitch
+                pitch=lambda: self._tts_pitch,
+                verbosity=lambda: self._tts_verbosity
             )
             ''' start update detection and notification thread '''
             if CAN_CHECK_FOR_UPDATES:
@@ -3374,7 +3376,7 @@ ____Using |fallback| theme.''')
             text = [f'Window: {caption}.'] + text
         logger.error(f'\n\n{text = }\n\n')
         if priority == Priority.DIALOG:
-            tts_text = tts_transform_to_string(text)
+            tts_text = tts_transform_to_string(text, self._cnf.tts_verbosity)
             if tts_text.endswith(' or'):
                 tts_text += ' any key to close the window.'
             if logger.isEnabledFor(logging.DEBUG):
@@ -8217,6 +8219,7 @@ _____"|f|" to see the |free| keys you can use.
                         self._tts_volume = self._cnf.tts_volume
                         self._tts_rate = self._cnf.tts_rate
                         self._tts_pitch = self._cnf.tts_pitch
+                        self._tts_verbosity = self._cnf.tts_verbosity
                         if not self._enable_tts and \
                                 self._enable_tts != self._cnf.enable_tts:
                             self._enable_tts = self._cnf.enable_tts

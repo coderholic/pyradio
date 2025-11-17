@@ -153,6 +153,17 @@ tts_rate = 0
 # Default value: 0 (use system default pitch)
 tts_pitch = 0
 
+# TTS verbosity
+# This is the verbosity to be used by the TTS engine
+# When set to "punctuation", punctuation will be 
+# spoken as if it was a real word in the text.
+# Example:
+# The text "this option is read-only" will be spoken as
+#       Verbosity "default": this option is read only
+#   Verbosity "punctuation": this option is read dash only
+#
+# Default value: default
+tts_verbosity = default
 
 # Titles logging
 # If this option is True, PyRadio will start logging song titles to a log file

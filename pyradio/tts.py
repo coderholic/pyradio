@@ -20,6 +20,7 @@ if platform.system().lower().startswith('win'):
     except:
         pass
 from .common import M_STRINGS
+from .tts_text import tts_transform_to_string
 
 logger = logging.getLogger(__name__)
 
@@ -143,11 +144,12 @@ class TTSRequest:
 class TTSBase:
     """Base class for TTS implementations"""
 
-    def __init__(self, config, volume, rate, pitch):
+    def __init__(self, config, volume, rate, pitch, verbosity):
         self.config = config
         self.volume = volume
         self.rate = rate
         self.pitch = pitch
+        self.verbosity = verbosity
         self.system = platform.system()
         self.state = TTSState.IDLE
         self._current_process = None
@@ -178,8 +180,8 @@ class TTSBase:
 class TTSLinux(TTSBase):
     """Linux TTS implementation using user-configured command"""
 
-    def __init__(self, config, volume, rate, pitch):
-        super().__init__(config, volume, rate, pitch)
+    def __init__(self, config, volume, rate, pitch, verbosity):
+        super().__init__(config, volume, rate, pitch, verbosity)
         self.retry_count = 0
         self.max_retries = 2
 
@@ -312,8 +314,8 @@ class TTSLinux(TTSBase):
 class TTSWindows(TTSBase):
     """Windows TTS implementation using win32com and SAPI"""
 
-    def __init__(self, config, volume, rate, pitch):
-        super().__init__(config, volume, rate, pitch)
+    def __init__(self, config, volume, rate, pitch, verbosity):
+        super().__init__(config, volume, rate, pitch, verbosity)
         self.speaker = win32com.client.Dispatch("SAPI.SpVoice")
 
         # Try to set an English voice
@@ -436,8 +438,8 @@ class TTSWindows(TTSBase):
 class TTSMacOS(TTSBase):
     """macOS TTS implementation"""
 
-    def __init__(self, config, volume, rate, pitch):
-        super().__init__(config, volume, rate, pitch)
+    def __init__(self, config, volume, rate, pitch, verbosity):
+        super().__init__(config, volume, rate, pitch, verbosity)
         self._current_process = None
         self._lock = threading.RLock()
 
@@ -566,12 +568,13 @@ class TTSManager:
     Main TTS manager with priority-based queue and title preservation
     """
 
-    def __init__(self, volume, rate, pitch, enabled=True):
+    def __init__(self, volume, rate, pitch, enabled=True, verbosity='default'):
         self.stop_after_high = False
         self.enabled = enabled
         self.volume = volume
         self.rate = rate
         self.pitch = pitch
+        self.verbosity = verbosity
         self.config = TTSConfig()
         self.system = platform.system()
         self.available = False
@@ -631,11 +634,11 @@ class TTSManager:
     def _create_engine(self):
         """Create the appropriate TTS engine for the current platform"""
         if self.system == "Windows":
-            return TTSWindows(self.config, self.volume, self.rate, self.pitch)
+            return TTSWindows(self.config, self.volume, self.rate, self.pitch, self.verbosity)
         elif self.system == "Darwin":
-            return TTSMacOS(self.config, self.volume, self.rate, self.pitch)
+            return TTSMacOS(self.config, self.volume, self.rate, self.pitch, self.verbosity)
         else:
-            return TTSLinux(self.config, self.volume, self.rate, self.pitch)
+            return TTSLinux(self.config, self.volume, self.rate, self.pitch, self.verbosity)
         # if ret is None:
         #     if logger.isEnabledFor(logging.WARNING):
         #         logger.warning(f"Unsupported platform: {self.system}")
@@ -776,8 +779,10 @@ class TTSManager:
                 elif platform.system().lower().startswith('win'):
                     prefix = f'<pitch absmiddle="{pitch}"/>'
             logger.error(f'{prefix = }')
+
+            transformed_text = tts_transform_to_string([request.text], self.verbosity())
             success = self.engine._execute_speech(
-                prefix+request.text,
+                prefix+transformed_text,
                 request.priority
             )
             if not success:

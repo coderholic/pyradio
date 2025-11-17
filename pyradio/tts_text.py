@@ -1,43 +1,5 @@
 import re
 
-def tts_transform_final(text_lines):
-    """
-    Transform a list of text lines for TTS output with simplified rules.
-
-    Args:
-        text_lines: List of text lines to transform
-
-    Returns:
-        List of transformed text lines suitable for TTS
-    """
-    transformed_lines = []
-    for line in text_lines:
-        # Step 0: Handle formatting underscores
-        line = handle_formatting_underscores(line)
-
-        # Step 1: Convert pipe content |...|
-        line = convert_pipe_content(line)
-
-        # Step 2: Remove any remaining | characters
-        line = line.replace('|', '')
-
-        # Step 3: Replace parentheses with commas
-        line = replace_parentheses_with_commas(line)
-
-        # Step 4: Replace special keys and symbols
-        line = replace_special_keys(line)
-
-        # Step 5: Convert file extensions (dots to "dot")
-        line = convert_file_extensions(line)
-
-        # Step 6: Clean up extra spaces
-        line = re.sub(r'\s+', ' ', line).strip()
-
-        transformed_lines.append(line)
-
-    return transformed_lines
-
-
 def handle_formatting_underscores(text):
     """
     Handle formatting underscores used for indentation.
@@ -79,27 +41,43 @@ def convert_pipe_content(text):
     return re.sub(pattern, replace_match, text)
 
 
-def replace_parentheses_with_commas(text):
+def handle_parentheses(text, verbosity):
     """
-    Replace parentheses with commas for better TTS flow.
+    Handle parentheses based on verbosity setting.
 
     Args:
         text: Input text containing parentheses
+        verbosity: 'default' or 'punctuation'
 
     Returns:
-        Text with parentheses replaced by commas
+        Text with parentheses handled appropriately
     """
-    text = text.replace('(', ', ')
-    text = text.replace(')', ', ')
+    if verbosity == 'punctuation':
+        text = text.replace('(', ' open parenthesis ')
+        text = text.replace(')', ' close parenthesis ')
+        text = text.replace('[', ' open bracket ')
+        text = text.replace(']', ' close bracket ')
+        text = text.replace('{', ' open brace ')
+        text = text.replace('}', ' close brace ')
+    else:
+        # Default behavior - replace with commas
+        text = text.replace('(', ', ')
+        text = text.replace(')', ', ')
+        text = text.replace('[', ', ')
+        text = text.replace(']', ', ')
+        text = text.replace('{', ', ')
+        text = text.replace('}', ', ')
+
     return text
 
 
-def replace_special_keys(text):
+def replace_special_keys(text, verbosity):
     """
     Replace special key notations with their descriptive names.
 
     Args:
         text: Input text containing special key notations
+        verbosity: 'default' or 'punctuation'
 
     Returns:
         Text with special keys replaced by descriptive names
@@ -136,20 +114,6 @@ def replace_special_keys(text):
         '^X': 'Control X',
         '^H': 'Control H',
         '^?': 'Control Question Mark',
-        '\\': 'backslash',
-        '/': 'slash',
-        '<': 'less than',
-        '>': 'greater than',
-        '~': 'tilde',
-        '`': 'backtick',
-        '@': 'at',
-        '#': 'hash',
-        '$': 'dollar',
-        '%': 'percent',
-        '&': 'and',
-        '*': 'star',
-        '+': 'plus',
-        '=': 'equals',
     }
 
     for key, replacement in special_keys_map.items():
@@ -157,6 +121,78 @@ def replace_special_keys(text):
             text = re.sub(r'\b' + re.escape(key) + r'\b', replacement, text)
         else:
             text = text.replace(key, f" {replacement} ")
+
+    return text
+
+
+def handle_punctuation_marks(text, verbosity):
+    """
+    Handle punctuation marks based on verbosity setting.
+
+    Args:
+        text: Input text containing punctuation marks
+        verbosity: 'default' or 'punctuation'
+
+    Returns:
+        Text with punctuation marks handled appropriately
+    """
+    if verbosity == 'punctuation':
+        # Handle dashes and hyphens
+        text = re.sub(r'(\s)--(\s)', r'\1double dash\2', text)
+        text = re.sub(r'(\s)-(\s)', r'\1dash\2', text)
+        text = re.sub(r'(\w)-(\w)', r'\1 dash \2', text)
+
+        # Handle quotes
+        text = text.replace('"', ' quote ')
+        text = text.replace("'", ' single quote ')
+
+        # Handle ellipsis
+        text = text.replace('...', ' dot dot dot ')
+
+        # Handle other symbols with descriptive names
+        symbol_map = {
+            '\\': 'backslash',
+            '/': 'slash',
+            '<': 'less than',
+            '>': 'greater than',
+            '~': 'tilde',
+            '`': 'backtick',
+            '@': 'at',
+            '#': 'hash',
+            '$': 'dollar',
+            '%': 'percent',
+            '&': 'and',
+            '*': 'star',
+            '+': 'plus',
+            '=': 'equals',
+        }
+
+        for symbol, replacement in symbol_map.items():
+            text = text.replace(symbol, f" {replacement} ")
+    else:
+        # Default behavior - minimal symbol replacement
+        symbol_map = {
+            '\\': 'backslash',
+            '/': 'slash',
+            '<': 'less than',
+            '>': 'greater than',
+            '~': 'tilde',
+            '`': 'backtick',
+            '@': 'at',
+            '#': 'hash',
+            '$': 'dollar',
+            '%': 'percent',
+            '&': 'and',
+            '*': 'star',
+            '+': 'plus',
+            '=': 'equals',
+        }
+
+        for symbol, replacement in symbol_map.items():
+            if symbol.isalnum():
+                text = re.sub(r'\b' + re.escape(symbol) + r'\b', replacement, text)
+            else:
+                text = text.replace(symbol, f" {replacement} ")
 
     return text
 
@@ -182,7 +218,7 @@ def convert_file_extensions(text):
     return text
 
 
-def tts_transform_to_string(text_lines):
+def tts_transform_to_string(text_lines, verbosity):
     """
     Transform text lines to a single TTS-ready string.
     Optimized for dialog messages and help texts.
@@ -190,9 +226,10 @@ def tts_transform_to_string(text_lines):
     for i, n in enumerate(text_lines):
         if n == '___----==== Empty ====----___':
             text_lines[i] = 'Empty'
-    transformed_lines = tts_transform_final(text_lines)
+    transformed_lines = tts_transform_final(text_lines, verbosity)
     non_empty_lines = [line.strip() for line in transformed_lines if line.strip()]
     return ' '.join(non_empty_lines)
+
 
 # Test function
 def test_tts_transformation():
@@ -211,6 +248,12 @@ def test_tts_transformation():
             "\"|Best Radio Station|\"?",
             "",
             "Press |y| to confirm or any other key to cancel."
+        ],
+        [
+            "Artist - Song",
+            "Album (Remix) [2024]",
+            "read-only file...",
+            "Email: user@domain.com"
         ]
     ]
 
@@ -220,13 +263,52 @@ def test_tts_transformation():
         for line in test_lines:
             print(f"  {line}")
 
-        print("\nTTS Ready String:")
-        tts_output = tts_transform_to_string(test_lines)
-        print(f"  '{tts_output}'")
+        for verbosity in ['default', 'punctuation']:
+            print(f"\nTTS Ready String ({verbosity}):")
+            tts_output = tts_transform_to_string(test_lines, verbosity)
+            print(f"  '{tts_output}'")
         print()
 
-if __name__ == "__main__":
-    test_tts_transformation()
+def tts_transform_final(text_lines, verbosity='default'):
+    """
+    Transform a list of text lines for TTS output with simplified rules.
+
+    Args:
+        text_lines: List of text lines to transform
+        verbosity: 'default' or 'punctuation'
+
+    Returns:
+        List of transformed text lines suitable for TTS
+    """
+    transformed_lines = []
+    for line in text_lines:
+        # Step 0: Handle formatting underscores
+        line = handle_formatting_underscores(line)
+
+        # Step 1: Convert pipe content |...|
+        line = convert_pipe_content(line)
+
+        # Step 2: Remove any remaining | characters
+        line = line.replace('|', '')
+
+        # Step 3: Handle parentheses based on verbosity
+        line = handle_parentheses(line, verbosity)
+
+        # Step 4: Replace special keys and symbols
+        line = replace_special_keys(line, verbosity)
+
+        # Step 5: Convert file extensions (dots to "dot")
+        line = convert_file_extensions(line)
+
+        # Step 6: Handle punctuation marks based on verbosity
+        line = handle_punctuation_marks(line, verbosity)
+
+        # Step 7: Clean up extra spaces
+        line = re.sub(r'\s+', ' ', line).strip()
+
+        transformed_lines.append(line)
+
+    return transformed_lines
 
 if __name__ == "__main__":
     test_tts_transformation()

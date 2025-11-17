@@ -120,6 +120,7 @@ class PyRadioConfigWindow():
     else:
         _help_text.append(['This is the pitch to be used by the speech dispatcher, provided that the engine selected supports it.', '|', 'Valid values: -100 - +100', '|', 'Default value: 0'])
         _tts_pitch_data = (-100, 100, 1)
+    _help_text.append(['Verbosity', ])
     _help_text.append(None)
     _help_text.append(['If this option is enabled, the current time will be displayed at the bottom left corner of the window at program startup.', '|', 'Adjust the time format in the next option to change how the current time is displayed.', '|', r'You can always hide it by pressing ' + to_str('open_extra') + to_str('toggle_time') +  '.', '|', 'Default value: False'])
     _help_text.append(['This is the time format to be used when the clock is visible.', '|', 'Available values are:', '   0: 24h, with seconds', '   1: 24h, no seconds', '   2: 12h, with am/pm and seconds', '   3: 12h, no am/pm, with seconds', '   4: 12h, with am/pm, no seconds', '   5: 12h, no am/pm, no seconds', '|', 'Default value: 1'])
@@ -1284,6 +1285,19 @@ class PyRadioConfigWindow():
                 self._print_title()
                 self._win.refresh()
                 return -1, []
+
+        elif val[0] == 'tts_verbosity':
+            logger.error(f'{val = }')
+            if val[1][1] == 'punctuation':
+                self._config_options[val[0]][1] = 'default'
+            else:
+                self._config_options[val[0]][1] = 'punctuation'
+            self._win.addstr(
+                Y, 3 + len(val[1][0]),
+                self._config_options[val[0]][1] + '    ', curses.color_pair(6))
+            self._print_title()
+            self._win.refresh()
+            return -1, []
 
         if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
                     kbkey['pause'], kbkey['l'], curses.KEY_RIGHT) or \
