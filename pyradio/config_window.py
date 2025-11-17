@@ -853,6 +853,7 @@ class PyRadioConfigWindow():
                     volume=lambda: self._config_options['tts_volume'][1],
                     rate=lambda: self._config_options['tts_rate'][1],
                     pitch=lambda: self._config_options['tts_pitch'][1],
+                    verbosity=lambda: self._config_options['tts_verbosity'][1]
                 )
                 if not self.tmp_tts.available:
                     return 1110, []
