@@ -7322,7 +7322,8 @@ _____"|f|" to see the |free| keys you can use.
                     enabled=True,
                     volume=lambda: self._tts_volume,
                     rate=lambda: self._tts_rate,
-                    pitch=lambda: self._tts_pitch
+                    pitch=lambda: self._tts_pitch,
+                    verbosity=lambda: self._tts_verbosity
                 )
                 if self._enable_tts:
                     self.tts.queue_speech('T T S enabled', Priority.HIGH)
