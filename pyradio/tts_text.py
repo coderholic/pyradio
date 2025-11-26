@@ -138,9 +138,16 @@ def handle_punctuation_marks(text, verbosity):
     """
     if verbosity == 'punctuation':
         # Handle dashes and hyphens
-        text = re.sub(r'(\s)--(\s)', r'\1double dash\2', text)
-        text = re.sub(r'(\s)-(\s)', r'\1dash\2', text)
-        text = re.sub(r'(\w)-(\w)', r'\1 dash \2', text)
+        if any(c in text for c in ['-', '–', '—', '‒']):
+            text = re.sub(r'(\s)--(\s)', r'\1double dash\2', text)
+            text = re.sub(r'(\s)-(\s)', r'\1dash\2', text)
+            text = re.sub(r'(\w)-(\w)', r'\1 dash \2', text)
+            text = re.sub(r'(\s)–(\s)', r'\1long dash\2', text)
+            text = re.sub(r'(\w)–(\w)', r'\1 long dash \2', text)
+            text = re.sub(r'(\s)—(\s)', r'\1long dash\2', text)
+            text = re.sub(r'(\w)—(\w)', r'\1 long dash \2', text)
+            text = re.sub(r'(\s)‒(\s)', r'\1figure dash\2', text)
+            text = re.sub(r'(\w)‒(\w)', r'\1 figure dash \2', text)
 
         # Handle quotes
         text = text.replace('"', ' quote ')

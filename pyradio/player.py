@@ -2135,7 +2135,8 @@ class Player():
         self.playback_is_on = False
         self.delay_thread = None
         self.outputStream.write(msg_id=STATES.CONNECT, msg=M_STRINGS['station_'] + name + M_STRINGS['station-open'], counter='')
-        self._speak(f'Playing station: {name}', Priority.NORMAL)
+        # self._speak(f'Playing station: {name}', Priority.NORMAL)
+        self._speak(f'Playing station: {name}', Priority.HIGH)
         if logger.isEnabledFor(logging.INFO):
             logger.info('Selected Station: ' + name)
         if encoding:

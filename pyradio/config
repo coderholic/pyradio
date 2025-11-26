@@ -165,6 +165,16 @@ tts_pitch = 0
 # Default value: default
 tts_verbosity = default
 
+# TTS Context
+# This is the context spoken by the TTS engine
+# Values are:
+#   basic       : system messages and errors, station data
+#   window      : also speak windows text
+#   everything  : speak everything provided
+#
+#   Default value: basic
+tts_context = basic
+
 # Titles logging
 # If this option is True, PyRadio will start logging song titles to a log file
 # at startup, provided that the station playing does provide title data.

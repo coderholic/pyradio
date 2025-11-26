@@ -58,7 +58,7 @@ from .simple_curses_widgets import SimpleCursesMenu
 from .messages_system import PyRadioMessagesSystem
 from .server import PyRadioServer, HAS_NETIFACES
 from .keyboard import kbkey, get_lkbkey, get_unicode_and_cjk_char, dequeue_input, input_queue, set_kb_letter, check_localized, add_l10n_to_functions_dict, set_kb_cjk
-from .tts import TTSManager, TTSManagerDummy, Priority
+from .tts import TTSManager, TTSManagerDummy, Priority, Context
 from .tts_text import tts_transform_to_string
 HAVE_CHARSET_NORMALIZER = True
 try:
@@ -518,6 +518,7 @@ class PyRadio():
         self._tts_rate = pyradio_config.tts_rate
         self._tts_pitch = pyradio_config.tts_pitch
         self._tts_verbosity = pyradio_config.tts_verbosity
+        self._tts_context = pyradio_config.tts_context
         self._enable_tts = pyradio_config.enable_tts
         self.ws = Window_Stack(self._speak_selection)
         self.player = None
@@ -2145,7 +2146,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 volume=lambda: self._tts_volume,
                 rate=lambda: self._tts_rate,
                 pitch=lambda: self._tts_pitch,
-                verbosity=lambda: self._tts_verbosity
+                verbosity=lambda: self._tts_verbosity,
+                context=lambda: self._tts_context,
             )
             ''' start update detection and notification thread '''
             if CAN_CHECK_FOR_UPDATES:
@@ -4331,8 +4333,11 @@ and |remove the file manually|.
                 self.selection, self.startPos, self.playing = self.playlist_selections[self.ws.operation_mode]
                 self.number_of_items, self.playing = self.readPlaylists()
             self.stations = self._cnf.playlists
+            logger.error('\n\n=======\n\n')
             if self.number_of_items > 0 or self._cnf.open_register_list:
+                logger.error('1')
                 self.refreshBody()
+            self._speak_selection()
         # self.ll('_open_playlist(): returning')
 
     def _return_from_online_browser_search(self, ret):
@@ -6749,12 +6754,13 @@ and |remove the file manually|.
                 self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
                 self.playlist_selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing]
             # self.ll('ESCAPE')
-            self.ws.close_window()
+            self.ws.close_window(no_tts=True)
             self._give_me_a_search_class(self.ws.operation_mode)
             self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
             self.stations = self._cnf.stations
             self.number_of_items = len(self.stations)
             self.refreshBody()
+            self._speak_selection()
             return True
         else:
             if self._cnf.is_register:
@@ -7323,7 +7329,8 @@ _____"|f|" to see the |free| keys you can use.
                     volume=lambda: self._tts_volume,
                     rate=lambda: self._tts_rate,
                     pitch=lambda: self._tts_pitch,
-                    verbosity=lambda: self._tts_verbosity
+                    verbosity=lambda: self._tts_verbosity,
+                    context=lambda: self._tts_context
                 )
                 if self._enable_tts:
                     self.tts.queue_speech('T T S enabled', Priority.HIGH)
@@ -8221,6 +8228,7 @@ _____"|f|" to see the |free| keys you can use.
                         self._tts_rate = self._cnf.tts_rate
                         self._tts_pitch = self._cnf.tts_pitch
                         self._tts_verbosity = self._cnf.tts_verbosity
+                        self._tts_context = self._cnf.tts_context
                         if not self._enable_tts and \
                                 self._enable_tts != self._cnf.enable_tts:
                             self._enable_tts = self._cnf.enable_tts

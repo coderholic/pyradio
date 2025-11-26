@@ -1366,6 +1366,7 @@ class PyRadioConfig(PyRadioStations):
         self.opts['tts_rate'] = ['  Rate: ', '0']
         self.opts['tts_pitch'] = ['  Pitch: ', '0']
         self.opts['tts_verbosity'] = ['Verbosity: ', 'default']
+        self.opts['tts_context'] = ['Context: ', 'basic']
         self.opts['clock_title'] = ['Clock', '']
         self.opts['enable_clock'] = ['Display on startup: ', False]
         self.opts['time_format'] = ['Time format: ', '1']
@@ -1758,6 +1759,20 @@ class PyRadioConfig(PyRadioStations):
         else:
             set_val = 'default'
         self.opts['tts_verbosity'][1] = set_val
+        self.opts['dirty_config'][1] = True
+
+    @property
+    def tts_context(self):
+        ''' connection timeout as string '''
+        return self.opts['tts_context'][1]
+
+    @tts_context.setter
+    def tts_context(self, val):
+        if val in ('basic', 'window', 'everything'):
+            set_val = val
+        else:
+            set_val = 'basic'
+        self.opts['tts_context'][1] = set_val
         self.opts['dirty_config'][1] = True
 
     @property
@@ -2617,6 +2632,13 @@ class PyRadioConfig(PyRadioStations):
                 self.opts['tts_pitch'][1] = sp[1]
             elif sp[0] == 'tts_verbosity':
                 self.opts['tts_verbosity'][1] = 'punctuation' if sp[1].lower() == 'punctuation' else 'default'
+            elif sp[0] == 'tts_context':
+                cont = sp[1].lower()
+                self.opts['tts_context'][1] = 'basic'
+                if cont == 'window':
+                    self.opts['tts_context'][1] = 'window'
+                elif cont == 'everything':
+                    self.opts['tts_context'][1] = 'everything'
             elif sp[0] == 'confirm_station_deletion':
                 if sp[1].lower() == 'false':
                     self.opts['confirm_station_deletion'][1] = False

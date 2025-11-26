@@ -51,6 +51,7 @@ class PyRadioConfigWindow():
     _tts_volume_data = (0, 0, 0)
     _tts_rate_data = (0, 0, 0)
     _tts_pitch_data = (0, 0, 0)
+    _tts_context_data = ('basic', 'window', 'everything')
     _help_text = []
     _help_text.append(None)
     _help_text.append(['Specify the player to use with PyRadio, or the player detection order.', '|',
@@ -120,7 +121,8 @@ class PyRadioConfigWindow():
     else:
         _help_text.append(['This is the pitch to be used by the speech dispatcher, provided that the engine selected supports it.', '|', 'Valid values: -100 - +100', '|', 'Default value: 0'])
         _tts_pitch_data = (-100, 100, 1)
-    _help_text.append(['Verbosity', ])
+    _help_text.append(['This is the verbosity to be used by the TTS engine.', '|', 'When set to punctuation, the engine will read aloud all punctuation marks as if they were regular words.', '|', 'Example:', 'The text "this option is read-only" will be spoken as:', '  - Verbosity "default":', '      this option is read only', '  - Verbosity "punctuation":','      this option is read dash only', '|', '|', 'Default value: default'])
+    _help_text.append(['This is the context spoken by the TTS engine.', '|', 'Values are:', '  basic: system messages and errors, station data', '  window: also speak windows text', '  everything: speak everything provided', '|', 'Default value: basic'])
     _help_text.append(None)
     _help_text.append(['If this option is enabled, the current time will be displayed at the bottom left corner of the window at program startup.', '|', 'Adjust the time format in the next option to change how the current time is displayed.', '|', r'You can always hide it by pressing ' + to_str('open_extra') + to_str('toggle_time') +  '.', '|', 'Default value: False'])
     _help_text.append(['This is the time format to be used when the clock is visible.', '|', 'Available values are:', '   0: 24h, with seconds', '   1: 24h, no seconds', '   2: 12h, with am/pm and seconds', '   3: 12h, no am/pm, with seconds', '   4: 12h, with am/pm, no seconds', '   5: 12h, no am/pm, no seconds', '|', 'Default value: 1'])
@@ -853,7 +855,8 @@ class PyRadioConfigWindow():
                     volume=lambda: self._config_options['tts_volume'][1],
                     rate=lambda: self._config_options['tts_rate'][1],
                     pitch=lambda: self._config_options['tts_pitch'][1],
-                    verbosity=lambda: self._config_options['tts_verbosity'][1]
+                    verbosity=lambda: self._config_options['tts_verbosity'][1],
+                    context=lambda: self._config_options['tts_context'][1]
                 )
                 if not self.tmp_tts.available:
                     return 1110, []
@@ -1296,6 +1299,21 @@ class PyRadioConfigWindow():
             self._win.addstr(
                 Y, 3 + len(val[1][0]),
                 self._config_options[val[0]][1] + '    ', curses.color_pair(6))
+            self._print_title()
+            self._win.refresh()
+            return -1, []
+
+        elif val[0] == 'tts_context':
+            ind = self._tts_context_data.index(self._config_options[val[0]][1])
+            ind += 1
+            if ind >= len(self._tts_context_data):
+                ind = 0
+            self._config_options[val[0]][1] = self._tts_context_data[ind]
+            disp = self._tts_context_data[ind].ljust(len(self._tts_context_data[-1]))
+            logger.error(f'{disp = }')
+            self._win.addstr(
+                Y, 3 + len(val[1][0]),
+                disp, curses.color_pair(6))
             self._print_title()
             self._win.refresh()
             return -1, []

@@ -9,7 +9,7 @@ from sys import platform
 from .window_stack import Window_Stack_Constants
 from .keyboard import kbkey, kb2str, kb2strL, check_localized
 from .common import M_STRINGS
-from .tts import Priority
+from .tts import Priority, Context
 
 locale.setlocale(locale.LC_ALL, "")
 
@@ -305,7 +305,7 @@ Esc|, |{q}|, |Left|, |{h}                       <*>Cancel.
 {v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*>  Change volume.
 {mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
-), Priority.DIALOG),
+), Priority.HELP),
 
 
     'M_PLAYLIST_READ': ('',
@@ -1015,7 +1015,7 @@ Global functions work when preceded with a "|\|".
 '''
 ), Priority.HELP),
 
-    'H_EXTERNAL_LINE_EDITOR': ('',),
+    'H_EXTERNAL_LINE_EDITOR': ('', Priority.HELP),
 
     'H_LINE_EDITOR': ('Line Editor Help',
 kb2str(r'''Left| / |Right           <*> Move to next / previous character.
@@ -1700,7 +1700,7 @@ unintentionally disrupt functionality.
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Redisplaying last Messaging System Active key...')
         else:
-            self._caption, text, max_len, priority = self._get_txt(*args)
+            self._caption, text, max_len, priority, context = self._get_txt(*args)
             if text is None:
                 return None, 0
             if max_len < self._main_win_width or \
@@ -1826,11 +1826,15 @@ unintentionally disrupt functionality.
 
         logger.error('\n\nself._txt[self.active_message_key] = {}\n\n'.format(self._txt[self.active_message_key]))
 
-        cap, out, priority = self._txt[self.active_message_key]
+        try:
+            cap, out, priority = self._txt[self.active_message_key]
+            context = Context.BASIC
+        except ValueError:
+            cap, out, priority, context = self._txt[self.active_message_key]
         # logger.info('--> out\n{}'.format(out))
         if out is None:
-            logger.error('return None, None, 0, 0')
-            return None, None, 0, 0
+            logger.error('return None, None, 0, 0', 0)
+            return None, None, 0, 0, 0
 
         ''' apply per item customization / variables '''
         if self.active_message_key == 'H_MAIN' and \
@@ -1938,7 +1942,8 @@ unintentionally disrupt functionality.
         logger.error('mmax = {}'.format(mmax))
         logger.error('cleaned_text = {}'.format(cleaned_text))
         logger.error('priority = {}'.format(priority))
-        return cap, cleaned_text, mmax, priority
+        logger.error('context = {}'.format(context))
+        return cap, cleaned_text, mmax, priority, context
 
     def _get_active_message_key(self, *args):
         if args:

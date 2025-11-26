@@ -31,6 +31,12 @@ class Priority(Enum):
     DIALOG = 3    # Interruptible HIGH - dialog messages
     HELP = 4      # Help messages
 
+class Context(Enum):
+    """Context setting for speech requests"""
+    BASIC = 1
+    WINDOW = 2
+    ALL = 3
+
 class TTSState(Enum):
     """TTS system states"""
     IDLE = 0
@@ -545,7 +551,7 @@ class TTSManagerDummy:
     def __init__(self):
         self.enabled = False
 
-    def queue_speech(self, text, priority=Priority.NORMAL):
+    def queue_speech(self, text, priority=Priority.NORMAL, context=Context.BASIC):
         return
 
     def stop(self):
@@ -568,13 +574,14 @@ class TTSManager:
     Main TTS manager with priority-based queue and title preservation
     """
 
-    def __init__(self, volume, rate, pitch, enabled=True, verbosity='default'):
+    def __init__(self, volume, rate, pitch, verbosity, context, enabled=True):
         self.stop_after_high = False
         self.enabled = enabled
         self.volume = volume
         self.rate = rate
         self.pitch = pitch
         self.verbosity = verbosity
+        self.context = context
         self.config = TTSConfig()
         self.system = platform.system()
         self.available = False
@@ -779,7 +786,7 @@ class TTSManager:
                 elif platform.system().lower().startswith('win'):
                     prefix = f'<pitch absmiddle="{pitch}"/>'
             logger.error(f'{prefix = }')
-
+            # logger.error(f'\n\n{request.text = }\n\n')
             transformed_text = tts_transform_to_string([request.text], self.verbosity())
             success = self.engine._execute_speech(
                 prefix+transformed_text,
@@ -826,6 +833,7 @@ class TTSManager:
 
     def _is_title(self, text):
         """Check if text is a title message"""
+        # logger.error(f'"{self.title_token = }" - "{text = }"')
         return text.startswith(self.title_token)
 
     def _process_pending_title(self):
@@ -853,14 +861,27 @@ class TTSManager:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug("Cleaned normal priority queue due to rapid navigation")
 
-    def queue_speech(self, text, priority=Priority.NORMAL):
+    def _get_context_value(self):
+        context = self.context()
+        if context == 'everything':
+            return Context.ALL.value
+        elif context == 'window':
+            return Context.WINDOW.value
+        return Context.BASIC.value
+
+    def queue_speech(self, text, priority=Priority.NORMAL, context=Context.BASIC):
         if not self.enabled or not self.available or not self.engine:
+            return False
+
+        logger.error('config says: {}'.format(self._get_context_value()))
+        if context.value > self._get_context_value():
+            logger.error('refusing {} = {}'.format(context.name, context.value))
             return False
 
         if not text or not text.strip():
             return False
         if '%' in text:
-            text = text.replace('%', ' precent')
+            text = text.replace('%', ' percent')
         if priority == Priority.HIGH and ' (error ' in text:
             text = text.split(' (error ')[0]
 
@@ -889,6 +910,17 @@ class TTSManager:
             if self._pending_volume_request:
                 self._process_pending_volume_immediately()
 
+
+        # logger.error('\n\ntitle = \n{}'.format(text))
+        # logger.error('self._last_spoken_title =\n{}\n\n'.format(self._last_spoken_title))
+        if self._is_title(text) and text == self._last_spoken_title:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f"Ignoring repeated title: {text[:50]}...")
+            return True
+
+        if self._is_title(text):
+            self._last_spoken_title = text
+
         request = TTSRequest(text, priority)
 
         try:
@@ -915,52 +947,21 @@ class TTSManager:
                     logger.debug(f"Queued HIGH priority: {text[:50]}...")
                 return True
 
-            else:  # NORMAL priority
-                current_time = time.time()
-
-                # Rate limiting for rapid navigation
-                if current_time - self._last_navigation_time < 0.2:
-                    self._consecutive_requests += 1
-                    if self._consecutive_requests > 3:
-                        self._clean_normal_queue()
-                else:
-                    self._consecutive_requests = 0
-
-                self._last_navigation_time = current_time
-
-                if self._is_title(text):
-                    # Check if this title is the same as the one previously spoken
-                    if text == self._last_spoken_title:
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug(f"Ignoring repeated title: {text[:50]}...")
-                        return True
-
-                    # Title handling - always preserve the latest title
-                    self.pending_title = text
+            else:
+                # Regular NORMAL request
+                if not self.high_priority_queue.empty() or (
+                    self._current_request and
+                    self._current_request.priority in (Priority.HIGH, Priority.DIALOG)
+                ):
+                    # HIGH is playing or queued, reject regular NORMAL
                     if logger.isEnabledFor(logging.WARNING):
-                        logger.debug(f"Preserved title: {text[:50]}...")
-
-                    # If no HIGH is playing, queue it immediately
-                    if self.high_priority_queue.empty() and not self._current_request:
-                        self.normal_priority_queue.put(request)
-                        return True
-                    return True  # Title preserved, considered successful
-
+                        logger.debug("Rejected NORMAL request during HIGH playback")
+                    return False
                 else:
-                    # Regular NORMAL request
-                    if not self.high_priority_queue.empty() or (
-                        self._current_request and
-                        self._current_request.priority in (Priority.HIGH, Priority.DIALOG)
-                    ):
-                        # HIGH is playing or queued, reject regular NORMAL
-                        if logger.isEnabledFor(logging.WARNING):
-                            logger.debug("Rejected NORMAL request during HIGH playback")
-                        return False
-                    else:
-                        self.normal_priority_queue.put(request)
-                        if logger.isEnabledFor(logging.WARNING):
-                            logger.debug(f"Queued NORMAL: {text[:50]}...")
-                        return True
+                    self.normal_priority_queue.put(request)
+                    if logger.isEnabledFor(logging.WARNING):
+                        logger.debug(f"Queued NORMAL: {text[:50]}...")
+                    return True
 
         except Exception as e:
             if logger.isEnabledFor(logging.ERROR):

@@ -418,8 +418,7 @@ class Log():
                 if self.tts and self.tts():
                     if msg_id == STATES.TITLE \
                             and msg and msg.startswith(M_STRINGS['title_']):
-                        self.tts().queue_speech(msg.replace(':', ',',1))
-                        pass
+                        self.tts().queue_speech(msg, Priority.HIGH)
                     elif msg_id == STATES.VOLUME:
                         if msg.startswith('['):
                             logger.error(f'{msg = }')
