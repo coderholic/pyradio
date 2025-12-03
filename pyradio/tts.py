@@ -28,12 +28,12 @@ class Priority(Enum):
     """Priority levels for speech requests"""
     NORMAL = 1    # Interruptible - navigation, titles
     HIGH = 2      # Non-interruptible - critical alerts, playback status
-    DIALOG = 3    # Interruptible HIGH - dialog messages
-    HELP = 4      # Help messages
+    HELP = 3      # Help messages
+    DIALOG = 4    # Interruptible HIGH - dialog messages
 
 class Context(Enum):
     """Context setting for speech requests"""
-    BASIC = 1
+    LIMITED = 1
     WINDOW = 2
     ALL = 3
 
@@ -191,6 +191,10 @@ class TTSLinux(TTSBase):
         self.retry_count = 0
         self.max_retries = 2
 
+    def _calculate_volume(self):
+        volume = self.volume()
+        return 2 * volume - 100
+
     def _execute_speech(self, text, priority=Priority.NORMAL):
         # logger.error('priority = {}\n\n'.format(priority.name))
         """Execute speech with priority-based blocking behavior"""
@@ -200,11 +204,13 @@ class TTSLinux(TTSBase):
 
             if priority in (Priority.HIGH, Priority.DIALOG):
                 # HIGH priority: blocking execution with -w flag
+                timeout = 60
                 cmd = ['spd-say', '-l', 'en', '-i', self.volume(),
                        '-r', self.rate(), '-p', self.pitch(), '-w', text
                        ]  # -w for wait
             else:
                 # NORMAL priority: non-blocking execution
+                timeout = 30
                 cmd = ['spd-say', '-l', 'en', '-i', self.volume(),
                        '-r', self.rate(), '-p', self.pitch(), text]
 
@@ -212,7 +218,7 @@ class TTSLinux(TTSBase):
             logger.error(f'===> waiting... "{cmd}" with {priority.name = }')
             result = subprocess.run(
                 cmd,
-                timeout=30,  # Safety timeout
+                # timeout=timeout,  # Safety timeout
                 capture_output=True,
                 text=True
             )
@@ -551,7 +557,12 @@ class TTSManagerDummy:
     def __init__(self):
         self.enabled = False
 
-    def queue_speech(self, text, priority=Priority.NORMAL, context=Context.BASIC):
+    def can_i_use_tts(self, priority=Priority.HIGH):
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Speech request rejected: TTS disabled')
+        return False
+
+    def queue_speech(self, text, priority=Priority.NORMAL, context=Context.LIMITED, mode=0):
         return
 
     def stop(self):
@@ -614,6 +625,24 @@ class TTSManager:
         self._volume_timer = None
         # New lock for volume operations
         self._volume_lock = threading.RLock()
+
+    def can_i_use_tts(self, priority=Priority.NORMAL):
+        """ return True if TTS is availabel and enabled
+            and the context is allowed to be spoken
+        """
+        if self.available and self.enabled:
+            context = self.context()
+            if context == 'all':
+                return True
+            elif context == 'window':
+                if priority.value <= Priority.DIALOG.value:
+                    return True
+            elif context == 'limited':
+                if priority.value <= Priority.HIGH.value:
+                    return True
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'Speech request rejected: priorit is "{priority.name}" but context is "{context}"')
+        return False
 
     def _initialize_tts(self):
         """Initialize TTS with proper availability checking"""
@@ -863,13 +892,14 @@ class TTSManager:
 
     def _get_context_value(self):
         context = self.context()
-        if context == 'everything':
+        if context == 'all':
             return Context.ALL.value
         elif context == 'window':
             return Context.WINDOW.value
-        return Context.BASIC.value
+        return Context.LIMITED.value
 
-    def queue_speech(self, text, priority=Priority.NORMAL, context=Context.BASIC):
+    def queue_speech(self, text, priority=Priority.NORMAL, context=Context.LIMITED, mode=0):
+        logger.error(f'{mode = }')
         if not self.enabled or not self.available or not self.engine:
             return False
 

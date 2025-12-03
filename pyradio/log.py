@@ -248,7 +248,8 @@ class Log():
                  current_player_id,
                  active_player_id,
                  get_web_song_title,
-                 tts
+                 tts,
+                 mode
                  ):
         self.program_restart = False
         self.error_msg = False
@@ -256,6 +257,7 @@ class Log():
         self._desktop_notification_title = None
         self._desktop_notification_message = None
         self._repeat_notification = None
+        self._mode = mode
 
         self.msg = None
         self.suffix = None
@@ -418,15 +420,16 @@ class Log():
                 if self.tts and self.tts():
                     if msg_id == STATES.TITLE \
                             and msg and msg.startswith(M_STRINGS['title_']):
-                        self.tts().queue_speech(msg, Priority.HIGH)
+                        self.tts().queue_speech(msg, Priority.HIGH, mode=self._mode())
                     elif msg_id == STATES.VOLUME:
                         if msg.startswith('['):
-                            logger.error(f'{msg = }')
-                            s_msg = msg.split(']')[0].split(' ')[-1]
-                            logger.error(f'{s_msg = }')
-                            self.tts().queue_speech(M_STRINGS['volume_set'] + s_msg, Priority.HIGH)
+                            pass
+                            # logger.error(f'{msg = }')
+                            # s_msg = msg.split(']')[0].split(' ')[-1]
+                            # logger.error(f'{s_msg = }')
+                            # self.tts().queue_speech(M_STRINGS['volume_set'] + s_msg, Priority.HIGH, mode=self._mode())
                         else:
-                            self.tts().queue_speech(msg, Priority.HIGH)
+                            self.tts().queue_speech(msg, Priority.HIGH, mode=self._mode())
             except AttributeError:
                 pass
 

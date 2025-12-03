@@ -28,11 +28,11 @@ openSUSE based distros:
 sudo zypper install python3-dateutil
 
 If everything else fails, try:
-python -m pip install dateutil
+    python -m pip install dateutil
 or
-python3 -m pip install dateutil
+    python3 -m pip install dateutil
 or even
-python -m pip install --user dateutil
+    python -m pip install --user dateutil
 
 ''')
     exit(1)

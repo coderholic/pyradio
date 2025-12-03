@@ -1366,7 +1366,7 @@ class PyRadioConfig(PyRadioStations):
         self.opts['tts_rate'] = ['  Rate: ', '0']
         self.opts['tts_pitch'] = ['  Pitch: ', '0']
         self.opts['tts_verbosity'] = ['Verbosity: ', 'default']
-        self.opts['tts_context'] = ['Context: ', 'basic']
+        self.opts['tts_context'] = ['Context: ', 'all']
         self.opts['clock_title'] = ['Clock', '']
         self.opts['enable_clock'] = ['Display on startup: ', False]
         self.opts['time_format'] = ['Time format: ', '1']
@@ -1768,10 +1768,10 @@ class PyRadioConfig(PyRadioStations):
 
     @tts_context.setter
     def tts_context(self, val):
-        if val in ('basic', 'window', 'everything'):
+        if val in ('limited', 'window', 'all'):
             set_val = val
         else:
-            set_val = 'basic'
+            set_val = 'limited'
         self.opts['tts_context'][1] = set_val
         self.opts['dirty_config'][1] = True
 
@@ -2625,7 +2625,13 @@ class PyRadioConfig(PyRadioStations):
                 else:
                     self.opts['enable_tts'][1] = True
             elif sp[0] == 'tts_volume':
-                self.opts['tts_volume'][1] = sp[1]
+                try:
+                    if 0 <= int(sp[1])  <= 100:
+                        self.opts['tts_volume'][1] = sp[1]
+                    else:
+                        self.opts['tts_volume'][1] = '50'
+                except ValueError:
+                    self.opts['tts_volume'][1] = '50'
             elif sp[0] == 'tts_rate':
                 self.opts['tts_rate'][1] = sp[1]
             elif sp[0] == 'tts_pitch':
@@ -2634,11 +2640,11 @@ class PyRadioConfig(PyRadioStations):
                 self.opts['tts_verbosity'][1] = 'punctuation' if sp[1].lower() == 'punctuation' else 'default'
             elif sp[0] == 'tts_context':
                 cont = sp[1].lower()
-                self.opts['tts_context'][1] = 'basic'
+                self.opts['tts_context'][1] = 'all'
                 if cont == 'window':
                     self.opts['tts_context'][1] = 'window'
-                elif cont == 'everything':
-                    self.opts['tts_context'][1] = 'everything'
+                elif cont == 'limited':
+                    self.opts['tts_context'][1] = 'limited'
             elif sp[0] == 'confirm_station_deletion':
                 if sp[1].lower() == 'false':
                     self.opts['confirm_station_deletion'][1] = False

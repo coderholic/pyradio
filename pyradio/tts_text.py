@@ -59,6 +59,9 @@ def handle_parentheses(text, verbosity):
         text = text.replace(']', ' close bracket ')
         text = text.replace('{', ' open brace ')
         text = text.replace('}', ' close brace ')
+        text = text.replace(':', ' colon ')
+        text = text.replace(',', ' comma ')
+        text = text.replace('.', ' full stop ')
     else:
         # Default behavior - replace with commas
         text = text.replace('(', ', ')

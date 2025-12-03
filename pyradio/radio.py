@@ -1262,7 +1262,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             lambda: self._current_player_id,
             lambda: self._active_player_id,
             lambda: self._remote_control_server,
-            lambda: self.tts
+            lambda: self.tts,
+            lambda: self.ws.operation_mode
         )
         self.log.program_restart = self.program_restart
         self.program_restart = False
@@ -2875,7 +2876,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             help_msg=True, suffix=self._status_suffix, counter=''
         )
         if state == STATES.CONNECT_ERROR:
-            self.tts.queue_speech(player_start_stop_token[msg_key], Priority.HIGH)
+            self.tts.queue_speech(player_start_stop_token[msg_key], Priority.HIGH, mode=self.we.operation_mode)
         self._current_player_id = self._next_current_player_id
         logger.error(f'increasing {self._current_player_id = }')
         self._prepare_next_current_player_id()
@@ -3005,14 +3006,16 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                         callback_function=self.refreshBody)
         elif ret == -1:
             self._open_simple_message_by_key(
-                    'M_PLAYLIST_SAVE_ERR_1',
-                    self._cnf.station_path.replace('.csv', '.txt')
-                    )
+                'M_PLAYLIST_SAVE_ERR_1',
+                self._cnf.station_path.replace('.csv', '.txt'),
+                self.ws.MESSAGING_MODE
+            )
         elif ret == -2:
             self._open_simple_message_by_key(
                 'M_PLAYLIST_SAVE_ERR_2',
-                 self._cnf.station_path.replace('.csv', '.txt')
-                 )
+                self._cnf.station_path.replace('.csv', '.txt'),
+                self.ws.MESSAGING_MODE
+            )
         if ret < 0 and logger.isEnabledFor(logging.DEBUG):
             logger.debug(f'Error saving playlist: "{self._cnf.station_path}"')
         return ret
@@ -3029,7 +3032,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             #self.stations = self._cnf.playlists
             self.ws.close_window()
             self.refreshBody()
-            self._open_simple_message_by_key('M_PLAYLIST_RELOAD_ERROR')
+            self._open_simple_message_by_key('M_PLAYLIST_RELOAD_ERROR', self.ws.MESSAGING_MODE)
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'Error reloading playlist: "{self._cnf.station_path}"')
         else:
@@ -3042,7 +3045,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
     def readPlaylists(self):
         num_of_playlists, playing = self._cnf.read_playlists()
         if num_of_playlists == 0 and not self._cnf.open_register_list:
-            self._open_simple_message_by_key('M_NO_PLAYLIST')
+            self._open_simple_message_by_key('M_NO_PLAYLIST', self.ws.PLAYLIST_SCAN_ERROR_MODE)
             self.ws.operation_mode = self.ws.PLAYLIST_SCAN_ERROR_MODE
             if logger.isEnabledFor(logging.ERROR):
                 logger.error('No playlists found!!!')
@@ -3259,7 +3262,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 ('', '''Error loading selected theme!
 ____Using |fallback| theme.''')
                 )
-        self._open_simple_message_by_key('UNIVERSAL')
+        self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
         self.ws.close_window()
         # start 1750 ms counter
         if self._theme_not_supported_thread:
@@ -3348,7 +3351,7 @@ ____Using |fallback| theme.''')
         # logger.error('args = "{}"'.format(args))
         self._message_system_default_operation_mode = mode
         self._messaging_win.simple_dialog = True
-        self._open_message_win_by_key(*args)
+        self._open_message_win_by_key(*args, mode)
         self._message_system_default_operation_mode = self.ws.MESSAGING_MODE
 
     def _open_simple_message_by_key(self, *args):
@@ -3357,23 +3360,23 @@ ____Using |fallback| theme.''')
         self._messaging_win.simple_dialog = True
 
     def _open_message_win_by_key(self, *args):
-        # logger.error('args = "{}"'.format(args))
+        logger.error('args = "{}"'.format(args))
         caption, text, priority = self._messaging_win.set_text(self.bodyWin, *args)
         # self._speak_high(''.join(text).replace('|', '').replace('ESC', 'escape'))
         logger.error('\n\ntext =\n{}\n\n'.format(text))
         self.ws.operation_mode = self._message_system_default_operation_mode
-        if self._enable_tts:
+        if self._enable_tts and self.tts.can_i_use_tts(priority=priority):
             self._message_box_tts_thread = threading.Thread(
                 target=self._tts_queue_speech,
                 args=(
-                    caption, text, priority
+                    caption, text, priority, args[-1]
                 )
             )
             self._message_box_tts_thread.start()
             self.ws.stop_dialog_speech = self.tts.stop_dialog_speech
         self._messaging_win.show()
 
-    def _tts_queue_speech(self, caption, text, priority):
+    def _tts_queue_speech(self, caption, text, priority, mode):
         if caption:
             text = [f'Window: {caption}.'] + text
         logger.error(f'\n\n{text = }\n\n')
@@ -3383,7 +3386,8 @@ ____Using |fallback| theme.''')
                 tts_text += ' any key to close the window.'
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'{tts_text = }')
-            self.tts.queue_speech(tts_text, priority)
+            logger.error(f'-----> {mode = }')
+            self.tts.queue_speech(tts_text, priority, mode=mode)
 
     def _show_line_editor_help(self):
         if self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE, self.ws.SCHEDULE_EDIT_MODE) \
@@ -3514,13 +3518,16 @@ ____Using |fallback| theme.''')
                 txt = '_' + txt + '_'
         else:
             txt = '----==== Empty ====----'
-        self._open_simple_message_by_key('M_SHOW_UNNAMED_REGISTER', txt)
+        self._open_simple_message_by_key(
+            'M_SHOW_UNNAMED_REGISTER',
+            txt, self.ws.MESSAGING_MODE)
 
     def _print_vote_result(self):
         self._open_simple_message_by_key(
-                'M_RB_VOTE_RESULT',
-                self._cnf._online_browser.vote_result[0],
-                self._cnf._online_browser.vote_result[1]
+            'M_RB_VOTE_RESULT',
+            self._cnf._online_browser.vote_result[0],
+            self._cnf._online_browser.vote_result[1],
+            self.ws.MESSAGING_MODE
         )
 
     def _print_remote_control_server_error(self, msg=None):
@@ -3533,7 +3540,7 @@ ____Using |fallback| theme.''')
         return
         if msg:
             self._server_error_msg = str(msg)
-        self._open_simple_message_by_key('M_RC_START_ERROR', self._server_error_msg)
+        self._open_simple_message_by_key('M_RC_START_ERROR', self._server_error_msg, self.ws.MESSAGING_MODE)
         self._remote_control_server = self._remote_control_server_thread = None
 
     def _print_remote_control_server_dead_error(self, msg=None):
@@ -3546,32 +3553,34 @@ ____Using |fallback| theme.''')
         return
         if msg:
             self._server_dead_msg = str(msg)
-        self._open_simple_message_by_key('M_RC_DEAD_ERROR', self._server_dead_msg)
+        self._open_simple_message_by_key('M_RC_DEAD_ERROR', self._server_dead_msg, self.ws.MESSAGING_MODE)
         self._remote_control_server = self._remote_control_server_thread = None
 
     def _print_change_player_one_player_error(self):
         players = [x.PLAYER_NAME for x in player.Player.__subclasses__() if x.PLAYER_NAME != self.player.PLAYER_NAME]
         logger.error(f'{players = }')
         self._open_simple_message_by_key(
-                'M_CHANGE_PLAYER_ONE_ERROR',
-                players[0],
-                players[1]
-                )
+            'M_CHANGE_PLAYER_ONE_ERROR',
+            players[0],
+            players[1],
+            self.ws.MESSAGING_MODE
+        )
 
     def _print_change_player_same_player_error(self):
         self._open_simple_message_by_key(
-                'M_CHANGE_PLAYER_THE_SAME_ERROR',
-                self.player.PLAYER_NAME
-                )
+            'M_CHANGE_PLAYER_THE_SAME_ERROR',
+            self.player.PLAYER_NAME,
+            self.ws.MESSAGING_MODE
+        )
 
     def _print_not_implemented_yet(self):
-        self._open_simple_message_by_key('M_NOT_IMPLEMENTED')
+        self._open_simple_message_by_key('M_NOT_IMPLEMENTED', self.ws.MESSAGING_MODE)
 
     def _print_handle_foreign_playlist(self):
         self._open_simple_message_by_key_and_mode(
-                self.ws.FOREIGN_PLAYLIST_ASK_MODE,
-                'D_FOREIGN_ASK'
-                )
+            self.ws.FOREIGN_PLAYLIST_ASK_MODE,
+            'D_FOREIGN_ASK'
+        )
 
     def _print_foreign_playlist_message(self):
         ''' reset previous message '''
@@ -3579,16 +3588,17 @@ ____Using |fallback| theme.''')
         self.refreshBody()
         ''' display new message '''
         self._open_simple_message_by_key(
-                'M_FOREIGN',
-                self._cnf.foreign_title,
-                self._cnf.station_title
-                )
+            'M_FOREIGN',
+            self._cnf.foreign_title,
+            self._cnf.station_title,
+            self.we.MESSAGING_MODE
+        )
 
     def _print_foreign_playlist_copy_error(self):
         ''' reset previous message '''
         self.ws.close_window()
         self.refreshBody()
-        self._open_simple_message_by_key('M_FOREIGN_ERROR')
+        self._open_simple_message_by_key('M_FOREIGN_ERROR', self.ws.MESSAGING_MODE)
 
     def _print_playlist_recovery_error(self):
         if self._playlist_error_message:
@@ -3598,12 +3608,12 @@ ____Using |fallback| theme.''')
                     )
             if logger.isEnabledFor(logging.DEBUG):
                 logging.debug('Universal Message provided')
-            self._open_simple_message_by_key('UNIVERSAL')
+            self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
         else:
             if self._cnf.playlist_recovery_result == 1:
-                self._open_simple_message_by_key('M_PLAYLIST_RECOVERY_ERROR_1')
+                self._open_simple_message_by_key('M_PLAYLIST_RECOVERY_ERROR_1', self.ws.MESSAGING_MODE)
             else:
-                self._open_simple_message_by_key('M_PLAYLIST_RECOVERY_ERROR_2')
+                self._open_simple_message_by_key('M_PLAYLIST_RECOVERY_ERROR_2', self.ws.MESSAGING_MODE)
 
     def _show_no_themes(self):
         if self._cnf.show_no_themes_message:
@@ -3651,15 +3661,17 @@ ____Using |fallback| theme.''')
 
     def _print_netifaces_not_installed_error(self):
         self._open_simple_message_by_key(
-                'M_NETIFACES_ERROR',
-                python_version[0]
-                )
+            'M_NETIFACES_ERROR',
+            python_version[0],
+            self.ws.MESSAGING_MODE
+        )
 
     def _print_requests_not_installed_error(self):
         self._open_simple_message_by_key(
-                'M_REQUESTS_ERROR',
-                python_version[0]
-                )
+            'M_REQUESTS_ERROR',
+            python_version[0],
+            self.ws.MESSAGING_MODE
+        )
 
     def _print_register_save_error(self):
         if len(self._failed_register_file) + 10 > self.bodyMaxX:
@@ -3667,9 +3679,10 @@ ____Using |fallback| theme.''')
         else:
             string_to_display = self._failed_register_file.replace('_', '¸')
         self._open_simple_message_by_key(
-                'M_REGISTER_SAVE_ERROR',
-                string_to_display
-                )
+            'M_REGISTER_SAVE_ERROR',
+            string_to_display,
+            self.ws.MESSAGING_MODE
+        )
 
     def _print_station_change_error(self):
         self._open_simple_message_by_key_and_mode(
@@ -3720,7 +3733,7 @@ ____Using |fallback| theme.''')
                 'UNIVERSAL',
             (caption, txt)
             )
-        self._open_simple_message_by_key('UNIVERSAL')
+        self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
         if logger.isEnabledFor(logging.DEBUG):
             logging.debug('Universal Message provided')
 
@@ -3764,16 +3777,17 @@ ____Using |fallback| theme.''')
                 'UNIVERSAL',
                 (caption, txt)
                 )
-        self._open_simple_message_by_key('UNIVERSAL')
+        self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
         if logger.isEnabledFor(logging.DEBUG):
             logging.debug('Universal Message provided')
 
     def _print_user_parameter_error(self):
         self._open_simple_message_by_key(
-                'M_PARAMETER_ERROR',
-                self._cnf.PLAYER_NAME,
-                len(self._cnf.params[self._cnf.PLAYER_NAME]) - 1
-                )
+            'M_PARAMETER_ERROR',
+            self._cnf.PLAYER_NAME,
+            len(self._cnf.params[self._cnf.PLAYER_NAME]) - 1,
+            self.ws.MESSAGING_MODE
+        )
         self._cnf.user_param_id = 0
 
     def _print_theme_download_error(self):
@@ -3782,7 +3796,7 @@ ____Using |fallback| theme.''')
             self._cnf.theme_has_error = False
             self._cnf.theme_download_failed = False
             self._cnf.theme_not_supported_notification_shown = False
-            self._open_simple_message_by_key('X_THEME_DOWN_FAIL')
+            self._open_simple_message_by_key('X_THEME_DOWN_FAIL', self.ws.MESSAGING_MODE)
             self.ws.close_window()
             a_thread = threading.Timer(1.75, self.refreshBody)
             a_thread.start()
@@ -3823,7 +3837,7 @@ ____Using |fallback| theme.''')
                 callback_function=self.refreshBody)
 
     def _print_servers_unreachable(self):
-        self._open_simple_message_by_key('H_RB_NO_PING')
+        self._open_simple_message_by_key('H_RB_NO_PING', self.ws.MESSAGING_MODE)
 
     def _print_playlist_reload_confirmation(self):
         if self._cnf.locked:
@@ -3855,25 +3869,25 @@ ____Using |fallback| theme.''')
                 )
 
     def _print_editor_name_error(self):
-        self._open_simple_message_by_key('M_RB_EDIT_NAME_ERROR')
+        self._open_simple_message_by_key('M_RB_EDIT_NAME_ERROR', self.ws.MESSAGING_MODE)
 
     def _print_editor_url_error(self):
         if self._station_editor._line_editor[1].string.strip():
-            self._open_simple_message_by_key('M_RB_EDIT_URL_ERROR')
+            self._open_simple_message_by_key('M_RB_EDIT_URL_ERROR', self.ws.MESSAGING_MODE)
         else:
-            self._open_simple_message_by_key('M_RB_EDIT_INCOMPLETE_ERROR')
+            self._open_simple_message_by_key('M_RB_EDIT_INCOMPLETE_ERROR', self.ws.MESSAGING_MODE)
 
     def _print_icon_url_error(self):
-        self._open_simple_message_by_key('M_RB_EDIT_ICON_ERROR')
+        self._open_simple_message_by_key('M_RB_EDIT_ICON_ERROR', self.ws.MESSAGING_MODE)
 
     def _print_icon_url_format_error(self):
-        self._open_simple_message_by_key('M_RB_EDIT_ICON_FORMAT_ERROR')
+        self._open_simple_message_by_key('M_RB_EDIT_ICON_FORMAT_ERROR', self.ws.MESSAGING_MODE)
 
     def _print_ref_url_format_error(self):
-        self._open_simple_message_by_key('M_RB_EDIT_REF_ERROR')
+        self._open_simple_message_by_key('M_RB_EDIT_REF_ERROR', self.ws.MESSAGING_MODE)
 
     def _print_browser_config_save_error(self):
-        self._open_simple_message_by_key('M_RB_CONFIG_SAVE_ERROR')
+        self._open_simple_message_by_key('M_RB_CONFIG_SAVE_ERROR', self.ws.MESSAGING_MODE)
 
     def _print_ask_to_create_theme(self):
         self._open_simple_message_by_key_and_mode(
@@ -4121,7 +4135,7 @@ and |remove the file manually|.
                     'Playlist Changed',
                     msg)
                 )
-        self._open_simple_message_by_key('UNIVERSAL')
+        self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
 
     def _show_recording_status_in_header(
         self,
@@ -4254,18 +4268,20 @@ and |remove the file manually|.
                     else:
                         self._cnf.remove_from_playlist_history()
                         self._open_simple_message_by_key(
-                                'M_RB_UNKNOWN_SERVICE',
-                                self.stations[self.selection][0],
-                                self.stations[self.selection][1]
+                            'M_RB_UNKNOWN_SERVICE',
+                            self.stations[self.selection][0],
+                            self.stations[self.selection][1],
+                            self.ws.MESSAGING_MODE
                         )
                         self._cnf.browsing_station_service = False
                         self._cnf.online_browser = None
                 else:
                     self._cnf.remove_from_playlist_history()
                     self._open_simple_message_by_key(
-                            'M_DNSPYTHON_ERROR',
-                            python_version[0]
-                            )
+                        'M_DNSPYTHON_ERROR',
+                        python_version[0],
+                        self.ws.MESSAGING_MODE
+                    )
                     self._cnf.browsing_station_service = False
             else:
                 self._cnf.remove_from_playlist_history()
@@ -6520,14 +6536,14 @@ and |remove the file manually|.
             self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE,
             'D_RC_ACTIVE',
             self._remote_control_server.ip + \
-                    '|:|' + str(
-                        self._cnf.active_remote_control_server_port
-                    )
+            '|:|' + str(
+                self._cnf.active_remote_control_server_port
+            )
         )
 
     def _show_remote_control_server_not_active(self):
         if self._cnf.locked:
-            self._open_simple_message_by_key('M_RC_LOCKED')
+            self._open_simple_message_by_key('M_RC_LOCKED', self.ws.MESSAGING_MODE)
         else:
             if self._remote_control_window is None:
                 self._remote_control_window = PyRadioServerWindow(
@@ -6805,15 +6821,19 @@ and |remove the file manually|.
             return False
 
     def _speak_high(self, msg):
-        self.tts.queue_speech(msg, Priority.HIGH)
+        self.tts.queue_speech(msg, Priority.HIGH, mode=self.ws.operation_mode)
 
     def _speak_normal(self, msg):
-        self.tts.queue_speech(msg, Priority.NORMAL)
+        self.tts.queue_speech(msg, Priority.NORMAL, mode=self.ws.operation_mode)
 
     def _speak_selection(self):
         if self._enable_tts and \
                 self.ws.operation_mode in (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
-            self.tts.queue_speech(f'{self.selection+1}, {self.stations[self.selection][0]}', Priority.NORMAL)
+            self.tts.queue_speech(
+                f'{self.selection+1}, {self.stations[self.selection][0]}',
+                Priority.NORMAL,
+                mode=self.ws.operation_mode
+            )
 
     def keypress(self, char):
         ''' PyRadio keypress '''
@@ -6941,10 +6961,10 @@ and |remove the file manually|.
                 self.refreshBody()
             elif ret == 2:
                 # display help
-                self._open_simple_message_by_key('M_LOC_HELP')
+                self._open_simple_message_by_key('M_LOC_HELP', self.ws.MESSAGING_MODE)
             elif ret == 3:
                 # edit read only
-                self._open_simple_message_by_key('M_LOC_READ_ONLY')
+                self._open_simple_message_by_key('M_LOC_READ_ONLY', self.ws.MESSAGING_MODE)
             elif ret == 4:
                 # ask for language name
                 self._redisplay_loc_get_name(set_mode=True)
@@ -7007,7 +7027,7 @@ and |remove the file manually|.
             elif ret == 2:
                 # print message specified in
                 # self._keyboard_config_win.message
-                self._open_simple_message_by_key(self._keyboard_config_win.message)
+                self._open_simple_message_by_key(self._keyboard_config_win.message, self.ws.MESSAGING_MODE)
             elif ret == -2:
                 # Error saving file
                 self._open_simple_message_by_key_and_mode(
@@ -7051,7 +7071,7 @@ _____"|f|" to see the |free| keys you can use.
                             'Shortcut Conflict',
                             msg)
                         )
-                self._open_simple_message_by_key('UNIVERSAL')
+                self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug(msg)
 
@@ -7063,7 +7083,7 @@ _____"|f|" to see the |free| keys you can use.
                         )
                 # if logger.isEnabledFor(logging.DEBUG):
                 #     logging.debug('Universal Message provided')
-                self._open_simple_message_by_key('UNIVERSAL')
+                self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
 
             return
 
@@ -7279,7 +7299,7 @@ _____"|f|" to see the |free| keys you can use.
                             if (logger.isEnabledFor(logging.DEBUG)):
                                 logger.debug(f'Volume is {self.player.volume}%. Saving...')
                             if self.stations[self.selection][Station.volume] != self.player.volume:
-                                ret_string = f'Station volume: {self.player.volume}% saved'
+                                ret_string = f'Station volume saved: {self.player.volume}%'
                                 self.stations[self.selection][Station.volume] = self.player.volume
                                 self._cnf.dirty_playlist = True
                                 self.saveCurrentPlaylist(report_success=False)
@@ -7405,7 +7425,7 @@ _____"|f|" to see the |free| keys you can use.
                     self._set_rename_stations()
                 if self.ws.operation_mode == self.ws.NORMAL_MODE and \
                         self._cnf.dirty_playlist:
-                    self._open_simple_message_by_key('M_PLAYLIST_NOT_SAVED')
+                    self._open_simple_message_by_key('M_PLAYLIST_NOT_SAVED', self.ws.MESSAGING_MODE)
                 else:
                     self._rename_playlist_dialog = PyRadioRenameFile(
                         self._cnf.station_path if self.ws.operation_mode == self.ws.NORMAL_MODE else self.stations[self.selection][3],
@@ -7688,9 +7708,10 @@ _____"|f|" to see the |free| keys you can use.
                                 self._update_stations_error_count += 1
                                 break
                             self._open_simple_message_by_key(
-                                    'M_UPDATE_STATIONS_RESULT',
-                                    self._update_stations_result
-                                    )
+                                'M_UPDATE_STATIONS_RESULT',
+                                self._update_stations_result,
+                                self.ws.MESSAGING_MODE
+                            )
                             self.bodyWin.getch()
                         else:
                             break
@@ -7712,9 +7733,10 @@ _____"|f|" to see the |free| keys you can use.
                             self._update_stations_error_count += 1
                             break
                         self._open_simple_message_by_key(
-                                'M_UPDATE_STATIONS_RESULT',
-                                self._update_stations_result
-                                )
+                            'M_UPDATE_STATIONS_RESULT',
+                            self._update_stations_result,
+                            self.ws.MESSAGING_MODE
+                        )
                         self.bodyWin.getch()
                     else:
                         break
@@ -7724,9 +7746,10 @@ _____"|f|" to see the |free| keys you can use.
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'stations update result = {self._need_to_update_stations_csv}')
             self._open_simple_message_by_key(
-                    'M_UPDATE_STATIONS_RESULT',
-                    self._update_stations_result
-                    )
+                'M_UPDATE_STATIONS_RESULT',
+                self._update_stations_result,
+                self.ws.MESSAGING_MODE
+            )
             return
 
         elif self.ws.operation_mode == self.ws.CHANGE_PLAYER_MODE:
@@ -7915,16 +7938,18 @@ _____"|f|" to see the |free| keys you can use.
                 self._schedule_station_select_win.setStation(self._simple_schedule.station)
             elif ret in (3, 6, 7, 8):
                 self._open_simple_message_by_key(
-                        'M_SCHEDULE_ERROR',
-                        self._simple_schedule.get_error_message()
-                        )
+                    'M_SCHEDULE_ERROR',
+                    self._simple_schedule.get_error_message(),
+                    self.ws.MESSAGING_MODE
+                )
             elif ret == 9:
                 self._show_line_editor_help()
             elif ret == 10:
                 self._open_simple_message_by_key(
-                        'M_SCHEDULE_INFO',
-                        self._simple_schedule._info_result
-                        )
+                    'M_SCHEDULE_INFO',
+                    self._simple_schedule._info_result,
+                    self.ws.MESSAGING_MODE
+                )
 
         elif self.ws.operation_mode == self.ws.BUFFER_SET_MODE:
             # keypress ok
@@ -8163,9 +8188,10 @@ _____"|f|" to see the |free| keys you can use.
                             self._config_win._old_use_transparency = self._cnf.use_transparency
                         if self._cnf.player_changed:
                             self._open_simple_message_by_key(
-                                    'X_PLAYER_CHANGED',
-                                    *self._cnf.player_values
-                                    )
+                                'X_PLAYER_CHANGED',
+                                *self._cnf.player_values,
+                                self.ws.MESSAGING_MODE
+                            )
                             self._cnf.player_changed = False
                         self.player.playback_timeout = int(self._cnf.connection_timeout)
                         if self._config_win.need_to_update_theme:
@@ -8185,7 +8211,7 @@ _____"|f|" to see the |free| keys you can use.
                             if self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS] != self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]:
                                 if logger.isEnabledFor(logging.INFO):
                                     logger.info(f'I need to move the directory: "{self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS]}')
-                                self._open_simple_message_by_key('M_REC_DIR_MOVE')
+                                self._open_simple_message_by_key('M_REC_DIR_MOVE', self.ws.MESSAGING_MODE)
                                 rret = self._cnf.xdg.set_recording_dir(
                                         new_dir=None,
                                         print_to_console=False,
@@ -8257,7 +8283,7 @@ _____"|f|" to see the |free| keys you can use.
                     '''
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Cannot open Recording Selector Window; recording is on!')
-                    self._open_simple_message_by_key('M_REC_IS_ON_NO_DIR')
+                    self._open_simple_message_by_key('M_REC_IS_ON_NO_DIR', self.ws.MESSAGING_MODE)
                     return
 
                 elif ret == 6:
@@ -8267,9 +8293,10 @@ _____"|f|" to see the |free| keys you can use.
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Cannot open Recording Selector Window; recording is on in a headless instance!')
                     self._open_simple_message_by_key(
-                            'M_REC_IS_ON_NO_DIR_HEADLESS',
-                            ret_list[0]
-                            )
+                        'M_REC_IS_ON_NO_DIR_HEADLESS',
+                        ret_list[0],
+                        self.ws.MESSAGING_MODE
+                    )
                     return
 
                 elif ret == self.ws.KEYBOARD_CONFIG_MODE:
@@ -8658,7 +8685,8 @@ _____"|f|" to see the |free| keys you can use.
                     # show error message
                     self._open_simple_message_by_key(
                         'M_PLAYLIST_DELETE_ERROR',
-                        self.stations[self.selection][0]
+                        self.stations[self.selection][0],
+                        self.ws.MESSAGING_MODE
                     )
                     return
                 if self.selection < len(self.stations) - 1:
@@ -10151,7 +10179,7 @@ _____"|f|" to see the |free| keys you can use.
                         check_localized(char, (kbkey['rb_vote'], )):
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
-                        self._open_simple_message_by_key('M_RB_VOTE')
+                        self._open_simple_message_by_key('M_RB_VOTE', self.ws.MESSAGING_MODE)
                         if self.player.isPlaying():
                             self._cnf._online_browser.vote(self.playing)
                         else:
@@ -10208,7 +10236,7 @@ _____"|f|" to see the |free| keys you can use.
                         self._browser_init_config(init=True, distro=self._cnf.distro)
                     else:
                         if self._cnf.locked:
-                            self._open_simple_message_by_key('M_SESSION_LOCKED')
+                            self._open_simple_message_by_key('M_SESSION_LOCKED', self.ws.MESSAGING_MODE)
                             return
 
                         self._old_config_encoding = self._cnf.opts['default_encoding'][1]
@@ -10487,7 +10515,7 @@ _____"|f|" to see the |free| keys you can use.
                                 )
                                 if logger.isEnabledFor(logging.DEBUG):
                                     logger.debug(f'm3u_to_csv: Error converting file: "{playlist_to_try_to_open}" : "{error}')
-                                self._open_simple_message_by_key('UNIVERSAL')
+                                self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
                                 return
                             if logger.isEnabledFor(logging.DEBUG):
                                 logger.debug(f'm3u_to_csv: File converted: "{playlist_to_try_to_open}"')
@@ -10509,7 +10537,7 @@ _____"|f|" to see the |free| keys you can use.
                                 )
                                 if logger.isEnabledFor(logging.DEBUG):
                                     logger.debug(f'm3u_to_csv: Error saving file: "{csv_file_to_save}"')
-                                self._open_simple_message_by_key('UNIVERSAL')
+                                self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
                                 # TODO: display
                                 if not os.path.exists(csv_file_to_save):
                                     try:
@@ -10867,7 +10895,7 @@ _____"|f|" to see the |free| keys you can use.
                     'PyRadio Dirs',
                     '\n' + txt.replace(path.expanduser('~'), '~') + '\n\n')
                 )
-        self._open_simple_message_by_key('UNIVERSAL')
+        self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
 
     def _show_delayed_notification(self, txt, delay=.75):
         if not (self._limited_height_mode or self._limited_width_mode):
