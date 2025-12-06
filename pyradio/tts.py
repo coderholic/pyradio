@@ -26,10 +26,11 @@ logger = logging.getLogger(__name__)
 
 class Priority(Enum):
     """Priority levels for speech requests"""
-    NORMAL = 1    # Interruptible - navigation, titles
-    HIGH = 2      # Non-interruptible - critical alerts, playback status
-    HELP = 3      # Help messages
-    DIALOG = 4    # Interruptible HIGH - dialog messages
+    NORMAL = 1          # Interruptible - navigation, titles
+    HIGH = 2            # Non-interruptible - critical alerts, playback status
+    NAVIGATION = 3      # HIGH-like but self-interruptible
+    HELP = 4            # Help messages
+    DIALOG = 5          # Interruptible HIGH - dialog messages
 
 class Context(Enum):
     """Context setting for speech requests"""

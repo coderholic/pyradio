@@ -3260,7 +3260,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self._messaging_win.set_a_message(
                 'UNIVERSAL',
                 ('', '''Error loading selected theme!
-____Using |fallback| theme.''')
+____Using |fallback| theme.''', Priority.HIGH)
                 )
         self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
         self.ws.close_window()
@@ -3313,7 +3313,7 @@ ____Using |fallback| theme.''')
 
         self._messaging_win.set_a_message(
                 'UNIVERSAL',
-                ('EXE Location', txt.format(add_msg))
+                ('EXE Location', txt.format(add_msg), Priority.HIGH)
                 )
         self._open_simple_message_by_key_and_mode(
                 self.ws.WIN_PRINT_EXE_LOCATION_MODE,
@@ -3360,11 +3360,16 @@ ____Using |fallback| theme.''')
         self._messaging_win.simple_dialog = True
 
     def _open_message_win_by_key(self, *args):
+        logger.error('\n\n')
         logger.error('args = "{}"'.format(args))
         caption, text, priority = self._messaging_win.set_text(self.bodyWin, *args)
         # self._speak_high(''.join(text).replace('|', '').replace('ESC', 'escape'))
         logger.error('\n\ntext =\n{}\n\n'.format(text))
         self.ws.operation_mode = self._message_system_default_operation_mode
+        logger.error(f'{self._enable_tts = }')
+        logger.error('self.tts.can_i_use_tts(priority=priority) = {}'.format(self.tts.can_i_use_tts(priority=priority)))
+        logger.error('\n\n')
+
         if self._enable_tts and self.tts.can_i_use_tts(priority=priority):
             self._message_box_tts_thread = threading.Thread(
                 target=self._tts_queue_speech,
@@ -3380,14 +3385,13 @@ ____Using |fallback| theme.''')
         if caption:
             text = [f'Window: {caption}.'] + text
         logger.error(f'\n\n{text = }\n\n')
-        if priority == Priority.DIALOG:
-            tts_text = tts_transform_to_string(text, self._cnf.tts_verbosity)
-            if tts_text.endswith(' or'):
-                tts_text += ' any key to close the window.'
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug(f'{tts_text = }')
-            logger.error(f'-----> {mode = }')
-            self.tts.queue_speech(tts_text, priority, mode=mode)
+        tts_text = tts_transform_to_string(text, self._cnf.tts_verbosity)
+        if tts_text.endswith(' or'):
+            tts_text += ' any key to close the window.'
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'{tts_text = }')
+        logger.error(f'-----> {mode = }')
+        self.tts.queue_speech(tts_text, priority, mode=mode)
 
     def _show_line_editor_help(self):
         if self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE, self.ws.SCHEDULE_EDIT_MODE) \
@@ -3461,7 +3465,7 @@ ____Using |fallback| theme.''')
         if txt:
             self._messaging_win.set_a_message(
                     'H_EXTERNAL_LINE_EDITOR',
-                    ('Line Editor Help', txt)
+                    ('Line Editor Help', txt, Priority.HIGH)
                     )
             self._open_message_win_by_key('H_EXTERNAL_LINE_EDITOR')
 
@@ -3604,7 +3608,7 @@ ____Using |fallback| theme.''')
         if self._playlist_error_message:
             self._messaging_win.set_a_message(
                     'UNIVERSAL',
-                    ('Error', self._playlist_error_message)
+                    ('Error', self._playlist_error_message, Priority.HIGH)
                     )
             if logger.isEnabledFor(logging.DEBUG):
                 logging.debug('Universal Message provided')
@@ -3627,7 +3631,7 @@ ____Using |fallback| theme.''')
         if self._playlist_error_message:
             self._messaging_win.set_a_message(
                     'UNIVERSAL',
-                    ('Error', self._playlist_error_message)
+                    ('Error', self._playlist_error_message, Priority.HIGH)
                     )
             if logger.isEnabledFor(logging.DEBUG):
                 logging.debug('Universal Message provided')
@@ -3645,7 +3649,7 @@ ____Using |fallback| theme.''')
         if self._playlist_error_message:
             self._messaging_win.set_a_message(
                     'UNIVERSAL',
-                    ('Error', self._playlist_error_message)
+                    ('Error', self._playlist_error_message, Priority.HIGH)
                     )
             if logger.isEnabledFor(logging.DEBUG):
                 logging.debug('Universal Message provided')
@@ -3731,7 +3735,7 @@ ____Using |fallback| theme.''')
 
         self._messaging_win.set_a_message(
                 'UNIVERSAL',
-            (caption, txt)
+            (caption, txt, Priority.HIGH)
             )
         self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
         if logger.isEnabledFor(logging.DEBUG):
@@ -3775,7 +3779,7 @@ ____Using |fallback| theme.''')
             txt = txt.replace('playlist', 'register')
         self._messaging_win.set_a_message(
                 'UNIVERSAL',
-                (caption, txt)
+                (caption, txt, Priority.HIGH)
                 )
         self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
         if logger.isEnabledFor(logging.DEBUG):
@@ -4088,12 +4092,12 @@ ____Using |fallback| theme.''')
             self._messaging_win.set_a_message(
                     'D_RB_SEARCH',
                     ('', r'''__Performing search.__
- ____Please wait...''')
+ ____Please wait...''', Priority.NORMAL)
                     )
         else:
             self._messaging_win.set_a_message(
                     'D_RB_SEARCH',
-                    ('', txt)
+                    ('', txt, Priority.NORMAL)
                     )
         self._open_simple_message_by_key_and_mode(
                 self.ws.BROWSER_PERFORMING_SEARCH_MODE,
@@ -4133,7 +4137,7 @@ and |remove the file manually|.
         self._messaging_win.set_a_message(
                 'UNIVERSAL', (
                     'Playlist Changed',
-                    msg)
+                    msg, Priority.HIGH)
                 )
         self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
 
@@ -4902,8 +4906,10 @@ and |remove the file manually|.
                 self._save_parameters,
                 self._reset_parameters,
                 self._show_port_number_invalid,
-                show_confirm_cancel_config_changes= self._show_confirm_cancel_config_changes,
-                global_functions=self._global_functions
+                show_confirm_cancel_config_changes=self._show_confirm_cancel_config_changes,
+                global_functions=self._global_functions,
+                tts=lambda: self.tts,
+                op_mode=lambda: self.ws.operation_mode
             )
         else:
             self._config_win.parent = self.outerBodyWin
@@ -4936,7 +4942,7 @@ and |remove the file manually|.
         # logger.error('txt\n{}'.format(txt))
         self._messaging_win.set_a_message(
                 'M_DB_INFO',
-                ('Station Database Info', txt)
+                ('Station Database Info', txt, Priority.DIALOG)
                 )
         self._open_simple_message_by_key_and_mode(
                 self.ws.STATION_DATABASE_INFO_MODE,
@@ -4967,7 +4973,7 @@ and |remove the file manually|.
             self._station_rename_from_info = False
         self._messaging_win.set_a_message(
             'M_STATION_INFO',
-            ('Active Station Info', msg)
+            ('Active Station Info', msg, Priority.DIALOG)
             )
         self._open_simple_message_by_key_and_mode(
                 self.ws.STATION_INFO_MODE,
@@ -5740,7 +5746,9 @@ and |remove the file manually|.
                     config=self._cnf,
                     parent=self.outerBodyWin,
                     distro=self._cnf.distro,
-                    global_functions=self._global_functions
+                    global_functions=self._global_functions,
+                    tts=lambda: self.tts,
+                    op_mode=lambda: self.ws.operation_mode
                     )
         self._keyboard_config_win.show(parent=self.outerBodyWin)
 
@@ -7049,7 +7057,7 @@ and |remove the file manually|.
                     sec = 'Group: |' + conflict_second_header_title + '|\n  ' + sec
 
                 msg = '''The following entries have a shortcut conflict.
-__Conflicting shortcut: "|{0}|"
+__Conflicting shortcut: "|{0}|".
 
 Group: |{1}|
 _________{2}
@@ -7069,7 +7077,7 @@ _____"|f|" to see the |free| keys you can use.
                 self._messaging_win.set_a_message(
                         'UNIVERSAL', (
                             'Shortcut Conflict',
-                            msg)
+                            msg, Priority.HIGH)
                         )
                 self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
                 if logger.isEnabledFor(logging.DEBUG):
@@ -7079,7 +7087,7 @@ _____"|f|" to see the |free| keys you can use.
                 pass
                 self._messaging_win.set_a_message(
                         'UNIVERSAL',
-                        ('Free Keys', self._keyboard_config_win.keys_string)
+                        ('Free Keys', self._keyboard_config_win.keys_string, Priority.HIGH)
                         )
                 # if logger.isEnabledFor(logging.DEBUG):
                 #     logging.debug('Universal Message provided')
@@ -10511,7 +10519,7 @@ _____"|f|" to see the |free| keys you can use.
                                 # TODO: display m3u conversion error
                                 self._messaging_win.set_a_message(
                                     'UNIVERSAL',
-                                    ('', f'___{error}___')
+                                    ('', f'___{error}___', Priority.HIGH)
                                 )
                                 if logger.isEnabledFor(logging.DEBUG):
                                     logger.debug(f'm3u_to_csv: Error converting file: "{playlist_to_try_to_open}" : "{error}')
@@ -10533,7 +10541,7 @@ _____"|f|" to see the |free| keys you can use.
                             else:
                                 self._messaging_win.set_a_message(
                                     'UNIVERSAL',
-                                    ('', '___Cannot write CSV file___')
+                                    ('', '___Cannot write CSV file___', Priority.HIGH)
                                 )
                                 if logger.isEnabledFor(logging.DEBUG):
                                     logger.debug(f'm3u_to_csv: Error saving file: "{csv_file_to_save}"')
@@ -10893,7 +10901,7 @@ _____"|f|" to see the |free| keys you can use.
         self._messaging_win.set_a_message(
                 'UNIVERSAL', (
                     'PyRadio Dirs',
-                    '\n' + txt.replace(path.expanduser('~'), '~') + '\n\n')
+                    '\n' + txt.replace(path.expanduser('~'), '~') + '\n\n', Priority.DIALOG)
                 )
         self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
 

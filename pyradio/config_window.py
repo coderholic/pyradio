@@ -14,6 +14,7 @@ from collections import OrderedDict
 import json
 from pathlib import Path
 from shutil import copyfile
+from time import sleep
 try:
     # Python ≥ 3.9
     from importlib.resources import files, as_file
@@ -33,7 +34,8 @@ from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalP
 from .client import PyRadioClient
 from .keyboard import kbkey, kbkey_orig, ctrl_code_to_string, is_valid_char, is_invalid_key, is_ctrl_key, conflicts, read_keyboard_shortcuts, check_localized, LetterDisplay, get_kb_letter, to_str, add_l10n_to_functions_dict, remove_l10n_from_global_functions
 from .log import TIME_FORMATS
-from .tts import TTSManager, Priority
+from .tts import TTSManager, Priority, Context
+from .tts_text import describe_single_key
 
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
@@ -163,7 +165,9 @@ class PyRadioConfigWindow():
             show_port_number_invalid,
             parameters_editing_error=None,
             show_confirm_cancel_config_changes=None,
-            global_functions=None
+            global_functions=None,
+            tts=None,
+            op_mode=0,
             ):
         self.tmp_tts = None
         self._max_start = 0
@@ -175,6 +179,8 @@ class PyRadioConfigWindow():
         self.need_to_update_theme = False
         self._move_in_config_win_Y = 0
         self._move_in_config_win_Y = 0
+        self.tts = tts
+        self.op_mode = op_mode
 
         self._win = None
         self.__selection = 1
@@ -3775,7 +3781,9 @@ class PyRadioKeyboardConfig():
             config,
             parent,
             distro='None',
-            global_functions=None):
+            global_functions=None,
+            tts=None,
+            op_mode=0):
         self._h_buttons = None
         self._win = None
         self.existing_conflict = None
@@ -3795,6 +3803,8 @@ class PyRadioKeyboardConfig():
         self._number_of_lines = 0
         self._start = 0
         self._selection = 1
+        self.tts = tts
+        self.op_mode = op_mode
 
         # titles for search function
         self._titles = None
@@ -3948,6 +3958,9 @@ class PyRadioKeyboardConfig():
         return new_file_name
 
     def _start_editing(self):
+        tts = self.tts()
+        if tts and tts.can_i_use_tts(Priority.HIGH):
+            tts.queue_speech('Editing mode enabled', Priority.HIGH, Context.LIMITED, self.op_mode())
         self._win.addstr(self._selection - self._start + 2, self.maxX-8, '[edit]', curses.color_pair(6))
         self._win.refresh()
         self._editing = True
@@ -3963,6 +3976,30 @@ class PyRadioKeyboardConfig():
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('edited "{}"'.format(self._list[self._selection]))
 
+    def _speak_item(self, index, priority=Priority.NORMAL):
+        tts = self.tts()
+        if tts and tts.can_i_use_tts(Priority.HIGH):
+            it = self.item(index)
+            logger.error(f'{it = }')
+            msg = 'Current item: {}, current key: {}'.format(it[-1], describe_single_key(it[5]))
+            tts.queue_speech(msg, priority, Context.LIMITED, self.op_mode())
+
+    def _speak_button(self, priority=Priority.HIGH):
+        tts = self.tts()
+        if tts and tts.can_i_use_tts(priority):
+            if self._b_ok.focused:
+                tts.queue_speech(
+                    'Current item: Button - OK',
+                    priority, Context.LIMITED, self.op_mode()
+                )
+            elif self._b_cancel.focused:
+                tts.queue_speech(
+                    'Current item: Button - Cancel',
+                    priority, Context.LIMITED, self.op_mode()
+                )
+            else:
+                self._speak_item(self._selection)
+
     def _update_focus(self):
         if self._focus == 0:
             self._b_ok.focused = False
@@ -3974,6 +4011,7 @@ class PyRadioKeyboardConfig():
             self._b_ok.focused = False
             self._b_cancel.focused = True
         self._needs_update = True
+        self._speak_button()
 
     def _focus_next(self):
         if not self._editing:
@@ -3993,6 +4031,7 @@ class PyRadioKeyboardConfig():
         self._start = 0
         self._selection = 1
         self._needs_update = True
+        self._speak_item(self._selection)
 
     def _go_bottom(self):
         self._selection = len(self._list) -1
@@ -4001,6 +4040,7 @@ class PyRadioKeyboardConfig():
         else:
             self._start = self._selection - self._number_of_lines + 1
         self._needs_update = True
+        self._speak_item(self._selection)
 
     def _go_down(self, step=1):
         if logger.isEnabledFor(logging.DEBUG):
@@ -4021,6 +4061,7 @@ class PyRadioKeyboardConfig():
             self._selection = 1
             self._start = 0
             self._needs_update = True
+            self._speak_item(self._selection)
             return
         line = next_selection - self._start + 2
         if logger.isEnabledFor(logging.DEBUG):
@@ -4032,6 +4073,7 @@ class PyRadioKeyboardConfig():
                 self._start += (next_selection - self._selection)
                 self._selection = next_selection
                 self._needs_update = True
+                self._speak_item(self._selection)
                 return
         if 2 <  line <= self._number_of_lines + 1:
             if logger.isEnabledFor(logging.DEBUG):
@@ -4044,6 +4086,7 @@ class PyRadioKeyboardConfig():
                 logger.debug(f'selecting {next_selection - self._start + 2}')
             self._selection = next_selection
             self._win.refresh()
+            self._speak_item(self._selection)
 
     def _go_up(self, step=1):
         if logger.isEnabledFor(logging.DEBUG):
@@ -4067,6 +4110,7 @@ class PyRadioKeyboardConfig():
             else:
                 self._start = len(self._list) - self._number_of_lines
             self._needs_update = True
+            self._speak_item(self._selection)
             return
         line = next_selection - self._start - 2
         line = next_selection - self._start + 1
@@ -4077,6 +4121,7 @@ class PyRadioKeyboardConfig():
                 self._selection =- 1
             self._start = self._selection
             self._needs_update = True
+            self._speak_item(self._selection)
             return
         if 1 <=  line <= self._number_of_lines:
             if logger.isEnabledFor(logging.DEBUG):
@@ -4088,6 +4133,7 @@ class PyRadioKeyboardConfig():
             self._select_line(next_selection - self._start + 2)
             self._selection = next_selection
             self._win.refresh()
+            self._speak_item(self._selection)
 
     def _print_title(self):
         title = 'Keyboard Shortcuts'
@@ -4249,6 +4295,13 @@ class PyRadioKeyboardConfig():
         self._win.refresh()
         self._widget.show()
 
+    def _speak_group(self, index, priority=Priority.HIGH):
+        tts = self.tts()
+        if tts and tts.can_i_use_tts(priority):
+            it = self.item(index)
+            msg = 'Current group: {}'.format(self._list[index-1][-1])
+            tts.queue_speech(msg, priority, Context.LIMITED, self.op_mode())
+
     def _get_after_header(self, next=True):
         if next:
             # Return the first header value which is larger than an_id
@@ -4256,10 +4309,12 @@ class PyRadioKeyboardConfig():
                 if value > self._selection:
                     self._start = value
                     self._selection = value + 1
+                    self._speak_group(self._selection)
                     return
             # If no larger value is found, return the last value
             self._start = 0
             self._selection = 1
+            self._speak_group(self._selection)
         else:
             # Find the first header value which is smaller than self._selection
             smaller_values = [value for value in self._headers if value < self._selection]
@@ -4272,6 +4327,7 @@ class PyRadioKeyboardConfig():
                 # If no smaller values are found, return the last value in _headers
                 self._start = self._headers[-1]
                 self._selection = self._start + 1
+            self._speak_group(self._selection)
 
 
     def _detect_conflict(self, modified_item):
@@ -4295,6 +4351,7 @@ class PyRadioKeyboardConfig():
         # Extract key and the new shortcut code from the modified item
         key = modified_item[0]  # Identifier for the shortcut (e.g., "reload", "mute")
         new_shortcut_code = modified_item[3]  # The new shortcut code provided by the user
+        # logger.error(f'{modified_item = }')
 
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('\n\n-*-*-*-*-*-*-*-*-')
@@ -4349,6 +4406,14 @@ class PyRadioKeyboardConfig():
             logger.debug('\n-*-*-*-*-*-*-*-*- None 2\n\n')
 
     def _validate_key(self):
+        tts = self.tts()
+        if tts and tts.can_i_use_tts(Priority.HIGH):
+            tts.queue_speech(
+                'You have pressed: {}'.format(
+                    describe_single_key(self._list[self._selection][6])),
+                Priority.HIGH, Context.LIMITED, self.op_mode()
+            )
+            sleep(0.25)
         self._detect_conflict(self._list[self._selection])
         if self.existing_conflict:
             return -3
@@ -4431,17 +4496,36 @@ class PyRadioKeyboardConfig():
 
         elif self._editing:
             if is_invalid_key(char):
+                # tts = self.tts()
+                # if tts and tts.can_i_use_tts(Priority.HIGH):
+                #     tts.queue_speech(
+                #         'You have pressed: {}'.format(
+                #             describe_single_key(ctrl_code_to_string(char))),
+                #         Priority.HIGH, Context.LIMITED, self.op_mode()
+                #     )
+                #     sleep(0.25)
                 self.message = 'M_INVALID_KEY_ERROR'
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('1 Key is INVALID')
                 return 2
             if not is_valid_char(char, self._win):
+                # tts = self.tts()
+                # if tts and tts.can_i_use_tts(Priority.HIGH):
+                #     tts.queue_speech(
+                #         'You have pressed: {}'.format(
+                #             describe_single_key(ctrl_code_to_string(char))),
+                #         Priority.HIGH, Context.LIMITED, self.op_mode()
+                #     )
+                #     sleep(0.25)
                 self.message = 'M_INVALID_TYPE_KEY_ERROR'
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('2 Key is INVALID')
                 return 2
             if char in (curses.KEY_EXIT, 27):
                 self._stop_editing()
+                tts = self.tts()
+                if tts and tts.can_i_use_tts(Priority.HIGH):
+                    tts.queue_speech('Editing mode disabled', Priority.HIGH, Context.LIMITED, self.op_mode())
                 return
             the_key = self._list[self._selection][0]
             if the_key in conflicts['h_rb_s'] and not is_ctrl_key(char):

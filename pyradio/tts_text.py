@@ -1,4 +1,113 @@
 import re
+import locale
+import logging
+
+locale.setlocale(locale.LC_ALL, '')    # set your locale
+
+logger = logging.getLogger(__name__)
+
+def describe_single_key(key_string):
+    """
+    Convert a single key string to its spoken description.
+    Handles:
+      - lowercase letters
+      - uppercase letters
+      - control keys (^X)
+      - special keys (Home, End, etc.)
+
+    Args:
+        key_string: A string representing a single key
+
+    Returns:
+        Spoken description of the key
+    """
+    if not key_string:
+        return ""
+
+    # Special character mappings for readability
+    special_chars = {
+        ' ': 'Space',
+        '\t': 'Tab',
+        '\n': 'Enter',
+        '\r': 'Enter',
+        'Esc': 'Escape',
+        'Del': 'Delete',
+        'Left': 'Left Arrow',
+        'Right': 'Right Arrow',
+        'Up': 'Up Arrow',
+        'Down': 'Down Arrow',
+        'Sh-Tab': 'Shift Tab',
+        'PgUp': 'Page Up',
+        'PgDn': 'Page Down',
+        'PgDown': 'Page Down',
+    }
+
+    # 1. Check for control keys (^X)
+    if len(key_string) == 2 and key_string[0] == '^':
+        char = key_string[1]
+
+        # Special control character mappings
+        special_controls = {
+            '?': 'Question Mark',
+            '[': 'Left Bracket',
+            ']': 'Right Bracket',
+            '{': 'Left Brace',
+            '}': 'Right Brace',
+            ' ': 'Space',
+            '^': 'Caret',
+            '\\': 'Backslash',
+            '/': 'Slash',
+            '|': 'Pipe',
+            '-': 'Minus',
+            '_': 'Underscore',
+            '=': 'Equals',
+            '+': 'Plus',
+            '`': 'Backtick',
+            '~': 'Tilde',
+            '@': 'At',
+            '#': 'Hash',
+            '$': 'Dollar',
+            '%': 'Percent',
+            '&': 'Ampersand',
+            '*': 'Asterisk',
+            '(': 'Left Parenthesis',
+            ')': 'Right Parenthesis',
+            '<': 'Less Than',
+            '>': 'Greater Than',
+            ',': 'Comma',
+            '.': 'Period',
+            ';': 'Semicolon',
+            ':': 'Colon',
+            '"': 'Double Quote',
+            "'": 'Single Quote',
+        }
+
+        if char in special_controls:
+            return f"Control {special_controls[char]}"
+        elif char.isalpha():
+            return f"Control {char.upper()}"
+        elif char.isdigit():
+            return f"Control {char}"
+        else:
+            return f"Control {char}"
+
+    # 2. Check for single character
+    if len(key_string) == 1:
+        if key_string.islower():
+            return key_string
+        elif key_string.isupper():
+            return f"capital {key_string}"
+        elif key_string in special_chars:
+            return special_chars[key_string]
+        else:
+            return key_string
+
+    # 3. Check for special keys
+    if key_string in special_chars:
+        return special_chars[key_string]
+
+    # 4. If no match, return the original
+    return key_string
 
 def handle_formatting_underscores(text):
     """
@@ -60,8 +169,9 @@ def handle_parentheses(text, verbosity):
         text = text.replace('{', ' open brace ')
         text = text.replace('}', ' close brace ')
         text = text.replace(':', ' colon ')
-        text = text.replace(',', ' comma ')
-        text = text.replace('.', ' full stop ')
+        text = text.replace(',', ' comma, ')
+        text = text.replace('.', ' full stop. ')
+        text = text.replace('!', ' exclamation mark ')
     else:
         # Default behavior - replace with commas
         text = text.replace('(', ', ')
@@ -70,8 +180,66 @@ def handle_parentheses(text, verbosity):
         text = text.replace(']', ', ')
         text = text.replace('{', ', ')
         text = text.replace('}', ', ')
+        text = text.replace('!', ', ')
 
     return text
+
+def replace_control_keys_in_text(text, verbosity):
+    """
+    Replace control key notations (^X) within text with descriptive names.
+    Uses regex to catch all ^X patterns in the text.
+    """
+    # Special control character mappings
+    special_controls = {
+        '?': 'Question Mark',
+        '[': 'Left Bracket',
+        ']': 'Right Bracket',
+        '{': 'Left Brace',
+        '}': 'Right Brace',
+        ' ': 'Space',
+        '^': 'Caret',
+        '\\': 'Backslash',
+        '/': 'Slash',
+        '|': 'Pipe',
+        '-': 'Minus',
+        '_': 'Underscore',
+        '=': 'Equals',
+        '+': 'Plus',
+        '`': 'Backtick',
+        '~': 'Tilde',
+        '@': 'At',
+        '#': 'Hash',
+        '$': 'Dollar',
+        '%': 'Percent',
+        '&': 'Ampersand',
+        '*': 'Asterisk',
+        '(': 'Left Parenthesis',
+        ')': 'Right Parenthesis',
+        '<': 'Less Than',
+        '>': 'Greater Than',
+        ',': 'Comma',
+        '.': 'Period',
+        ';': 'Semicolon',
+        ':': 'Colon',
+        '"': 'Double Quote',
+        "'": 'Single Quote',
+    }
+
+    # Regex to catch ^ followed by any single character
+    pattern = r'\^(\?|[^\w\s]|[A-Za-z0-9])'
+
+    def replace_match(match):
+        char = match.group(1)
+        if char in special_controls:
+            return f' Control {special_controls[char]} '
+        elif char.isalpha():
+            return f' Control {char.upper()} '
+        elif char.isdigit():
+            return f' Control {char} '
+        else:
+            return f' Control {char} '
+
+    return re.sub(pattern, replace_match, text)
 
 
 def replace_special_keys(text, verbosity):
@@ -85,48 +253,35 @@ def replace_special_keys(text, verbosity):
     Returns:
         Text with special keys replaced by descriptive names
     """
+    # Only include keys that need transformation
     special_keys_map = {
+        'Esc': 'Escape',
+        'Del': 'Delete',
+        'Space': 'Space',
+        'Sh-Tab': 'Shift Tab',
         'PgUp': 'Page Up',
         'PgDn': 'Page Down',
         'PgDown': 'Page Down',
-        'Home': 'Home',
-        'End': 'End',
-        'Esc': 'Escape',
-        'Del': 'Delete',
-        'Enter': 'Enter',
-        'Tab': 'Tab',
-        'Space': 'Space',
-        'Backspace': 'Backspace',
         'Left': 'Left Arrow',
         'Right': 'Right Arrow',
         'Up': 'Up Arrow',
         'Down': 'Down Arrow',
-        'Sh-Tab': 'Shift Tab',
-        '^B': 'Control B',
-        '^F': 'Control F',
-        '^N': 'Control N',
-        '^P': 'Control P',
-        '^U': 'Control U',
-        '^D': 'Control D',
-        '^Y': 'Control Y',
-        '^E': 'Control E',
-        '^G': 'Control G',
-        '^A': 'Control A',
-        '^W': 'Control W',
-        '^K': 'Control K',
-        '^X': 'Control X',
-        '^H': 'Control H',
-        '^?': 'Control Question Mark',
     }
 
+    # 1. First replace control keys with regex
+    text = replace_control_keys_in_text(text, verbosity)
+    logger.error(f'a) {text = }')
+
+    # 2. Then replace other special keys
     for key, replacement in special_keys_map.items():
-        if key.isalnum():
-            text = re.sub(r'\b' + re.escape(key) + r'\b', replacement, text)
-        else:
-            text = text.replace(key, f" {replacement} ")
+        text = text.replace(key, f" {replacement} ")
+    logger.error(f'b) {text = }')
 
+
+    # Clean up extra spaces
+    text = re.sub(r'\s+', ' ', text).strip()
+    logger.error(f'c) {text = }')
     return text
-
 
 def handle_punctuation_marks(text, verbosity):
     """
@@ -301,21 +456,33 @@ def tts_transform_final(text_lines, verbosity='default'):
         # Step 2: Remove any remaining | characters
         line = line.replace('|', '')
 
+        logger.error(f'2 *** {line = }')
         # Step 3: Handle parentheses based on verbosity
         line = handle_parentheses(line, verbosity)
 
+        logger.error(f'3 *** {line = }')
         # Step 4: Replace special keys and symbols
         line = replace_special_keys(line, verbosity)
 
+        logger.error(f'4 *** {line = }')
         # Step 5: Convert file extensions (dots to "dot")
         line = convert_file_extensions(line)
 
+        logger.error(f'5 *** {line = }')
         # Step 6: Handle punctuation marks based on verbosity
         line = handle_punctuation_marks(line, verbosity)
 
+        logger.error(f'6 *** {line = }')
         # Step 7: Clean up extra spaces
         line = re.sub(r'\s+', ' ', line).strip()
 
+        # step 8: Clean duplicates
+        line = line.replace(' comma comma,', ' comma,')
+        line = line.replace(' full stop full stop.', ' full stop.')
+        line = line.replace('Page Up Arrow', 'Page Up')
+        line = line.replace('Page Down Arrow', 'Page Down')
+
+        logger.error(f'7 *** {line = }')
         transformed_lines.append(line)
 
     return transformed_lines
