@@ -3976,15 +3976,15 @@ class PyRadioKeyboardConfig():
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('edited "{}"'.format(self._list[self._selection]))
 
-    def _speak_item(self, index, priority=Priority.NORMAL):
+    def _speak_item(self, index, priority=Priority.NAVIGATION):
         tts = self.tts()
-        if tts and tts.can_i_use_tts(Priority.HIGH):
+        if tts and tts.can_i_use_tts(priority):
             it = self.item(index)
             logger.error(f'{it = }')
             msg = 'Current item: {}, current key: {}'.format(it[-1], describe_single_key(it[5]))
             tts.queue_speech(msg, priority, Context.LIMITED, self.op_mode())
 
-    def _speak_button(self, priority=Priority.HIGH):
+    def _speak_button(self, priority=Priority.NAVIGATION):
         tts = self.tts()
         if tts and tts.can_i_use_tts(priority):
             if self._b_ok.focused:
@@ -4295,7 +4295,7 @@ class PyRadioKeyboardConfig():
         self._win.refresh()
         self._widget.show()
 
-    def _speak_group(self, index, priority=Priority.HIGH):
+    def _speak_group(self, index, priority=Priority.NAVIGATION):
         tts = self.tts()
         if tts and tts.can_i_use_tts(priority):
             it = self.item(index)

@@ -163,26 +163,39 @@ class TTSBase:
         self._lock = threading.RLock()
         self.speech_delay = 0.3  # Anti-stutter delay
 
-        # External stop mechanism for DIALOG interruption
+        # External stop mechanism for DIALOG and NAVIGATION interruption
         self._external_stop_requested = threading.Event()
         self._external_stop_lock = threading.RLock()
+        self._navigation_stop_requested = threading.Event()  # NEW: Specific for NAVIGATION
 
-    def request_external_stop(self):
-        """Request external stop - to be checked during DIALOG execution"""
+    def request_external_stop(self, priority=Priority.DIALOG):
+        """Request external stop - to be checked during DIALOG or NAVIGATION execution"""
         with self._external_stop_lock:
-            self._external_stop_requested.set()
+            if priority == Priority.NAVIGATION:
+                self._navigation_stop_requested.set()
+            else:
+                self._external_stop_requested.set()
 
-    def _clear_external_stop(self):
-        """Clear external stop flag"""
+    def _clear_external_stop(self, priority=None):
+        """Clear external stop flag for specific priority"""
         with self._external_stop_lock:
-            self._external_stop_requested.clear()
+            if priority == Priority.NAVIGATION:
+                self._navigation_stop_requested.clear()
+            elif priority == Priority.DIALOG:
+                self._external_stop_requested.clear()
+            else:
+                self._external_stop_requested.clear()
+                self._navigation_stop_requested.clear()
 
     def _should_stop_externally(self, priority):
-        """Check if external stop was requested (only for DIALOG priority)"""
-        if priority != Priority.DIALOG:
-            return False
-        with self._external_stop_lock:
-            return self._external_stop_requested.is_set()
+        """Check if external stop was requested"""
+        if priority == Priority.DIALOG:
+            with self._external_stop_lock:
+                return self._external_stop_requested.is_set()
+        elif priority == Priority.NAVIGATION:
+            with self._external_stop_lock:
+                return self._navigation_stop_requested.is_set()
+        return False
 
 class TTSLinux(TTSBase):
     """Linux TTS implementation using user-configured command"""
@@ -193,37 +206,81 @@ class TTSLinux(TTSBase):
         self.max_retries = 2
 
     def _calculate_volume(self):
-        volume = self.volume()
-        return 2 * volume - 100
+        volume = int(self.volume())
+        return str(2 * volume - 100)
 
     def _execute_speech(self, text, priority=Priority.NORMAL):
-        # logger.error('priority = {}\n\n'.format(priority.name))
         """Execute speech with priority-based blocking behavior"""
         try:
-            # Clear external stop flag for consistency with other platforms
-            self._clear_external_stop()
+            # Clear external stop flag for the given priority
+            self._clear_external_stop(priority)
 
-            if priority in (Priority.HIGH, Priority.DIALOG):
-                # HIGH priority: blocking execution with -w flag
-                timeout = 60
-                cmd = ['spd-say', '-l', 'en', '-i', self.volume(),
-                       '-r', self.rate(), '-p', self.pitch(), '-w', text
-                       ]  # -w for wait
+            # Calculate volume for spd-say (-100 to 100)
+            volume = self._calculate_volume()
+
+            # Determine command based on priority
+            if priority in (Priority.HIGH, Priority.DIALOG, Priority.NAVIGATION):
+                # HIGH/DIALOG/NAVIGATION priority: blocking execution with -w flag
+                cmd = ['spd-say', '-l', 'en', '-i', volume,
+                       '-r', self.rate(), '-p', self.pitch(), '-w', text]
+                logger.error(f'Linux: Blocking speech with -w flag for {priority.name}')
             else:
                 # NORMAL priority: non-blocking execution
-                timeout = 30
-                cmd = ['spd-say', '-l', 'en', '-i', self.volume(),
+                cmd = ['spd-say', '-l', 'en', '-i', volume,
                        '-r', self.rate(), '-p', self.pitch(), text]
+                logger.error(f'Linux: Non-blocking speech for {priority.name}')
 
             # Execute the command
-            logger.error(f'===> waiting... "{cmd}" with {priority.name = }')
-            result = subprocess.run(
-                cmd,
-                # timeout=timeout,  # Safety timeout
-                capture_output=True,
-                text=True
-            )
-            logger.error(f'===> done waiting... "{cmd}" with {priority.name = }')
+            logger.error(f'===> executing: "{cmd}" with {priority.name = }')
+
+            # For blocking priorities (HIGH/DIALOG/NAVIGATION), we need to handle interruption
+            if priority in (Priority.HIGH, Priority.DIALOG, Priority.NAVIGATION):
+                # Start the process
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True
+                )
+
+                # Monitor the process for completion or interruption
+                while process.poll() is None:
+                    # Small sleep to avoid busy waiting
+                    time.sleep(0.05)
+
+                    # Check for external stop (for DIALOG or NAVIGATION)
+                    if self._should_stop_externally(priority):
+                        logger.error(f"External stop requested for {priority.name}, terminating")
+                        process.terminate()
+                        try:
+                            process.wait(timeout=0.5)
+                        except subprocess.TimeoutExpired:
+                            process.kill()
+                            process.wait()
+                        return False
+
+                    # Check for shutdown
+                    if self.state == TTSState.SHUTTING_DOWN:
+                        logger.error("Shutting down, terminating speech process")
+                        process.terminate()
+                        try:
+                            process.wait(timeout=0.5)
+                        except subprocess.TimeoutExpired:
+                            process.kill()
+                            process.wait()
+                        return False
+
+                # Process completed normally
+                result = process
+            else:
+                # For NORMAL priority, just run without monitoring
+                result = subprocess.run(
+                    cmd,
+                    capture_output=True,
+                    text=True
+                )
+
+            logger.error(f'===> done: "{cmd}" with {priority.name = }')
 
             if result.returncode == 0:
                 return True
@@ -304,6 +361,9 @@ class TTSLinux(TTSBase):
     def stop(self):
         """Stop current speech - only used for emergency stops"""
         with self._lock:
+            # Clear all external stop flags
+            self._clear_external_stop()
+
             # Stop all speech using -S flag
             subprocess.run(['spd-say', '-S'], capture_output=True)
             # Anti-stutter delay
@@ -383,40 +443,28 @@ class TTSWindows(TTSBase):
         """Execute speech with proper priority handling"""
         with self._lock:
             try:
-                # Stop any current speech
-                self.stop()
-                self._clear_external_stop()  # Clear previous stop requests
+                # Clear external stop flag for the given priority
+                if priority in (Priority.HIGH, Priority.DIALOG, Priority.NAVIGATION):
+                    self._clear_external_stop(priority)
 
-                # Set voice properties for consistent experience
+                # For ALL priorities, stop any ongoing speech first
+                self.stop()
+
+                # Set voice properties
                 self.speaker.Volume = int(self.volume())
                 self.speaker.Rate = int(self.rate())
 
-                # Speak the new text (flags=1 for async)
-                logger.error(f'executing: "{text}"')
-                self.current_stream = self.speaker.Speak(text, 1)
-                self.state = TTSState.SPEAKING
+                logger.error(f'Windows: executing: "{text[:50]}..." with {priority.name}')
 
+                # HIGH and DIALOG: blocking execution
                 if priority in (Priority.HIGH, Priority.DIALOG):
-                    # For HIGH/DIALOG priority, wait for completion with interruption checks
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug(f"Waiting for {priority.name} speech completion")
-
-                    # Wait for speech completion with interruption checks
-                    while self.current_stream and not self.speaker.WaitUntilDone(50):  # 50ms chunks for responsiveness
-                        # Check for external stop (only for DIALOG)
-                        if self._should_stop_externally(priority):
-                            self.stop()
-                            return False
-                        # Check for shutdown
-                        if self.state == TTSState.SHUTTING_DOWN:
-                            self.stop()
-                            return False
-
-                    self.current_stream = None
+                    self.speaker.Speak(text, 0)  # flags=0 for sync
                     self.state = TTSState.IDLE
                     return True
                 else:
-                    # For NORMAL priority, return immediately
+                    # NAVIGATION and NORMAL: async execution
+                    self.speaker.Speak(text, 1)  # flags=1 for async
+                    self.state = TTSState.SPEAKING
                     return True
 
             except Exception as e:
@@ -425,13 +473,12 @@ class TTSWindows(TTSBase):
                 return False
 
     def stop(self):
-        """Stop current speech"""
+        """Stop current speech - optimized for Windows"""
         with self._lock:
             try:
+                # Stop immediately
                 self.speaker.Speak("", 2)  # flags=2 for immediate stop
-                self.current_stream = None
-                self.state = TTSState.IDLE
-                time.sleep(self.speech_delay)
+                time.sleep(0.1)  # shorter delay
             except Exception as e:
                 if logger.isEnabledFor(logging.ERROR):
                     logger.error(f"Windows TTS stop error: {e}")
@@ -457,32 +504,35 @@ class TTSMacOS(TTSBase):
         self._lock = threading.RLock()
 
     def _execute_speech(self, text, priority=Priority.NORMAL):
-        """Execute speech on macOS with proper interruption"""
+        """Execute speech on macOS with optimized NAVIGATION handling"""
         with self._lock:
             try:
-                # Stop any current speech first
-                self._stop_current_speech()
-                self._clear_external_stop()  # Clear previous stop requests
+                # Clear external stop flag for the given priority
+                if priority in (Priority.HIGH, Priority.DIALOG, Priority.NAVIGATION):
+                    self._clear_external_stop(priority)
 
-                # cmd = self.config.get_command(self.system, text)
+                # For NAVIGATION, stop any ongoing speech
+                if priority == Priority.NAVIGATION:
+                    self._stop_current_speech()
+
                 cmd = ['say', '-r', self.rate(), text]
-                if isinstance(cmd, str):
-                    cmd = shlex.split(cmd)
 
-                logger.error(f'executing: "{cmd}" with priority {priority.name}')
-                # Start new speech process
+                logger.error(f'macOS: executing: "{cmd}" with {priority.name}')
+
+                # Use Popen with stdout/stderr redirection for better performance
                 self._current_process = subprocess.Popen(
                     cmd,
                     stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
+                    stderr=subprocess.DEVNULL,
+                    start_new_session=True  # New session for easier kill
                 )
                 self.state = TTSState.SPEAKING
 
+                # ONLY for HIGH/DIALOG: wait for completion
                 if priority in (Priority.HIGH, Priority.DIALOG):
-                    # For HIGH/DIALOG priority, wait for completion with interruption
                     return self._wait_for_completion(priority)
                 else:
-                    # For NORMAL priority, return immediately
+                    # For NAVIGATION and NORMAL: non-blocking
                     return True
 
             except Exception as e:
@@ -509,7 +559,7 @@ class TTSMacOS(TTSBase):
         """Wait for current process to complete with interruption checking"""
         try:
             while self._current_process and self._current_process.poll() is None:
-                # Check for external stop (only for DIALOG)
+                # Check for external stop (for DIALOG or NAVIGATION)
                 if self._should_stop_externally(priority):
                     self._stop_current_speech()
                     return False
@@ -607,6 +657,10 @@ class TTSManager:
         self.title_token = self.config.get_title_token()
         self.reset_tokens = self.config.get_reset_tokens()
 
+        # NEW: Track current navigation for self-interruption
+        self._current_navigation = None
+        self._navigation_lock = threading.RLock()
+
         # Threading
         self._lock = threading.RLock()
         self._current_request = None
@@ -627,8 +681,62 @@ class TTSManager:
         # New lock for volume operations
         self._volume_lock = threading.RLock()
 
+    def _clean_navigation_queue(self):
+        """Remove all pending NAVIGATION requests except the last one"""
+        with self._navigation_lock:
+            if self.high_priority_queue.qsize() == 0:
+                return
+
+            # Create a temporary list to hold all requests
+            temp_requests = []
+            last_navigation = None
+
+            # Extract all requests from queue
+            while not self.high_priority_queue.empty():
+                try:
+                    req = self.high_priority_queue.get_nowait()
+                    if req.priority == Priority.NAVIGATION:
+                        last_navigation = req  # Keep only the last one
+                    else:
+                        temp_requests.append(req)  # Keep non-NAVIGATION
+                except queue.Empty:
+                    break
+
+            # Put back non-NAVIGATION requests
+            for req in temp_requests:
+                self.high_priority_queue.put(req)
+
+            # Put back the last NAVIGATION request (if any)
+            if last_navigation:
+                self.high_priority_queue.put(last_navigation)
+
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f"Cleaned navigation queue, kept {1 if last_navigation else 0} NAVIGATION requests")
+
+    def stop_navigation_speech(self):
+        """Stop currently speaking NAVIGATION priority speech"""
+        if self.engine:
+            self.engine.request_external_stop(Priority.NAVIGATION)
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("Requested stop for NAVIGATION speech")
+
+    def _process_pending_title(self):
+        """Process pending title after HIGH or NAVIGATION priority completes"""
+        if self.pending_title and not self._shutdown_flag:
+            # Check if we should actually speak the title
+            # Don't speak if another HIGH/NAVIGATION is queued
+            if self.high_priority_queue.empty():
+                # Add pending title to normal queue
+                self.normal_priority_queue.put(TTSRequest(
+                    self.pending_title,
+                    Priority.NORMAL
+                ))
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f"Queued pending title: {self.pending_title[:50]}...")
+            self.pending_title = None
+
     def can_i_use_tts(self, priority=Priority.NORMAL):
-        """ return True if TTS is availabel and enabled
+        """ return True if TTS is available and enabled
             and the context is allowed to be spoken
         """
         if self.available and self.enabled:
@@ -642,7 +750,7 @@ class TTSManager:
                 if priority.value <= Priority.HIGH.value:
                     return True
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f'Speech request rejected: priorit is "{priority.name}" but context is "{context}"')
+            logger.debug(f'Speech request rejected: priority is "{priority.name}" but context is "{context}"')
         return False
 
     def _initialize_tts(self):
@@ -676,10 +784,6 @@ class TTSManager:
             return TTSMacOS(self.config, self.volume, self.rate, self.pitch, self.verbosity)
         else:
             return TTSLinux(self.config, self.volume, self.rate, self.pitch, self.verbosity)
-        # if ret is None:
-        #     if logger.isEnabledFor(logging.WARNING):
-        #         logger.warning(f"Unsupported platform: {self.system}")
-        #     return None
 
     def _check_linux_availability(self):
         """Check if spd-say is available on Linux"""
@@ -761,41 +865,44 @@ class TTSManager:
                 logger.debug("Requested stop for DIALOG speech")
 
     def _process_queues(self):
-        """Process speech queues with platform-specific behavior"""
+        """Process speech queues with optimized handling for NAVIGATION"""
         while not self._shutdown_flag:
             try:
-                # 1. Process HIGH priority queue first
+                # 1. Process HIGH/DIALOG/NAVIGATION/HELP queue with priority
                 try:
-                    high_request = self.high_priority_queue.get(timeout=0.1)
+                    # Shorter timeout for better responsiveness
+                    high_request = self.high_priority_queue.get(timeout=0.05)
+
+                    # Skip empty requests (they were added for wake-up)
+                    if not high_request.text and high_request.priority == Priority.NORMAL:
+                        continue
+
                     self._execute_request(high_request)
                     continue
                 except queue.Empty:
                     pass
 
-                # 2. Process NORMAL priority queue
+                # 2. Process NORMAL queue
                 try:
-                    normal_request = self.normal_priority_queue.get(timeout=0.1)
-
-                    # PLATFORM-SPECIFIC: Anti-stutter and interruption
-                    if self.system == "Darwin":  # macOS
-                        # For macOS, always stop current speech before new NORMAL
-                        if self._wait_with_interruption(0.1):
-                            self._execute_request(normal_request)
-                    elif self.system == "Linux":
-                        # Linux: No delay needed
-                        self._execute_request(normal_request)
-                    else:
-                        # Windows: Apply anti-stutter delay
-                        if self._wait_with_interruption(0.3):
-                            self._execute_request(normal_request)
-
+                    normal_request = self.normal_priority_queue.get(timeout=0.05)
+                    self._execute_request(normal_request)
                 except queue.Empty:
-                    time.sleep(0.01)
+                    time.sleep(0.01)  # Shorter delay
 
             except Exception as e:
                 if logger.isEnabledFor(logging.ERROR):
                     logger.error(f"Queue processing error: {e}")
-                time.sleep(0.1)
+                time.sleep(0.05)
+
+    def _stop_normal_speech(self):
+        """Stop currently speaking NORMAL priority speech"""
+        with self._lock:
+            if (self._current_request and
+                self._current_request.priority == Priority.NORMAL):
+                logger.error('**** Stopping NORMAL speech')
+                self.engine.stop()
+                return True
+            return False
 
     def _execute_request(self, request):
         """Execute a TTS request"""
@@ -816,7 +923,6 @@ class TTSManager:
                 elif platform.system().lower().startswith('win'):
                     prefix = f'<pitch absmiddle="{pitch}"/>'
             logger.error(f'{prefix = }')
-            # logger.error(f'\n\n{request.text = }\n\n')
             transformed_text = tts_transform_to_string([request.text], self.verbosity())
             success = self.engine._execute_speech(
                 prefix+transformed_text,
@@ -833,9 +939,16 @@ class TTSManager:
                 logger.error(f"Speech execution error: {e}")
         finally:
             with self._lock:
+                # Process pending title after HIGH or NAVIGATION completes
+                if request.priority in (Priority.HIGH, Priority.NAVIGATION):
+                    self._process_pending_title()
+
+                # Clear current request BEFORE changing state
+                self._current_request = None
+
                 if self.engine.state != TTSState.SHUTTING_DOWN:
                     self.engine.state = TTSState.IDLE
-                self._current_request = None
+
         if self.stop_after_high and request.priority == Priority.HIGH:
             self.set_enabled(False)
             self.stop_after_high = False
@@ -863,33 +976,18 @@ class TTSManager:
 
     def _is_title(self, text):
         """Check if text is a title message"""
-        # logger.error(f'"{self.title_token = }" - "{text = }"')
         return text.startswith(self.title_token)
 
-    def _process_pending_title(self):
-        """Process pending title after HIGH priority completes"""
-        if self.pending_title and not self._shutdown_flag:
-            # Add pending title to normal queue
-            self.normal_priority_queue.put(TTSRequest(
-                self.pending_title,
-                Priority.NORMAL
-            ))
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug(f"Queued pending title: {self.pending_title[:50]}...")
-            self.pending_title = None
-
     def _clean_normal_queue(self):
-        """Clean normal priority queue during rapid navigation"""
-        # Keep only the most recent request if we have too many
-        if self.normal_priority_queue.qsize() > 2:
-            # Drain the queue
-            while not self.normal_priority_queue.empty():
-                try:
-                    self.normal_priority_queue.get_nowait()
-                except queue.Empty:
-                    break
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug("Cleaned normal priority queue due to rapid navigation")
+        """Clean normal priority queue - always clear for new NORMAL"""
+        # Drain the queue completely
+        while not self.normal_priority_queue.empty():
+            try:
+                self.normal_priority_queue.get_nowait()
+            except queue.Empty:
+                break
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Cleaned normal priority queue completely")
 
     def _get_context_value(self):
         context = self.context()
@@ -898,6 +996,19 @@ class TTSManager:
         elif context == 'window':
             return Context.WINDOW.value
         return Context.LIMITED.value
+
+    def _wake_worker(self):
+        """Wake up worker thread for faster processing"""
+        # Add an empty request to wake up the worker thread
+        try:
+            # This will make the worker thread's queue.get() return immediately
+            if self.high_priority_queue.qsize() < 10:  # Prevent queue flooding
+                self.high_priority_queue.put(TTSRequest("", Priority.NORMAL), block=False)
+        except queue.Full:
+            pass
+        except Exception as e:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f"Could not wake worker: {e}")
 
     def queue_speech(self, text, priority=Priority.NORMAL, context=Context.LIMITED, mode=0):
         logger.error(f'{mode = }')
@@ -916,12 +1027,12 @@ class TTSManager:
         if priority == Priority.HIGH and ' (error ' in text:
             text = text.split(' (error ')[0]
 
-        # Volume debouncing logic
-        if (priority == Priority.HIGH and
+        # Volume debouncing logic - applies to HIGH and NAVIGATION
+        if (priority in (Priority.HIGH, Priority.NAVIGATION) and
             text.startswith(M_STRINGS['volume_set'])):
 
             with self._volume_lock:
-                # Cabcel previous timer
+                # Cancel previous timer
                 if self._volume_timer:
                     self._volume_timer.cancel()
 
@@ -930,7 +1041,7 @@ class TTSManager:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug(f"Holding volume request: {text[:30]}...")
 
-                # Start noew timer for 500ms
+                # Start new timer for 500ms
                 self._volume_timer = threading.Timer(0.5, self._process_pending_volume)
                 self._volume_timer.daemon = True
                 self._volume_timer.start()
@@ -941,9 +1052,6 @@ class TTSManager:
             if self._pending_volume_request:
                 self._process_pending_volume_immediately()
 
-
-        # logger.error('\n\ntitle = \n{}'.format(text))
-        # logger.error('self._last_spoken_title =\n{}\n\n'.format(self._last_spoken_title))
         if self._is_title(text) and text == self._last_spoken_title:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f"Ignoring repeated title: {text[:50]}...")
@@ -955,42 +1063,67 @@ class TTSManager:
         request = TTSRequest(text, priority)
 
         try:
-            if priority in (Priority.HIGH, Priority.DIALOG):
-                # HIGH priority handling
+            if priority in (Priority.HIGH, Priority.DIALOG, Priority.NAVIGATION, Priority.HELP):
+                # HIGH/DIALOG/NAVIGATION/HELP priority handling
                 if self._should_reset_title(text):
                     self.pending_title = None
-                    # Reset if changinf title
+                    # Reset if changing title
                     self._last_spoken_title = None
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug(f"Reset pending title due to: {text[:50]}...")
 
-                # PLATFORM-SPECIFIC: Interrupt logic
-                if self.system != "Linux":  # Windows/macOS
-                    # Manual interruption for non-Linux platforms
-                    with self._lock:
+                # Always stop NORMAL when HIGH/DIALOG/NAVIGATION/HELP arrives
+                self._stop_normal_speech()
+
+                # NAVIGATION-specific: Self-interruption logic
+                if priority == Priority.NAVIGATION:
+                    with self._navigation_lock:
+                        # If current request is also NAVIGATION, stop it
                         if (self._current_request and
-                            self._current_request.priority == Priority.NORMAL):
-                            self.engine.stop()
-                # Linux: No manual stop - speech-dispatcher handles it automatically
+                                self._current_request.priority == Priority.NAVIGATION):
+                            logger.error('**** stopping previous NAVIGATION')
+                            self.engine.request_external_stop(Priority.NAVIGATION)
+
+                        # Clean up any pending NAVIGATION requests
+                        self._clean_navigation_queue()
+
+                    # Platform-specific: Wake up worker thread for faster processing on non-Linux
+                    if self.system != "Linux":
+                        self._wake_worker()
 
                 self.high_priority_queue.put(request)
-                if logger.isEnabledFor(logging.WARNING):
-                    logger.debug(f"Queued HIGH priority: {text[:50]}...")
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f"Queued {priority.name} priority: {text[:50]}...")
                 return True
 
             else:
-                # Regular NORMAL request
+                # NORMAL priority request
+                # Clean normal queue to avoid accumulation
+                self._clean_normal_queue()
+
+                # Stop any currently speaking NORMAL for new NORMAL
+                self._stop_normal_speech()
+
+                # Check if HIGH/DIALOG/NAVIGATION/HELP is playing or queued
                 if not self.high_priority_queue.empty() or (
                     self._current_request and
-                    self._current_request.priority in (Priority.HIGH, Priority.DIALOG)
+                    self._current_request.priority in (Priority.HIGH, Priority.DIALOG, Priority.NAVIGATION, Priority.HELP)
                 ):
-                    # HIGH is playing or queued, reject regular NORMAL
-                    if logger.isEnabledFor(logging.WARNING):
-                        logger.debug("Rejected NORMAL request during HIGH playback")
-                    return False
+                    # HIGH/DIALOG/NAVIGATION/HELP is playing or queued
+                    if self._is_title(text):
+                        # Title during HIGH/NAVIGATION/HELP: save as pending
+                        self.pending_title = text
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug(f"Title saved as pending: {text[:50]}...")
+                        return True
+                    else:
+                        # Non-title NORMAL during HIGH/DLG/NAV/HELP: reject
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug("Rejected NORMAL request during HIGH/DLG/NAV/HELP playback")
+                        return False
                 else:
                     self.normal_priority_queue.put(request)
-                    if logger.isEnabledFor(logging.WARNING):
+                    if logger.isEnabledFor(logging.DEBUG):
                         logger.debug(f"Queued NORMAL: {text[:50]}...")
                     return True
 
@@ -1013,7 +1146,7 @@ class TTSManager:
                 self.high_priority_queue.put(volume_request)
 
     def _process_pending_volume_immediately(self):
-        """Forced skeep for pending volume SR before any other request"""
+        """Forced speech for pending volume SR before any other request"""
         with self._volume_lock:
             if self._pending_volume_request:
                 volume_request = self._pending_volume_request

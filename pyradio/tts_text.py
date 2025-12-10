@@ -270,17 +270,17 @@ def replace_special_keys(text, verbosity):
 
     # 1. First replace control keys with regex
     text = replace_control_keys_in_text(text, verbosity)
-    logger.error(f'a) {text = }')
+    # logger.error(f'a) {text = }')
 
     # 2. Then replace other special keys
     for key, replacement in special_keys_map.items():
         text = text.replace(key, f" {replacement} ")
-    logger.error(f'b) {text = }')
+    # logger.error(f'b) {text = }')
 
 
     # Clean up extra spaces
     text = re.sub(r'\s+', ' ', text).strip()
-    logger.error(f'c) {text = }')
+    # logger.error(f'c) {text = }')
     return text
 
 def handle_punctuation_marks(text, verbosity):
@@ -456,23 +456,23 @@ def tts_transform_final(text_lines, verbosity='default'):
         # Step 2: Remove any remaining | characters
         line = line.replace('|', '')
 
-        logger.error(f'2 *** {line = }')
+        # logger.error(f'2 *** {line = }')
         # Step 3: Handle parentheses based on verbosity
         line = handle_parentheses(line, verbosity)
 
-        logger.error(f'3 *** {line = }')
+        # logger.error(f'3 *** {line = }')
         # Step 4: Replace special keys and symbols
         line = replace_special_keys(line, verbosity)
 
-        logger.error(f'4 *** {line = }')
+        # logger.error(f'4 *** {line = }')
         # Step 5: Convert file extensions (dots to "dot")
         line = convert_file_extensions(line)
 
-        logger.error(f'5 *** {line = }')
+        # logger.error(f'5 *** {line = }')
         # Step 6: Handle punctuation marks based on verbosity
         line = handle_punctuation_marks(line, verbosity)
 
-        logger.error(f'6 *** {line = }')
+        # logger.error(f'6 *** {line = }')
         # Step 7: Clean up extra spaces
         line = re.sub(r'\s+', ' ', line).strip()
 
@@ -482,7 +482,7 @@ def tts_transform_final(text_lines, verbosity='default'):
         line = line.replace('Page Up Arrow', 'Page Up')
         line = line.replace('Page Down Arrow', 'Page Down')
 
-        logger.error(f'7 *** {line = }')
+        # logger.error(f'7 *** {line = }')
         transformed_lines.append(line)
 
     return transformed_lines
