@@ -862,7 +862,8 @@ class PyRadioConfigWindow():
                     rate=lambda: self._config_options['tts_rate'][1],
                     pitch=lambda: self._config_options['tts_pitch'][1],
                     verbosity=lambda: self._config_options['tts_verbosity'][1],
-                    context=lambda: self._config_options['tts_context'][1]
+                    context=lambda: self._config_options['tts_context'][1],
+                    tts_in_config=lambda: True,
                 )
                 if not self.tmp_tts.available:
                     return 1110, []
@@ -3796,6 +3797,7 @@ class PyRadioKeyboardConfig():
         self._dirty_config = False
         self._too_small = False
         self._editing = False
+        self._still_editing = False
         self.maxY = 0
         self.maxX = 0
         self._start_line = 0
@@ -3883,6 +3885,9 @@ class PyRadioKeyboardConfig():
         self._needs_update = False
         # logger.error('\n\ntitles\n{}\n\n'.format(self.titles()))
 
+        self._showed = False
+        self._spoken_group = -1
+
     @property
     def editing(self):
         return self._editing
@@ -3960,7 +3965,8 @@ class PyRadioKeyboardConfig():
     def _start_editing(self):
         tts = self.tts()
         if tts and tts.can_i_use_tts(Priority.HIGH):
-            tts.queue_speech('Editing mode enabled', Priority.HIGH, Context.LIMITED, self.op_mode())
+            still = ' still ' if self._still_editing else ' '
+            tts.queue_speech(f'Editing mode{still}enabled', Priority.DIALOG, Context.LIMITED, self.op_mode())
         self._win.addstr(self._selection - self._start + 2, self.maxX-8, '[edit]', curses.color_pair(6))
         self._win.refresh()
         self._editing = True
@@ -3976,13 +3982,35 @@ class PyRadioKeyboardConfig():
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('edited "{}"'.format(self._list[self._selection]))
 
-    def _speak_item(self, index, priority=Priority.NAVIGATION):
+    def _get_group_to_speak(self, index, first=False, conflict=False, priority=Priority.NAVIGATION):
+        it = self.item(index)
+        group_to_speak = it[-2]
+        if group_to_speak != self._spoken_group:
+            self._spoken_group = group_to_speak
+            it = self.item(self._spoken_group)
+            logger.error(f'{it = }')
+            if first:
+                msg = 'Group: {}. '.format(it[-1])
+            else:
+                if conflict:
+                    msg = 'Conflicting item in group: {}.'.format(it[-1])
+                else:
+                    msg = 'Changed to group: {}. '.format(it[-1])
+            return msg
+        return ''
+
+    def _speak_item(self, index, first=False, conflict=False, priority=Priority.NAVIGATION):
         tts = self.tts()
         if tts and tts.can_i_use_tts(priority):
             it = self.item(index)
             logger.error(f'{it = }')
+            gr = ''
+            if it[-2] != self._spoken_group or first:
+                gr = self._get_group_to_speak(index, first=first, conflict=conflict)
             msg = 'Current item: {}, current key: {}'.format(it[-1], describe_single_key(it[5]))
-            tts.queue_speech(msg, priority, Context.LIMITED, self.op_mode())
+            if first:
+                return gr + msg
+            tts.queue_speech(gr + msg, priority, Context.LIMITED, self.op_mode())
 
     def _speak_button(self, priority=Priority.NAVIGATION):
         tts = self.tts()
@@ -3992,13 +4020,14 @@ class PyRadioKeyboardConfig():
                     'Current item: Button - OK',
                     priority, Context.LIMITED, self.op_mode()
                 )
+                return True
             elif self._b_cancel.focused:
                 tts.queue_speech(
                     'Current item: Button - Cancel',
                     priority, Context.LIMITED, self.op_mode()
                 )
-            else:
-                self._speak_item(self._selection)
+                return True
+        return False
 
     def _update_focus(self):
         if self._focus == 0:
@@ -4011,7 +4040,8 @@ class PyRadioKeyboardConfig():
             self._b_ok.focused = False
             self._b_cancel.focused = True
         self._needs_update = True
-        self._speak_button()
+        if not self._speak_button():
+            self._speak_item(self._selection)
 
     def _focus_next(self):
         if not self._editing:
@@ -4241,6 +4271,7 @@ class PyRadioKeyboardConfig():
                 pass
             self._win.refresh()
             return
+
         if self._widget is None:
             self._widget = SimpleCursesHorizontalPushButtons(
                     Y=self.maxY-3, captions=('OK', 'Cancel'),
@@ -4294,13 +4325,12 @@ class PyRadioKeyboardConfig():
                 pass
         self._win.refresh()
         self._widget.show()
-
-    def _speak_group(self, index, priority=Priority.NAVIGATION):
-        tts = self.tts()
-        if tts and tts.can_i_use_tts(priority):
-            it = self.item(index)
-            msg = 'Current group: {}'.format(self._list[index-1][-1])
-            tts.queue_speech(msg, priority, Context.LIMITED, self.op_mode())
+        if not self._showed:
+            tts = self.tts()
+            if tts and tts.can_i_use_tts(Priority.NAVIGATION):
+                msg = self._speak_item(1, first=True)
+                tts.queue_speech('Window: Keyboard shortcuts. ' + msg, Priority.NAVIGATION, Context.LIMITED, self.op_mode())
+            self._showed = True
 
     def _get_after_header(self, next=True):
         if next:
@@ -4309,12 +4339,12 @@ class PyRadioKeyboardConfig():
                 if value > self._selection:
                     self._start = value
                     self._selection = value + 1
-                    self._speak_group(self._selection)
+                    # self._get_group_to_speak(self._selection)
                     return
             # If no larger value is found, return the last value
             self._start = 0
             self._selection = 1
-            self._speak_group(self._selection)
+            # self._get_group_to_speak(self._selection)
         else:
             # Find the first header value which is smaller than self._selection
             smaller_values = [value for value in self._headers if value < self._selection]
@@ -4327,8 +4357,7 @@ class PyRadioKeyboardConfig():
                 # If no smaller values are found, return the last value in _headers
                 self._start = self._headers[-1]
                 self._selection = self._start + 1
-            self._speak_group(self._selection)
-
+            # self._get_group_to_speak(self._selection)
 
     def _detect_conflict(self, modified_item):
         """
@@ -4411,7 +4440,7 @@ class PyRadioKeyboardConfig():
             tts.queue_speech(
                 'You have pressed: {}'.format(
                     describe_single_key(self._list[self._selection][6])),
-                Priority.HIGH, Context.LIMITED, self.op_mode()
+                Priority.DIALOG, Context.LIMITED, self.op_mode()
             )
             sleep(0.25)
         self._detect_conflict(self._list[self._selection])
@@ -4487,12 +4516,14 @@ class PyRadioKeyboardConfig():
         if char == ord('0'):
             logger.error(f'{self.existing_conflict = }')
             if self.existing_conflict:
+                self._still_editing = False
                 self._editing = False
                 self._cnf.inhibit_search = False
                 if self._selection == self.existing_conflict[0]:
                     self._go_to_line(self.existing_conflict[1])
                 else:
                     self._go_to_line(self.existing_conflict[0])
+                self._speak_item(self._selection, conflict=True)
 
         elif self._editing:
             if is_invalid_key(char):
@@ -4522,10 +4553,11 @@ class PyRadioKeyboardConfig():
                     logger.debug('2 Key is INVALID')
                 return 2
             if char in (curses.KEY_EXIT, 27):
+                self._still_editing = False
                 self._stop_editing()
                 tts = self.tts()
                 if tts and tts.can_i_use_tts(Priority.HIGH):
-                    tts.queue_speech('Editing mode disabled', Priority.HIGH, Context.LIMITED, self.op_mode())
+                    tts.queue_speech('Editing mode disabled', Priority.DIALOG, Context.LIMITED, self.op_mode())
                 return
             the_key = self._list[self._selection][0]
             if the_key in conflicts['h_rb_s'] and not is_ctrl_key(char):
@@ -4562,7 +4594,29 @@ class PyRadioKeyboardConfig():
 
             return ret
         else:
-            if char == kbkey['?'] or \
+            if char == ord('t'):
+                tts = self.tts()
+                if tts and tts.can_i_use_tts(Priority.HIGH):
+                    if not self._speak_button():
+                        it = self.item(self._selection)
+                        logger.error(f'{it = }')
+                        caption = it[-1]
+                        default = it[4]
+                        user = it[5]
+                        new = it[6]
+                        msg = 'Default key is {}'.format(describe_single_key(default))
+                        if user != default:
+                            msg += ', active key is {}'.format(describe_single_key(user))
+                        if (new != default) or (new != user):
+                            msg += ', new key is {}'.format(describe_single_key(new))
+                        group_to_speak = it[-2]
+                        self._spoken_group = group_to_speak
+                        it = self.item(self._spoken_group)
+                        group = it[-1]
+                        msg = f'Group is: {group}, item is: {caption}, ' + msg
+                        tts.queue_speech(msg, Priority.DIALOG, Context.LIMITED, self.op_mode())
+
+            elif char == kbkey['?'] or \
                     check_localized(char, (kbkey['?'], )):
                 self.message = 'M_KEYBOARD_HELP'
                 return 2
@@ -4592,10 +4646,12 @@ class PyRadioKeyboardConfig():
                 self._get_after_header()
                 self._make_selection_visible()
                 self._needs_update = True
+                self._speak_item(self.selection)
             elif char == ord('['):
                 self._get_after_header(next=False)
                 self._make_selection_visible()
                 self._needs_update = True
+                self._speak_item(self.selection)
             elif char in (curses.KEY_HOME, kbkey['g']) or \
                     check_localized(char, (kbkey['g'], )):
                 if self._focus == 0:
@@ -4616,12 +4672,14 @@ class PyRadioKeyboardConfig():
                     self._focus_next()
                 else:
                     self._start_editing()
+                    self._still_editing = True
             elif char in (curses.KEY_LEFT, kbkey['h']) or \
                     check_localized(char, (kbkey['h'], )):
                 if self._focus > 0:
                     self._focus_previous()
                 else:
                     self._start_editing()
+                    self._still_editing = True
             elif char in (curses.KEY_DOWN, kbkey['j']) or \
                     check_localized(char, (kbkey['j'], )):
                 if self._focus == 0:

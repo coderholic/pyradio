@@ -1567,7 +1567,7 @@ The key pressed is |invalid|!
 Please do not use any keys like |Home|, |End|,
 |PgUp|, |PgDown|, |Arrow Keys|, etc. here.
 
-''', Priority.HIGH
+''', Priority.DIALOG
 ),
 
     'M_INVALID_TYPE_KEY_ERROR':('Invalid Key',
@@ -1577,7 +1577,7 @@ The key pressed is |invalid|!
 Please use ASCII characters, punctuation and
 Control characters |only| for |PyRadio Shortcuts|.
 
-''', Priority.HIGH
+''', Priority.DIALOG
 ),
 
     'M_NOT_CTRL_KEY_ERROR':('Invalid Key',
@@ -1592,7 +1592,7 @@ Keep in mind that the shortcut's equivalent key
 will also work on non-line editor widgets (|n| will
 work for |Ctrl-N|, for example).
 
-''', Priority.HIGH
+''', Priority.DIALOG
 ),
 
     'M_KEYBOARD_FILE_SAVE_ERROR':('Error Saving File',

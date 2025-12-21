@@ -514,6 +514,7 @@ class PyRadio():
                     do not display any message
         '''
 
+        self._tts_in_config = False
         self._tts_volume = pyradio_config.tts_volume
         self._tts_rate = pyradio_config.tts_rate
         self._tts_pitch = pyradio_config.tts_pitch
@@ -2149,6 +2150,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 pitch=lambda: self._tts_pitch,
                 verbosity=lambda: self._tts_verbosity,
                 context=lambda: self._tts_context,
+                tts_in_config=lambda: self._tts_in_config,
             )
             ''' start update detection and notification thread '''
             if CAN_CHECK_FOR_UPDATES:
@@ -3385,6 +3387,23 @@ ____Using |fallback| theme.''', Priority.HIGH)
         if caption:
             text = [f'Window: {caption}.'] + text
         logger.error(f'\n\n{text = }\n\n')
+        if text[0].startswith('Window: Free Keys'):
+            rep = {
+                'Punct': 'Punctuation',
+                '|_|': 'underscore',
+                '| ': '|, ',
+                ':. .': ':',
+                '. .': '.',
+                ';': 'semicolon',
+                '^': 'caret',
+            }
+            for n in range(len(text)):
+                text[n] += '.'
+            msg = ' '.join(text)
+            for n in rep:
+                msg = msg.replace(n, rep[n])
+            logger.error('\n\nmsg = {}\n\n'.format(msg))
+            text = [msg]
         tts_text = tts_transform_to_string(text, self._cnf.tts_verbosity)
         if tts_text.endswith(' or'):
             tts_text += ' any key to close the window.'
@@ -6838,10 +6857,12 @@ and |remove the file manually|.
         if self._enable_tts and \
                 self.ws.operation_mode in (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
             self.tts.queue_speech(
-                f'{self.selection+1}, {self.stations[self.selection][0]}',
+                f'{self.selection+1}. {self.stations[self.selection][0]}',
                 Priority.NORMAL,
                 mode=self.ws.operation_mode
             )
+        else:
+            logger.error('not speaking')
 
     def keypress(self, char):
         ''' PyRadio keypress '''
@@ -7077,7 +7098,7 @@ _____"|f|" to see the |free| keys you can use.
                 self._messaging_win.set_a_message(
                         'UNIVERSAL', (
                             'Shortcut Conflict',
-                            msg, Priority.HIGH)
+                            msg, Priority.DIALOG)
                         )
                 self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
                 if logger.isEnabledFor(logging.DEBUG):
@@ -7358,7 +7379,8 @@ _____"|f|" to see the |free| keys you can use.
                     rate=lambda: self._tts_rate,
                     pitch=lambda: self._tts_pitch,
                     verbosity=lambda: self._tts_verbosity,
-                    context=lambda: self._tts_context
+                    context=lambda: self._tts_context,
+                    tts_in_config=lambda: self._tts_in_config,
                 )
                 if self._enable_tts:
                     self.tts.queue_speech('T T S enabled', Priority.HIGH)
@@ -8358,6 +8380,7 @@ _____"|f|" to see the |free| keys you can use.
                 self._station_select_win = None
                 self._config_win.tmp_tts = None
                 self._config_win = None
+                self._tts_in_config = False
             return
 
         elif (self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE  and \
@@ -10247,6 +10270,7 @@ _____"|f|" to see the |free| keys you can use.
                             self._open_simple_message_by_key('M_SESSION_LOCKED', self.ws.MESSAGING_MODE)
                             return
 
+                        self._tts_in_config = True
                         self._old_config_encoding = self._cnf.opts['default_encoding'][1]
                         ''' open config window '''
                         #self.ws.operation_mode = self.ws.window_mode = self.ws.CONFIG_MODE

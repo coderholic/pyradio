@@ -40,6 +40,10 @@ def describe_single_key(key_string):
         'PgUp': 'Page Up',
         'PgDn': 'Page Down',
         'PgDown': 'Page Down',
+        '.': 'Full stop',
+        '-': 'Dash',
+        '?': 'Questiong mark',
+        '|': 'Vertical bar',
     }
 
     # 1. Check for control keys (^X)
@@ -170,7 +174,7 @@ def handle_parentheses(text, verbosity):
         text = text.replace('}', ' close brace ')
         text = text.replace(':', ' colon ')
         text = text.replace(',', ' comma, ')
-        text = text.replace('.', ' full stop. ')
+        # text = text.replace('.', ' full stop. ')
         text = text.replace('!', ' exclamation mark ')
     else:
         # Default behavior - replace with commas

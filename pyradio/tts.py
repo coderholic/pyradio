@@ -170,10 +170,13 @@ class TTSBase:
 
     def request_external_stop(self, priority=Priority.DIALOG):
         """Request external stop - to be checked during DIALOG or NAVIGATION execution"""
+        logger.error('priority  = {}'.format(priority.name))
         with self._external_stop_lock:
             if priority == Priority.NAVIGATION:
+                logger.error('setting navigation stop request')
                 self._navigation_stop_requested.set()
             else:
+                logger.error('setting external stop request')
                 self._external_stop_requested.set()
 
     def _clear_external_stop(self, priority=None):
@@ -496,24 +499,28 @@ class TTSWindows(TTSBase):
             return True
 
 class TTSMacOS(TTSBase):
-    """macOS TTS implementation"""
+    """macOS TTS implementation with improved interruption handling"""
 
     def __init__(self, config, volume, rate, pitch, verbosity):
         super().__init__(config, volume, rate, pitch, verbosity)
         self._current_process = None
         self._lock = threading.RLock()
+        self._speech_start_delay = 0.15
+        # Faster interruption check interval for better responsiveness
+        self._interrupt_check_interval = 0.02  # 20ms instead of 100ms
 
     def _execute_speech(self, text, priority=Priority.NORMAL):
-        """Execute speech on macOS with optimized NAVIGATION handling"""
+        """Execute speech on macOS with optimized interruption handling"""
         with self._lock:
             try:
-                # Clear external stop flag for the given priority
-                if priority in (Priority.HIGH, Priority.DIALOG, Priority.NAVIGATION):
-                    self._clear_external_stop(priority)
+                # ALWAYS stop any current speech first - CRITICAL for macOS
+                self._stop_current_speech()
 
-                # For NAVIGATION, stop any ongoing speech
-                if priority == Priority.NAVIGATION:
-                    self._stop_current_speech()
+                # Clear external stop flag for the given priority
+                self._clear_external_stop(priority)
+
+                # Small delay to avoid race conditions
+                time.sleep(0.01)
 
                 cmd = ['say', '-r', self.rate(), text]
 
@@ -528,12 +535,16 @@ class TTSMacOS(TTSBase):
                 )
                 self.state = TTSState.SPEAKING
 
-                # ONLY for HIGH/DIALOG: wait for completion
-                if priority in (Priority.HIGH, Priority.DIALOG):
-                    return self._wait_for_completion(priority)
-                else:
-                    # For NAVIGATION and NORMAL: non-blocking
+                # For NORMAL: wait a bit to let speech start then return
+                if priority == Priority.NORMAL:
+                    time.sleep(self._speech_start_delay)
                     return True
+
+                # For NAVIGATION, HIGH, DIALOG: wait for completion with interruption checks
+                elif priority in (Priority.NAVIGATION, Priority.HIGH, Priority.DIALOG):
+                    return self._wait_for_completion_with_interrupt(priority)
+
+                return True
 
             except Exception as e:
                 if logger.isEnabledFor(logging.ERROR):
@@ -542,32 +553,46 @@ class TTSMacOS(TTSBase):
 
     def _stop_current_speech(self):
         """Stop any currently running speech process"""
-        if self._current_process and self._current_process.poll() is None:
-            self._current_process.terminate()
+        if self._current_process:
             try:
-                self._current_process.wait(timeout=0.5)
-            except subprocess.TimeoutExpired:
-                self._current_process.kill()
-                self._current_process.wait()
-        # Additional cleanup: kill any stray say processes
-        subprocess.run(['pkill', '-9', 'say'],
-                      stdout=subprocess.DEVNULL,
-                      stderr=subprocess.DEVNULL,
-                      timeout=5)
+                # Try graceful termination first
+                if self._current_process.poll() is None:
+                    self._current_process.terminate()
+                    try:
+                        self._current_process.wait(timeout=0.2)
+                    except subprocess.TimeoutExpired:
+                        # Force kill if not terminated
+                        self._current_process.kill()
+                        self._current_process.wait()
+            except Exception as e:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f"Error stopping speech process: {e}")
+            finally:
+                self._current_process = None
 
-    def _wait_for_completion(self, priority):
-        """Wait for current process to complete with interruption checking"""
+        # Clean up any stray say processes
+        try:
+            subprocess.run(['pkill', '-9', 'say'],
+                          stdout=subprocess.DEVNULL,
+                          stderr=subprocess.DEVNULL,
+                          timeout=0.5)
+        except Exception:
+            pass
+
+    def _wait_for_completion_with_interrupt(self, priority):
+        """Wait for current process to complete with frequent interruption checking"""
         try:
             while self._current_process and self._current_process.poll() is None:
                 # Check for external stop (for DIALOG or NAVIGATION)
                 if self._should_stop_externally(priority):
+                    logger.error(f"macOS: External stop requested for {priority.name}")
                     self._stop_current_speech()
                     return False
                 # Check for shutdown
                 if self.state == TTSState.SHUTTING_DOWN:
                     self._stop_current_speech()
                     return False
-                time.sleep(0.1)
+                time.sleep(self._interrupt_check_interval)
 
             return self._current_process.returncode == 0 if self._current_process else False
 
@@ -636,7 +661,7 @@ class TTSManager:
     Main TTS manager with priority-based queue and title preservation
     """
 
-    def __init__(self, volume, rate, pitch, verbosity, context, enabled=True):
+    def __init__(self, volume, rate, pitch, verbosity, context, tts_in_config, enabled=True):
         self.stop_after_high = False
         self.enabled = enabled
         self.volume = volume
@@ -648,6 +673,7 @@ class TTSManager:
         self.system = platform.system()
         self.available = False
         self.engine = None
+        self.tts_in_config = tts_in_config
 
         # Queue management
         self.high_priority_queue = queue.Queue()
@@ -667,7 +693,7 @@ class TTSManager:
         self._worker_thread = None
         self._shutdown_flag = False
 
-        # Statistics
+        # Statistics for rapid navigation detection
         self._last_navigation_time = 0
         self._consecutive_requests = 0
 
@@ -675,7 +701,7 @@ class TTSManager:
             self._initialize_tts()
             self._start_worker()
 
-        # Volume
+        # Volume debouncing
         self._pending_volume_request = None
         self._volume_timer = None
         # New lock for volume operations
@@ -740,6 +766,8 @@ class TTSManager:
             and the context is allowed to be spoken
         """
         if self.available and self.enabled:
+            if self.tts_in_config():
+                return True
             context = self.context()
             if context == 'all':
                 return True
@@ -857,51 +885,61 @@ class TTSManager:
     def stop_dialog_speech(self):
         """Stop currently speaking DIALOG priority speech"""
         if self.engine:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("Requesting stop for DIALOG speech")
             if platform.system() == 'Linux':
                 self.stop()
             else:
                 self.engine.request_external_stop()
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug("Requested stop for DIALOG speech")
 
     def _process_queues(self):
         """Process speech queues with optimized handling for NAVIGATION"""
         while not self._shutdown_flag:
             try:
-                # 1. Process HIGH/DIALOG/NAVIGATION/HELP queue with priority
+                # Use shorter timeouts for better responsiveness
+                request = None
+
+                # 1. Check for HIGH/DIALOG/NAVIGATION/HELP first (non-blocking)
                 try:
-                    # Shorter timeout for better responsiveness
-                    high_request = self.high_priority_queue.get(timeout=0.05)
-
-                    # Skip empty requests (they were added for wake-up)
-                    if not high_request.text and high_request.priority == Priority.NORMAL:
-                        continue
-
-                    self._execute_request(high_request)
-                    continue
+                    request = self.high_priority_queue.get_nowait()
                 except queue.Empty:
                     pass
 
-                # 2. Process NORMAL queue
-                try:
-                    normal_request = self.normal_priority_queue.get(timeout=0.05)
-                    self._execute_request(normal_request)
-                except queue.Empty:
-                    time.sleep(0.01)  # Shorter delay
+                # 2. If no HIGH priority, check NORMAL queue with short timeout
+                if not request:
+                    try:
+                        request = self.normal_priority_queue.get(timeout=0.01)
+                    except queue.Empty:
+                        time.sleep(0.005)  # Very small sleep for CPU efficiency
+                        continue
+
+                # Execute the request if it has actual text
+                if request and request.text:
+                    self._execute_request(request)
 
             except Exception as e:
                 if logger.isEnabledFor(logging.ERROR):
                     logger.error(f"Queue processing error: {e}")
-                time.sleep(0.05)
+                time.sleep(0.01)
 
     def _stop_normal_speech(self):
         """Stop currently speaking NORMAL priority speech"""
         with self._lock:
+            # ALWAYS stop NORMAL when HIGH/DIALOG/NAVIGATION/HELP arrives
             if (self._current_request and
                 self._current_request.priority == Priority.NORMAL):
-                logger.error('**** Stopping NORMAL speech')
+                logger.error(f'**** Stopping NORMAL speech for {self.system}')
                 self.engine.stop()
                 return True
+
+            # ADDITION: Also stop if engine is speaking and we don't know the request
+            if (self.engine and
+                self.engine.state == TTSState.SPEAKING and
+                not self._current_request):
+                logger.error(f'**** Stopping unknown speech (assumed NORMAL) for {self.system}')
+                self.engine.stop()
+                return True
+
             return False
 
     def _execute_request(self, request):
@@ -1010,6 +1048,30 @@ class TTSManager:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f"Could not wake worker: {e}")
 
+    def _clean_all_queues(self):
+        """Clean all queues completely - for rapid navigation scenarios"""
+        with self._lock:
+            # Clean high priority queue
+            while not self.high_priority_queue.empty():
+                try:
+                    self.high_priority_queue.get_nowait()
+                except queue.Empty:
+                    break
+
+            # Clean normal priority queue
+            while not self.normal_priority_queue.empty():
+                try:
+                    self.normal_priority_queue.get_nowait()
+                except queue.Empty:
+                    break
+
+            # Reset state
+            self.pending_title = None
+            self._current_request = None
+
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("Cleaned all queues completely")
+
     def queue_speech(self, text, priority=Priority.NORMAL, context=Context.LIMITED, mode=0):
         logger.error(f'{mode = }')
         if not self.enabled or not self.available or not self.engine:
@@ -1072,12 +1134,24 @@ class TTSManager:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug(f"Reset pending title due to: {text[:50]}...")
 
-                # Always stop NORMAL when HIGH/DIALOG/NAVIGATION/HELP arrives
+                # ALWAYS stop NORMAL when HIGH/DIALOG/NAVIGATION/HELP arrives
                 self._stop_normal_speech()
 
                 # NAVIGATION-specific: Self-interruption logic
                 if priority == Priority.NAVIGATION:
                     with self._navigation_lock:
+                        # Rapid navigation detection
+                        current_time = time.time()
+                        if current_time - self._last_navigation_time < 0.1:  # 100ms
+                            self._consecutive_requests += 1
+                            if self._consecutive_requests > 3:
+                                self._clean_all_queues()
+                                self._consecutive_requests = 0
+                        else:
+                            self._consecutive_requests = 0
+
+                        self._last_navigation_time = current_time
+
                         # If current request is also NAVIGATION, stop it
                         if (self._current_request and
                                 self._current_request.priority == Priority.NAVIGATION):
@@ -1086,6 +1160,11 @@ class TTSManager:
 
                         # Clean up any pending NAVIGATION requests
                         self._clean_navigation_queue()
+
+                    # For macOS: Ensure immediate stop before new speech
+                    if self.system == "Darwin":
+                        self.engine.stop()
+                        time.sleep(0.01)  # Small delay to avoid race conditions
 
                     # Platform-specific: Wake up worker thread for faster processing on non-Linux
                     if self.system != "Linux":
