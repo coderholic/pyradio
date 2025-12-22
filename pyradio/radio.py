@@ -3417,7 +3417,7 @@ ____Using |fallback| theme.''', Priority.HIGH)
                 or  self.ws.previous_operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE, self.ws.SCHEDULE_EDIT_MODE):
             if platform.lower().startswith('darwin'):
                 txt = r'''Left| / |Right            <*> Move to next / previous character.
-                HOME|, |^A| / |END|,i |^E           <*> Move to start / end of line.
+                HOME|, |^A| / |END|, |^E            <*> Move to start / end of line.
                 ^W| / |^K                           <*> Clear to start / end of line.
                 ^U                                  <*> Clear line.
                 DEL|, |^D                           <*> Delete character.
