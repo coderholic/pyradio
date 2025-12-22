@@ -854,7 +854,7 @@ class PyRadioConfigWindow():
         # logger.error(f'{val = }')
         Y = self.selection - self._start + 1
 
-        if char == ord('t'):
+        if char == ord('T'):
             if self.tmp_tts is None:
                 self.tmp_tts = TTSManager(
                     enabled=True,
@@ -4587,6 +4587,7 @@ class PyRadioKeyboardConfig():
                 self._win.refresh()
 
                 ''' disable editing '''
+                self._still_editing = False
                 self._stop_editing()
             else:
                 # restore previous values on conflict
@@ -4628,20 +4629,38 @@ class PyRadioKeyboardConfig():
 
             elif char == kbkey['revert_def'] or \
                     check_localized(char, (kbkey['revert_def'], )):
+                tts = self.tts()
+                if tts and tts.can_i_use_tts(Priority.HIGH):
+                    tts.queue_speech('Default keys loaded', Priority.DIALOG, Context.LIMITED, self.op_mode())
                 for i in range(len(self._list)):
                     self._list[i][3] = self._list[i][1]
                     self._list[i][6] = self._list[i][4]
                 self._needs_update = True
             elif char == kbkey['revert_saved'] or \
                     check_localized(char, (kbkey['revert_saved'], )):
+                tts = self.tts()
+                if tts and tts.can_i_use_tts(Priority.HIGH):
+                    tts.queue_speech('Saved keys loaded', Priority.DIALOG, Context.LIMITED, self.op_mode())
                 for i in range(len(self._list)):
                     self._list[i][3] = self._list[i][2]
                     self._list[i][6] = self._list[i][5]
                 self._needs_update = True
             elif char == ord('x'):
-                self._list[self._selection][3] = self._list[self._selection][2]
-                self._list[self._selection][6] = self._list[self._selection][5]
-                self._needs_update = True
+                logger.error(f' ***** {self._focus =} ')
+                tts = self.tts()
+                if tts and tts.can_i_use_tts(Priority.HIGH):
+                    if not self._speak_button():
+                        self._list[self._selection][3] = self._list[self._selection][2]
+                        self._list[self._selection][6] = self._list[self._selection][5]
+                        self._needs_update = True
+                        it = self.item(self._selection)
+                        # caption = it[-1]
+                        default = it[4]
+                        user = it[5]
+                        # new = it[6]
+                        key = default if default == user else user
+                        msg = 'Key reverted to {}'.format(describe_single_key(key))
+                        tts.queue_speech(msg, Priority.DIALOG, Context.LIMITED, self.op_mode())
             elif char == ord(']'):
                 self._get_after_header()
                 self._make_selection_visible()

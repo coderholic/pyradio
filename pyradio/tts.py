@@ -465,12 +465,12 @@ class TTSWindows(TTSBase):
 
                 # HIGH and DIALOG: async execution with interruption checking
                 if priority in (Priority.HIGH, Priority.DIALOG):
-                    # Χρησιμοποιούμε ασύγχρονη ομιλία (flags=1) και βρόχο αναμονής
+                    # Using async speech (flags=1) and a waiting loop
                     self.current_stream = self.speaker.Speak(text, 1)  # flags=1 for async
                     self.state = TTSState.SPEAKING
 
                     while self.current_stream and not self.speaker.WaitUntilDone(50):  # 50ms chunks
-                        # Check for external stop (για HIGH και DIALOG)
+                        # Check for external stop (for HIGH and DIALOG)
                         if self._should_stop_externally(priority):
                             self.stop()
                             return False
@@ -500,7 +500,7 @@ class TTSWindows(TTSBase):
                 # Stop immediately
                 self.speaker.Speak("", 2)  # flags=2 for immediate stop
                 time.sleep(0.1)  # shorter delay
-                self.current_stream = None  # Προσθήκη: καθαρισμός του stream
+                self.current_stream = None
             except Exception as e:
                 if logger.isEnabledFor(logging.ERROR):
                     logger.error(f"Windows TTS stop error: {e}")
@@ -599,43 +599,28 @@ class TTSMacOS(TTSBase):
             pass
 
     def _wait_for_completion_with_interrupt(self, priority):
+        """Wait for current process to complete with frequent interruption checking"""
         try:
-            logger.error(f"macOS DEBUG: Entering wait loop, priority={priority.name}, process={self._current_process}")
-
-            if self._current_process:
-                logger.error(f"macOS DEBUG: Process PID: {self._current_process.pid}")
-                logger.error(f"macOS DEBUG: Initial poll: {self._current_process.poll()}")
-
-            loop_count = 0
+            # Enhanced check for interruption
             while self._current_process and self._current_process.poll() is None:
-                loop_count += 1
-                if loop_count % 50 == 0:  # Log κάθε 50 επαναλήψεις (περίπου 1 δευτερόλεπτο)
-                    logger.error(f"macOS DEBUG: Loop {loop_count}, checking external stop")
-
-                # Check for external stop
+                # Check for external stop (for DIALOG or NAVIGATION)
                 if self._should_stop_externally(priority):
-                    logger.error(f"macOS DEBUG: External stop detected! priority={priority.name}")
+                    logger.error(f"macOS: External stop requested for {priority.name}")
                     self._stop_current_speech()
                     return False
-
                 # Check for shutdown
                 if self.state == TTSState.SHUTTING_DOWN:
-                    logger.error(f"macOS DEBUG: Shutdown detected")
                     self._stop_current_speech()
                     return False
 
-                time.sleep(self._interrupt_check_interval)
+                # Using a very short sleep for better responsiveness
+                # but long enough to not load the PU
+                time.sleep(0.01)  # 10ms instead of 20ms
 
-            logger.error(f"macOS DEBUG: Exited loop, loop_count={loop_count}")
+            return self._current_process.returncode == 0 if self._current_process else False
 
-            if self._current_process:
-                returncode = self._current_process.returncode
-                logger.error(f"macOS DEBUG: Process returncode: {returncode}")
-                return returncode == 0
-
-            return False
-        except:
-            logger.error(f'macOS DEBUG:Exception for priority={priority.name}')
+        except Exception as e:
+            logger.error(f"Error waiting for speech completion: {e}")
             return False
 
     def stop(self):
@@ -1112,6 +1097,9 @@ class TTSManager:
                 logger.debug("Cleaned all queues completely")
 
     def queue_speech(self, text, priority=Priority.NORMAL, context=Context.LIMITED, mode=0):
+        if priority == Priority.HELP:
+            return
+
         logger.error(f'{mode = }')
         if not self.enabled or not self.available or not self.engine:
             return False

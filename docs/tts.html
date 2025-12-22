@@ -38,7 +38,7 @@ a:visited{color: SaddleBrown;}
 </header>
 <h1 style="color: SaddleBrown" id="pyradio-text-to-speech-support">PyRadio Text-to-Speech Support</h1>
 <h2 id="overview">Overview <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p><strong>PyRadio</strong> now features comprehensive Text-to-Speech (TTS) support, providing auditory feedback for an enhanced radio streaming experience. This intelligent system delivers contextual information about station navigation, playback status, and system events.</p>
+<p><strong>PyRadio</strong> features comprehensive Text-to-Speech (TTS) support, providing intelligent auditory feedback for an enhanced radio streaming experience. This advanced system delivers contextual information with priority-based management, supporting multiple platforms and extensive configuration options.</p>
 <h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <!-- vim-markdown-toc Marked -->
 <ul>
@@ -53,6 +53,11 @@ a:visited{color: SaddleBrown;}
 <li><a href="#linux">Linux</a></li>
 <li><a href="#windows">Windows</a></li>
 <li><a href="#macos">macOS</a></li>
+</ul></li>
+<li><a href="#speech-control">Speech Control</a>
+<ul>
+<li><a href="#speech-context">Speech Context</a></li>
+<li><a href="#speech-priorities">Speech Priorities</a></li>
 </ul></li>
 <li><a href="#language-support">Language Support</a>
 <ul>
@@ -69,28 +74,33 @@ a:visited{color: SaddleBrown;}
 <li><a href="#for-english-dominant-users">For English-Dominant Users</a></li>
 <li><a href="#for-multi-language-content">For Multi-Language Content</a></li>
 </ul></li>
-<li><a href="#configuration-philosophy">Configuration Philosophy</a></li>
 <li><a href="#configuration-options">Configuration Options</a>
 <ul>
-<li><a href="#volume">Volume</a></li>
+<li><a href="#basic-settings">Basic Settings</a></li>
+<li><a href="#speech-characteristics">Speech Characteristics</a></li>
 </ul></li>
-<li><a href="#current-status-&amp;-roadmap">Current Status &amp; Roadmap</a></li>
+<li><a href="#current-status-&amp;-roadmap">Current Status &amp; Roadmap</a>
+<ul>
+<li><a href="#current-implementation">Current Implementation</a></li>
+<li><a href="#configuration-window-behavior">Configuration Window Behavior</a></li>
+<li><a href="#planned-enhancements-for-future-versions">Planned Enhancements for Future Versions</a></li>
+</ul></li>
 </ul>
 <!-- vim-markdown-toc -->
 <p class="indented">[ <a href="index.html#text-to-speech-support">Return to main doc</a> ]</p>
 <h2 id="features">Features <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>The TTS system provides spoken feedback for:</p>
 <ul>
-<li><strong>Station Information</strong>: Station names and numbers during navigation</li>
-<li><strong>Playback Status</strong>: Start of playback and connection establishment<br />
-</li>
-<li><strong>Media Context</strong>: Song titles when available in stream metadata</li>
-<li><strong>System Events</strong>: Connection errors and important status changes</li>
-<li><strong>Audio Control</strong>: Volume adjustment feedback</li>
+<li><strong>Station Navigation</strong>: Station names and numbers during browsing</li>
+<li><strong>Playback Status</strong>: Connection establishment, playback start/stop</li>
+<li><strong>Media Metadata</strong>: Song titles and artist information from stream metadata</li>
+<li><strong>System Events</strong>: Connection errors, volume changes, status alerts</li>
+<li><strong>Dialog Interaction</strong>: Menu items, help text, configuration options</li>
 </ul>
 <h2 id="activation">Activation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <h3 id="permanent-activation">Permanent Activation</h3>
 <p>Enable TTS permanently through the configuration menu: <strong>Config → TTS → Enable TTS</strong></p>
+<p>This setting is saved in your configuration file and persists across sessions.</p>
 <h3 id="temporary-activation">Temporary Activation</h3>
 <p>Toggle TTS during runtime by pressing <strong>\T</strong> (backslash + T). This setting is session-only and resets when restarting PyRadio.</p>
 <h2 id="platform-implementation">Platform Implementation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
@@ -100,6 +110,21 @@ a:visited{color: SaddleBrown;}
 <p>Leverages <strong>Windows SAPI (Speech API)</strong> with automatic selection of English voices when available. Features immediate speech interruption and consistent volume control.</p>
 <h3 id="macos">macOS</h3>
 <p>Employs the native <strong>say command</strong> using the system’s default voice. Most macOS voices support multiple languages natively, handling mixed-language content seamlessly.</p>
+<h2 id="speech-control">Speech Control <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<h3 id="speech-context">Speech Context</h3>
+<p>Control how much speech feedback you receive:</p>
+<ul>
+<li><strong>limited</strong>: Essential information only (system messages, errors, station data)</li>
+<li><strong>window</strong>: Extended feedback (includes window text and interface elements)</li>
+<li><strong>all</strong>: Comprehensive feedback (speaks all available text and information)</li>
+</ul>
+<h3 id="speech-priorities">Speech Priorities</h3>
+<p>The system intelligently manages speech priorities:</p>
+<ul>
+<li><strong>Critical information</strong> (errors, alerts) receives immediate attention</li>
+<li><strong>Navigation feedback</strong> can be interrupted for rapid browsing</li>
+<li><strong>Song titles</strong> are preserved and spoken after important announcements</li>
+</ul>
 <h2 id="language-support">Language Support <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <h3 id="voice-characteristics">Voice Characteristics</h3>
 <p>TTS voices generally fall into two categories:</p>
@@ -118,14 +143,13 @@ a:visited{color: SaddleBrown;}
 <h3 id="platform-specific-strategy">Platform-Specific Strategy</h3>
 <ul>
 <li><strong>Linux</strong>: English-configured for consistent system messaging</li>
-<li><strong>Windows</strong>: Auto-selects English voices while respecting system preferences<br />
-</li>
+<li><strong>Windows</strong>: Auto-selects English voices while respecting system preferences</li>
 <li><strong>macOS</strong>: Uses default system voice - typically multilingual by design</li>
 </ul>
 <h2 id="technical-features">Technical Features <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <h3 id="smart-queue-management">Smart Queue Management</h3>
 <ul>
-<li>Priority-based processing (HIGH for alerts, NORMAL for navigation)</li>
+<li>Priority-based processing</li>
 <li>Pending title queuing after high-priority interruptions</li>
 <li>Volume adjustment debouncing</li>
 <li>Platform-optimized anti-stutter protection</li>
@@ -135,7 +159,6 @@ a:visited{color: SaddleBrown;}
 <li>Critical alerts receive immediate priority</li>
 <li>Song titles are queued and spoken after high-priority interruptions</li>
 <li>Rapid navigation triggers queue optimization</li>
-<li>Volume changes are consolidated to prevent speech spam</li>
 </ul>
 <h2 id="usage-guidelines">Usage Guidelines <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <h3 id="for-english-dominant-users">For English-Dominant Users</h3>
@@ -149,30 +172,98 @@ a:visited{color: SaddleBrown;}
 <li><strong>Windows/Linux</strong>: <strong>Non-English characters in station names may not be pronounced correctly</strong></li>
 <li>Consider using English names for frequently-accessed stations</li>
 </ul>
-<h2 id="configuration-philosophy">Configuration Philosophy <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>The system is optimized for English while respecting platform conventions:</p>
-<ul>
-<li><strong>English-optimized voice selection on Linux and Windows</strong></li>
-<li><strong>Multilingual voice support on macOS</strong></li>
-<li>Maintains your preferred speech rate and volume</li>
-<li>Platform-native experience throughout</li>
-</ul>
 <h2 id="configuration-options">Configuration Options <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<h3 id="volume">Volume</h3>
-<p>The TTS volume can be adjusted independently of audio playback volume:</p>
+<h3 id="basic-settings">Basic Settings</h3>
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 20%" />
+<col style="width: 23%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Values</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>enable_tts</strong></td>
+<td>True/False</td>
+<td>False</td>
+<td>Master switch for TTS functionality</td>
+</tr>
+<tr>
+<td><strong>tts_context</strong></td>
+<td>limited/window/all</td>
+<td>all</td>
+<td>Controls how much information is spoken</td>
+</tr>
+<tr>
+<td><strong>tts_volume</strong></td>
+<td>0-100</td>
+<td>50</td>
+<td>Speech volume (Linux/Windows only)</td>
+</tr>
+<tr>
+<td><strong>tts_rate</strong></td>
+<td>-100 to 100</td>
+<td>0</td>
+<td>Speech speed (negative=slower, positive=faster)</td>
+</tr>
+<tr>
+<td><strong>tts_pitch</strong></td>
+<td>-100 to 100</td>
+<td>0</td>
+<td>Voice pitch adjustment</td>
+</tr>
+<tr>
+<td><strong>tts_verbosity</strong></td>
+<td>default/punctuation</td>
+<td>default</td>
+<td>Controls how punctuation is spoken</td>
+</tr>
+</tbody>
+</table>
+<h3 id="speech-characteristics">Speech Characteristics</h3>
 <ul>
-<li><strong>Linux</strong>: Uses spd-say with volume range from <strong>-100 to +100</strong> (relative to base volume)</li>
-<li><strong>Windows</strong>: Uses SAPI with volume range from <strong>0 to 100</strong> (absolute)</li>
-<li><strong>macOS</strong>: Volume control is not supported - uses system speech volume</li>
+<li><strong>Volume</strong>: Adjustable on Linux and Windows (macOS uses system volume)</li>
+<li><strong>Rate</strong>: Controls speech speed across all platforms</li>
+<li><strong>Pitch</strong>: Alters voice pitch (platform-dependent implementation)</li>
+<li><strong>Verbosity</strong>:
+<ul>
+<li>default: Punctuation is interpreted naturally</li>
+<li>punctuation: Punctuation is spoken literally (e.g., “read-only” becomes “read dash only”)</li>
+</ul></li>
 </ul>
-<p>This option can be found in the configuration menu under <strong>Config → TTS → Volume</strong>.</p>
 <h2 id="current-status-roadmap">Current Status &amp; Roadmap <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>This TTS implementation is actively developed. Planned enhancements include:</p>
+<h3 id="current-implementation">Current Implementation</h3>
+<p>The TTS support in PyRadio is continuously evolving. Currently, TTS is available for:</p>
 <ul>
-<li>Comprehensive help system narration</li>
-<li>Detailed interface element descriptions</li>
-<li>Enhanced context-aware speech patterns</li>
-<li>Extended configuration options</li>
+<li>Main station selection window</li>
+<li>Playback status and notifications</li>
+<li>Station navigation and browsing</li>
+<li>Volume adjustment feedback</li>
+<li>Basic configuration menus</li>
 </ul>
+<h3 id="configuration-window-behavior">Configuration Window Behavior</h3>
+<p>To assist users in configuring the program, <strong>special rules apply when using the Configuration windows</strong>:</p>
+<ol type="1">
+<li><p><strong>Full TTS Access</strong>: When navigating through the Configuration menus and windows (including all sub-windows), the TTS system operates at its fullest capacity, temporarily overriding the tts_context setting to provide complete auditory feedback about all interface elements.</p></li>
+<li><p><strong>Voice Sample</strong>: While in the main TTS configuration screen, pressing <strong>T</strong> (uppercase) will speak a voice sample using the current TTS settings, allowing you to preview how your configuration sounds.</p></li>
+<li><p><strong>Detailed Help</strong>: In all configuration windows (currently implemented in the “Keyboard Shortcuts” window), pressing <strong>t</strong> (lowercase) provides additional spoken information about the current setting being configured.</p></li>
+</ol>
+<p><em>This special behavior ensures that all users can effectively configure the program to their preferences, regardless of their current TTS context settings.</em></p>
+<h3 id="planned-enhancements-for-future-versions">Planned Enhancements for Future Versions</h3>
+<ul>
+<li>Extended TTS support for all program windows and dialogs</li>
+<li>Enhanced context-aware speech patterns</li>
+<li>More granular control over speech feedback</li>
+<li>Implementation of the detailed help feature (lowercase <strong>t</strong>) across all configuration windows</li>
+</ul>
+<p><em>Note: The TTS system is designed to be unobtrusive yet informative. If you encounter issues with speech feedback or have suggestions for improvement, please report them via the PyRadio issue tracker.</em></p>
 </body>
 </html>

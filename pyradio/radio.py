@@ -34,7 +34,7 @@ except:
 try:
     from importlib.resources import files, as_file   # 3.9+
 except ImportError:
-    from importlib_resources import files, as_file   # backport για 3.7–3.8
+    from importlib_resources import files, as_file   # backport for 3.7–3.8
 from .player import PlayerCache
 from .config import HAS_REQUESTS, HAS_DNSPYTHON, Station
 from .common import StationsChanges, CsvReadWrite, STATES, M_STRINGS, player_start_stop_token, get_cached_icon_path
@@ -3385,7 +3385,7 @@ ____Using |fallback| theme.''', Priority.HIGH)
 
     def _tts_queue_speech(self, caption, text, priority, mode):
         if caption:
-            text = [f'Window: {caption}.'] + text
+            text = ['Window: {}.'.format(caption.lower())] + text
         logger.error(f'\n\n{text = }\n\n')
         if text[0].startswith('Window: Free Keys'):
             rep = {
@@ -12453,8 +12453,8 @@ _____"|f|" to see the |free| keys you can use.
     def read_markdown_file(self):
         markdown_file = os.path.join(self._cnf.check_output_folder, 'playlist_report.md')
 
-        errors = {}  # Για αποθήκευση κωδικών σφαλμάτων και περιγραφών
-        station_data = {}  # Για αποθήκευση δεδομένων σταθμών
+        errors = {}
+        station_data = {}
 
         with open(markdown_file, 'r') as file:
             lines = file.readlines()
@@ -12472,7 +12472,7 @@ _____"|f|" to see the |free| keys you can use.
 
             # Detect Section
             if line.startswith('###'):
-                current_section = line[4:].strip()  # Αφαιρούμε το "### "
+                current_section = line[4:].strip()
                 continue
 
             # Section is now "Errors and Descriptions"

@@ -1519,6 +1519,7 @@ __{search} |/ |{search_next}| / |{search_prev}    <*>  Search, go to next / prev
 __|{revert_def}| / |{revert_saved}|      <*> Revert to default / saved shortcuts.
 __|x|                                    <*> Revert current item to saved value.
 __|f|                                    <*> Show |free| keys.
+__|t|                                    <*> |T|alk the current item.
 __|Enter|, |{pause}|,                    <*>
 __|Right|, |{l}|                         <*> Enter |editing mode| (insert new shortcut).
 __|Esc|                                  <*>Exit |editing mode|.
