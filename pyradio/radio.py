@@ -2884,7 +2884,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             help_msg=True, suffix=self._status_suffix, counter=''
         )
         if state == STATES.CONNECT_ERROR:
-            self.tts.queue_speech(player_start_stop_token[msg_key], Priority.HIGH, mode=self.we.operation_mode)
+            self.tts.queue_speech(player_start_stop_token[msg_key], Priority.HIGH, mode=self.ws.operation_mode)
         self._current_player_id = self._next_current_player_id
         logger.error(f'increasing {self._current_player_id = }')
         self._prepare_next_current_player_id()
@@ -12100,26 +12100,16 @@ _____"|f|" to see the |free| keys you can use.
         '''
         num = -1
         self._reading_stations = []
-        with open(playlist_file, 'r', encoding='utf-8') as cfgfile:
-            try:
-                for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
-                    if not row:
-                        continue
-                    try:
-                        name, url = [s.strip() for s in row]
-                        self._reading_stations.append([name, url, '', ''])
-                    except:
-                        try:
-                            name, url, enc = [s.strip() for s in row]
-                            self._reading_stations.append([name, url, enc, ''])
-                        except:
-                            name, url, enc, onl = [s.strip() for s in row]
-                            self._reading_stations.append([name, url, enc, onl])
-            except:
-                self._reading_stations = []
-                return num
-
-
+        csv_in = CsvReadWrite(a_file=playlist_file)
+        csv_in.encoding_to_remove = self._cnf.default_encoding
+        ret = csv_in.read()
+        if not ret:
+            self._reading_stations = []
+            csv_in = None
+            return num
+        self._reading_stations = csv_in.items
+        current_playlist_version = csv_in.version
+        csv_in = None
         return self._scan_playlist_for_station(self._reading_stations, start, station_to_find)
 
     def _can_receive_remote_command(self):
@@ -12191,6 +12181,9 @@ _____"|f|" to see the |free| keys you can use.
         self._start_remote_control_server()
 
     def _open_playlist_and_station_from_station_history(self, stationFile, h_item):
+        logger.error('\n\nstationFile = {}\nh_items = {}\n h_item[-1] = {}\nh_item[1] = {}\n\n'.format(
+                     stationFile, h_item, h_item[-1], h_item[1]
+                     ))
         num = self._open_and_check_station_in_playlist(stationFile, h_item[-1], h_item[1])
         if num == -1:
             return
