@@ -120,7 +120,7 @@ class PyRadioScheduleList():
         if self._a_list:
             logger.error(f'\n\nself._list\n{self._a_list}\n\n')
             self._list = self._a_list
-            for i in range(len(self._list)):
+            for _i in range(len(self._list)):
                 if self._list[-1]['token'] == '':
                     self._list[-1]['token'] = random_string()
         else:
@@ -504,8 +504,8 @@ class PyRadioScheduleItem():
         if isinstance(val, str):
             try:
                 self._item = json.loads(val)
-            except:
-                raise ValueError('JSON string not supported')
+            except json.JSONDecodeError as e:
+                raise ValueError('JSON string not supported') from e
         elif isinstance(val, dict):
             self._item = val
 

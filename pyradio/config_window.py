@@ -825,7 +825,7 @@ class PyRadioConfigWindow():
                 self._cnf.player_changed = True
                 self._cnf.player_values = [self._cnf.opts['player'][1], self._saved_config_options['player'][1]]
             self._cnf.opts = deepcopy(self._saved_config_options)
-            self._old_theme == self._saved_config_options['theme'][1]
+            self._old_theme = self._saved_config_options['theme'][1]
             self._config_options = deepcopy(self._cnf.opts)
             self._cnf.dirty_config = True
         else:

@@ -11,10 +11,6 @@ from shutil import which, move, Error as shutil_Error
 from enum import IntEnum
 from sys import platform
 from rich import print
-try:
-    from importlib.resources import files, as_file   # 3.9+
-except ImportError:
-    from importlib_resources import files, as_file   # backport για 3.7–3.8
 
 logger = logging.getLogger(__name__)
 
@@ -410,17 +406,6 @@ class StationsChanges():
         self.asked_sync = None
         self.last_sync = None
         self.version_to_write = None
-
-    def _read_version(self):
-        init_file = files("pyradio").joinpath("__init__.py")
-        lin = ''
-        with init_file.open('r', encoding='utf-8') as cfg:
-            for raw in cfg:
-                raw = raw.strip()
-                if raw.startswith('version_info'):
-                    lin = raw[15:].replace('(', '').replace(')', '')
-                    break
-        return eval(lin)
 
     def _read_synced_version(self, asked=False):
         in_file = self._asked_sync_file if asked else self._last_sync_file

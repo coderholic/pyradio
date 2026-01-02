@@ -8,7 +8,6 @@ from time import sleep
 import site
 from shutil import rmtree
 from msvcrt import getwch
-from pathlib import Path
 from urllib.request import urlretrieve
 import glob
 import threading

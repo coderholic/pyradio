@@ -31,7 +31,7 @@ queue_lock = Lock()
 def enqueue_input(char, reset=False):
     global input_queue
     if reset:
-        input_queue(clear)
+        input_queue.clear()
     with queue_lock:
         input_queue.append(char)
 

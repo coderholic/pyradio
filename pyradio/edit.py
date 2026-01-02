@@ -7,6 +7,7 @@ import logging
 from sys import platform, modules
 from os import path, remove, sep, access, X_OK, environ, makedirs
 from string import punctuation as string_punctuation
+from pathlib import Path
 try:
     # python 3
     from urllib.parse import urlparse

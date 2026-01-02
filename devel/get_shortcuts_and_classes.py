@@ -485,7 +485,6 @@ def ask_and_execute():
         print("\nTimeout occurred. Exiting...")
 
 if __name__ == "__main__":
-    from sys import exit
     # Updated project path
     starting_dir = os.getcwd()
     verbose_print(f'{starting_dir = }')

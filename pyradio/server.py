@@ -1947,7 +1947,7 @@ Content-Length: {len(b_msg)}
                 nsp = sp[1].split(',')
                 if len(nsp) == 1:
                     try:
-                        x = int(nsp[0])
+                        _ = int(nsp[0])
                     except ValueError:
                         return None
                     return sp[1]

@@ -34,7 +34,10 @@ except:
 try:
     from importlib.resources import files, as_file   # 3.9+
 except ImportError:
-    from importlib_resources import files, as_file   # backport for 3.7–3.8
+    try:
+        from importlib.resources import files, as_file   # 3.14
+    except ImportError:
+        from importlib_resources import files, as_file   # backport for 3.7–3.8
 from .player import PlayerCache
 from .config import HAS_REQUESTS, HAS_DNSPYTHON, Station
 from .common import StationsChanges, CsvReadWrite, STATES, M_STRINGS, player_start_stop_token, get_cached_icon_path
@@ -2048,7 +2051,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         st_size = cur_size = getsize(a_file)
         while True:
             if exists(a_file):
-                for n in range(0, 5):
+                for _n in range(0, 5):
                     sleep(.15)
                     if stop():
                         break
@@ -2100,7 +2103,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 if logger.isEnabledFor(logging.DEBUG) and not showed:
                     logger.debug(f'File watched does not exist: {a_file}')
                     showed = True
-                for n in range(0, 5):
+                for _n in range(0, 5):
                     sleep(.15)
                     if stop():
                         if logger.isEnabledFor(logging.DEBUG):
@@ -11522,7 +11525,7 @@ _____"|f|" to see the |free| keys you can use.
                         ''' display browser empty lines (station=None) '''
                         line = self.__displayBodyLine(0, pad, None, return_line = True)
                         if self._cnf.browsing_station_service:
-                            for n in range(i+1, self.bodyMaxY + 1):
+                            for _n in range(i+1, self.bodyMaxY + 1):
                                 try:
                                     self.bodyWin.addstr(lineNum, 0, line, curses.color_pair(5))
                                 except:
@@ -12315,7 +12318,7 @@ _____"|f|" to see the |free| keys you can use.
             i += 1
 
         # Write logs to separate files (only if logs exist for the player)
-        for player, log_lines in logs.items():
+        for this_player, log_lines in logs.items():
             if log_lines:  # Only create a file if there are logs for the player
                 if log_lines[-2].startswith('#'):
                     log_lines.pop()
@@ -12336,7 +12339,7 @@ _____"|f|" to see the |free| keys you can use.
         station_data = {}  # To store station data
 
         # Read and parse CSV files
-        for player, filename in player_files.items():
+        for this_player, filename in player_files.items():
             filepath = os.path.join(self._cnf.check_output_folder, filename)
             if not os.path.exists(filepath):
                 continue  # Skip if the file doesn't exist

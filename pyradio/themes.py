@@ -42,7 +42,9 @@ def compare_color_pairs(pair1, pair2, curses_colors):
         return True  # The color pairs are identical
     return False  # The color pairs are different
 
-def is_light_or_dark(rgb_color=[0,128,255]):
+def is_light_or_dark(rgb_color=None):
+    if rgb_color is None:
+        rgb_color = [0, 128, 255]
     [r,g,b]=rgb_color
     """
     https://stackoverflow.com/questions/22603510/is-this-possible-to-detect-a-colour-is-a-light-or-dark-colour
@@ -459,7 +461,7 @@ class PyRadioTheme():
                 with as_file(in_resource) as real_path:
                     copyfile(real_path, out_file)
                 return True, f'Theme created: "{out_theme_name}"'
-            except Exception as e:
+            except Exception:
                 return False, f'Error creating file for theme: "{out_theme_name}"'
 
     def open_theme(self, a_theme='', a_path='', print_errors=None, no_curses=False):
@@ -496,7 +498,7 @@ class PyRadioTheme():
             self._colors['Name'] = 'dark_16_colors'
             self._colors['Path'] = ''
             self.applied_theme_name = 'dark_16_colors'
-            self._colors['data'] = {1: (255, 255, 255), 2: (128, 128, 128), 3: (0, 255, 0), 8: (0, 0, 0), 9: (0, 255, 0), 4: (0, 0, 0), 5: (255, 0, 255), 6: (0, 0, 0), 7: (0, 255, 0), 12: (0, 255, 255), 11: (0, 0, 255), 10: (255, 255, 0), 13: (255, 255, 255), 13: (128, 128, 128), 15: (154, 154, 154)}
+            self._colors['data'] = {1: (255, 255, 255), 2: (128, 128, 128), 3: (0, 255, 0), 8: (0, 0, 0), 9: (0, 255, 0), 4: (0, 0, 0), 5: (255, 0, 255), 6: (0, 0, 0), 7: (0, 255, 0), 12: (0, 255, 255), 11: (0, 0, 255), 10: (255, 255, 0), 13: (255, 255, 255), 14: (128, 128, 128), 15: (154, 154, 154)}
             if not no_curses:
                 if curses.COLORS > 16:
                     self._colors['data'][16] = (255, 255, 255)
@@ -759,7 +761,7 @@ class PyRadioThemeReadWrite():
             # logger.error('sp = {}'.format(sp))
             # logger.error('names = {}'.format(names))
             names[sp[0].strip()] = sp[1:]
-            for k, v in names.items():
+            for _, v in names.items():
                 for n in (0, 1):
                     try:
                         v[n] = v[n].strip()
@@ -1073,8 +1075,7 @@ class PyRadioThemeSelector():
         if self._first_theme_to_watch == 0:
             self._first_theme_to_watch = len(self._themes)
 
-        for a_theme in self._themes:
-            self._max_title_width = max(len(theme[0]) for theme in self._themes)
+        self._max_title_width = max(len(theme[0]) for theme in self._themes)
 
         if self.log:
             self.log(f'max_title_width = {self._max_title_width}\n')
@@ -1380,10 +1381,11 @@ class PyRadioThemeSelector():
             else:
                 self._win.addstr(i+1, 1, token + self._themes[an_item][0], col)
 
-        try:
-            self._win.move(sel, self._width - 2)
-        except:
-            pass
+        # Leftover from a bad copy/paste?
+        # try:
+        #     self._win.move(sel, self._width - 2)
+        # except:
+        #     pass
         ''' display transparency indicator '''
         if not self.changed_from_config:
             self._win.addstr(self._height-1, self._width - 4, '[T]', curses.color_pair(self._box_color_pair))

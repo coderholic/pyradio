@@ -73,7 +73,7 @@ class PyRadioSimpleScheduleWindow():
             cur_op_mode,
             playlist=None, station=None,
             schedule_item=None,
-            global_functions={}
+            global_functions=None
     ):
         self._info_result = None
         self._X = 0
@@ -101,7 +101,10 @@ class PyRadioSimpleScheduleWindow():
         self._maxX = 60
         self._displacement = 3
         self._maxY = 20
-        self._global_functions = global_functions
+        if global_functions is None:
+            self._global_functions = {}
+        else:
+            self._global_functions = global_functions
         self._get_parent(parent)
         self._focus = 22
         try:
@@ -1098,7 +1101,7 @@ class PyRadioSimpleScheduleWindow():
                         w.addstr(5, X, ' Now is:', curses.color_pair(10))
                         w.addstr(now_str, curses.color_pair(3))
                         w.refresh()
-                for n in range(5):
+                for _n in range(5):
                     if stop():
                         break
                     sleep(.1)
@@ -1458,7 +1461,7 @@ class PyRadioSimpleScheduleWindow():
         showed = False
         while True:
             if showed:
-                for n in range(0, 5):
+                for _ in range(0, 5):
                     sleep(.1)
                     if stop():
                         # if logger.isEnabledFor(logging.DEBUG):

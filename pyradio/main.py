@@ -226,26 +226,6 @@ def _win_python_3_12():
             setattr(curses, key, value)
     return stdscr
 
-def create_systemd_service_files():
-    file_names = ('start-headless-pyradio.sh', 'stop-headless-pyradio.sh', 'pyradio.service')
-    if program == 'tmux':
-        srv_files = (
-r'''#!|SHELL|
-touch |HOME|/pyradio.log
-|PROGRAM| new-session -dA -s pyradio-session |PYRADIO| --headless auto
-''',
-r'''#!|SHELL|
-[ -z "$(|PROGRAM| ls | grep pyradio-session)" ] || |PROGRAM| send-keys -t pyradio-session q
-sleep 2
-[ -z "$(|PROGRAM| ls | grep pyradio-session)" ] || |PROGRAM| sennd-keys -t pyradio-session q
-[ -e |HOME|/.config/pyradio/data/server-headless.txt ] && rm |HOME|/.config/pyradio/data/server-headless.txt
-[ -e |HOME|/.local/state/pyradio/server-headless.txt ] && rm |HOME|/.local/state/pyradio/server-headless.txt
-'''
-                )
-        pass
-    else:
-        pass
-
 def shell():
     if sys.version_info[0] == 2 or \
             (sys.version_info.major == 3 and sys.version_info < (3, 7)):
@@ -610,10 +590,6 @@ If nothing else works, try the following command:
 
         if not system().lower().startswith('darwin') and \
                 not system().lower().startswith('win'):
-            # if args.generate_systemd_service_files:
-            #     create_systemd_service_files()
-            #     sys.exit()
-            # elif args.terminal:
 
             if args.terminal:
                 import subprocess

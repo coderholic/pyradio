@@ -3006,7 +3006,7 @@ class RadioBrowserSearchWindow():
                 parent=self._win)
             self._widgets.append(self._h_buttons.buttons[0])
             self._widgets.append(self._h_buttons.buttons[1])
-            for i, n in enumerate(self._widgets):
+            for i, _ in enumerate(self._widgets):
                 self._widgets[i].id = i
                 if type(self._widgets[i]).__name__ == 'SimpleCursesLineEdit':
                     self._line_editor_id.append(i)
@@ -4336,7 +4336,7 @@ class RadioBrowserServers():
             if len(self.items[i]) > s_max:
                 s_max = len(self.items[i])
         self.items.sort()
-        for i, n in enumerate(self.items):
+        for i, _ in enumerate(self.items):
             if len(self.items[i]) < s_max:
                 self.items[i] = self.items[i].replace('(', ' ' * (s_max - len(self.items[i])) + '(')
         self.maxY = len(self.items)

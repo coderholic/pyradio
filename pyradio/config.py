@@ -3303,7 +3303,7 @@ class PyRadioConfig(PyRadioStations):
             except AttributeError:
                 parents = self._get_parents(pid)
 
-            # logger.error('\n\n{}\n\n'.format(parents))
+            logger.error('\n\nparents = {}\n\n'.format(parents))
             if parents is not None:
                 '''
                 read ~/.config/pyradio/no-themes-terminals
@@ -3317,14 +3317,15 @@ class PyRadioConfig(PyRadioStations):
                         pass
                     logger.error(f'\n\nuser terminals: {user_terminals}\n\n')
                     if user_terminals:
-                        if parent.name() in user_terminals:
-                            '''
-                            set this to not display notification because
-                            user has customized no-themes-terminals
-                            '''
-                            self.no_themes_from_command_line = True
-                            self.terminal_is_blacklisted = True
-                            return True
+                        for parent in parents:
+                            if parent.name() in user_terminals:
+                                '''
+                                set this to not display notification because
+                                user has customized no-themes-terminals
+                                '''
+                                self.no_themes_from_command_line = True
+                                self.terminal_is_blacklisted = True
+                                return True
 
                 ''' blacklisted terminals '''
                 terminals = [

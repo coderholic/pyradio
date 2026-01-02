@@ -1,4 +1,3 @@
-import os
 import winreg
 
 hkey = winreg.HKEY_CURRENT_USER
