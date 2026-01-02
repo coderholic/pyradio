@@ -10922,14 +10922,14 @@ _____"|f|" to see the |free| keys you can use.
         source_path = files("pyradio")
         if logger.isEnabledFor(logging.INFO):
             logger.info('No resource opener found; displaying dirs list...')
-        out = ['|____Config Dir:| ' + self._cnf.stations_dir]
-        out.append('|______Data Dir:| ' + self._cnf.data_dir)
+        out = [f'|____Config Dir:| {self._cnf.stations_dir}']
+        out.append(f'|______Data Dir:| {self._cnf.data_dir}')
         if self._cnf.data_dir != self._cnf.state_dir:
-            out.append('|_____State Dir:| ' + self._cnf.state_dir)
+            out.append(f'|_____State Dir:| {self._cnf.state_dir}')
         if not os.path.isdir(source_path):
             source_path = ''
-        out.append('|______Code Dir:| ' + source_path)
-        out.append('|Recordings Dir:| ' + self._cnf.recording_dir)
+        out.append(f'|______Code Dir:| {source_path}')
+        out.append(f'|Recordings Dir:| {self._cnf.recording_dir}')
         txt = '\n'.join(out)
         self._messaging_win.set_a_message(
                 'UNIVERSAL', (

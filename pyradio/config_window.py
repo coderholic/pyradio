@@ -18,17 +18,11 @@ from time import sleep
 try:
     # Python ≥ 3.9
     from importlib.resources import files, as_file
-    from importlib.abc import Traversable
+    from importlib.resources.abc import Traversable
 except ImportError:
-    try:
-        # Python 3.14
-        from importlib.resources import files, as_file
-        from importlib.resources.abc import Traversable
-    except ImportError:
-        # Python 3.7–3.8 (backport)
-        from importlib_resources import files, as_file
-        from importlib_resources.abc import Traversable
-
+    # Python 3.7 & 3.8 (backport)
+    from importlib_resources import files, as_file
+    from importlib_resources.abc import Traversable
 from .common import CsvReadWrite, Station
 from .window_stack import Window_Stack_Constants
 from .cjkwrap import cjklen

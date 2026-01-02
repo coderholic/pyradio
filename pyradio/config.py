@@ -9,7 +9,7 @@ import collections
 import json
 from pathlib import Path
 # import socket
-from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, getpid, listdir, access, R_OK, environ
+from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, getpid, listdir, access, R_OK, environ, fspath
 from sys import platform, exit
 from time import ctime, sleep
 from datetime import datetime
@@ -24,16 +24,11 @@ from rich import print
 try:
     # Python ≥ 3.9
     from importlib.resources import files, as_file
-    from importlib.abc import Traversable
+    from importlib.resources.abc import Traversable
 except ImportError:
-    try:
-        # Python 3.14
-        from importlib.resources import files, as_file
-        from importlib.resources.abc import Traversable
-    except ImportError:
-        # Python 3.7–3.8 (backport)
-        from importlib_resources import files, as_file
-        from importlib_resources.abc import Traversable
+    # Python 3.7 & 3.8 (backport)
+    from importlib_resources import files, as_file
+    from importlib_resources.abc import Traversable
 from pyradio import version
 from .common import validate_resource_opener_path, is_rasberrypi, Station, describe_playlist, CsvReadWrite, ProfileManager
 from .keyboard import read_keyboard_shortcuts, read_localized_keyboard, set_lkbkey
@@ -187,6 +182,7 @@ class PyRadioStations():
             self.xdg.build_paths()
         self.xdg.ensure_paths_exist()
         self.root_path = files("pyradio").joinpath("stations.csv")
+        logger.error(f'{self.root_path = }')
         self.themes_dir = path.join(self.stations_dir, 'themes')
         self.favorites_path = path.join(self.stations_dir, 'favorites.csv')
         try:
@@ -642,7 +638,9 @@ class PyRadioStations():
                 return '', -2
 
     def _package_stations(self):
-        ''' read package stations.csv file '''
+        ''' read package stations.csv file
+            this is supposed to ba a simple file (2-3 fields)
+        '''
         with self.root_path.open('r', encoding='utf-8') as cfgfile:
             for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
                 if not row:
@@ -676,6 +674,7 @@ class PyRadioStations():
                     logger.debug(f'Added: {self.added_stations} - {a_pkg_station}')
 
     def read_playlist_for_server(self, stationFile):
+        """ read the station names only from a playlist """
         out = []
         in_file = self._construct_playlist_path(stationFile)
         try:
@@ -2182,10 +2181,11 @@ class PyRadioConfig(PyRadioStations):
         #curses.mouseinterval(0)
 
     def open_a_dir(self, a_dir):
+        str_dir = fspath(a_dir)
         if system().lower() == 'windows':
-            startfile(a_dir)
+            startfile(str_dir)
         elif system().lower() == 'darwin':
-            Popen([which('open'), a_dir])
+            Popen([which('open'), str_dir])
         else:
             xdg_open_path = self._linux_resource_opener if self._linux_resource_opener else get_a_linux_resource_opener()
             if isinstance(xdg_open_path, str):
@@ -2193,7 +2193,7 @@ class PyRadioConfig(PyRadioStations):
             if xdg_open_path:
                 try:
                     Popen(
-                        [*xdg_open_path, a_dir],
+                        [*xdg_open_path, str_dir],
                         stderr=DEVNULL,
                         stdout=DEVNULL
                     )
@@ -2201,7 +2201,7 @@ class PyRadioConfig(PyRadioStations):
                     pass
 
     def open_config_dir(self, recording=0):
-        a_dir = self.stations_dir if recording == 0 else self.recording_dir
+        a_dir = fspath(self.stations_dir if recording == 0 else self.recording_dir)
         if system().lower() == 'windows':
             startfile(a_dir)
         elif system().lower() == 'darwin':

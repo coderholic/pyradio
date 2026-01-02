@@ -12,16 +12,11 @@ from pathlib import Path
 try:
     # Python ≥ 3.9
     from importlib.resources import files, as_file
-    from importlib.abc import Traversable
+    from importlib.resources.abc import Traversable
 except ImportError:
-    try:
-        # Python 3.14
-        from importlib.resources import files, as_file
-        from importlib.resources.abc import Traversable
-    except ImportError:
-        # Python 3.7–3.8 (backport)
-        from importlib_resources import files, as_file
-        from importlib_resources.abc import Traversable
+    # Python 3.7 & 3.8 (backport)
+    from importlib_resources import files, as_file
+    from importlib_resources.abc import Traversable
 from .common import rgb_to_curses_rgb, rgb_to_hex, hex_to_rgb
 from .keyboard import kbkey, check_localized, remove_l10n_from_global_functions
 
@@ -456,7 +451,7 @@ class PyRadioTheme():
                 return False, f'Error writing theme file: "{out_theme_name}"'
         else:
             ''' copy theme file '''
-            in_resource = files("pyradio.themes").joinpath(theme_name + ".pyradio-theme")
+            in_resource = files("pyradio.themes").joinpath(f"{theme_name}.pyradio-theme")
             try:
                 with as_file(in_resource) as real_path:
                     copyfile(real_path, out_file)
@@ -624,51 +619,45 @@ class PyRadioTheme():
         # logger.error(f'{a_theme = }')
         try:
             # Python ≥ 3.9
-            from importlib.abc import Traversable
+            from importlib.resources import files, as_file
+            from importlib.resources.abc import Traversable
         except ImportError:
-            try:
-                # Python 3.14
-                from importlib.resources.abc import Traversable
-            except ImportError:
-                # Python 3.7–3.8 (backport)
-                from importlib_resources.abc import Traversable
+            # Python 3.7 & 3.8 (backport)
+            from importlib_resources import files, as_file
+            from importlib_resources.abc import Traversable
+
+        user_theme_dir = Path(self._cnf.stations_dir) / 'themes'
+        package_theme_dir = files("pyradio") / "themes"
+        cache_dir = Path(self._cnf.cache_dir) / 'themes'
 
         # List of theme directories: user path first, package resources second
-        theme_dirs = [
-            path.join(self._cnf.stations_dir, 'themes'),  # user themes
-            files("pyradio").joinpath("themes")           # package internal themes
+        theme_dirs_to_search = [
+            (user_theme_dir, False),    # (dir, is_package_resource)
+            (package_theme_dir, True)
         ]
         # logger.error(f'{theme_dirs = }')
 
-        for theme_dir in theme_dirs:
-            # Case 1: Traversable object (package resource, may be zipped)
-            if isinstance(theme_dir, Traversable):
+
+        # Search in user dir firts
+        for theme_dir, is_package_resource in theme_dirs_to_search:
+            # Case 1: It is Traversable (package source)
+            if is_package_resource and isinstance(theme_dir, Traversable):
                 for res in theme_dir.iterdir():
-                    # logger.debug(f'===> {res.name = }')
-                    if res.name.endswith('.pyradio-theme') and res.name[:-14] == a_theme:
-                        # Extract the resource temporarily to cache
+                    if res.name == f"{a_theme}.pyradio-theme":
+                        # Copy to cache if a package source
+                        cache_dir.mkdir(parents=True, exist_ok=True)
+                        cached_theme_path = cache_dir / res.name
                         with as_file(res) as tmp_path:
-                            cache_dir = path.join(self._cnf.cache_dir, 'themes')
-                            Path(cache_dir).mkdir(parents=True, exist_ok=True)
-                            real_theme_path = path.join(cache_dir, a_theme + '.pyradio-theme')
-                            # logger.info(f'{real_theme_path = }')
-                            # Always overwrite to handle updated package themes
-                            copyfile(tmp_path, real_theme_path)
-                            # logger.error(f'{real_theme_path = }')
-                            return real_theme_path
+                            copyfile(tmp_path, cached_theme_path)
+                        return str(cached_theme_path)
+            # Case 2: It is a normal system path
+            elif isinstance(theme_dir, Path) and theme_dir.is_dir():
+                theme_path = theme_dir / f"{a_theme}.pyradio-theme"
+                if theme_path.is_file():
+                    return str(theme_path)
 
-            # Case 2: Real filesystem path (string or Path)
-            elif path.isdir(theme_dir):
-                theme_files = glob.glob(path.join(theme_dir, '*.pyradio-theme'))
-                for a_file in theme_files:
-                    a_theme_name = path.basename(a_file).replace('.pyradio-theme', '')
-                    if a_theme_name == a_theme:
-                        # logger.error(f'{a_file = }')
-                        return a_file
-
-        # Not found
-        # logger.error('*** Not found ***')
-        return ''
+        # If we got this far, nothing found
+        return None
 
 
 class PyRadioThemeReadWrite():

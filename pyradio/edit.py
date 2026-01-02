@@ -53,20 +53,33 @@ class PyRadioOpenDir(SimpleCursesMenu):
         self.dir = None
         self._cnf = config
 
-        # these are ok, I do not need to compensate for zip/wheel
+        # Determine the real directory path for the package.
+        # This works for both regular installations and zipped packages.
+        # Returns the folder containing the .whl/.zip file if in an archive.
         pkg_file = modules['pyradio'].__file__
         code_dir = path.dirname(__file__)
+
+        p_type = ''
+
         if path.isdir(code_dir):
             real_dir = code_dir
         else:
-            # Inside a wheel/zip → get the folder that contains the .whl or zip
+            # Inside a wheel/zip → get the folder that contains the .whl or .zip file
             wheel_path = Path(pkg_file).parts
             try:
-                whl_index = [i for i, p in enumerate(wheel_path) if p.endswith('.whl', '.zip')][0]
+                whl_index = [i for i, p in enumerate(wheel_path) if p.endswith(('.whl', '.zip'))][0]
+                # Get the directory containing the archive file
                 real_dir = str(Path(*wheel_path[:whl_index]).resolve())
+                # Determine if it's wheel or zip
+                archive_name = wheel_path[whl_index]
+                if archive_name.endswith('.whl'):
+                    p_type = ' (wheel)'
+                elif archive_name.endswith('.zip'):
+                    p_type = ' (zip)'
             except IndexError:
                 # fallback: just dirname of pkg_file
                 real_dir = str(Path(pkg_file).parent.resolve())
+                p_type = ''
 
         if self._cnf.xdg_compliant:
             self._items = [
@@ -74,7 +87,7 @@ class PyRadioOpenDir(SimpleCursesMenu):
                     'Data Directory',
                     'State Directory',
                     'Cache Directory',
-                    'Code Directory',
+                    f'Code Directory{p_type}',
                     'Recordings Directory    ',
             ]
             self._dir = [
@@ -82,7 +95,7 @@ class PyRadioOpenDir(SimpleCursesMenu):
                     self._cnf.data_dir,
                     self._cnf.state_dir,
                     self._cnf.cache_dir,
-                    real_dir,
+                    real_dir,  # This is now either the code dir or the folder containing the archive
                     self._cnf.recording_dir
             ]
             self._ord = [
@@ -98,7 +111,7 @@ class PyRadioOpenDir(SimpleCursesMenu):
                     'Config Directory',
                     'Data Directory',
                     'Cache Directory',
-                    'Code Directory',
+                    f'Code Directory{p_type}',
                     'Recordings Directory        ',
             ]
             self._dir = [
@@ -116,18 +129,11 @@ class PyRadioOpenDir(SimpleCursesMenu):
                 ord('5')
             ]
 
-        # if logger.isEnabledFor(logging.DEBUG):
-        #     logger.debug('Open Directory Window')
-        #     for n in self._dir:
-        #         logger.debug('dir: "{}"'.format(n))
-
-        # logger.error(self._cnf.profile_manager.config_files)
         for a_player in self._cnf.AVAILABLE_PLAYERS:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(a_player.PLAYER_DISPLAY_NAME + ' player found')
             try:
                 base = path.dirname(self._cnf.profile_manager.config_files[a_player.PLAYER_NAME][0])
-                # logger.error(f'{base = }')
                 makedirs(base, exist_ok=True)
                 self._items.append(a_player.PLAYER_DISPLAY_NAME + ' Config Directory')
                 self._dir.append(base)
@@ -156,7 +162,6 @@ class PyRadioOpenDir(SimpleCursesMenu):
             max_height=11,
             global_functions=global_functions
         )
-    # self._group_selection_window.show(parent=self.bodyWin)
 
     def keypress(self, char):
         ''' PyRadioOpenDir keypress
@@ -176,6 +181,7 @@ class PyRadioOpenDir(SimpleCursesMenu):
             if ret == 0:
                 self.dir = self._dir[self.selection]
             return ret
+
 
 class PyRadioSearch(SimpleCursesLineEdit):
 
