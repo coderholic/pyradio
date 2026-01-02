@@ -14,9 +14,14 @@ try:
     from importlib.resources import files, as_file
     from importlib.abc import Traversable
 except ImportError:
-    # Python 3.7–3.8 (backport)
-    from importlib_resources import files, as_file
-    from importlib_resources.abc import Traversable
+    try:
+        # Python 3.14
+        from importlib.resources import files, as_file
+        from importlib.resources.abc import Traversable
+    except ImportError:
+        # Python 3.7–3.8 (backport)
+        from importlib_resources import files, as_file
+        from importlib_resources.abc import Traversable
 from .common import rgb_to_curses_rgb, rgb_to_hex, hex_to_rgb
 from .keyboard import kbkey, check_localized, remove_l10n_from_global_functions
 
@@ -615,7 +620,16 @@ class PyRadioTheme():
             Absolute path to the located theme file, or an empty string if not found.
         """
         # logger.error(f'{a_theme = }')
-        from importlib.abc import Traversable
+        try:
+            # Python ≥ 3.9
+            from importlib.abc import Traversable
+        except ImportError:
+            try:
+                # Python 3.14
+                from importlib.resources.abc import Traversable
+            except ImportError:
+                # Python 3.7–3.8 (backport)
+                from importlib_resources.abc import Traversable
 
         # List of theme directories: user path first, package resources second
         theme_dirs = [

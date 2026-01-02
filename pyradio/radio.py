@@ -2578,6 +2578,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.selection = sel
 
     def _what_is_the_station_player(self):
+        for i, n in enumerate(self.stations):
+            logger.error(f'{i} -> {n}')
+        logger.error('len(self.stations) = {}'.format(len(self.stations)))
+        logger.error(f'{self.selection = }')
+        logger.error('Station.player = {}'.format(Station.player.value))
+        logger.error('self.stations[self.selection] = {}'.format(self.stations[self.selection]))
         station_player = self.stations[self.selection][Station.player]
         if logger.isEnabledFor(logging.DEBUG):
             logger.error(f'{self._default_player_name =  }')

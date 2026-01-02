@@ -26,9 +26,14 @@ try:
     from importlib.resources import files, as_file
     from importlib.abc import Traversable
 except ImportError:
-    # Python 3.7–3.8 (backport)
-    from importlib_resources import files, as_file
-    from importlib_resources.abc import Traversable
+    try:
+        # Python 3.14
+        from importlib.resources import files, as_file
+        from importlib.resources.abc import Traversable
+    except ImportError:
+        # Python 3.7–3.8 (backport)
+        from importlib_resources import files, as_file
+        from importlib_resources.abc import Traversable
 from pyradio import version
 from .common import validate_resource_opener_path, is_rasberrypi, Station, describe_playlist, CsvReadWrite, ProfileManager
 from .keyboard import read_keyboard_shortcuts, read_localized_keyboard, set_lkbkey

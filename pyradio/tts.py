@@ -799,8 +799,8 @@ class TTSManager:
             elif context == 'limited':
                 if priority.value <= Priority.HIGH.value:
                     return True
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f'Speech request rejected: priority is "{priority.name}" but context is "{context}"')
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'Speech request rejected: priority is "{priority.name}" but context is "{context}"')
         return False
 
     def _initialize_tts(self):
