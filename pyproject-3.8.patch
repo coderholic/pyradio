@@ -1,0 +1,12 @@
+--- pyproject.toml	2026-01-01 22:11:43.667956543 +0200
++++ pyproject-new.toml	2026-01-03 14:02:48.078067155 +0200
+@@ -7,8 +7,7 @@
+ ]
+ description = "Command line internet radio player"
+ readme = "README.md"
+-license = "MIT"
+-license-files = ["LICENSE"]
++license = {"text" = "MIT"}
+ requires-python = ">=3.8"
+ classifiers = [
+     "Programming Language :: Python :: 3",

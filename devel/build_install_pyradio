@@ -23,28 +23,28 @@ Checking python availability:"
 }
 
 function check_pipx() {
-    # Δοκιμή 1: python -m pipx
+    # Test 1: python -m pipx
     local pipx_test=$(python"${TO_PYTHON}" -m pipx --version 2>/dev/null)
     if [ -n "$pipx_test" ]; then
         echo "python${TO_PYTHON} -m pipx"
         return 0
     fi
 
-    # Δοκιμή 2: standalone pipx
+    # Test 2: standalone pipx
     pipx_test=$(pipx --version 2>/dev/null)
     if [ -n "$pipx_test" ]; then
         echo "pipx"
         return 0
     fi
 
-    # Δοκιμή 3: απόλυτο path (συνήθης θέση σε macOS)
+    # Test 3: absolute  path (usuall location on macOS)
     pipx_test=$(/usr/local/bin/pipx --version 2>/dev/null)
     if [ -n "$pipx_test" ]; then
         echo "/usr/local/bin/pipx"
         return 0
     fi
 
-    # Δοκιμή 4: άλλα πιθανά paths
+    # Test 4: other possible locations
     local potential_paths=(
         "/opt/homebrew/bin/pipx"
         "/usr/bin/pipx" 
@@ -486,6 +486,21 @@ else
     then
         PIPX_ISOLATE=1
     fi
+    # fix toml file for python 3.8
+    PY_VERSION=$(python${TO_PYTHON} -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+    if [ "$PY_VERSION" = "3.8" ]
+    then
+        echo "Patching pyproject.toml for Python 3.8"
+        cp pyproject.toml pyproject.toml.BCK
+        patch -p0 < pyproject-3.8.patch || {
+            echo "Error applying the Python 3.8 patch
+    patch -p0 < pyproject-3.8.patch
+Please make sure patch is installed and try again
+    "
+    mv pyproject.toml.BCK pyproject.toml 
+    exit 1
+        }
+    fi
     if [ -z "$PIPX_ISOLATE" ]
     then
         $PIPX_CMD install $PIPX_EDITABLE --system-site-packages --force . || pipx_error
@@ -496,6 +511,7 @@ else
             cat requirements_pipx.txt | sed -e 's/#.*//' | xargs $PIPX_CMD inject pyradio
         inst_type=2
     fi
+    [ -e  pyproject.toml.BCK ] && mv pyproject.toml.BCK pyproject.toml
 fi
 
 do_undev

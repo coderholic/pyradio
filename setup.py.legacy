@@ -13,6 +13,7 @@
 #
 # NOTE: This will be removed in the future.
 #
+import sys
 from os import path as op
 from setuptools import setup, find_namespace_packages
 
@@ -27,14 +28,27 @@ def read(filename):
     return ret
 
 
+# Conditional dependencies matching pyproject.toml
+install_requires = []
+if sys.version_info < (3, 9):
+    install_requires.append('importlib_resources>=5.10')
+
+extras_require = {
+    'cli': ['mpv', 'mplayer', 'vlc']
+}
+
 meta = dict(
     name=__project__,
     version=version,
     license=__license__,
     description=read('DESCRIPTION').rstrip(),
+    long_description=read('README.md'),
+    long_description_content_type='text/markdown',
     platforms=('Any'),
     author='Ben Dowling',
     author_email='ben.m.dowling@gmail.com',
+    maintainer='Spiros Georgaras',  # Added
+    maintainer_email='sng@hellug.gr',  # Added
     url='http://github.com/coderholic/pyradio',
     include_package_data=True,
     packages=find_namespace_packages(
@@ -59,7 +73,22 @@ meta = dict(
             'pyradio-client = pyradio.main:run_client'
         ]
     },
-    install_requires=[],
+    install_requires=install_requires,  # Now has importlib_resources for Py3.8
+    extras_require=extras_require,  # Added optional dependencies
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Operating System :: OS Independent",
+        "Operating System :: POSIX",
+        "Operating System :: POSIX :: BSD",  # For FreeBSD
+        "Operating System :: POSIX :: Linux",
+        "Environment :: Console :: Curses",
+    ],
+    python_requires=">=3.8",
 )
 
 
