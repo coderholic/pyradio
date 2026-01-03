@@ -1301,18 +1301,21 @@ class Player():
 
         sock = None
         while True:
+            if stop():
+                if (logger.isEnabledFor(logging.INFO)):
+                    logger.info('MPV updateStatus thread stopped (no connection to socket).')
+                return
             try:
                 sock = self._connect_to_socket(self.mpvsocket)
-            finally:
                 if sock:
                     break
-                if stop():
-                    if (logger.isEnabledFor(logging.INFO)):
-                        logger.info('MPV updateStatus thread stopped (no connection to socket).')
-                    return
+            except Exception:
+                pass
         if stop():
             if (logger.isEnabledFor(logging.INFO)):
                 logger.info('MPV updateStatus thread was aeked to stopp. Terminating...')
+            if sock:
+                self._close_pipe(sock)
             return
         # Send data
         message = b'{ "command": ["observe_property", 1, "metadata"] }\n'

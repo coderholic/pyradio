@@ -182,7 +182,7 @@ class PyRadioStations():
             self.xdg.build_paths()
         self.xdg.ensure_paths_exist()
         self.root_path = files("pyradio").joinpath("stations.csv")
-        logger.error(f'{self.root_path = }')
+        # logger.error(f'{self.root_path = }')
         self.themes_dir = path.join(self.stations_dir, 'themes')
         self.favorites_path = path.join(self.stations_dir, 'favorites.csv')
         try:
@@ -636,42 +636,6 @@ class PyRadioStations():
                         return '', -4
             else:
                 return '', -2
-
-    def _package_stations(self):
-        ''' read package stations.csv file
-            this is supposed to ba a simple file (2-3 fields)
-        '''
-        with self.root_path.open('r', encoding='utf-8') as cfgfile:
-            for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
-                if not row:
-                    continue
-                try:
-                    name, url = [s.strip() for s in row]
-                    yield [name, url, '', '']
-                except:
-                    try:
-                        name, url, enc = [s.strip() for s in row]
-                        yield [name, url, enc, '']
-                    except:
-                        name, url, enc, onl = [s.strip() for s in row]
-                        yield [name, url, enc, onl]
-
-    def integrate_playlists(self):
-        ''''''
-
-        ''' get user station urls '''
-        self.added_stations = 0
-        urls = []
-        for n in self.stations:
-            urls.append(n[1])
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('----==== Stations integration ====----')
-        for a_pkg_station in self._package_stations():
-            if a_pkg_station[1] not in urls:
-                self.stations.append(a_pkg_station)
-                self.added_stations += 1
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug(f'Added: {self.added_stations} - {a_pkg_station}')
 
     def read_playlist_for_server(self, stationFile):
         """ read the station names only from a playlist """
