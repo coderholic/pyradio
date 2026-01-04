@@ -348,8 +348,8 @@ class PyRadioConfigWindow():
             curses.KEY_RIGHT,
         )
         local_f = {}
-        for n in self._local_functions:
-            local_f[n] = self._local_functions[n]
+        for key, value in self._local_functions.items():
+            local_f[key] = value
         for n in chk:
             if n in local_f:
                 local_f.pop(n)
@@ -417,8 +417,7 @@ class PyRadioConfigWindow():
         #    self._title,
         #    curses.color_pair(4))
         min_lines = len(self._config_options)
-        if min_lines < self._max_number_of_help_lines:
-            min_lines = self._max_number_of_help_lines
+        min_lines = max(min_lines, self._max_number_of_help_lines)
         # if self.maxX < 80 or self.maxY < min_lines + 3:
         if self.maxX < 80 or self.maxY < 22:
             self.too_small = True
@@ -587,10 +586,8 @@ class PyRadioConfigWindow():
                 if self.number_of_items > visible_items:
                     self._start = self.__selection - visible_items
             else:
-                if self.__selection < self._start:
-                    self._start = self.__selection
-        if self.__selection < self._start:
-            self._start = self.__selection
+                self._start = min(self._start, self.__selection)
+        self._start = min(self._start, self.__selection)
 
     def _populate_help_lines(self):
         self._help_lines = []
@@ -605,8 +602,7 @@ class PyRadioConfigWindow():
                     lines = wrap(k, self.maxX - self._second_column - 2)
                     all_lines.extend(lines)
                 self._help_lines.append(all_lines)
-                if len(all_lines) > self._max_number_of_help_lines:
-                    self._max_number_of_help_lines = len(all_lines)
+                self._max_number_of_help_lines = max(self._max_number_of_help_lines, len(all_lines))
 
     def _print_options_help(self):
         for i, x in enumerate(self._help_lines[self.selection]):
@@ -630,8 +626,7 @@ class PyRadioConfigWindow():
     def _load_default_values(self):
         self.load_default_or_saved_parameters = True
         for n in self._default_config_options.keys():
-            if n != 'theme' and \
-                    n != 'recording_dir':
+            if n not in ('theme', 'recording_dir'):
                 self._config_options[n][1] = self._default_config_options[n][1]
         # logger.error('\n\nself._config_options before transparency toggle')
         # for n in 'theme', 'use_transparency', 'force_transparency', 'calculated_color_factor':
@@ -903,7 +898,7 @@ class PyRadioConfigWindow():
             self._global_functions[l_char]()
 
         elif val[0] == 'resource_opener':
-            if not (SYSTEM == 'Win' or SYSTEM == 'Mac'):
+            if SYSTEM not in ('Win', 'Mac'):
                 return Window_Stack_Constants.INSERT_RESOURCE_OPENER, []
             return -1, []
 
@@ -999,8 +994,7 @@ class PyRadioConfigWindow():
                     t = 30
                 else:
                     t += 30
-                    if t > 300:
-                        t =300
+                    t = min(t, 300)
                 val[1][1] = str(t)
                 self._win.addstr(
                     Y, 3 + len(val[1][0]),
@@ -1197,8 +1191,7 @@ class PyRadioConfigWindow():
                 t = int(val[1][1])
                 if t < self._tts_volume_data[1]:
                     t += self._tts_volume_data[2]
-                    if t > self._tts_volume_data[1]:
-                        t = self._tts_volume_data[1]
+                    t = min(t, self._tts_volume_data[1])
                     self._config_options[val[0]][1] = str(t)
                     self._win.addstr(
                         Y, 3 + len(val[1][0]),
@@ -1212,8 +1205,7 @@ class PyRadioConfigWindow():
                 t = int(val[1][1])
                 if t > self._tts_volume_data[0]:
                     t -= self._tts_volume_data[2]
-                if t < self._tts_volume_data[0]:
-                    t = self._tts_volume_data[0]
+                t = min(t, self._tts_volume_data[0])
                 self._config_options[val[0]][1] = str(t)
                 self._win.addstr(
                     Y, 3 + len(val[1][0]),
@@ -1227,10 +1219,8 @@ class PyRadioConfigWindow():
                     check_localized(char, (kbkey['l'], )):
                 t = int(val[1][1])
                 t += self._tts_rate_data[2]
-                if t < self._tts_rate_data[0]:
-                    t = self._tts_rate_data[0]
-                if t > self._tts_rate_data[1]:
-                    t = self._tts_rate_data[1]
+                t = max (t, self._tts_rate_data[0])
+                t = min(t, self._tts_rate_data[1])
                 self._config_options[val[0]][1] = str(t)
                 self._win.addstr(
                     Y, 3 + len(val[1][0]),
@@ -1244,14 +1234,12 @@ class PyRadioConfigWindow():
                 t = int(val[1][1])
 
                 t -= self._tts_rate_data[2]
-                if t > self._tts_rate_data[1]:
-                    t = self._tts_rate_data[1]
+                t = min(t, self._tts_rate_data[1])
                 if t < self._tts_rate_data[0]:
                     if SYSTEM == 'Mac':
                         t = 0
                     else:
-                        if t < self._tts_rate_data[0]:
-                            t = self._tts_rate_data[0]
+                        t = max(t, self._tts_rate_data[0])
                 self._config_options[val[0]][1] = str(t)
                 self._win.addstr(
                     Y, 3 + len(val[1][0]),
@@ -1266,8 +1254,7 @@ class PyRadioConfigWindow():
                 t = int(val[1][1])
                 if t < self._tts_pitch_data[1]:
                     t += self._tts_pitch_data[2]
-                    if t > self._tts_pitch_data[1]:
-                        t = self._tts_pitch_data[1]
+                    t = min(t, self._tts_pitch_data[1])
                     self._config_options[val[0]][1] = str(t)
                     self._win.addstr(
                         Y, 3 + len(val[1][0]),
@@ -1281,10 +1268,9 @@ class PyRadioConfigWindow():
                 t = int(val[1][1])
                 logger.error(f'{self._tts_pitch_data = }')
                 t -= self._tts_pitch_data[2]
-                if t > self._tts_pitch_data[1]:
-                    t = self._tts_pitch_data[1]
+                t = min(t, self._tts_pitch_data[1])
                 if t < self._tts_pitch_data[0]:
-                    if SYSTEM == 'Linux' or SYSTEM == 'Win':
+                    if SYSTEM in ('Linux', 'Win'):
                         t = self._tts_pitch_data[0]
                     else:
                         t = 0
@@ -1344,21 +1330,23 @@ class PyRadioConfigWindow():
                 return Window_Stack_Constants.SELECT_PLAYLIST_MODE, []
             elif sel == 'default_station':
                 return Window_Stack_Constants.SELECT_STATION_MODE, []
-            elif sel == 'confirm_station_deletion' or \
-                    sel == 'open_last_playlist' or \
-                    sel == 'confirm_playlist_reload' or \
-                    sel == 'enable_mouse' or \
-                    sel == 'auto_save_playlist' or \
-                    sel == 'force_http' or \
-                    sel == 'remote_control_server_auto_start' or \
-                    sel == 'use_station_icon' or \
-                    sel == 'enable_clock' or \
-                    sel == 'wheel_adjusts_volume' or \
-                    sel == 'log_titles' or \
-                    sel == 'remove_station_icons' or \
-                    sel == 'mplayer_save_br' or \
-                    sel == 'continuous_playback' or \
-                    sel == 'enable_tts':
+            elif sel in (
+                'confirm_station_deletion',
+                'open_last_playlist',
+                'confirm_playlist_reload',
+                'enable_mouse',
+                'auto_save_playlist',
+                'force_http',
+                'remote_control_server_auto_start',
+                'use_station_icon',
+                'enable_clock',
+                'wheel_adjusts_volume',
+                'log_titles',
+                'remove_station_icons',
+                'mplayer_save_br',
+                'continuous_playback',
+                'enable_tts'
+            ):
                 self._config_options[sel][1] = not self._config_options[sel][1]
                 # # if sel == 'open_last_playlist':
                 # #     if self._config_options[sel][1]:
@@ -1869,8 +1857,8 @@ class ExtraParameters():
 
         self.reset(saved=False)
         ''' set cursor to active item '''
-        for a_key in self._selections:
-            self._selections[a_key][0] = self._selections[a_key][2]
+        for value in self._selections.values():
+            value[0] = value[2]
         # logger.error('self._selections\n{}'.format(self._selections))
         self._get_width()
 
@@ -2137,27 +2125,25 @@ class ExtraParameters():
 
     def _dict_to_list(self):
         ''' convert self._working_params dict
-            to self._items dict, and set self.active
+        to self._items dict, and set self.active
         '''
         # logger.error('DE\n')
         # logger.error('DE working params = {}'.format(self._working_params))
         # logger.error('DE self._profiles_from_files = {}'.format(self._profiles_from_files))
-        for a_param_set in self._profiles_from_files:
-            # logger.error(f'{a_param_set = }')
-            if self._profiles_from_files[a_param_set]:
-                for a_param in self._profiles_from_files[a_param_set]:
-                    # logger.error('a_param = {}'.format(a_param))
+        for a_param_set, params_list in self._profiles_from_files.items():
+            if params_list:
+                for a_param in params_list:
                     if a_param not in self._items_dict[a_param_set]:
                         self._items_dict[a_param_set].append(a_param)
                 if self._items_dict[a_param_set][0] in self._items_dict[a_param_set][1:]:
-                    self._items_dict[a_param_set]  = self._items_dict[a_param_set][1:]
+                    self._items_dict[a_param_set] = self._items_dict[a_param_set][1:]
 
     def _list_to_dict(self):
         ''' convert self._items_dict to self._working_params '''
-        for a_params_set in self._items_dict:
+        for a_params_set, param_list in self._items_dict.items():
             the_list = [self._selections[a_params_set][2] + 1]
-            the_list.extend(self._items_dict[a_params_set])
-            self._working_params[a_params_set] = the_list[:]
+            the_list.extend(param_list)
+            self._working_params[a_params_set] = the_list
 
     def _get_width(self):
         _, X = self._win.getmaxyx()
@@ -2541,7 +2527,7 @@ class PyRadioSelectPlayer():
             self._parameter_editor.show()
 
     def refresh_selection(self):
-        for i in range(0, len(self._players)):
+        for i, _ in enumerate(self._players):
             token = self._char if self._players[i][1] else ' [ ] '
             first_char = last_char = ' '
             if self.focus:
@@ -2943,8 +2929,7 @@ class PyRadioSelectEncodings():
                 self.startPos = 0
         except:
             pass
-        if self.startPos < 0:
-            self.startPos = 0
+        self.startPos = max(self.startPos, 0)
 
     def _resize(self, init=False):
         _, row = self._selection_to_col_row(self.selection)
@@ -3007,12 +2992,11 @@ class PyRadioSelectEncodings():
                 else:
                     self._resize()
             elif direction < 0:
-                if row == self._num_of_rows - 2 or row == self._num_of_rows:
+                if row in (self._num_of_rows - 2, self._num_of_rows):
                     self.startPos = self._num_of_rows - self.list_maxY + 1
                 elif self.startPos < 0:
                     self._resize(init=True)
-            if self.startPos < 0:
-                self.startPos = 0
+            self.startPos = max(self.startPos, 0)
 
     def _selection_to_col_row(self, sel):
         x = int(sel / (self._num_of_rows+1))
@@ -3093,8 +3077,7 @@ class PyRadioSelectEncodings():
                 self.selection = 0
             else:
                 self.selection += 5
-                if self.selection > len(self._encodings) - 1:
-                    self.selection = len(self._encodings) - 1
+                self.selection = min(self.selection, len(self._encodings) - 1)
             self._fix_startPos(5)
             self.refresh_selection()
 
@@ -3103,8 +3086,7 @@ class PyRadioSelectEncodings():
                 self.selection = len(self._encodings) - 1
             else:
                 self.selection -= 5
-                if self.selection < 0:
-                    self.selection = 0
+                self.selection = max(self.selection, 0)
             self._fix_startPos(-5)
             self.refresh_selection()
 
@@ -3212,8 +3194,7 @@ class PyRadioSelectPlaylist():
         if read_items:
             self._read_items()
         self.maxY = self._num_of_items + 2
-        if self.maxY > self._parent_maxY - 2:
-            self.maxY = self._parent_maxY - 2
+        self.maxY = min(self.maxY, self._parent_maxY - 2)
         self._calculate_width()
         self._win = None
         Y = int((self._parent_maxY - self.maxY) / 2) + self._parent_Y
@@ -3229,10 +3210,8 @@ class PyRadioSelectPlaylist():
     def _calculate_width(self):
         self.maxX = self._max_len + 5 + len(str(self._num_of_items))
         max_title = len(self._title) + 8
-        if self.maxX < max_title:
-            self.maxX = max_title
-        if self.maxX > self._parent_maxX - 4:
-            self.maxX = self._parent_maxX - 4
+        self.maxX = max(self.maxX, max_title)
+        self.maxX = min(self.maxX, self._parent_maxX - 4)
 
     def refresh_win(self, resizing=False):
         self._win.bkgdset(' ', curses.color_pair(3))
@@ -3409,8 +3388,7 @@ class PyRadioSelectPlaylist():
             return 0, self._items[self._selected_playlist_id]
 
     def print_select_playlist_error(self):
-        if self._select_playlist_error == -1 or \
-                self._select_playlist_error == 0:
+        if self._select_playlist_error in (-1, 0):
             if self._select_playlist_error == 0:
                 msg = 'This playlist is empty!'
             else:
@@ -3433,8 +3411,7 @@ class PyRadioSelectPlaylist():
             self.startPos = 0
             return
         if self._selected_playlist_id < self.maxY - 2:
-            if self._selected_playlist_id < 0:
-                self._selected_playlist_id = 0
+            self._selected_playlist_id = max (self._selected_playlist_id, 0)
             self.startPos = 0
         elif self._selected_playlist_id >= self._num_of_items:
             self._selected_playlist_id = self._num_of_items - 1
@@ -3460,8 +3437,7 @@ class PyRadioSelectPlaylist():
                 l_char = char
             self._global_functions[l_char]()
 
-        elif self._select_playlist_error == -1 or \
-                self._select_playlist_error == 0:
+        elif self._select_playlist_error in (-1, 0):
             self._error_win = None
             self._select_playlist_error = -2
             self.refresh_selection()
@@ -3515,8 +3491,7 @@ class PyRadioSelectPlaylist():
                                      adjust=False)
                 if self._selected_playlist_id == self._num_of_items - 1:
                     self.startPos = self._num_of_items - self.maxY + 2
-                    if self.startPos < 0:
-                        self.startPos = 0
+                    self.startPos = max(self.startPos, 0)
                 elif self.startPos > self._selected_playlist_id:
                     self.startPos = self._selected_playlist_id
                 self.refresh_selection()
@@ -3535,8 +3510,7 @@ class PyRadioSelectPlaylist():
                 else:
                     if not (self.startPos < self._selected_playlist_id < self.startPos + self.maxY - 2):
                         self.startPos = old_id - self.pageChange
-                        if self.startPos > self._num_of_items - self.maxY + 2:
-                            self.startPos = self._num_of_items - self.maxY + 2
+                        self.startPos = min(self.startPos, self._num_of_items - self.maxY + 2)
                 self.refresh_selection()
 
         elif char in (curses.KEY_NPAGE, ):
@@ -3552,8 +3526,7 @@ class PyRadioSelectPlaylist():
             else:
                 if not (self.startPos < self._selected_playlist_id < self.startPos + self.maxY - 2):
                     self.startPos = old_id + self.pageChange
-                    if self.startPos > self._num_of_items - self.maxY + 2:
-                        self.startPos = self._num_of_items - self.maxY + 2
+                    self.startPos = min(self.startPos, self._num_of_items - self.maxY + 2)
             self.refresh_selection()
 
         elif char in (curses.KEY_HOME, kbkey['g']) or \
@@ -3851,9 +3824,9 @@ class PyRadioKeyboardConfig():
             logger.debug(f'{self._headers = }')
 
         # insert header index into self._list
-        for x in range(len(self._headers)):
+        for x, _ in enumerate(self._headers):
             header_index = self._headers[x]
-            for i in range(len(self._list)):
+            for i, _ in enumerate(self._list):
                 if i > header_index:
                     self._list[i][-2] = header_index
         if logger.isEnabledFor(logging.DEBUG):
@@ -4398,8 +4371,8 @@ class PyRadioKeyboardConfig():
             logger.debug(f'{context_classes = }')
         context_keys = set()
         for context_class in context_classes:
-            for key_in_context in self._keys_to_classes:
-                if context_class in self._keys_to_classes[key_in_context]:
+            for key_in_context, a_key_list in self._keys_to_classes.items():
+                if context_class in a_key_list:
                     context_keys.add(key_in_context)
 
         if logger.isEnabledFor(logging.DEBUG):
@@ -4474,7 +4447,7 @@ class PyRadioKeyboardConfig():
         return 0
 
     def _get_available_keys(self):
-        existing_set = set([ x[-4] for x in self._list if len(x[-4]) > 0 ])
+        existing_set = set(x[-4] for x in self._list if x[-4])
         # Define all available characters including function keys
         function_keys = {f'F{i}' for i in range(1, 11)}  # Creates {'F1' to 'F10'}
         all_characters = set(string.ascii_letters + string.punctuation +  string.digits + " ") | function_keys
@@ -4631,7 +4604,7 @@ class PyRadioKeyboardConfig():
                 tts = self.tts()
                 if tts and tts.can_i_use_tts(Priority.HIGH):
                     tts.queue_speech('Default keys loaded', Priority.DIALOG, Context.LIMITED, self.op_mode())
-                for i in range(len(self._list)):
+                for i, _ in enumerate(self._list):
                     self._list[i][3] = self._list[i][1]
                     self._list[i][6] = self._list[i][4]
                 self._needs_update = True
@@ -4640,7 +4613,7 @@ class PyRadioKeyboardConfig():
                 tts = self.tts()
                 if tts and tts.can_i_use_tts(Priority.HIGH):
                     tts.queue_speech('Saved keys loaded', Priority.DIALOG, Context.LIMITED, self.op_mode())
-                for i in range(len(self._list)):
+                for i, _ in enumerate(self._list):
                     self._list[i][3] = self._list[i][2]
                     self._list[i][6] = self._list[i][5]
                 self._needs_update = True
@@ -5126,7 +5099,7 @@ class PyRadioLocalized():
             self._h_buttons.calculate_buttons_position(parent=self._win)
         self._win.refresh()
 
-        for i in range(len(self._widgets)):
+        for i, _ in enumerate(self._widgets):
             try:
                 self._widgets[i].show(parent=self._parent)
                 if i == 1:
@@ -5153,7 +5126,7 @@ class PyRadioLocalized():
         #             pass
 
     def _update_focus(self):
-        for i in range(len(self._widgets)):
+        for i, _ in enumerate(self._widgets):
             self._widgets[i].focused = True if i == self._focus else False
 
     def _focus_next(self):

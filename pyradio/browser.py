@@ -1277,12 +1277,12 @@ class RadioBrowser(PyRadioStationsBrowser):
             if self._output_format == 1:
                 columns_separotors[0] -= self._outer_internal_body_half_diff
             else:
-                for n in range(0, len(columns_separotors)):
-                    columns_separotors[n] += self._outer_internal_body_half_diff
+                for i, _ in enumerate(columns_separotors):
+                    columns_separotors[i] += self._outer_internal_body_half_diff
 
         if adjust > 0:
-            for n in range(0, len(columns_separotors)):
-                columns_separotors[n] -= adjust
+            for i, _ in enumerate(columns_separotors):
+                columns_separotors[i] -= adjust
         return columns_separotors
 
     def _format_term_for_get_strings(self, aterm):
@@ -1646,34 +1646,33 @@ class RadioBrowserConfig():
             return False
 
         for line in lines:
-            if '=' in line:
-                # logger.error('DE line = "' + line + '"')
-                sp = line.split('=')
-                for n in range(0, len(sp)):
-                    sp[n] = sp[n].strip()
-                # logger.error('DE   sp = {}'.format(sp))
-                if sp[1]:
-                    if sp[0] == 'AUTO_SAVE_CONFIG':
-                        self.auto_save = True if sp[1].lower() == 'true' else False
-                    elif sp[0] == 'DEFAULT_SERVER':
-                        self.server = sp[1]
-                    elif sp[0] == 'DEFAULT_LIMIT':
-                        try:
-                            self.limit = int(sp[1])
-                        except (IndexError, ValueError):
-                            self.limit = '100'
-                    elif sp[0] == 'SEARCH_TERM':
-                        term_str.append(sp[1])
-                    elif sp[0] == 'PING_COUNT':
-                        try:
-                            self.ping_count = int(sp[1])
-                        except (IndexError, ValueError):
-                            self.ping_count = 1
-                    elif sp[0] == 'PING_TIMEOUT':
-                        try:
-                            self.ping_timeout = int(sp[1])
-                        except (IndexError, ValueError):
-                            self.ping_timeout = 1
+            try:
+                key, value = (part.strip() for part in line.split('=', 1))
+            except ValueError:
+                continue
+            # logger.error('DE line = "' + line + '"')
+            if value:
+                if key == 'AUTO_SAVE_CONFIG':
+                    self.auto_save = True if value.lower() == 'true' else False
+                elif key == 'DEFAULT_SERVER':
+                    self.server = value
+                elif key == 'DEFAULT_LIMIT':
+                    try:
+                        self.limit = int(value)
+                    except (IndexError, ValueError):
+                        self.limit = '100'
+                elif key == 'SEARCH_TERM':
+                    term_str.append(value)
+                elif key == 'PING_COUNT':
+                    try:
+                        self.ping_count = int(value)
+                    except (IndexError, ValueError):
+                        self.ping_count = 1
+                elif key == 'PING_TIMEOUT':
+                    try:
+                        self.ping_timeout = int(value)
+                    except (IndexError, ValueError):
+                        self.ping_timeout = 1
 
         if path.exists(self.search_terms_file):
             try:
@@ -1686,15 +1685,15 @@ class RadioBrowserConfig():
                 pass
 
         if term_str:
-            for n in range(0, len(term_str)):
-                if term_str[n].startswith('*'):
-                    term_str[n] = term_str[n][1:]
-                    self.default = n + 1
+            for i, _ in  enumerate(term_str):
+                if term_str[i].startswith('*'):
+                    term_str[i] = term_str[i][1:]
+                    self.default = i + 1
 
-                term_str[n] = term_str[n].replace("'", '"')
+                term_str[i] = term_str[i].replace("'", '"')
                 # logger.error('term {0} = "{1}"'.format(n, term_str[n]))
                 try:
-                    self.terms.append(json.loads(term_str[n]))
+                    self.terms.append(json.loads(term_str[i]))
                 except (json.JSONDecodeError, IndexError):
                     if logger.isEnabledFor(logging.ERROR):
                         logger.error(f'RadioBrowser: error inserting search term {n}')
@@ -1984,7 +1983,7 @@ class RadioBrowserConfigWindow():
                 n.show(self._win)
 
     def _calculate_left_margin(self):
-        self._width = max([len(x[2]) for x in self._static_msg])
+        self._width = max(len(x[2]) for x in self._static_msg)
         self._left = self.maxX - self._width
         self._left = int(self._left / 2) - 2
 
@@ -2252,7 +2251,7 @@ class RadioBrowserConfigWindow():
             self._widgets[-1].enabled = True
             self._fix_focus(show=False)
         else:
-            for i in range(0, len(self._widgets)):
+            for i, _ in enumerate(self._widgets):
                 self._widgets[i].move(self._wleft[i], 2+self._left)
         for n in self._widgets:
             n.show(self._win)
@@ -2464,7 +2463,7 @@ class RadioBrowserConfigWindow():
                         ''' limit  '''
                         self._widgets[self._focused].show(self._win)
                         self._params[0][self._widgets[self._focused].token] = self._widgets[self._focused].value
-                        if self._focused == 2 or self._focused == 3:
+                        if self._focused in (2, 3):
                             self._fix_ping_enable()
                     self._win.refresh()
                     #self._print_params()
@@ -3024,7 +3023,7 @@ class RadioBrowserSearchWindow():
             self._win.refresh()
 
             # set vertical placement variable
-            for i in range(0, len(self._widgets)):
+            for i, _ in enumerate(self._widgets):
                 if type(self._widgets[i]).__name__ != 'DisabledWidget':
                     if self._widgets[i].id in self._left_column:
                         self._widgets[i]._vert = self._left_column
@@ -3142,7 +3141,7 @@ class RadioBrowserSearchWindow():
         self._win.addstr(f'/{len(self._history) - 1} ')
 
     def _other_chgat(self, Y, X, a_string):
-        indexes = [i for i, c in enumerate(a_string) if c == '/' or c == ',']
+        indexes = [i for i, c in enumerate(a_string) if c in ('/', ',')]
         logger.error(indexes)
         for n in indexes:
             self._win.chgat(Y, X+n+1, 1, curses.color_pair(5))
@@ -3725,9 +3724,8 @@ class RadioBrowserData():
 
     @property
     def connection_error(self):
-        self._lock.acquire()
-        ret = self._connection_error
-        self._lock.release()
+        with self._lock:
+            ret = self._connection_error
         return ret
 
     @connection_error.setter
@@ -3736,9 +3734,8 @@ class RadioBrowserData():
 
     @property
     def tags(self):
-        self._lock.acquire()
-        ret = self._data['tags']
-        self._lock.release()
+        with self._lock:
+            ret = self._data['tags']
         return ret
 
     @tags.setter
@@ -3747,12 +3744,11 @@ class RadioBrowserData():
 
     @property
     def codecs(self):
-        self._lock.acquire()
-        if 'codecs' in self._data:
-            ret = self._data['codecs']
-        else:
-            ret = {}
-        self._lock.release()
+        with self._lock:
+            if 'codecs' in self._data:
+                ret = self._data['codecs']
+            else:
+                ret = {}
         return ret
 
     @codecs.setter
@@ -3761,9 +3757,8 @@ class RadioBrowserData():
 
     @property
     def countries(self):
-        self._lock.acquire()
-        ret = self._data['countries']
-        self._lock.release()
+        with self._lock:
+            ret = self._data['countries']
         return ret
 
     @countries.setter
@@ -3772,9 +3767,8 @@ class RadioBrowserData():
 
     @property
     def languages(self):
-        self._lock.acquire()
-        ret = self._data['languages']
-        self._lock.release()
+        with self._lock:
+            ret = self._data['languages']
         return ret
 
     @languages.setter
@@ -3994,8 +3988,7 @@ class RadioBrowserSort():
                 self.active = self.selection = self._value_to_index(search_by)
         self.maxY = len(self.items) + 2
         self.maxX = max(len(x) for x in self.items.keys()) + 4
-        if len(self.TITLE) + 4 > self.maxX:
-            self.maxX = len(self.TITLE) + 4
+        self.maxX = max(self.maxX, len(self.TITLE) + 4)
         self._win = None
         if search_by:
             self.set_active_by_value(search_by)
@@ -4119,8 +4112,7 @@ class RadioBrowserSort():
                 self.selection = len(self.items) - 1
             else:
                 self.selection -= 5
-                if self.selection < 0:
-                    self.selection = 0
+                self.selection = max(self.selection, 0)
             self._refresh()
 
         elif char in (curses.KEY_NPAGE, ):
@@ -4333,8 +4325,7 @@ class RadioBrowserServers():
             if self.server == n:
                 self.selection = self.active = i
             self.items[i] = ' ' + country_from_server(n) + f'  ({n}) '
-            if len(self.items[i]) > s_max:
-                s_max = len(self.items[i])
+            s_max = max(s_max, len(self.items[i]))
         self.items.sort()
         for i, _ in enumerate(self.items):
             if len(self.items[i]) < s_max:
@@ -4446,8 +4437,7 @@ class RadioBrowserServers():
                 self.selection = len(self.items) - 1
             else:
                 self.selection -= 5
-                if self.selection < 0:
-                    self.selection = 0
+                self.selection = max(self.selection, 0)
             self.show()
 
         elif char in (curses.KEY_NPAGE, ):

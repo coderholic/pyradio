@@ -1617,7 +1617,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         # if self.ws.operation_mode == self.ws.INSERT_RECORDINGS_DIR_MODE:
         #     logger.error(f'{self.ws.previous_operation_mode = }')
         #     self._messaging_win.erase()
-        if display_terminal_icon == False:
+        if not display_terminal_icon:
             self.bodyWin.erase()
         if self.player.ctrl_c_pressed:
             return
@@ -12680,8 +12680,8 @@ _____"|f|" to see the |free| keys you can use.
             # Generate error display string and collect error codes
             errors_combined = []
             error_codes = []
-            for player in ['mpv', 'mplayer', 'vlc']:
-                error_code, error_desc = data['errors'][player]
+            for a_player in ['mpv', 'mplayer', 'vlc']:
+                error_code, error_desc = data['errors'][a_player]
                 error_codes.append(error_code)
                 errors_combined.append(
                     f'<span class="tooltip error-{error_code}" title="{error_desc}">{error_code}</span>'

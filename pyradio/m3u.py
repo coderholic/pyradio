@@ -432,16 +432,16 @@ def clean_temp_file(a_file):
 def parse_m3u(m3u_path, max_entries=10000):
     """Convert M3U to playlist with enhanced safety checks"""
 
-    temp_file = None
+    temp_file_path = None
     if m3u_path.startswith("http://") or m3u_path.startswith("https://"):
         # Download remote m3u
         try:
-            response = urllib.request.urlopen(m3u_path)
-            data = response.read()
-            temp_file = tempfile.NamedTemporaryFile(delete=False)
-            temp_file.write(data)
-            temp_file.close()
-            m3u_path = temp_file.name
+            with urllib.request.urlopen(m3u_path) as response:
+                data = response.read()
+            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                temp_file.write(data)
+                m3u_path = temp_file.name
+                temp_file_path = m3u_path
         except Exception as e:
             return None, f"Error parsing {m3u_path}: {str(e)}"
 
@@ -450,7 +450,7 @@ def parse_m3u(m3u_path, max_entries=10000):
         with open(m3u_path, 'rb') as f:
             raw_data = f.read()
     except Exception as e:
-        clean_temp_file(temp_file)
+        clean_temp_file(temp_file_path)
         return None, f"Error reading file: {str(e)}"
 
     # DETECT ENCODING FROM BYTES - FIXED
@@ -552,7 +552,7 @@ def parse_m3u(m3u_path, max_entries=10000):
 
             elif line.startswith("#EXTINF"):
                 if entry_count >= max_entries and max_entries > 0:
-                    clean_temp_file(temp_file)
+                    clean_temp_file(temp_file_path)
                     return None, f"Maximum entries ({max_entries}) reached"
 
                 if ',' in line:
@@ -607,11 +607,11 @@ def parse_m3u(m3u_path, max_entries=10000):
             playlist.append([group, "-"])
             playlist.extend(groups[group])
 
-        clean_temp_file(temp_file)
+        clean_temp_file(temp_file_path)
         return playlist, None
 
     except Exception as e:
-        clean_temp_file(temp_file)
+        clean_temp_file(temp_file_path)
         return None, f"Error parsing {m3u_path}: {str(e)}"
 
 ##############################################################################
