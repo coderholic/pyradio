@@ -544,7 +544,7 @@ def install_player(output_folder=None, package=0, do_not_exit=False):
             best_choise = ''
         else:
             best_choise = '([yellow]best choise[/yellow])'
-        if x == 'y' or x == '\n' or x == '\r':
+        if x in ('y', '\n', '\r'):
             x = ''
             msg = '''
 Please select an action:

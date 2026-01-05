@@ -31,7 +31,7 @@ def convert_to_md(a_file):
 def is_graphical_environment_running():
     global HAS_GRAPHICAL_ENV
     this_system = system()
-    if this_system == 'Darwin' or this_system == 'Windows':
+    if this_system in ('Darwin', 'Windows'):
         HAS_GRAPHICAL_ENV = 1
         return True
     if getenv('TERM') == 'linux':

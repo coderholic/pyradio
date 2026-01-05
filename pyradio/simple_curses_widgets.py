@@ -341,8 +341,7 @@ class SimpleCursesString(SimpleCursesWidget):
         self._X = X
         self._win = self._parent = parent
         self._string = string
-        if cjklen(self._string) > self._max_string:
-            self._max_string = cjklen(self._string)
+        self._max_string = max(self._max_string, cjklen(self._string))
         self._caption = caption
         self._color = color
         self._color_focused = color_focused
@@ -368,8 +367,7 @@ class SimpleCursesString(SimpleCursesWidget):
     @string.setter
     def string(self, value):
         self._string = value
-        if cjklen(self._string) > self._max_string:
-            self._max_string = cjklen(self._string)
+        self._max_string = max(self._max_string, cjklen(self._string))
 
     @property
     def string_len(self):
@@ -1210,14 +1208,11 @@ class SimpleCursesCounter(SimpleCursesWidget):
         self._big_step = big_step
         self._value = int(value)
         self._pad = pad
-        if self._value < self._min:
-            self._value = self._min
-        if self._value > self._max:
-            self._value = self._max
+        self._value = max(self._value, self._min)
+        self._value = min(self._value, self._max)
         self._len = number_length
         max_len = len(str(self._max))
-        if self._len < max_len:
-            self._len = max_len
+        self._len = max(self._len, max_len)
         self.string = string
         self._color = color
         self._color_focused = color_focused
@@ -1252,8 +1247,7 @@ class SimpleCursesCounter(SimpleCursesWidget):
     def maximum(self, val):
         self._max = val
         max_len = len(str(self._max))
-        if self._len < max_len:
-            self._len = max_len
+        self._len = max(self._len, max_len)
 
     @property
     def step(self):
@@ -1279,8 +1273,7 @@ class SimpleCursesCounter(SimpleCursesWidget):
     def number_length(self, val):
         self._len = val
         max_len = len(str(self._max))
-        if self._len < max_len:
-            self._len = max_len
+        self._len = max(self._len, max_len)
 
     @property
     def string(self):
@@ -1369,31 +1362,27 @@ class SimpleCursesCounter(SimpleCursesWidget):
 
         elif char in (curses.KEY_NPAGE, ):
             self._value -= self._big_step
-            if self._value < self._min:
-                self._value = self._min
+            self._value = max(self._value, self._min)
             self.show(self._win)
             return 0
 
         elif char in (curses.KEY_PPAGE, ):
             self._value += self._big_step
-            if self._value > self._max:
-                self._value = self._max
+            self._value = min(self._value, self._max)
             self.show(self._win)
             return 0
 
         elif char in (kbkey['h'], curses.KEY_LEFT) or \
                 check_localized(char, (kbkey['h'], )):
             self._value -= self._step
-            if self._value < self._min:
-                self._value = self._min
+            self._value = max(self._value, self._min)
             self.show(self._win)
             return 0
 
         elif char in (kbkey['l'], curses.KEY_RIGHT) or \
                 check_localized(char, (kbkey['l'], )):
             self._value += self._step
-            if self._value > self._max:
-                self._value = self._max
+            self._value = min(self._value, self._max)
             self.show(self._win)
             return 0
 
@@ -1703,7 +1692,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
         # for i, n in enumerate(self._coords):
         #     logger.error('Item {}: X = {}, Y = {}'.format(i, *n))
 
-        self._rows = max([x[0] for x in self._coords]) + 1
+        self._rows = max(x[0] for x in self._coords) + 1
         # logger.error('DE coords = {}'.format(self._coords))
         # logger.error('DE columns = {0}, rows = {1}'.format(self._columns, self._rows))
 
@@ -1771,8 +1760,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                 self.selection = len(self.items) - 1
             else:
                 self.selection -= 5
-                if self.selection < 0:
-                    self.selection = 0
+                self.selection = max(self.selection, 0)
             self.show()
             return 2
 
@@ -2352,9 +2340,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._maxX = X
         elif self._window_type == self.CENTERED:
             self._maxY = items_max_Y = len(self._items)
-            if self._maxY > Y - 2 * self._outer_margin:
-                self._maxY = Y - 2 * self._outer_margin
-                # logger.error(f'1 {self._maxY = }')
+            self._maxY = min(self._maxY, Y - 2 * self._outer_margin)
+            # logger.error(f'1 {self._maxY = }')
 
             # logger.error('max = {}'.format(max(len(x) for x in self._items)))
             self._maxX = items_max_X = max(cjklen(x) for x in self._items) + 2
@@ -2362,14 +2349,11 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._maxX = self._maxX + 2 * self._margin
             if self._display_count:
                 self._maxX = self._maxX + len(str(items_max_Y)) + 3
-            if self._maxX > X - 2 * self._outer_margin:
-                self._maxX = X - 2 * self._outer_margin
+            self._maxX = min(self._maxX, X - 2 * self._outer_margin)
 
             ''' make sure we have a big enough window '''
-            if self._maxY < 10:
-                self._maxY = 10
-            if self._maxX < 30:
-                self._maxX = 30
+            self._maxY = max(self._maxY, 10)
+            self._maxX = max(self._maxX, 30)
             # logger.error(f'2 {self._maxY = }')
 
             aY, aX = self._parent.getbegyx()
@@ -2387,14 +2371,11 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._maxX = self._maxX + 2 * self._margin
             if self._display_count:
                 self._maxX = self._maxX + len(str(items_max_Y)) + 3
-            if self._maxX > X - 2 * self._outer_margin:
-                self._maxX = X - 2 * self._outer_margin
+            self._maxX = min(self._maxX, X - 2 * self._outer_margin)
 
             ''' make sure we have a big enough window '''
-            if self._maxY < 5:
-                self._maxY = 5
-            if self._maxX < 30:
-                self._maxX = 30
+            self._maxY = max(self._maxY, 5)
+            self._maxX = max(self._maxX, 30)
 
             aY, aX = self._parent.getbegyx()
             # self._Y = aY + int((Y-self._maxY)/2)
@@ -2471,8 +2452,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._maxX = X - 2
         if self._auto_adjust_width:
             self._maxX = cjklen(max(self._items)) + 2 * self._margin
-        if self._maxX > self._max_width:
-            self._maxX = self._max_width
+        self._maxX = min(self._maxX, self._max_width)
 
     def set_items(
         self,
@@ -2490,7 +2470,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 else:
                     cap = []
                     itms = []
-                    for n in range(0, len(items)):
+                    for n, _ in enumerate(items):
                         if n.starts_with('-'):
                             itms.append(items[n][1:])
                             cap.append(n)
@@ -2599,8 +2579,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
         elif self._start_pos > len(self._items) - 1 - self._body_maxY:
             self._start_pos = len(self._items) - self._body_maxY
         ''' make sure we have a valid self._start_pos '''
-        if self._start_pos < 0:
-            self._start_pos = 0
+        self._start_pos = max(self._start_pos, 0)
         # logger.error('refresh (st={0}, sel={1})'.format(self._start_pos, self._selection))
         for i in range(0, self._body_maxY):
             item_id = i + self._start_pos
@@ -2702,9 +2681,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             return False
 
         self._start_pos = self._selection - meso
-
-        if self._start_pos < 0:
-            self._start_pos = 0
+        self._start_pos = max(self._start_pos, 0)
         return True
 
     def _verify_selection_not_on_caption(self, movement=1):
@@ -2737,7 +2714,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
         # logger.info('items after delete\n{}'.format(self._items))
         # log_it('=======> id = {0}, captions = {1}'.format(index, self._captions))
         if self._has_captions:
-            for i in range(0, len(self._captions)):
+            for i, _ in enumerate(self._captions):
                 if index < self._captions[i]:
                     self._captions[i] -= 1
 
@@ -4238,8 +4215,7 @@ class SimpleCursesLineEdit():
                             self._curs_pos = len(self._displayed_string)
                             self._disp_curs_pos = cjklen(self._displayed_string)
                             self._first = len(self.string) - len(self._displayed_string)
-                            if self._first < 0:
-                                self._first = 0
+                            self._first = max(self._first, 0)
                     else:
                         self._curs_pos -= 1
                         curs = self._curs_pos
@@ -4358,8 +4334,7 @@ class SimpleCursesLineEdit():
                             self._disp_curs_pos += cjklen(self._displayed_string[-1])
             else:
                 self._to_right_simple()
-            if self._curs_pos > len(self._displayed_string):
-                self._curs_pos = len(self._displayed_string)
+            self._curs_pos = min(self._curs_pos, len(self._displayed_string))
 
     def _to_right_simple(self):
         if len(self.string) < self._max_chars_to_display:
@@ -4398,13 +4373,11 @@ class SimpleCursesLineEdit():
     def _go_left_simple(self):
         if len(self.string) < self._max_chars_to_display:
             self._curs_pos -= 1
-            if self._curs_pos < 0:
-                self._curs_pos = 0
+            self._curs_pos = max(self._curs_pos, 0)
         else:
             if self._curs_pos == 0:
                 self._first -= 1
-                if self._first < 0:
-                    self._first = 0
+                self._first = max(self._first, 0)
             else:
                 self._curs_pos -= 1
         self._disp_curs_pos = self._curs_pos

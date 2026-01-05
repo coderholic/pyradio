@@ -2338,7 +2338,7 @@ class PyRadioConfig(PyRadioStations):
             lines = []
 
         # modify player line
-        for i in range(len(lines)):
+        for i, _ in enumerate(lines):
             if lines[i].startswith('player'):
                 lines[i] = 'player = mplayer,vlc,mpv'
 
@@ -2498,7 +2498,7 @@ class PyRadioConfig(PyRadioStations):
                 return -2
             if sp[1] == '':
                 return -2
-            for i in range(len(sp)):
+            for i, _ in enumerate(sp):
                 sp[i] = sp[i].strip()
             if sp[0] == 'mplayer_save_br':
                 self.mplayer_save_br = True
@@ -2546,7 +2546,7 @@ class PyRadioConfig(PyRadioStations):
                 st = sp[1].strip()
                 if st == '-1' or st.lower() == 'false':
                     self.opts['default_station'][1] = 'False'
-                elif st == "0" or st == 'random':
+                elif st in ("0", 'random'):
                     self.opts['default_station'][1] = None
                 else:
                     self.opts['default_station'][1] = st
@@ -3250,7 +3250,7 @@ class PyRadioConfig(PyRadioStations):
     ):
         if stationFile.strip() == '':
             stationFile = self.default_playlist
-        return super(PyRadioConfig, self).read_playlist_file(
+        return super().read_playlist_file(
             stationFile=stationFile,
             is_last_playlist=is_last_playlist,
             is_register=is_register)
@@ -3685,7 +3685,7 @@ class PyRadioStationsStack():
 
     def rename_playlist(self, orig, new):
         self._show_station_history_debug()
-        for i in range(0, len(self.items)):
+        for i, _ in enumerate(self.items):
             if self.items[i][0] == orig:
                 self.items[i][0] = new
         self._show_station_history_debug()
@@ -4174,7 +4174,7 @@ transparency        0
 
             lines = templates[self.theme_id].split('\n')
             for k in jdata['colors'].keys():
-                for i in range(0, len(lines)):
+                for i, _ in enumerate(lines):
                     lines[i] = lines[i].replace('{' + k + '}', jdata['colors'][k])
 
             ret = True
@@ -4444,7 +4444,7 @@ transparency        0
 
             lines = templates[self.theme_id].split('\n')
             for k in 'foreground', 'background':
-                for i in range(0, len(lines)):
+                for i, _ in enumerate(lines):
                     lines[i] = lines[i].replace('{' + k + '}', theme_data[k])
 
             for k in range(15, -1, -1):
@@ -4455,7 +4455,7 @@ transparency        0
                 else:
                     color_data = theme_data[str(k)]
                 token = '{color' + str(k) + '}'
-                for i in range(0, len(lines)):
+                for i, _ in enumerate(lines):
                     lines[i] = lines[i].replace(token, color_data)
             ret = True
             # enable this to see the contents of the theme

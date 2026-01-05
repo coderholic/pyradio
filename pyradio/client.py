@@ -229,14 +229,10 @@ class PyRadioClient():
             pass
 
 
-
 class MyArgParser(ArgumentParser):
-
-    def __init(self):
+    def __init__(self):
         description = None
-        super(MyArgParser, self).__init__(
-            description = description
-        )
+        super().__init__(description=description)
 
     def print_usage(self, file=None):
         if file is None:

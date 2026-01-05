@@ -81,7 +81,7 @@ except:
 class MyArgParser(ArgumentParser):
 
     def __init(self):
-        super(MyArgParser, self).__init__(
+        super().__init__(
             description = description
         )
 
@@ -724,10 +724,10 @@ If nothing else works, try the following command:
             return
 
         if args.show_themes:
-            int_themes = [x for x in pyradio_config.internal_themes if x != 'wob' and x != 'bow']
+            int_themes = [x for x in pyradio_config.internal_themes if x not in ('wob', 'bow')]
             sys_themes = list(pyradio_config.system_themes)
             user_themes = glob.glob(path.join(pyradio_config.themes_dir, '*.pyradio-theme'))
-            for i in range(0, len(user_themes)):
+            for i, _ in enumerate(user_themes):
                 user_themes[i] = path.basename(user_themes[i]).replace('.pyradio-theme', '')
 
             # remove project themes names from user_themes
@@ -1398,10 +1398,8 @@ def open_conf_dir(cnf, msg=None, a_dir=None):
 def get_format_string(stations):
     len0 = len1 = 0
     for n in stations:
-        if cjklen(n[0]) > len0:
-            len0 = cjklen(n[0])
-        if cjklen(n[1]) > len1:
-            len1 = cjklen(n[1])
+        len0 = max(cjklen(n[0]), len0)
+        len1 = max(cjklen(n[1]), len1)
     num = len(str(len(stations)))
     # format_string = '{0:>' + str(num) + '.' + str(num) + 's}. ' + '{1:' + str(len0) + '.' + str(len0) + 's} | {2:' + str(len1) + '.' + str(len1) + 's} | {3}'
     format_string = '{0:>' + str(num) + '.' + str(num) + 's}. ' + '{1} | {2:' + str(len1) + '.' + str(len1) + 's} | {3}'

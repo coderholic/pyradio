@@ -218,14 +218,13 @@ def info_dict_to_list1(info, fix_highlight, max_width):
 def info_dict_to_list(info, fix_highlight, max_width, win_width):
     max_len = 0
     for a_title in info.keys():
-        if len(a_title) > max_len:
-            max_len = len(a_title)
+        max_len = max(max_len, len(a_title))
         info[a_title] = info[a_title].replace('_','¸')
     # logger.error('DE info\n{}\n\n'.format(info))
 
     # logger.info(f'{max_width = }, {win_width = }')
     # logger.error(f'{info = }')
-    max_str = max([len(item[0]) + len(item[1]) + 2 for item in info.items()])
+    max_str = max(len(item[0]) + len(item[1]) + 2 for item in info.items())
     # # logger.error(f'{max_str = }')
     # # max_str = max([len(l[1]) + 2 for l in info.items()])
     # logger.info(f'{max_str = }, {max_width = }, {win_width = }')
@@ -1858,7 +1857,7 @@ class Player():
             else:
                 title = a_data.split(b'"title":"')[1].split(b'"}')[0].split(b'","')[0]
             if title:
-                if title == b'-' or title == b' - ':
+                if title in (b'-', b' - '):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Icy-Title = " - ", not displaying...')
                 else:
@@ -2648,7 +2647,7 @@ class MpvPlayer(Player):
                  history_add_function,
                  recording_lock):
         config.PLAYER_NAME = 'mpv'
-        super(MpvPlayer, self).__init__(
+        super().__init__(
             config,
             outputStream,
             playback_timeout_counter,
@@ -3175,7 +3174,7 @@ class MpPlayer(Player):
                  history_add_function,
                  recording_lock):
         config.PLAYER_NAME = 'mplayer'
-        super(MpPlayer, self).__init__(
+        super().__init__(
             config,
             outputStream,
             playback_timeout_counter,
@@ -3543,7 +3542,7 @@ class VlcPlayer(Player):
                  history_add_function,
                  recording_lock):
         config.PLAYER_NAME = 'vlc'
-        super(VlcPlayer, self).__init__(
+        super().__init__(
             config,
             outputStream,
             playback_timeout_counter,

@@ -777,8 +777,8 @@ def add_l10n_to_functions_dict(functions):
         #             new_keys[ord(lvalue)] = value
         #             break
         # logger.error('\n\n{}'.format(new_keys))
-        for n in new_keys:
-            local_functions[n] = new_keys[n]
+        for key, value in new_keys.items():
+            local_functions[key] = value
     return local_functions
 
 def remove_l10n_from_global_functions(global_functions, shortcut_names):
@@ -853,7 +853,7 @@ class LetterProvider:
         Returns:
             int: The length of the longest layout string.
         """
-        return max([len(x) for x in self._layouts])
+        return max(len(x) for x in self._layouts)
 
     def get_layout(self):
         """

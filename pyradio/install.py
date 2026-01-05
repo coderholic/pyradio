@@ -191,14 +191,11 @@ def fix_pyradio_win_exe():
 def is_pyradio_user_installed():
     if platform.system().lower().startswith('darwin'):
         return False
-    p = subprocess.Popen('which pyradio',
-                         shell=True,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.DEVNULL
-                         )
-    ret = str(p.communicate()[0])
+    pyradio_path = shutil.which('pyradio')
+    if not pyradio_path:
+        return False
     home = os.path.expanduser('~')
-    return True if ret.startswith(home) else False
+    return True if pyradio_path.startswith(home) else False
 
 def is_process_running(process_name):
     """Check if there is any running process that contains the given name, excluding the current process."""
@@ -572,7 +569,7 @@ class PyRadioCache():
             from rich.console import Console
             console = Console()
             if self.files:
-                max_len = max([len(x) for x in self._files]) + 4
+                max_len = max(len(x) for x in self._files) + 4
                 console.print('[magenta]PyRadio Cache[/magenta]:')
                 for i, n in enumerate(self._files):
                     if i < 5:

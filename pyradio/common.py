@@ -795,8 +795,7 @@ class CsvReadWrite():
                         self._items.append(station_info)
 
                         # Update playlist version based on the presence of optional fields
-                        if this_row_version > current_version:
-                            current_version = this_row_version
+                        current_version = max(this_row_version, current_version)
                         self._version = current_version
                 except (csv.Error, ValueError) as e:
                     if logger.isEnabledFor(logging.DEBUG):
@@ -970,7 +969,7 @@ class ProfileManager():
                 if profiles:
                     profiles_list.extend(profiles)
         profiles_list = list(set(profiles_list))
-        profiles_list = [ x for x in profiles_list if x != 'pyradio-volume' and x != 'silent']
+        profiles_list = [ x for x in profiles_list if x not in ('pyradio-volume','silent')]
         return sorted(profiles_list)
 
     def _read_a_config_file(self, config_file):

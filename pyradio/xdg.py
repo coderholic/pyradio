@@ -129,8 +129,7 @@ class XdgMigrate():
         for n in self.files_to_data, self.files_to_state, self.files_to_other:
             if n:
                 n_max_length = max(len(internal_list[0]) for internal_list in n)
-                if n_max_length > max_length:
-                    max_length = n_max_length
+                max_length = max(max_length, n_max_length)
         return max_length
 
     def rename_files(self, to_console=True):
@@ -396,7 +395,7 @@ class XdgDirs():
             'cache',
             'recording'
                 )
-        for n in range(len(self._old_dirs)):
+        for n, _ in enumerate(self._old_dirs):
             out.append(f'{cap[n]}\n  {self._old_dirs[n]}\n  {self._new_dirs[n]}')
         logger.info('\n'.join(out))
 

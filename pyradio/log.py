@@ -52,7 +52,7 @@ def fix_chars(s):
     out = [s]
     from_str = ('\r', '\n', r'\"', r"\'")
     to_str = ('' , '', '"', "'")
-    for n in range(len(to_str)):
+    for n, _ in enumerate(to_str):
         out.append(out[-1].replace(from_str[n], to_str[n]))
     return out[-1].strip()
 
@@ -1319,7 +1319,7 @@ class RepeatDesktopNotification():
 
     def _populate_notification_command(self, a_notification_command, d_title, d_msg):
         notification_command = deepcopy(a_notification_command)
-        for i in range(0, len(notification_command)):
+        for i, _ in enumerate(notification_command):
             if 'TITLE' in notification_command[i]:
                 notification_command[i] = notification_command[i].replace('TITLE', d_title)
             if 'MSG' in notification_command[i]:

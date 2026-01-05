@@ -132,7 +132,7 @@ class PyRadioScheduleList():
 
     def _list_to_schedule_items(self):
         self._schedule_list = []
-        for i in range(0, len(self._list)):
+        for i, _ in enumerate(self._list):
             self._schedule_list.append(
                     PyRadioScheduleItem(self._list[i])
                     )
@@ -148,7 +148,7 @@ class PyRadioScheduleList():
     def get_list_of_active_items(self):
         if self._schedule_list == []:
             # logger.error('len(self._list) = {}'.format(len(self._list)))
-            for i in range(0, len(self._list)):
+            for i, _ in enumerate(self._list):
                 self._schedule_list.append(
                         PyRadioScheduleItem(self._list[i])
                         )
@@ -241,7 +241,7 @@ class PyRadioScheduleList():
         out = []
         if ll:
             d = in_date[2] - in_date[1]
-            for i in range(len(ll)):
+            for i, _ in enumerate(ll):
                 out.append(list(in_date))
                 out[-1][1] = ll[i]
                 out[-1][2] = out[-1][1] + d
@@ -291,7 +291,7 @@ class PyRadioScheduleList():
                             'buffering': ''
                     }
                 out.append(tmp)
-            for i in range(len(out)):
+            for i, _ in enumerate(out):
                 if out[i]['stop'][:13] == out[i]['start'][:13]:
                     out[i]['stop'] = out[i]['stop'][13:]
         else:
@@ -337,7 +337,7 @@ class PyRadioScheduleList():
         # logger.error('\n\n')
 
         a_list= []
-        for i in range(0, len(self._schedule_list)):
+        for i, _ in enumerate(self._schedule_list):
             if self._schedule_list[i].repeat is None:
                 a_list.append(
                     self._schedule_list[i].get_active_item()

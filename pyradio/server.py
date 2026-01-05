@@ -1113,7 +1113,7 @@ Restricted Commands (Main mode only)
             received = self._commands['/html_is_stopped']()
             self._send_raw(received)
 
-        elif self._path == '/toggle_rec' or self._path == '/trec':
+        elif self._path in ('/toggle_rec', '/trec'):
             if self._is_html:
                 received = self._commands['/html_toggle_rec']()
                 self._send_raw(received)
@@ -1121,7 +1121,7 @@ Restricted Commands (Main mode only)
                 received = self._commands['/toggle_rec']()
                 self._send_text(received)
 
-        elif self._path == '/rec_status' or self._path == '/srec':
+        elif self._path in ('/rec_status', '/srec)':
             if platform.lower().startswith('win') and \
                     self._player().PLAYER_NAME == 'vlc':
                 if self._is_html:
@@ -1410,13 +1410,11 @@ Restricted Commands (Main mode only)
                             self._send_text(self._text['/error'])
                             has_error = True
                         if isinstance(ret, int):
-                            if ret >= len(self.lists()[0][-1]):
-                                ret = len(self.lists()[0][-1])
+                            ret = min(ret, len(self.lists()[0][-1]))
                         logger.error(f' 1 {ret = }')
                         if not has_error:
                             # ret = ret -1 if ret > 0 else 0
-                            if ret < 0:
-                                ret = 0
+                            ret = max(ret, 0)
                             logger.error(f' 2 {ret = }')
                             if self._is_html:
                                 self._commands['/jump'](ret)
@@ -1433,7 +1431,7 @@ Restricted Commands (Main mode only)
                 else:
                     self._send_text(self._text['/perm'])
 
-        elif self._path == '/open_rb' or self._path == '/orb':
+        elif self._path in ('/open_rb', '/orb'):
             if self._is_html:
                 received = self._commands['/html_open_radio_browser']()
                 self._send_raw(received)
@@ -1446,7 +1444,7 @@ Restricted Commands (Main mode only)
                     received = self._commands['/open_radio_browser']()
                 # self._send_text(received)
 
-        elif self._path == '/close_rb' or self._path == '/crb':
+        elif self._path in ('/close_rb', '/crb'):
             if self._is_html:
                 if not self.can_send_command():
                     self._send_raw(self._text['/perm_html'])
@@ -1499,7 +1497,7 @@ Restricted Commands (Main mode only)
                 if ret != '':
                     self._send_text(ret)
 
-        elif self._path == '/rb_page' or self._path == '/grb':
+        elif self._path in ('/rb_page', '/grb'):
             if self._is_html:
                 pass
             else:
@@ -1509,7 +1507,7 @@ Restricted Commands (Main mode only)
                 else:
                     self._send_text(self._text['/perm'])
 
-        elif self._path == '/rb_first_page' or self._path == '/frb':
+        elif self._path in ('/rb_first_page', '/frb'):
             if self._is_html:
                 if self.can_send_command():
                     ret = self._commands['/radio_browser_first_page']()
@@ -1530,7 +1528,7 @@ Restricted Commands (Main mode only)
                 else:
                     self._send_text(self._text['/perm'])
 
-        elif self._path == '/rb_next_page' or self._path == '/nrb':
+        elif self._path in ('/rb_next_page', '/nrb'):
             if self._is_html:
                 if self.can_send_command():
                     ret = self._commands['/radio_browser_next_page']()
@@ -1551,7 +1549,7 @@ Restricted Commands (Main mode only)
                 else:
                     self._send_text(self._text['/perm'])
 
-        elif self._path == '/rb_previous_page' or self._path == '/prb':
+        elif self._path in ('/rb_previous_page', '/prb'):
             if self._is_html:
                 if self.can_send_command():
                     ret = self._commands['/radio_browser_previous_page']()
@@ -1572,7 +1570,7 @@ Restricted Commands (Main mode only)
                 else:
                     self._send_text(self._text['/perm'])
 
-        elif self._path == '/list_rb' or self._path == '/lrb':
+        elif self._path in ('/list_rb', '/lrb'):
             if self._is_html:
                 if self.can_send_command():
                     sel, a_list = self.rb_html_search_strings()
@@ -1598,7 +1596,7 @@ Restricted Commands (Main mode only)
                 else:
                     self._send_text(self._text['/perm'])
 
-        elif self._path == '/volume' or self._path == '/v':
+        elif self._path in ('/volume', '/v'):
             ''' get volume '''
             if self._is_html:
                 pass
@@ -2019,7 +2017,7 @@ Content-Length: {len(b_msg)}
         pad = len(str(len(out)))
         pad_str = '{:' + str(pad) + '}. '
 
-        for i in range(0, len(out)):
+        for i, _ in enumerate(out):
             tok = '  '
             if stations is None:
                 if i == self.sel()[0] and i == self.sel()[1]:
@@ -2051,7 +2049,7 @@ Content-Length: {len(b_msg)}
         pad = len(str(len(out)))
         pad_str = '{:' + str(pad) + '}. '
 
-        for i in range(0, len(out)):
+        for i, _ in enumerate(out):
             tok = '  '
             if out[i] == pl:
                 tok = '> '

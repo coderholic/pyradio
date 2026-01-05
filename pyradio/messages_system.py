@@ -2208,9 +2208,7 @@ unintentionally disrupt functionality.
             self._win.refresh()
             if self._active_token is not None:
                 self._pad_pos = self._active_token
-            if self._pad_pos > self._lines_count - self._maxY + 3:
-                #if self._lines_count - self._maxY - 4 >= self._pad_pos + self._maxY + 2:
-                self._pad_pos = self._lines_count - self._maxY + 3
+            self._pad_pos = min(self._pad_pos, self._lines_count - self._maxY + 3)
             self._pad_refresh()
 
     def keypress(self, char):

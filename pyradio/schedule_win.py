@@ -88,7 +88,7 @@ class PyRadioSimpleScheduleWindow():
         self._stop = False
         self._thread_date = None
         self._error_num = 0
-        self._max_repeat_len = max([len(x) for x in _repeat])
+        self._max_repeat_len = max(len(x) for x in _repeat)
         self._repeat_index = 0
         self.lock = threading.Lock()
         self._entry = None
@@ -170,8 +170,8 @@ class PyRadioSimpleScheduleWindow():
             self._remove_enabled = True
 
         logger.error('set_item')
-        for n in self._schedule_item.item:
-            logger.error(f'{n}: {self._schedule_item.item[n]}')
+        for n, item in self._schedule_item.item.items():
+            logger.error(f'{n}: {item}')
 
         ''' parse and assign values '''
 
@@ -571,7 +571,7 @@ class PyRadioSimpleScheduleWindow():
             if not self._showed:
                 self._item_to_form()
             self._fix_focus()
-            for n in range(0, len(self._widgets)):
+            for n, _ in enumerate(self._widgets):
                 if n == len(self._widgets) -1:
                     with self.lock:
                         self._widgets[n].show(parent_win=self._win, opening=False)
@@ -805,7 +805,7 @@ class PyRadioSimpleScheduleWindow():
 
         self._fix_recording_from_player_selection()
 
-        for i in range(0, len(self._widgets)):
+        for i, _ in enumerate(self._widgets):
             if self._focus == i:
                 self._widgets[i].focused = True
             else:
@@ -898,8 +898,8 @@ class PyRadioSimpleScheduleWindow():
         })
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('--== item ==--')
-            for n in tmp_item.item:
-                logger.debug(f'{n}: {tmp_item.item[n]}')
+            for n, item in tmp_item.item.items():
+                logger.debug(f'{n}: {item}')
         return tmp_item
 
     def _show_info(self):
@@ -916,8 +916,8 @@ class PyRadioSimpleScheduleWindow():
         ac_tmp_item = tmp_item.get_active_item()
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('--== active item ==--')
-            for n in tmp_item.active_item:
-                logger.debug(f'{n}: {tmp_item.active_item[n]}')
+            for n, item in tmp_item.active_item.items():
+                logger.debug(f'{n}: tmp_item.active_{item}')
         ac_tmp_item = tmp_item.get_active_item()
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(f'ac_tmp_item = {ac_tmp_item}')
@@ -973,15 +973,15 @@ class PyRadioSimpleScheduleWindow():
                     out.append('_____Stop: |' + n[1] + '__')
 
         if err_out:
-            length = max([len(x) for x in out])
-            for i in range(len(err_out)):
+            length = max(len(x) for x in out)
+            for i, _ in enumerate(err_out):
                 num = int((length - len(err_out[i].replace('|', ''))) / 2)
                 err_out[i] = num * '_' + err_out[i]
             err_out.append('')
             out = err_out + out
 
-        while max([len(x) for x in out]) < 40:
-            for i in range(len(out)):
+        while max(len(x) for x in out) < 40:
+            for i, _ in enumerate(out):
                 out[i] = '__' + out[i] + '__'
 
         if out[0] != '':
@@ -1024,8 +1024,8 @@ class PyRadioSimpleScheduleWindow():
         tmp_item = self._form_to_item()
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('--== active item ==--')
-            for n in tmp_item.active_item:
-                logger.debug(f'{n}: {tmp_item.active_item[n]}')
+            for n, item in tmp_item.active_item.items():
+                logger.debug(f'{n}: tmp_item.active_{item}')
             logger.debug(f'tmp_item ={tmp_item}')
         ac_tmp_item = tmp_item.get_active_item()
         if logger.isEnabledFor(logging.DEBUG):

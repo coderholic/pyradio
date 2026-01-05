@@ -212,7 +212,7 @@ class SelectPlayer():
         self._win.addstr(1, 2, 'Active Media Player: ', curses.color_pair(10))
         self._win.addstr(self._active_player, curses.color_pair(11))
         self._win.addstr(3, 2, 'Please select a Media Player to activate', curses.color_pair(10))
-        for n in range(0, len(self._available_players)):
+        for n, _ in enumerate(self._available_players):
             y = 6 + n
             if self._selected == n:
                 self._win.addstr(4+n, 4, self._players[self._available_players[n]].ljust(self.hline), curses.color_pair(6))
@@ -2367,7 +2367,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         # logger.error('signum = {}'.format(signum))
         # logger.error('frame = {}'.format(frame))
         search_cls = [x for x in self._search_classes if x is not None]
-        for n in range(len(search_cls)):
+        for n, _ in enumerate(search_cls):
             search_cls[n].save_search_history()
             search_cls[n] = None
         self.player.stop_update_notification_thread = True
@@ -3104,9 +3104,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         mwidth = 0
         for n in lines:
             llen = cjklen(n.replace('|', ''))
-            if llen > mwidth:
-                mwidth = llen
-        return mwidth
+            mwidth = max(mwidth, llen)
 
     def _get_message_width_from_string(self, txt):
         lines = txt.split('\n')
@@ -3406,11 +3404,9 @@ ____Using |fallback| theme.''', Priority.HIGH)
                 ';': 'semicolon',
                 '^': 'caret',
             }
-            for n in range(len(text)):
-                text[n] += '.'
-            msg = ' '.join(text)
-            for n in rep:
-                msg = msg.replace(n, rep[n])
+            msg = ' '.join(n + '.' for n in text)
+            for key, value in rep.items():
+                msg = msg.replace(key, value)
             logger.error('\n\nmsg = {}\n\n'.format(msg))
             text = [msg]
         tts_text = tts_transform_to_string(text, self._cnf.tts_verbosity)
@@ -4000,8 +3996,7 @@ ____Using |fallback| theme.''', Priority.HIGH)
                     if self.selection >= self.number_of_items or \
                             self.selection >= self.startPos + self.maxY - 4:
                         self.selection -= 1
-                if self.startPos < 0:
-                    self.startPos = 0
+                self.startPos = max (0, self.startPos)
             else:
                 if not force_scan_playlist and self.player.isPlaying():
                     if self._last_played_playlist == self._cnf.station_title:
@@ -4958,10 +4953,8 @@ and |remove the file manually|.
 
     def _browser_station_info(self):
         max_width = self.bodyMaxX - 24
-        if max_width < 56:
-            max_width = 56
-        if max_width > 60:
-            max_width = 60
+        max_width = max(max_width, 56)
+        max_width = min(max_width, 60)
         txt, tail = self._cnf._online_browser.get_info_string(
                 self.selection,
                 max_width=max_width,
@@ -4979,10 +4972,8 @@ and |remove the file manually|.
 
     def _show_station_info(self):
         max_width = self.bodyMaxX - 24
-        if max_width < 56:
-            max_width = 56
-        if max_width > 60:
-            max_width = 60
+        max_width = max(max_width, 56)
+        max_width = min(max_width, 60)
         txt, tail = self.player.get_info_string(
             self._last_played_station,
             max_width=max_width,
@@ -5219,8 +5210,7 @@ and |remove the file manually|.
             self.setStation(ret)
             self._put_selection_in_the_middle(force=True)
         if reapply:
-            if self.ws.operation_mode in \
-                    [self._mode_to_search[x] for x in self._mode_to_search]:
+            if self.ws.operation_mode in self._mode_to_search.values():
                 _apply_main_windows(ret)
             elif self.ws.operation_mode == self.ws.THEME_MODE:
                 self._theme_selector.set_theme(self._theme_selector._themes[ret])
@@ -5298,11 +5288,10 @@ and |remove the file manually|.
         return ret
 
     def _do_display_notify(self):
-        self._update_notify_lock.acquire()
-        if self._update_version:
-            self._update_version_do_display = self._update_version
-            self._print_update_notification()
-        self._update_notify_lock.release()
+        with self._update_notify_lock:
+            if self._update_version:
+                self._update_version_do_display = self._update_version
+                self._print_update_notification()
 
     def _check_to_open_playlist(self, a_url=None):
         ''' Open a playlist after saving current playlist (if needed)
@@ -5448,8 +5437,7 @@ and |remove the file manually|.
                 self._open_playlist_from_history(list_of_registers=True)
             if self.selection >= self.number_of_items:
                 self.selection = self.number_of_items - 1
-                if self.selection < 0:
-                    self.selection = 0
+                self.selection = max(self.selection, 0)
                 self._put_selection_in_the_middle()
 
     def _clear_all_register_files(self):
@@ -5809,14 +5797,11 @@ and |remove the file manually|.
             # logger.error(f'{selection = }')
         else:
             profiles = self._station_profile_editor.items
-        max_X = max([len(x) for x in profiles]) + 6
-        if max_X < 30:
-            max_X = 30
+        max_X = max(len(x) for x in profiles) + 6
+        max_X = max(max_X, 30)
         max_Y = len(profiles) + 4
-        if max_Y > self.bodyMaxY - 4:
-            max_Y = self.bodyMaxY - 4
-        if max_Y < 8:
-            max_Y = 8
+        max_Y = min(max_Y, self.bodyMaxY - 4)
+        max_Y = max(max_Y, 8)
 
         X = int((self.bodyMaxX - max_X) / 2)
         Y = int((self.bodyMaxY - max_Y) / 2)
@@ -8523,8 +8508,7 @@ _____"|f|" to see the |free| keys you can use.
                         self._cnf.number_of_stations = self.number_of_items
                         self.selection = self.number_of_items - 1
                         self.startPos = self.number_of_items - self.bodyMaxY
-                        if self.startPos < 0:
-                            self.startPos = 0
+                        self.startPos = max(self.startPos, 0)
                     else:
                         if self.number_of_items == 0:
                             self._cnf.stations = [self._station_editor.new_station]
@@ -8553,8 +8537,7 @@ _____"|f|" to see the |free| keys you can use.
                 self._show_line_editor_help()
             elif ret == 3:
                 ''' show encoding '''
-                if self._station_editor._encoding == '' or \
-                    self._station_editor._encoding == self._cnf.default_encoding:
+                if self._station_editor._encoding in ('', self._cnf.default_encoding):
                     self._station_editor._encoding = 'Default'
                 self.ws.operation_mode = self.ws.EDIT_STATION_ENCODING_MODE
                 self._encoding_select_win = PyRadioSelectEncodings(
@@ -8741,14 +8724,12 @@ _____"|f|" to see the |free| keys you can use.
                     if self.selection == len(self.stations) - 1:
                         self.startPos -= 1
                         self.selection += 1
-                        if self.startPos < 0:
-                            self.startPos = 0
+                        self.startPos = max(self.startPos, 0)
                 if self.selection < self.playing and self.playing > -1:
                     self.playing -= 1
                 if self.selection > 0:
                     self.selection -= 1
-                if self.startPos > self.selection:
-                    self.startPos = self.selection
+                self.startPos = min(self.startPos, self.selection)
             self.ws.close_window()
             self.refreshBody()
             return
@@ -9494,8 +9475,7 @@ _____"|f|" to see the |free| keys you can use.
                 # curses.ungetch(kbkey['search'])
             return
 
-        elif self.ws.operation_mode in \
-            [self._search_modes[x] for x in self._search_modes]:
+        elif self.ws.operation_mode in self._search_modes.values():
             ''' serve search results '''
             # keypress ok
             ret = self.search.keypress(self.search._edit_win, char)
@@ -11113,8 +11093,7 @@ _____"|f|" to see the |free| keys you can use.
                         self._put_selection_in_the_middle()
                     if self.selection >= self.number_of_items:
                         self.selection = self.number_of_items - 1
-                        if self.selection < 0:
-                            self.selection = 0
+                        self.selection = max(self.selection, 0)
                         self._put_selection_in_the_middle()
 
                 self.refreshBody()
@@ -11136,8 +11115,7 @@ _____"|f|" to see the |free| keys you can use.
                 self.selection -= 1
                 self.selections[self.ws.PLAYLIST_MODE][0] = self.selection
                 self.playlist_selections[self.ws.PLAYLIST_MODE][0] = self.selection
-                if self.selection < self.startPos:
-                    self.startPos = self.selection
+                self.startPos = min(self.startPos, self.selection)
         else:
             no_more_registers = True
             logger.error('DE no more playlists....')
@@ -11180,8 +11158,7 @@ _____"|f|" to see the |free| keys you can use.
                 self._put_selection_in_the_middle()
             if self.selection >= self.number_of_items:
                 self.selection = self.number_of_items - 1
-                if self.selection < 0:
-                    self.selection = 0
+                self.selection = max(self.selection, 0)
                 self._put_selection_in_the_middle()
 
         self.refreshBody()
@@ -11507,8 +11484,7 @@ _____"|f|" to see the |free| keys you can use.
                 self.bodyWin.erase()
         else:
             for lineNum in range(self.bodyMaxY):
-                if self.startPos < 0:
-                    self.startPos = 0
+                self.startPos = max(self.startPos, 0)
                 i = lineNum + self.startPos
                 if i < len(self.stations):
                     if not self._cnf.browsing_station_service and \
@@ -11797,16 +11773,15 @@ _____"|f|" to see the |free| keys you can use.
         else:
             self.def_signal_handlers = {}
             try:
-                for a_sig in self.handled_signals:
-                    self.def_signal_handlers[a_sig] = signal.signal(
-                        self.handled_signals[a_sig],
-                        self._linux_signal_handler
+                for sig_name, sig_code in self.handled_signals.items():
+                    self.def_signal_handlers[sig_name] = signal.signal(
+                        sig_code, self._linux_signal_handler
                     )
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug(f'SetConsoleCtrlHandler: Handler for signal {a_sig} registered')
+                        logger.debug(f'SetConsoleCtrlHandler: Handler for signal {sig_name} registered')
             except:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug(f'SetConsoleCtrlHandler: Failed to register handler for signal {a_sig}')
+                    logger.debug(f'SetConsoleCtrlHandler: Failed to register handler for signal {sig_name}')
 
     def _linux_signal_handler(self, a_signal, a_frame):
         logger.error('DE ----==== _linux_signal_handler  ====----')
@@ -11814,7 +11789,7 @@ _____"|f|" to see the |free| keys you can use.
         if self._cnf.titles_log.titles_handler:
             logger.critical('=== Logging stopped')
         search_cls = [x for x in self._search_classes if x is not None]
-        for n in range(len(search_cls)):
+        for n, _ in enumerate(search_cls):
             search_cls[n].save_search_history()
             search_cls[n] = None
         self._cls_update_stations = None
@@ -11852,11 +11827,11 @@ _____"|f|" to see the |free| keys you can use.
         self.player.close()
         self._cnf.save_config()
         self._cnf.remove_session_lock_file()
-        for a_sig in self.handled_signals:
+        for sig_name, sig_code in self.handled_signals.items():
             try:
                 signal.signal(
-                    self.handled_signals[a_sig],
-                    self.def_signal_handlers[a_sig]
+                    sig_code,
+                    self.def_signal_handlers[sig_name]
                 )
             except:
                 pass
@@ -11875,7 +11850,7 @@ _____"|f|" to see the |free| keys you can use.
             https://danielkaes.wordpress.com/2009/06/04/how-to-catch-kill-events-with-python/
         '''
         search_cls = [x for x in self._search_classes if x is not None]
-        for n in range(len(search_cls)):
+        for n, _ in enumerate(search_cls):
             search_cls[n].save_search_history()
             search_cls[n] = None
         if self._cnf.titles_log.titles_handler:
@@ -12394,6 +12369,7 @@ _____"|f|" to see the |free| keys you can use.
         markdown_content.append("### Station Data\n")
 
         # Calculate maximum column widths
+        max_station_num_width = max(len(str(num)) for num in station_data)
         max_station_num_width = max(len(str(num)) for num in station_data.keys())
         max_station_name_width = max(len(data['name']) for data in station_data.values())
         max_station_url_width = max(len(data['url']) for data in station_data.values())

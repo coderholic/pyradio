@@ -204,7 +204,7 @@ class PyRadioSearch(SimpleCursesLineEdit):
         y, x = self.parent_win.getmaxyx()
         new_y = y - self._height + 1
         new_x = x - self._width
-        super(PyRadioSearch, self).show(
+        super().show(
             self.parent_win,
             new_y=new_y,
             new_x=new_x)
@@ -763,7 +763,7 @@ class PyRadioEditor():
                 disp = 100
                 break
         strings = ('Paste mode', 'Extra mode')
-        max_len = max([cjklen(x)+2 for x in strings])
+        max_len = max(cjklen(x)+2 for x in strings)
         # logger.error(f'{disp = }')
         if disp == 100:
             """ print paste mode is on on all editors """
@@ -2874,10 +2874,8 @@ class PyRadioBuffering():
             elif char in (kbkey['k'], curses.KEY_UP) or \
                     check_localized(char, (kbkey['k'], )):
                 delay += 1
-                if delay < self._min:
-                    delay = self._min
-                if delay > self._max:
-                    delay = self._max
+                delay = max(delay, self._min)
+                delay =min(delay, self._max)
                 self.buffering_value = str(delay)
             elif char in (kbkey['j'], curses.KEY_DOWN) or \
                     check_localized(char, (kbkey['j'], )):
@@ -2892,8 +2890,7 @@ class PyRadioBuffering():
                 self.buffering_value = str(delay)
             elif char == curses.KEY_PPAGE:
                 delay += self._big_step
-                if delay > self._max:
-                    delay = self._max
+                delay = min(delay, self._max)
                 self.buffering_value = str(delay)
             elif char == kbkey['no_buffer'] or \
                     check_localized(char, (kbkey['no_buffer'], )):
