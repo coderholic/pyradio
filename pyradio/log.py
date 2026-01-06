@@ -1228,6 +1228,7 @@ class RepeatDesktopNotification():
         self._cnf = config
         self._a_lock = self._start_time = None
         self.timeout = timeout
+        self.icon_path = None
 
     @property
     def start_time(self):

@@ -122,12 +122,12 @@ except:
             check_files = [cmd]
 
         seen = set()
-        for dir in path:
-            normdir = os.path.normcase(dir)
+        for a_dir in path:
+            normdir = os.path.normcase(a_dir)
             if normdir not in seen:
                 seen.add(normdir)
                 for thefile in check_files:
-                    name = os.path.join(dir, thefile)
+                    name = os.path.join(a_dir, thefile)
                     if _access_check(name, mode):
                         return name
 

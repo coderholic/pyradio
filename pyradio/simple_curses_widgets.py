@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
+import sys
 import locale
 import logging
 import curses
 import curses.ascii
 import threading
 from os.path import basename
-from sys import exit
 from datetime import datetime
 from collections import deque
 try:
@@ -35,8 +35,7 @@ or even
     python -m pip install --user dateutil
 
 ''')
-    exit(1)
-from sys import platform
+    sys.exit(1)
 try:
     from .cjkwrap import is_wide, cjklen, cjkrjust, cjkcenter, cjkljust, cjkslices
     from .schedule import PyRadioTime
@@ -810,7 +809,7 @@ class SimpleCursesTime(SimpleCursesWidget):
         # logger.error('timeformat = {}'.format(self.time_format))
 
         self._char = check_box_char
-        if platform.lower().startswith('win') and \
+        if sys.platform.lower().startswith('win') and \
                 self._char == '✔':
             self._char = 'X'
         '''
@@ -3173,7 +3172,7 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
         self._X = X
         self._caption = caption
         self._char = char
-        if platform.lower().startswith('win') and \
+        if sys.platform.lower().startswith('win') and \
                 self._char == '✔':
             self._char = 'X'
         self._checked = checked
@@ -4449,7 +4448,7 @@ class SimpleCursesLineEdit():
             self._global_functions[l_char]()
             return 1
 
-        if platform.startswith('win'):
+        if sys.platform.startswith('win'):
             if char == 420:
                 ''' A-D, clear to end of line '''
                 if logger.isEnabledFor(logging.DEBUG):
@@ -4802,7 +4801,7 @@ class SimpleCursesLineEdit():
                 logger.debug('action: add-character')
             if self.log is not None:
                 self.log('====================\n')
-            if self._pure_ascii and not platform.startswith('win'):
+            if self._pure_ascii and not sys.platform.startswith('win'):
                 if 32 <= char < 127:
                     ''' accept only ascii characters '''
                     if self._chars_to_accept:
@@ -4821,7 +4820,7 @@ class SimpleCursesLineEdit():
                         self._displayed_string = self.string[self._first:self._first+self._max_chars_to_display]
             else:
                 logger.error('working on the character')
-                if platform.startswith('win'):
+                if sys.platform.startswith('win'):
                     char = chr(char)
                 else:
                     ch = get_kb_letter()
@@ -4891,30 +4890,30 @@ class SimpleCursesLineEdit():
             else:
                 raise UnicodeError
 
-        bytes = []
+        bytes_data = []
         if char <= 127:
             ''' 1 byte '''
-            bytes.append(char)
+            bytes_data.append(char)
         #elif 194 <= char <= 223:
         elif 192 <= char <= 223:
-            ''' 2 bytes '''
-            bytes.append(char)
-            bytes.append(get_check_next_byte())
+            ''' 2 bytes_data '''
+            bytes_data.append(char)
+            bytes_data.append(get_check_next_byte())
         elif 224 <= char <= 239:
-            ''' 3 bytes '''
-            bytes.append(char)
-            bytes.append(get_check_next_byte())
-            bytes.append(get_check_next_byte())
+            ''' 3 bytes_data '''
+            bytes_data.append(char)
+            bytes_data.append(get_check_next_byte())
+            bytes_data.append(get_check_next_byte())
         elif 240 <= char <= 244:
-            ''' 4 bytes '''
-            bytes.append(char)
-            bytes.append(get_check_next_byte())
-            bytes.append(get_check_next_byte())
-            bytes.append(get_check_next_byte())
+            ''' 4 bytes_data '''
+            bytes_data.append(char)
+            bytes_data.append(get_check_next_byte())
+            bytes_data.append(get_check_next_byte())
+            bytes_data.append(get_check_next_byte())
         ''' no zero byte allowed '''
-        while 0 in bytes:
-            bytes.remove(0)
-        buf = bytearray(bytes)
+        while 0 in bytes_data:
+            bytes_data.remove(0)
+        buf = bytearray(bytes_data)
         out = self._decode_string(buf)
         if out:
             if is_wide(out) and not self._cjk:

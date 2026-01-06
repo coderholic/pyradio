@@ -10,7 +10,6 @@ import json
 from pathlib import Path
 # import socket
 from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, getpid, listdir, access, R_OK, environ, fspath
-from sys import platform, exit
 from time import ctime, sleep
 from datetime import datetime
 from shutil import which, copyfile, move, Error as shutil_Error, rmtree as remove_tree
@@ -174,7 +173,7 @@ class PyRadioStations():
 
         self.favorites = None
 
-        if platform.startswith('win'):
+        if sys.platform.startswith('win'):
             self._open_string_id = 1
 
         if user_config_dir is not None:
@@ -704,8 +703,10 @@ class PyRadioStations():
             prev_format = self._playlist_version
             self._read_playlist_version = self._playlist_version = Station.url
             self._reading_stations = []
-            csv_in = CsvReadWrite(a_file=stationFile)
-            csv_in.encoding_to_remove = self.default_encoding
+            csv_in = CsvReadWrite(
+                a_file=stationFile,
+                encoding_to_remove=self.default_encoding
+            )
             ret = csv_in.read()
             if not ret:
                 self._reading_stations = []
@@ -842,8 +843,10 @@ class PyRadioStations():
                 logger.debug('Playlist not modified...')
             return 0
 
-        out_csv = CsvReadWrite(st_file)
-        out_csv.encoding_to_remove = self.default_encoding
+        out_csv = CsvReadWrite(
+            a_file=st_file,
+            encoding_to_remove=self.default_encoding
+        )
         ret = out_csv.write(items=self.stations)
         if ret == 0:
             self.dirty_playlist = False
@@ -1364,7 +1367,7 @@ class PyRadioConfig(PyRadioStations):
         '''
         self.bck_opts = {}
 
-        if platform == 'win32':
+        if sys.platform == 'win32':
             self.th_path = path.join(getenv('APPDATA'), 'pyradio', 'themes', 'auto.pyradio-themes')
         else:
             self.th_path = path.join(path.expanduser('~'), '.config', 'pyradio', 'themes', 'auto.pyradio-themes')
@@ -2035,7 +2038,7 @@ class PyRadioConfig(PyRadioStations):
 
     def _read_notification_command(self):
         self._notification_command = []
-        if platform == 'win32':
+        if sys.platform == 'win32':
             return
 
         # first look for the user notification file
@@ -2073,7 +2076,7 @@ class PyRadioConfig(PyRadioStations):
 
         if not self._notification_command:
             # set default commands
-            if platform.lower().startswith('darwin'):
+            if sys.platform.lower().startswith('darwin'):
                 self._notification_command = [
                     'osascript', '-e',
                     'display notification "MSG" with title "TITLE"'
@@ -2189,7 +2192,7 @@ class PyRadioConfig(PyRadioStations):
         '''
         self._i_created_the_lock_file = False
         self.locked = False
-        if platform == 'win32':
+        if sys.platform == 'win32':
             self._session_lock_file = path.join(self.state_dir, 'pyradio.lock')
             win_lock = path.join(self.state_dir, 'data', '_windows.lock')
             if path.exists(win_lock):
@@ -2705,14 +2708,14 @@ class PyRadioConfig(PyRadioStations):
                 # self.dirty_config = True
                 self._distro = sp[1].strip()
             elif sp[0] == 'xdg_compliant' and \
-                    not platform.startswith('win') and \
+                    not sys.platform.startswith('win') and \
                     self._user_config_dir is None and \
                     sp[1].lower() == 'true':
                 self.xdg_compliant = True
                 xdg_compliant_read_from_file = True
             elif sp[0] == 'resource_opener' and \
-                    not (platform.startswith('win') or \
-                        platform.startswith('dar')):
+                    not (sys.platform.startswith('win') or \
+                        sys.platform.startswith('dar')):
                 if sp[1] != 'auto':
                     tmp = sp[1].split(' ')
                     prog = validate_resource_opener_path(tmp[0])
@@ -2799,7 +2802,7 @@ class PyRadioConfig(PyRadioStations):
 
         self._make_sure_dirs_exist()
         ''' detect previous XDG Base installation '''
-        if not platform.startswith('win')  and \
+        if not sys.platform.startswith('win')  and \
                 self._user_config_dir is None and \
                 not self.xdg_compliant and \
                 distro_config:
@@ -3099,7 +3102,7 @@ class PyRadioConfig(PyRadioStations):
     def _dir_to_shorthand(self, a_dir):
         ret = a_dir.replace(
                 path.expanduser('~'),
-                '%HOMEPATH%' if platform.startswith('win') else '~'
+                '%HOMEPATH%' if sys.platform.startswith('win') else '~'
                 )
         return ret
 
@@ -3922,7 +3925,7 @@ class PyRadioBase16Themes():
 
     @property
     def can_auto_update(self):
-        if platform.startswith('win'):
+        if sys.platform.startswith('win'):
             ''' base16 does not work on windows '''
             return False
         return True if path.exists(self._ln) else False
@@ -4230,7 +4233,7 @@ class PyRadioThemesShThemes(PyRadioBase16Themes):
 
     @property
     def can_auto_update(self):
-        if platform.startswith('win'):
+        if sys.platform.startswith('win'):
             ''' theme.sh does not work on windows '''
             return False
 

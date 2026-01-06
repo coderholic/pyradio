@@ -637,7 +637,6 @@ class PyRadioTheme():
         ]
         # logger.error(f'{theme_dirs = }')
 
-
         # Search in user dir firts
         for theme_dir, is_package_resource in theme_dirs_to_search:
             # Case 1: It is Traversable (package source)

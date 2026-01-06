@@ -1121,7 +1121,7 @@ Restricted Commands (Main mode only)
                 received = self._commands['/toggle_rec']()
                 self._send_text(received)
 
-        elif self._path in ('/rec_status', '/srec)':
+        elif self._path in ('/rec_status', '/srec'):
             if platform.lower().startswith('win') and \
                     self._player().PLAYER_NAME == 'vlc':
                 if self._is_html:

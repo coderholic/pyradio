@@ -10,7 +10,14 @@ from os.path import exists, dirname, join, expanduser
 from shutil import which, move, Error as shutil_Error
 from enum import IntEnum
 from sys import platform
+from pathlib import Path
 from rich import print
+try:
+    # Python ≥ 3.9
+    from importlib.resources.abc import Traversable
+except ImportError:
+    # Python 3.7 & 3.8 (backport)
+    from importlib_resources.abc import Traversable
 
 logger = logging.getLogger(__name__)
 
@@ -414,7 +421,7 @@ class StationsChanges():
             try:
                 with open(in_file, 'r', encoding='utf-8') as sync_file:
                     line = sync_file.readline().strip()
-                    return eval(line)
+                    return line
             except:
                 pass
         return None
@@ -476,15 +483,15 @@ class StationsChanges():
             rename(self._stations_file, self._bck_stations_file)
         except:
             print('Error: Cannot create the stations backup file.')
-            print('       The updated stations file can be found at\n         "{}".'.format(self._out_stations_file))
+            print(f'       The updated stations file can be found at\n         "{self._out_stations_file}".')
             return False
         ''' rename stations-new.csv to stations.csv '''
         try:
             rename(self._out_stations_file, self._stations_file)
         except:
             print('Error: Cannot rename the updated stations file.')
-            print('       The updated stations file can be found at\n         "{}".'.format(self._out_stations_file))
-            print('       The old stations file has been backed up as\n         "{}".'.format(self._bck_stations_file))
+            print(f'       The updated stations file can be found at\n         "{self._out_stations_file}".')
+            print(f'       The old stations file has been backed up as\n         "{self._bck_stations_file}".')
             return False
         ''' remove bck file '''
         try:
@@ -501,10 +508,9 @@ class StationsChanges():
             a 4 column row if has online browser flag too '''
         if self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON:
             return a_row
-        elif self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING:
+        if self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING:
             return a_row[:-1]
-        else:
-            return a_row[:-2]
+        return a_row[:-2]
 
     def _format_vesion(self, a_version_tuple):
         ret = str(a_version_tuple)
@@ -543,7 +549,7 @@ class StationsChanges():
 
             Used by update_stations_csv()
         '''
-        self.keys = [x for x in self.versions]
+        self.keys = list(self.versions)
         self.keys.sort()
         # print('keys = {}'.format(self.keys))
         if stop is not None:
@@ -561,7 +567,7 @@ class StationsChanges():
             try:
                 with open(self._last_sync_file, 'r', encoding='utf-8') as sync_file:
                     line = sync_file.readline().strip()
-                    self.last_sync = eval(line)
+                    self.last_sync = line
             except:
                 ret = False
             if self.last_sync is None:
@@ -698,11 +704,14 @@ and write in it
 class CsvReadWrite():
     ''' A base class to read and write a PyRadio playlist '''
 
-    def __init__(self, a_file=None):
+    def __init__(self, a_file=None, encoding_to_remove=None):
         self._items = None
         self._version = Station.url
-        self.encoding_to_remove = None
-        self._file = a_file
+        self.encoding_to_remove = encoding_to_remove
+        # We save the original file as given
+        self._original_file = a_file
+        # For internal usage, we save a version that can be used by other functions
+        self._file = self._normalize_file_path(a_file) if a_file else None
 
     @property
     def items(self):
@@ -723,97 +732,142 @@ class CsvReadWrite():
     @property
     def groups(self):
         if self._items:
-            return [i for i,x in enumerate(self._items) if x[1] == '-']
-        else:
+            return [i for i, x in enumerate(self._items) if x[1] == '-']
+        return None
+
+    def _normalize_file_path(self, file_path):
+        """Convert file_path to a format that can be used in all cases."""
+        if file_path is None:
             return None
+        # If it is a Traversable, return it as it is
+        if isinstance(file_path, Traversable):
+            return file_path
+        # If it is str, convert to Path
+        if isinstance(file_path, str):
+            return Path(file_path)
+        # If it is Path, return it as it is
+        if isinstance(file_path, Path):
+            return file_path
+        raise TypeError(f"Unsupported file type: {type(file_path)}")
+
+    def _get_writable_file(self, file_path):
+        """Return a string path for writing."""
+        if file_path is None:
+            return None
+        # We always need a string path
+        if isinstance(file_path, (str, Path)):
+            return str(file_path)
+        raise TypeError(f"Cannot write to {type(file_path)}. Must be str or Path")
 
     def read(self, a_file=None):
-        ''' Reads a PyRadio playlist
+        ''' Read a PyRadio playlist
 
             The file is a_file or self._file (if a_file is None)
+            Supports str, Path, and Traversable objects
             Populates self._items and self._version
             Returns True or False (if error)
         '''
         current_version = Station.url
-        in_file = a_file if a_file else self._file
+        # Use a_file if given, otherwise use self._file
+        in_file = a_file if a_file is not None else self._file
+
+        if in_file is None:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('No file specified for reading')
+            return False
+
+        # Path normalization
+        in_file = self._normalize_file_path(in_file)
         self._items = []
+
         try:
-            with open(in_file, 'r', encoding='utf-8') as cfgfile:
-                try:
-                    for row in csv.reader(filter(lambda row: row[0] != '#', cfgfile), skipinitialspace=True):
-                        if not row:
-                            continue
+            # We handle Traversable differently from the others
+            if isinstance(in_file, Traversable):
+                # We open Traversable with its own open() method
+                with in_file.open(encoding='utf-8') as cfgfile:
+                    return self._read_csv(cfgfile, current_version)
+            # We open a file with the plain open()
+            with open(str(in_file), 'r', encoding='utf-8') as cfgfile:
+                return self._read_csv(cfgfile, current_version)
 
-                        # logger.error(f'{row = }')
-                        # Initialize variables with default values
-                        name = url = enc = icon = volume = http = referer = profile = buffering = player = ''
-                        this_row_version = Station.url
-                        # Assign values based on the length of the row
-                        row_length = len(row)
-                        name = row[0].strip()
-                        url = row[1].strip()
-                        if row_length > Station.encoding:
-                            enc = row[Station.encoding].strip()
-                            this_row_version = Station.encoding
-                        if row_length > Station.icon:
-                            icon = row[Station.icon].strip()
-                            this_row_version = Station.icon
-                        if row_length > Station.profile:
-                            profile = row[Station.profile].strip()
-                            this_row_version = Station.profile
-                        if row_length > Station.buffering:
-                            buffering = row[Station.buffering].strip()
-                            this_row_version = Station.buffering
-                        if row_length > Station.volume:
-                            volume = row[Station.volume].strip()
-                            this_row_version = Station.volume
-                        if row_length > Station.http:
-                            http = row[Station.http].strip()
-                            this_row_version = Station.http
-                        if row_length > Station.referer:
-                            referer = row[Station.referer].strip()
-                            this_row_version = Station.referer
-                        if row_length > Station.player:
-                            player = row[Station.player].strip()
-                            this_row_version = Station.player
-
-                        if buffering:
-                            if '@' not in buffering:
-                                buffering += '@128'
-                        else:
-                            buffering = '0@128'
-
-                        if self.encoding_to_remove is not None:
-                            if enc == self.encoding_to_remove:
-                                enc = ''
-
-                        # Append the parsed values to the reading stations list
-                        station_info = [
-                            name, url, enc, icon if icon else '',
-                            profile, buffering, http, volume, referer, player
-                        ]
-                        self._items.append(station_info)
-
-                        # Update playlist version based on the presence of optional fields
-                        current_version = max(this_row_version, current_version)
-                        self._version = current_version
-                except (csv.Error, ValueError) as e:
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug(f'Playlist is malformed: {e}')
-                    self._items = []
-                    self._version = current_version
-                    return False
-        except (FileNotFoundError, IOError) as e:
+        except (FileNotFoundError, IOError, OSError) as e:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'Cannot open playlist file: {e}')
-            # Handle file not found or IO errors
             self._items = []
             self._version = current_version
             return False
-        return True
+
+    def _read_csv(self, file_handle, current_version):
+        """Internal function to read a CSV from a file handle."""
+        try:
+            for row in csv.reader(filter(lambda row: row[0] != '#', file_handle), skipinitialspace=True):
+                if not row:
+                    continue
+
+                # Initialize variables with default values
+                name = url = enc = icon = volume = http = referer = profile = buffering = player = ''
+                this_row_version = Station.url
+                # Assign values based on the length of the row
+                row_length = len(row)
+                name = row[0].strip()
+                url = row[1].strip()
+                if row_length > Station.encoding:
+                    enc = row[Station.encoding].strip()
+                    this_row_version = Station.encoding
+                if row_length > Station.icon:
+                    icon = row[Station.icon].strip()
+                    this_row_version = Station.icon
+                if row_length > Station.profile:
+                    profile = row[Station.profile].strip()
+                    this_row_version = Station.profile
+                if row_length > Station.buffering:
+                    buffering = row[Station.buffering].strip()
+                    this_row_version = Station.buffering
+                if row_length > Station.volume:
+                    volume = row[Station.volume].strip()
+                    this_row_version = Station.volume
+                if row_length > Station.http:
+                    http = row[Station.http].strip()
+                    this_row_version = Station.http
+                if row_length > Station.referer:
+                    referer = row[Station.referer].strip()
+                    this_row_version = Station.referer
+                if row_length > Station.player:
+                    player = row[Station.player].strip()
+                    this_row_version = Station.player
+
+                if buffering:
+                    if '@' not in buffering:
+                        buffering += '@128'
+                else:
+                    buffering = '0@128'
+
+                if self.encoding_to_remove is not None:
+                    if enc == self.encoding_to_remove:
+                        enc = ''
+
+                # Append the parsed values to the reading stations list
+                station_info = [
+                    name, url, enc, icon if icon else '',
+                    profile, buffering, http, volume, referer, player
+                ]
+                self._items.append(station_info)
+
+                # Update playlist version based on the presence of optional fields
+                current_version = max(this_row_version, current_version)
+                self._version = current_version
+
+            return True
+
+        except (csv.Error, ValueError) as e:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'Playlist is malformed: {e}')
+            self._items = []
+            self._version = current_version
+            return False
 
     def _format_playlist_row(self, a_row):
-        ''' Returns a formatted row (list)
+        ''' Return a formatted row (list)
             Functionality:
                 Removes {'image': '...'}
                 Removes '0@128'
@@ -832,34 +886,52 @@ class CsvReadWrite():
         return this_row
 
     def write(self, a_file=None, items=None):
-        ''' Saves a PyRadio playlist
+        ''' Save a PyRadio playlist
         Creates a txt file and write stations in it.
         Then renames it to final target
+
+        Supports str and Path objects for writing
 
         Returns   0: All ok
                  -1: Error writing file
                  -2: Error renaming file
         '''
-        out_file = a_file if a_file else self._file
+        # Use a_file if given, otherwise use self._file
+        out_file = a_file if a_file is not None else self._file
         out_items = items if items else self._items
-        txt_out_file = out_file.replace('.csv', '.txt')
+
+        if out_file is None:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('No file specified for writing')
+            return -1
+
+        # For writing, we need a string path
+        try:
+            out_file_str = self._get_writable_file(out_file)
+        except TypeError as e:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'Unsupported file type for writing: {e}')
+            return -1
+
+        txt_out_file = out_file_str.replace('.csv', '.txt')
 
         try:
             with open(txt_out_file, 'w', encoding='utf-8') as cfgfile:
-                writter = csv.writer(cfgfile)
-                writter.writerow(['# PyRadio Playlist File Format:'])
-                writter.writerow(
+                writer = csv.writer(cfgfile)
+                writer.writerow(['# PyRadio Playlist File Format:'])
+                writer.writerow(
                     ['# name', 'url', 'encoding', 'icon',
                      'profile', 'buffering', 'force-http',
                      'volume', 'referer', 'player'])
                 for a_station in out_items:
-                    writter.writerow(self._format_playlist_row(a_station))
+                    writer.writerow(self._format_playlist_row(a_station))
         except (IOError, OSError, UnicodeEncodeError) as e:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'Cannot open playlist file for writing: {e}')
             return -1
+
         try:
-            move(txt_out_file, out_file)
+            move(txt_out_file, out_file_str)
         except (shutil_Error, FileNotFoundError, PermissionError) as e:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'Cannot rename playlist file: {e}...')
@@ -1028,53 +1100,51 @@ class ProfileManager():
             makedirs(dirname(config_file), exist_ok=True)
             return self.append_to_config(player_name, profile_name, 'volume=' + str(volume))
 
-        else:
-            config_list = self._read_a_config_file(config_file)
-            config_string = ''.join(config_list)
-            # logger.error(f'{config_file = }')
-            # logger.error(f'before remove {config_list = }')
-            if any(line.strip() == '[' + profile_name + ']' for line in config_list):
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('[{}] profile found!\n\n'.format(profile_name))
-                config_list = remove_consecutive_empty_lines(config_string.split('\n'))
-                config_string = '\n'.join(config_list)
-                # logger.error(f'after  remove {config_string = }')
-                # find all lines starting with '['
-                indexes = [i for i, x  in enumerate(config_list) if x.startswith('[')]
-                # logger.error(f'{indexes = }')
-                # get [profile_name] index
-                profile_index = config_list.index('[' + profile_name + ']')
-                # logger.error(f'{profile_index = }')
-                volume_adjusted = False
-                for i in range(profile_index+1, len(config_list)):
-                    # logger.error('checking "{}"'.format(config_list[i]))
-                    if config_list[i].startswith('volume='):
-                        config_list[i] = 'volume=' + str(volume)
-                        volume_adjusted = True
-                        break
-                    elif i in indexes:
-                        # volume not found in profile
-                        break
-                if not volume_adjusted:
-                    config_list[profile_index] += '\nvolume={}\n'.format(volume)
-                config_list = ['\n' + x if x.startswith('[') else x for x in config_list]
-                # logger.error('\n\n')
-                # for n in config_list:
-                #     logger.error(f'"{n}"')
-                # logger.error(config_list)
-                # logger.error('\n'.join(config_list))
-                # logger.error('\n\n')
-                ret = self._write_config_file(config_file, a_string='\n'.join(config_list) + '\n\n')
-                if ret:
-                    return profile_name
-                else:
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Error writing profile [{}] in "{}"'.format(profile_name, config_file))
-                    return None
-            else:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('[{}] profile not found! Adding it with volume'.format(profile_name))
-                return self.append_to_config(player_name, profile_name, 'volume=' + str(volume))
+        config_list = self._read_a_config_file(config_file)
+        config_string = ''.join(config_list)
+        # logger.error(f'{config_file = }')
+        # logger.error(f'before remove {config_list = }')
+        if any(line.strip() == '[' + profile_name + ']' for line in config_list):
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('[{}] profile found!\n\n'.format(profile_name))
+            config_list = remove_consecutive_empty_lines(config_string.split('\n'))
+            config_string = '\n'.join(config_list)
+            # logger.error(f'after  remove {config_string = }')
+            # find all lines starting with '['
+            indexes = [i for i, x  in enumerate(config_list) if x.startswith('[')]
+            # logger.error(f'{indexes = }')
+            # get [profile_name] index
+            profile_index = config_list.index('[' + profile_name + ']')
+            # logger.error(f'{profile_index = }')
+            volume_adjusted = False
+            for i in range(profile_index+1, len(config_list)):
+                # logger.error('checking "{}"'.format(config_list[i]))
+                if config_list[i].startswith('volume='):
+                    config_list[i] = 'volume=' + str(volume)
+                    volume_adjusted = True
+                    break
+                if i in indexes:
+                    # volume not found in profile
+                    break
+            if not volume_adjusted:
+                config_list[profile_index] += '\nvolume={}\n'.format(volume)
+            config_list = ['\n' + x if x.startswith('[') else x for x in config_list]
+            # logger.error('\n\n')
+            # for n in config_list:
+            #     logger.error(f'"{n}"')
+            # logger.error(config_list)
+            # logger.error('\n'.join(config_list))
+            # logger.error('\n\n')
+            ret = self._write_config_file(config_file, a_string='\n'.join(config_list) + '\n\n')
+            if ret:
+                return profile_name
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Error writing profile [{}] in "{}"'.format(profile_name, config_file))
+            return None
+
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('[{}] profile not found! Adding it with volume'.format(profile_name))
+        return self.append_to_config(player_name, profile_name, 'volume=' + str(volume))
 
     def write_silenced_profile(self, player_name):
         self.add_to_config(player_name, 'silent', 'volume=0')
@@ -1241,9 +1311,8 @@ class ProfileManager():
         ret = self._write_config_file(out_file, a_list=cleaned_config)
         if ret:
             return new_profile
-        else:
-            logger.error(f"Error saving {player_name} config")
-            return None
+        logger.error(f"Error saving {player_name} config")
+        return None
 
 
 def validate_resource_opener_path(a_file):
@@ -1253,8 +1322,7 @@ def validate_resource_opener_path(a_file):
         full_path = which(a_file)
         if full_path is None:
             return None
-        else:
-            a_file = full_path
+        a_file = full_path
     # Check if the file is executable
     if not access(a_file, X_OK):
         return None
@@ -1286,16 +1354,15 @@ def get_cached_icon_path(cache_dir, station_name, icon_url):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug(f'Failed to remove old icon {path1}: {e}')
             return path2
-        else:
-            # Old filename exists - rename to new
-            try:
-                rename(path1, path2)
-            except OSError as e:
-                # If rename fails, fall back to old path
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug(f'Failed to rename {path1} to {path2}: {e}')
-                return path1
-            return path2
-    else:
-        # Old filename does not exist - use the new one
+        # Old filename exists - rename to new
+        try:
+            rename(path1, path2)
+        except OSError as e:
+            # If rename fails, fall back to old path
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'Failed to rename {path1} to {path2}: {e}')
+            return path1
         return path2
+
+    # Old filename does not exist - use the new one
+    return path2

@@ -715,32 +715,32 @@ def get_unicode_and_cjk_char(win, char):
     # logger.info('reseting kb_letter')
     set_kb_letter('')
     # logger.error(f'all {win = }')
-    bytes = []
+    bytes_data = []
     if char <= 127:
         ''' 1 byte '''
-        bytes.append(char)
+        bytes_data.append(char)
     #elif 194 <= char <= 223:
     elif 192 <= char <= 223:
-        ''' 2 bytes '''
-        bytes.append(char)
-        bytes.append(get_check_next_byte(win))
+        ''' 2 bytes_data '''
+        bytes_data.append(char)
+        bytes_data.append(get_check_next_byte(win))
     elif 224 <= char <= 239:
-        ''' 3 bytes '''
-        bytes.append(char)
-        bytes.append(get_check_next_byte(win))
-        bytes.append(get_check_next_byte(win))
+        ''' 3 bytes_data '''
+        bytes_data.append(char)
+        bytes_data.append(get_check_next_byte(win))
+        bytes_data.append(get_check_next_byte(win))
     elif 240 <= char <= 244:
-        ''' 4 bytes '''
-        bytes.append(char)
-        bytes.append(get_check_next_byte(win))
-        bytes.append(get_check_next_byte(win))
-        bytes.append(get_check_next_byte(win))
+        ''' 4 bytes_data '''
+        bytes_data.append(char)
+        bytes_data.append(get_check_next_byte(win))
+        bytes_data.append(get_check_next_byte(win))
+        bytes_data.append(get_check_next_byte(win))
     ''' no zero byte allowed '''
-    while 0 in bytes:
-        bytes.remove(0)
+    while 0 in bytes_data:
+        bytes_data.remove(0)
 
     try:
-        buf = bytearray(bytes)
+        buf = bytearray(bytes_data)
     except (ValueError, TypeError):
         return None
     out = _decode_string(buf)

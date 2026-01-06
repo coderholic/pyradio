@@ -517,6 +517,8 @@ class PyRadio():
                     do not display any message
         '''
 
+        self.tts = TTSManagerDummy()
+        self._message_box_tts_thread = None
         self._tts_in_config = False
         self._tts_volume = pyradio_config.tts_volume
         self._tts_rate = pyradio_config.tts_rate
@@ -5069,8 +5071,8 @@ and |remove the file manually|.
             if secs < 60:
                 return secs
             hour = int(secs/60)
-            min = secs % 60
-            return str(hour) + ':' + str(min)
+            minutes = secs % 60
+            return str(hour) + ':' + str(minutes)
 
         if logger.isEnabledFor(logging.INFO):
             logger.info('detectUpdateThread: Starting...')
@@ -12078,8 +12080,10 @@ _____"|f|" to see the |free| keys you can use.
         '''
         num = -1
         self._reading_stations = []
-        csv_in = CsvReadWrite(a_file=playlist_file)
-        csv_in.encoding_to_remove = self._cnf.default_encoding
+        csv_in = CsvReadWrite(
+            a_file=playlist_file,
+            sncoding_to_remove=self._cnf.default_encoding
+        )
         ret = csv_in.read()
         if not ret:
             self._reading_stations = []

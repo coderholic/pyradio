@@ -1807,6 +1807,7 @@ class ExtraParameters():
                  entry_cannot_be_edited_function=None,
                  entry_cannot_be_deleted_function=None,
                  global_functions=None):
+        self.enabled = True
         self._offsetY = 0
         self._offsetX = 0
         self._global_functions = None
@@ -4304,8 +4305,8 @@ class PyRadioKeyboardConfig():
                 tts.queue_speech('Window: Keyboard shortcuts. ' + msg, Priority.NAVIGATION, Context.LIMITED, self.op_mode())
             self._showed = True
 
-    def _get_after_header(self, next=True):
-        if next:
+    def _get_after_header(self, next_header=True):
+        if next_header:
             # Return the first header value which is larger than an_id
             for value in self._headers:
                 if value > self._selection:
@@ -4639,7 +4640,7 @@ class PyRadioKeyboardConfig():
                 self._needs_update = True
                 self._speak_item(self.selection)
             elif char == ord('['):
-                self._get_after_header(next=False)
+                self._get_after_header(next_header=False)
                 self._make_selection_visible()
                 self._needs_update = True
                 self._speak_item(self.selection)

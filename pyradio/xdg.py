@@ -1,7 +1,7 @@
+import sys
 import locale
 import logging
 from os import path, getenv, makedirs, remove, listdir, rmdir, walk
-from sys import platform, exit
 from shutil import copy, copyfile, move, rmtree as remove_tree
 from platform import system
 from rich import print
@@ -52,7 +52,7 @@ class XdgMigrate():
             self.data_dir =  path.join(self.home_dir, '.local/share/pyradio')
             self.state_dir = path.join(self.home_dir, '.local/state/pyradio')
             self.path_to_scan = path.join(self.home_dir, '.config/pyradio')
-            if platform.startswith('win'):
+            if sys.platform.startswith('win'):
                 self.old_registers_dir = path.join(getenv('APPDATA'), 'pyradio', '_registers')
             else:
                 self.old_registers_dir = path.join(self.home_dir, '.config', 'pyradio', '.registers')
@@ -165,7 +165,7 @@ class XdgMigrate():
                     except:
                         if to_console:
                             print(f'[red]Error:[/red] CannCannot remove dir: "{self.new_registers_dir}"')
-                        exit(1)
+                        sys.exit(1)
                     go_on = move_registers = True
             else:
                 # remove empty .registers dir
@@ -186,7 +186,7 @@ class XdgMigrate():
                 except:
                     if to_console:
                         print(f'[red]Error:[/red] Cannot create dir: "{n}"')
-                    exit(1)
+                    sys.exit(1)
             i = -1
             max_length = self._get_max_length()
             if to_console:
@@ -245,7 +245,7 @@ class XdgMigrate():
         print('[red]Error:[/red] moving files to [green]XDG[/green] directories failed...\nCleaning up...')
         self._remove_new_files_on_failure()
         input('Press ENTER to exit... ')
-        exit(1)
+        sys.exit(1)
 
     def _move_registers_dir(self):
         # try to move registers dir
@@ -336,7 +336,7 @@ class XdgDirs():
 
     def migrate(self, locked):
         if not locked:
-            if not platform.startswith('win'):
+            if not sys.platform.startswith('win'):
                 self.migrate_cache()
             self.migrate_recordings()
             self.migrate_titles()
@@ -352,7 +352,7 @@ class XdgDirs():
 
     def build_paths(self):
         # print(f'{self._xdg_compliant = }')
-        if platform.startswith('win'):
+        if sys.platform.startswith('win'):
             if self._new_dirs[self.HOME] is None:
                 self._old_dirs[self.HOME] = getenv('APPDATA')
             self._old_dirs[self.STATIONS] = path.join(self._old_dirs[self.HOME], 'pyradio')
@@ -428,14 +428,14 @@ class XdgDirs():
                       ):
             if not path.exists(a_dir):
                 if a_dir == self.log_dirs and \
-                        platform.startswith('win'):
+                        sys.platform.startswith('win'):
                     # do not create logos dir on windows
                     continue
                 try:
                     makedirs(a_dir, exist_ok=True)
                 except:
                     print(f'Error: Cannot create directory: "{a_dir}"')
-                    exit(1)
+                    sys.exit(1)
 
         # getenv('XDG_RUNTIME_DIR', '/run/user/1000')
 
@@ -449,7 +449,7 @@ class XdgDirs():
 
     @property
     def home_dir(self):
-        if platform.startswith('win'):
+        if sys.platform.startswith('win'):
             return path.expanduser('~')
         else:
             return self._new_dirs[self.HOME]
@@ -552,14 +552,14 @@ class XdgDirs():
                 move(self._old_dirs[self.CACHE], self._new_dirs[self.CACHE])
             except:
                 print(f'Cannot move cache\nfrom: "{self._old_dirs[self.CACHE]}"\nto: "{self._new_dirs[self.CACHE]}"')
-                exit(1)
+                sys.exit(1)
         else:
             if not path.exists(self._new_dirs[self.CACHE]):
                 try:
                     makedirs(self._new_dirs[self.CACHE])
                 except:
                     print(f'\nCannot create cache dir: "{self._new_dirs[self.CACHE]}"')
-                    exit(1)
+                    sys.exit(1)
 
     def migrate_recordings(self, silent=False):
         ''' recordings dir '''
@@ -582,7 +582,7 @@ class XdgDirs():
                                     return False
                                 else:
                                     print(f"\nCannot remove empty target dir: {self._new_dirs[self.RECORDINGS]}")
-                                    exit(1)
+                                    sys.exit(1)
                         else:
                             self._new_dirs[self.RECORDINGS] = path.join(self._new_dirs[self.RECORDINGS], 'pyradio-recordings')
                             dir_is_fixed = True
@@ -594,7 +594,7 @@ class XdgDirs():
                             return False
                         else:
                             print(f"\nCannot create target's parent dir: {parent_dir}")
-                            exit(1)
+                            sys.exit(1)
                 try:
                     move(self._old_dirs[self.RECORDINGS], self._new_dirs[self.RECORDINGS])
                 except:
@@ -602,7 +602,7 @@ class XdgDirs():
                         return False
                     else:
                         print(f'\nCannot copy files\nfrom: "{self._old_dirs[self.RECORDINGS]}"\nto: {self._new_dirs[self.RECORDINGS]}')
-                        exit(1)
+                        sys.exit(1)
                 if dir_is_fixed and self.dir_fixed_function is not None:
                     # save config if dir is "fixed"
                     self.dir_fixed_function(self._new_dirs[self.RECORDINGS])
@@ -629,7 +629,7 @@ class XdgDirs():
         #             return False
         #         else:
         #             print('\nCannot create dir: "{}"'.format(self._new_dirs[self.RECORDINGS]))
-        #             exit(1)
+        #             sys.exit(1)
         self._old_dirs[self.RECORDINGS] = self._new_dirs[self.RECORDINGS]
         return True
 
