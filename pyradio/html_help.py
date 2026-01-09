@@ -37,10 +37,12 @@ def is_graphical_environment_running():
     if getenv('TERM') == 'linux':
         HAS_GRAPHICAL_ENV = 2
         return False
+
     if HAS_GRAPHICAL_ENV == 1:
         return True
-    elif HAS_GRAPHICAL_ENV == 2:
+    if HAS_GRAPHICAL_ENV == 2:
         return False
+
     if which('pgrep'):
         # Check if Xorg is running
         xorg_process = subprocess.run(['pgrep', '-x', 'Xorg'], stdout=subprocess.PIPE)

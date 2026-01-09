@@ -141,7 +141,6 @@ class PyRadioOpenDir(SimpleCursesMenu):
             except KeyError:
                 if logger.isEnabledFor(logging.ERROR):
                     logger.error(a_player.PLAYER_DISPLAY_NAME + ' not in config')
-                pass
 
         SimpleCursesMenu.__init__(
             self,
@@ -176,11 +175,11 @@ class PyRadioOpenDir(SimpleCursesMenu):
         if char in self._ord:
             self.dir = self._dir[char-ord('1')]
             return 0
-        else:
-            ret = SimpleCursesMenu.keypress(self, char)
-            if ret == 0:
-                self.dir = self._dir[self.selection]
-            return ret
+
+        ret = SimpleCursesMenu.keypress(self, char)
+        if ret == 0:
+            self.dir = self._dir[self.selection]
+        return ret
 
 
 class PyRadioSearch(SimpleCursesLineEdit):
@@ -275,9 +274,7 @@ class PyRadioSearch(SimpleCursesLineEdit):
             """ if not found return None """
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'forward search term "{self.string}" not found')
-            return None
-        else:
-            return None
+        return None
 
     def get_previous(self,
                      a_list,
@@ -310,9 +307,7 @@ class PyRadioSearch(SimpleCursesLineEdit):
             """ if not found return None """
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'backward search term "{self.string}" not found')
-            return None
-        else:
-            return None
+        return None
 
     def print_not_found(self):
         self._edit_win.addstr(0, 0, 'Term not found!'.ljust(self._max_chars_to_display), self.edit_color)
@@ -323,8 +318,7 @@ class PyRadioSearch(SimpleCursesLineEdit):
     def _get_string(self, item):
         if isinstance(item, str):
             return item.lower()
-        else:
-            return item[0].lower()
+        return item[0].lower()
 
 
 class PyRadioEditor():
@@ -618,10 +612,10 @@ class PyRadioEditor():
             if item:
                 self._orig_item = item
             return 0
-        else:
-            if self._too_small and self._orig_item:
-                self._set_item(self._orig_item)
-            self._too_small = False
+
+        if self._too_small and self._orig_item:
+            self._set_item(self._orig_item)
+        self._too_small = False
 
         # logger.error(f'{self._focus = }')
 
@@ -982,7 +976,7 @@ class PyRadioEditor():
             dot = url.netloc.find('.')
             if dot == -1:
                 return False
-            elif dot > len(url.netloc) - 3:
+            if dot > len(url.netloc) - 3:
                 return False
         return True
 
@@ -1448,10 +1442,7 @@ class PyRadioRecordingDir():
                 error_win.refresh()
                 self._too_small = True
                 return 0
-            else:
-                self._too_small = False
-        else:
-            self._too_small = False
+        self._too_small = False
 
         if self._error_string:
             y = 2 if adjust_line_Y == 0 else 1
@@ -1631,103 +1622,109 @@ class PyRadioRecordingDir():
                 check_localized(char, (kbkey['q'], )):
                 return -1, None, False
             return 0, None, False
-        else:
-            if char in (curses.KEY_EXIT, 27):
-                self._win.nodelay(True)
-                char_esc = self._win.getch()
-                self._win.nodelay(False)
-                if char_esc == -1:
-                    ''' ESCAPE '''
-                    return -1, None, False
-                curses.ungetch(char_esc)
-            if ( char == kbkey['q'] or \
-                    check_localized(char, (kbkey['q'], )) ) and \
-                    self._focus > 0:
+
+        if char in (curses.KEY_EXIT, 27):
+            self._win.nodelay(True)
+            char_esc = self._win.getch()
+            self._win.nodelay(False)
+            if char_esc == -1:
+                ''' ESCAPE '''
                 return -1, None, False
-            elif ( char == kbkey['?'] or \
-                    check_localized(char, (kbkey['?'], )) ) and \
-                    self.focus == 0:
-                return 2, None, False
-            elif ( char == kbkey['?'] or \
-                    check_localized(char, (kbkey['?'], )) ) and \
-                    self.focus > 0:
-                return 4, None, False
-            elif (char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
-                          kbkey['pause'], kbkey['l'], curses.KEY_RIGHT) or \
-                          check_localized(char, (kbkey['l'], kbkey['pause']))) and \
-                          self._focus == 1:
-                # check boxes
-                self._widgets[self._focus].toggle_checked()
-            elif char in (ord('\t'), 9, curses.KEY_DOWN):
-                # EDIT: fixed H, L
+            curses.ungetch(char_esc)
+
+        if ( char == kbkey['q'] or \
+                check_localized(char, (kbkey['q'], )) ) and \
+                self._focus > 0:
+            return -1, None, False
+
+        if ( char == kbkey['?'] or \
+                check_localized(char, (kbkey['?'], )) ) and \
+                self.focus == 0:
+            return 2, None, False
+
+        if ( char == kbkey['?'] or \
+                check_localized(char, (kbkey['?'], )) ) and \
+                self.focus > 0:
+            return 4, None, False
+
+        if (char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
+                      kbkey['pause'], kbkey['l'], curses.KEY_RIGHT) or \
+                      check_localized(char, (kbkey['l'], kbkey['pause']))) and \
+                      self._focus == 1:
+            # check boxes
+            self._widgets[self._focus].toggle_checked()
+        elif char in (ord('\t'), 9, curses.KEY_DOWN):
+            # EDIT: fixed H, L
+            self._focus_next()
+        elif self._focus > 0 and (
+            char in (kbkey['tab'], ) or \
+            check_localized(char, (kbkey['tab'], ))
+        ):
+            self._focus_next()
+        elif char in (curses.KEY_UP, curses.KEY_BTAB):
+            self._focus_previous()
+        elif self._focus > 0 and (char in (kbkey['stab'], ) or \
+                check_localized(char, (kbkey['stab'], ))
+        ):
+            self._focus_previous()
+        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
+            if self._focus == 0:
+                # New location
                 self._focus_next()
-            elif self._focus > 0 and (
-                char in (kbkey['tab'], ) or \
-                check_localized(char, (kbkey['tab'], ))
-            ):
-                self._focus_next()
-            elif char in (curses.KEY_UP, curses.KEY_BTAB):
-                self._focus_previous()
-            elif self._focus > 0 and (char in (kbkey['stab'], ) or \
-                    check_localized(char, (kbkey['stab'], ))
-            ):
-                self._focus_previous()
-            elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
-                if self._focus == 0:
-                    # New location
-                    self._focus_next()
-                elif self._focus == 1:
-                    # check box
-                    self._widgets[1].toggle_checked()
-                elif self._focus == 2:
-                    # ok, execute
-                    if self._line_editor.string.startswith(self._orig_path + sep):
-                        return 3, None, False
-                    else:
-                        return self._get_result(ret)
-                elif self._focus == 3:
-                    # cancel
-                    return -1, None, False
-            elif ( char == kbkey['s'] or \
-                    check_localized(char, (kbkey['s'], )) ) and \
-                    self._focus > 0:
-                # s, execute
-                if self._line_editor.string.startswith(self._orig_path):
+            elif self._focus == 1:
+                # check box
+                self._widgets[1].toggle_checked()
+            elif self._focus == 2:
+                # ok, execute
+                if self._line_editor.string.startswith(self._orig_path + sep):
                     return 3, None, False
-                elif self._widgets[-2].enabled:
-                    return self._get_result(ret)
-                return 0, None, False
-            elif ( char == kbkey['html_help'] or \
-                    check_localized(char, (kbkey['html_help'], )) ) and \
-                    self._focus > 0:
-                html = HtmlHelp()
-                html.open_filename(a_file='rec-dir.html')
-            elif self._focus == 0:
-                """
-                 Returns:
-                    2: display help
-                    1: get next char
-                    0: exit edit mode, string isvalid
-                   -1: cancel
-                """
-                ret = self._line_editor.keypress(self._win, char)
-                if ret == 2:
-                    self._win.touchwin()
-                elif ret == 1:
-                    # get next char
-                    ret = 0
-                elif ret == 0:
-                    # exit, string is valid
-                    ret = -1
-                elif ret == -1:
-                    # cancel
-                    self._widgets[0].string = ''
-                    ret = -1
-            elif char in self._global_functions or \
-                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
-                if l_char is None:
-                    l_char = char
-                self._global_functions[l_char]()
+                return self._get_result(ret)
+            elif self._focus == 3:
+                # cancel
+                return -1, None, False
+        elif ( char == kbkey['s'] or \
+                check_localized(char, (kbkey['s'], )) ) and \
+                self._focus > 0:
+            # s, execute
+            if self._line_editor.string.startswith(self._orig_path):
+                return 3, None, False
+
+            if self._widgets[-2].enabled:
+                return self._get_result(ret)
+
+            return 0, None, False
+
+        elif ( char == kbkey['html_help'] or \
+                check_localized(char, (kbkey['html_help'], )) ) and \
+                self._focus > 0:
+            html = HtmlHelp()
+            html.open_filename(a_file='rec-dir.html')
+        elif self._focus == 0:
+            """
+             Returns:
+                2: display help
+                1: get next char
+                0: exit edit mode, string isvalid
+               -1: cancel
+            """
+            ret = self._line_editor.keypress(self._win, char)
+            if ret == 2:
+                self._win.touchwin()
+            elif ret == 1:
+                # get next char
+                ret = 0
+            elif ret == 0:
+                # exit, string is valid
+                ret = -1
+            elif ret == -1:
+                # cancel
+                self._widgets[0].string = ''
+                ret = -1
+        elif char in self._global_functions or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
         #self._show_title()
         #self.show()
         return 0, None, False
@@ -1899,10 +1896,7 @@ class PyRadioResourceOpener():
                 error_win.refresh()
                 self._too_small = True
                 return 0
-            else:
-                self._too_small = False
-        else:
-            self._too_small = False
+        self._too_small = False
 
         if self._error_string:
             y = 2 if adjust_line_Y == 0 else 1
@@ -2087,88 +2081,92 @@ class PyRadioResourceOpener():
                     check_localized(char, (kbkey['q'], )):
                 return -1, None, False
             return 0, None
-        else:
-            if char in (curses.KEY_EXIT, 27):
-                self._win.nodelay(True)
-                char_esc = self._win.getch()
-                self._win.nodelay(False)
-                if char_esc == -1:
-                    ''' ESCAPE '''
-                    return -1, None
-                curses.ungetch(char_esc)
-            if (char == kbkey['q'] or \
-                    check_localized(char, (kbkey['q'], ))) and \
-                    self._focus > 0:
+
+        if char in (curses.KEY_EXIT, 27):
+            self._win.nodelay(True)
+            char_esc = self._win.getch()
+            self._win.nodelay(False)
+            if char_esc == -1:
+                ''' ESCAPE '''
                 return -1, None
-            elif (char == kbkey['?'] or \
-                    check_localized(char, (kbkey['?'], ))) and \
-                    self.focus == 0:
-                return 2, None
-            elif (char == kbkey['?'] or \
-                    check_localized(char, (kbkey['?'], ))) and \
-                    self.focus > 0:
-                return 4, None
-            elif char in (ord('\t'), 9, curses.KEY_DOWN):
-                # EDIT: fixed H, L
+            curses.ungetch(char_esc)
+
+        if (char == kbkey['q'] or \
+                check_localized(char, (kbkey['q'], ))) and \
+                self._focus > 0:
+            return -1, None
+
+        if (char == kbkey['?'] or \
+                check_localized(char, (kbkey['?'], ))) and \
+                self.focus == 0:
+            return 2, None
+
+        if (char == kbkey['?'] or \
+               check_localized(char, (kbkey['?'], ))) and \
+               self.focus > 0:
+           return 4, None
+
+        if char in (ord('\t'), 9, curses.KEY_DOWN):
+            # EDIT: fixed H, L
+            self._focus_next()
+        elif self._focus > 0 and (
+                char in (kbkey['tab'], ) or \
+                check_localized(char, (kbkey['tab'], ))
+              ):
+            self._focus_next()
+        elif char in (curses.KEY_UP, curses.KEY_BTAB):
+            self._focus_previous()
+        elif self._focus > 0 and (
+                char in (kbkey['stab'], ) or \
+                check_localized(char, (kbkey['stab'], ))
+        ):
+            self._focus_previous()
+        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
+            if self._focus == 0:
+                # New location
                 self._focus_next()
-            elif self._focus > 0 and (
-                    char in (kbkey['tab'], ) or \
-                    check_localized(char, (kbkey['tab'], ))
-                  ):
-                self._focus_next()
-            elif char in (curses.KEY_UP, curses.KEY_BTAB):
-                self._focus_previous()
-            elif self._focus > 0 and (
-                    char in (kbkey['stab'], ) or \
-                    check_localized(char, (kbkey['stab'], ))
-            ):
-                self._focus_previous()
-            elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
-                if self._focus == 0:
-                    # New location
-                    self._focus_next()
-                elif self._focus == 1:
-                    # ok, execute
-                    return self._get_result()
-                elif self._focus == 2:
-                    # cancel
-                    return -1, None
-            elif (char == kbkey['s'] or \
-                    check_localized(char, (kbkey['s'], ))) and \
-                    self._focus > 0:
-                # s, execute
+            elif self._focus == 1:
+                # ok, execute
                 return self._get_result()
-            elif (char == kbkey['revert_def'] or \
-                    check_localized(char, (kbkey['revert_def'], ))) and \
-                    self._focus > 0:
-                # d, revert to default
-                return self._revert_to_default()
-            elif self._focus == 0:
-                """
-                 Returns:
-                    2: display help
-                    1: get next char
-                    0: exit edit mode, string isvalid
-                   -1: cancel
-                """
-                ret = self._line_editor.keypress(self._win, char)
-                if ret == 2:
-                    self._win.touchwin()
-                elif ret == 1:
-                    # get next char
-                    ret = 0
-                elif ret == 0:
-                    # exit, string is valid
-                    ret = -1
-                elif ret == -1:
-                    # cancel
-                    self._widgets[0].string = ''
-                    ret = -1
-            elif char in self._global_functions or \
-                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
-                if l_char is None:
-                    l_char = char
-                self._global_functions[l_char]()
+            elif self._focus == 2:
+                # cancel
+                return -1, None
+        elif (char == kbkey['s'] or \
+                check_localized(char, (kbkey['s'], ))) and \
+                self._focus > 0:
+            # s, execute
+            return self._get_result()
+        elif (char == kbkey['revert_def'] or \
+                check_localized(char, (kbkey['revert_def'], ))) and \
+                self._focus > 0:
+            # d, revert to default
+            return self._revert_to_default()
+        elif self._focus == 0:
+            """
+             Returns:
+                2: display help
+                1: get next char
+                0: exit edit mode, string isvalid
+               -1: cancel
+            """
+            ret = self._line_editor.keypress(self._win, char)
+            if ret == 2:
+                self._win.touchwin()
+            elif ret == 1:
+                # get next char
+                ret = 0
+            elif ret == 0:
+                # exit, string is valid
+                ret = -1
+            elif ret == -1:
+                # cancel
+                self._widgets[0].string = ''
+                ret = -1
+        elif char in self._global_functions or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
         #self._show_title()
         #self.show()
         return 0, None
@@ -2233,7 +2231,6 @@ class PyRadioRenameFile():
                     del x
                     x = None
         except:
-            pass
             logger.error('DE error')
 
     @property
@@ -2416,10 +2413,7 @@ class PyRadioRenameFile():
                 error_win.refresh()
                 self._too_small = True
                 return 0
-            else:
-                self._too_small = False
-        else:
-            self._too_small = False
+        self._too_small = False
 
         if self._error_string:
             y = 2 if adjust_line_Y == 0 else 1
@@ -2648,84 +2642,85 @@ class PyRadioRenameFile():
                     check_localized(char, (kbkey['q'], )):
                 return -1, '', '', False, False, False
             return 0, '', '', False, False, False
-        else:
-            # logger.error('self.focus = {}'.format(self.focus))
-            if (char in (curses.KEY_EXIT, 27, kbkey['q']) or \
-                    check_localized(char, (kbkey['q'], ))) and \
-                    self.focus > 0:
-                return -1, '', '', False, False, False
-            elif (char in (kbkey['pause'], kbkey['l'], curses.KEY_RIGHT,
-                          curses.KEY_ENTER, ord('\n'), ord('\r')) or \
-                    check_localized(char, (kbkey['l'], kbkey['pause']))) and \
-                    self._focus in (1, 2):
+
+        # logger.error('self.focus = {}'.format(self.focus))
+        if (char in (curses.KEY_EXIT, 27, kbkey['q']) or \
+                check_localized(char, (kbkey['q'], ))) and \
+                self.focus > 0:
+            return -1, '', '', False, False, False
+
+        if (char in (kbkey['pause'], kbkey['l'], curses.KEY_RIGHT,
+                      curses.KEY_ENTER, ord('\n'), ord('\r')) or \
+                check_localized(char, (kbkey['l'], kbkey['pause']))) and \
+                self._focus in (1, 2):
+            # check boxes
+            self._widgets[self._focus].toggle_checked()
+            if self._focus == 1 and self._opened_from_editor:
+                self._widgets[2].enabled = self._widgets[1].checked
+            # logger.error('len widgets = {}'.format(len(self._widgets)))
+        elif char in (ord('\t'), 9, curses.KEY_DOWN):
+            # EDIT: fixed for H, L
+            self._focus_next()
+        elif self._focus > 0 and (
+                char in (kbkey['tab'], ) or \
+                check_localized(char, (kbkey['tab'], ))
+        ):
+            self._focus_next()
+        elif char in (curses.KEY_UP, curses.KEY_BTAB):
+            self._focus_previous()
+        elif self._focus > 0 and (
+                char in (kbkey['stab'], ) or \
+                check_localized(char, (kbkey['stab'], ))
+        ):
+            self._focus_previous()
+        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
+            if self._focus == 0:
+                # Playlist Name
+                self._focus_next()
+            elif self._focus in (1, 2):
                 # check boxes
                 self._widgets[self._focus].toggle_checked()
-                if self._focus == 1 and self._opened_from_editor:
-                    self._widgets[2].enabled = self._widgets[1].checked
-                # logger.error('len widgets = {}'.format(len(self._widgets)))
-            elif char in (ord('\t'), 9, curses.KEY_DOWN):
-                # EDIT: fixed for H, L
-                self._focus_next()
-            elif self._focus > 0 and (
-                    char in (kbkey['tab'], ) or \
-                    check_localized(char, (kbkey['tab'], ))
-            ):
-                self._focus_next()
-            elif char in (curses.KEY_UP, curses.KEY_BTAB):
-                self._focus_previous()
-            elif self._focus > 0 and (
-                    char in (kbkey['stab'], ) or \
-                    check_localized(char, (kbkey['stab'], ))
-            ):
-                self._focus_previous()
-            elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
-                if self._focus == 0:
-                    # Playlist Name
-                    self._focus_next()
-                elif self._focus in (1, 2):
-                    # check boxes
-                    self._widgets[self._focus].toggle_checked()
-                elif self._focus == 3:
-                    # ok, execute
-                    ret = self._act_on_file()
-                    return self._get_result(ret)
-                elif self._focus == 4:
-                    # cancel
-                    return -1, '', '', False, False, False
-            elif (char == kbkey['s'] or \
-                    check_localized(char, (kbkey['s'], ))) and \
-                    self._focus > 0:
-                # s, execute
-                if self._widgets[-2].enabled:
-                    ret = self._act_on_file()
-                    return self._get_result(ret)
-                return 0, '', '', False, False, False
-            elif self._focus == 0:
-                """
-                 Returns:
-                    2: display help
-                    1: get next char
-                    0: exit edit mode, string isvalid
-                   -1: cancel
-                """
-                ret = self._line_editor.keypress(self._win, char)
-                if ret == 2:
-                    self._win.touchwin()
-                elif ret == 1:
-                    # get next char
-                    ret = 0
-                elif ret == 0:
-                    # exit, string is valid
-                    ret = -1
-                elif ret == -1:
-                    # cancel
-                    self._widgets[0].string = ''
-                    ret = -1
-            elif char in self._global_functions or \
-                    (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
-                if l_char is None:
-                    l_char = char
-                self._global_functions[l_char]()
+            elif self._focus == 3:
+                # ok, execute
+                ret = self._act_on_file()
+                return self._get_result(ret)
+            elif self._focus == 4:
+                # cancel
+                return -1, '', '', False, False, False
+        elif (char == kbkey['s'] or \
+                check_localized(char, (kbkey['s'], ))) and \
+                self._focus > 0:
+            # s, execute
+            if self._widgets[-2].enabled:
+                ret = self._act_on_file()
+                return self._get_result(ret)
+            return 0, '', '', False, False, False
+        elif self._focus == 0:
+            """
+             Returns:
+                2: display help
+                1: get next char
+                0: exit edit mode, string isvalid
+               -1: cancel
+            """
+            ret = self._line_editor.keypress(self._win, char)
+            if ret == 2:
+                self._win.touchwin()
+            elif ret == 1:
+                # get next char
+                ret = 0
+            elif ret == 0:
+                # exit, string is valid
+                ret = -1
+            elif ret == -1:
+                # cancel
+                self._widgets[0].string = ''
+                ret = -1
+        elif char in self._global_functions or \
+                (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            self._global_functions[l_char]()
         #self._show_title()
         #self.show()
         return self._get_result(ret)
@@ -3237,8 +3232,7 @@ class PyRadioServerWindow():
                 check_localized(char, (kbkey['s'], )):
             if self._validate_port():
                 return 0
-            else:
-                self._port_number_error_message()
+            self._port_number_error_message()
 
         elif self._editor.focused:
             ret = self._editor.keypress(self._win, char)

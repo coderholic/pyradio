@@ -76,9 +76,9 @@ def cjkljust(text, width, char= ' '):
     out = text
     if width == txt_len:
         return text
-    elif width > txt_len:
+    if width > txt_len:
         return out + (width - txt_len) * char
-    elif width < txt_len:
+    if width < txt_len:
         return cjkslices(text, width)[0]
 
 def cjkrjust(text, width, char= ' '):
@@ -86,9 +86,9 @@ def cjkrjust(text, width, char= ' '):
     out = text
     if width == txt_len:
         return text
-    elif width > txt_len:
+    if width > txt_len:
         return (width - txt_len) * char + out
-    elif width < txt_len:
+    if width < txt_len:
         return cjkslices(text, width)[0]
 
 def cjkcenter(text, width, char= ' '):
@@ -96,13 +96,13 @@ def cjkcenter(text, width, char= ' '):
     out = text
     if width == txt_len:
         return text
-    elif width > txt_len:
+    if width > txt_len:
         pad = int(( width - txt_len ) / 2)
         out =  pad * char + text + pad * char
         while cjklen(out) < width:
             out = char + out
         return out
-    elif width < txt_len:
+    if width < txt_len:
         return cjkslices(text, width)[0]
 
 

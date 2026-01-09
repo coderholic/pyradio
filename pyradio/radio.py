@@ -87,32 +87,28 @@ def shift_only(event):
             and not (event & curses.BUTTON_CTRL) \
             and not (event & curses.BUTTON_ALT):
         return True
-    else:
-        return False
+    return False
 
 def ctrl_only(event):
     if (event & curses.BUTTON_CTRL) \
             and not (event & curses.BUTTON_SHIFT) \
             and not (event & curses.BUTTON_ALT):
         return True
-    else:
-        return False
+    return False
 
 def alt_only(event):
     if (event & curses.BUTTON_ALT) \
             and not (event & curses.BUTTON_SHIFT) \
             and not (event & curses.BUTTON_CTRL):
         return True
-    else:
-        return False
+    return False
 
 def alt_ctrl(event):
     if (event & curses.BUTTON_ALT) \
             and not (event & curses.BUTTON_SHIFT) \
             and (event & curses.BUTTON_CTRL):
         return True
-    else:
-        return False
+    return False
 
 def number_of_modifiers(event):
     ret = 0
@@ -257,8 +253,7 @@ class SelectPlayer():
             if not (self._no_vlc and \
                     self._available_players[self._selected] == 'vlc'):
                 return self._available_players[self._selected]
-            else:
-                self._vlc_no_recording()
+            self._vlc_no_recording()
         elif char in (kbkey['h'], curses.KEY_LEFT,
                       kbkey['q'], curses.KEY_EXIT, 27) or \
                 check_localized(char, (kbkey['h'], kbkey['q'])):
@@ -1064,11 +1059,10 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.player.set_volume(vol)
             sleep(.1)
             return M_STRINGS['volume_set'] + f'{vol}'
-        else:
-            if self.player.muted:
-                return 'Player is Muted!'
-            else:
-                return 'Player is Idle!'
+
+        if self.player.muted:
+            return 'Player is Muted!'
+        return 'Player is Idle!'
 
     def _get_text_volume(self):
         if self.player.isPlaying() and \
@@ -1076,13 +1070,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.player.get_volume()
             if self.player.PLAYER_NAME == 'vlc':
                 return 'Volume: {}'.format(int(round(100*int(self.player.volume)/self.player.max_volume)))
-            else:
-                return f'Volume: {self.player.volume}'
-        else:
-            if self.player.muted:
-                return 'Player is Muted!'
-            else:
-                return 'Player is Idle!'
+            return f'Volume: {self.player.volume}'
+
+        if self.player.muted:
+            return 'Player is Muted!'
+        return 'Player is Idle!'
 
     def _html_song_title(self):
         if self._remote_control_server:
@@ -1949,19 +1941,18 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         # logger.error('out = "{}"'.format(out))
         if out[0] == '─' or out[0] == ' ':
             return '{0}. ──{1}'.format(str(lineNum + self.startPos + 1).rjust(pad), out)
-        else:
-            return '{0}. ──{1}'.format(str(lineNum + self.startPos + 1).rjust(pad), self._cjk_ljust(old_disp, self.bodyMaxX - pad - 4, '─'))
+        return '{0}. ──{1}'.format(str(lineNum + self.startPos + 1).rjust(pad), self._cjk_ljust(old_disp, self.bodyMaxX - pad - 4, '─'))
 
     def _cjk_ljust(self, text, width, char):
         if cjklen(text) >= width:
             return cjkslices(text, width-1)[0] + ' '
-        else:
-            out = text
-            # while cjklen(out) < width - 1:
-            #     out += char
-            if cjklen(out) < width - 1:
-                out += (width - 1 - cjklen(out)) * char
-            return out + ' '
+
+        out = text
+        # while cjklen(out) < width - 1:
+        #     out += char
+        if cjklen(out) < width - 1:
+            out += (width - 1 - cjklen(out)) * char
+        return out + ' '
 
     def _change_browser_ticks(self, lineNum, sep_col, all_ticks=None):
         ticks = all_ticks
@@ -1985,10 +1976,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self._watch_theme_thread.join()
             self._watch_theme_thread = None
             self.stop_watch_theme_thread = False
+
         if theme_path is None:
             return
-        else:
-            a_path = theme_path
+
+        a_path = theme_path
         self._watch_theme_thread = threading.Thread(
             target=self._wait_for_theme_to_change,
             # args=(self._cnf,
@@ -3156,8 +3148,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             while cjklen(line) > self.bodyMaxX:
                 line = line[:-1]
             return line
-        else:
-            return line[:self.bodyMaxX]
+        return line[:self.bodyMaxX]
 
     def _print_help(self):
         # logger.error('DE \n\nself.ws.operation_mode = {}\n\n'.format(self.ws.operation_mode))
@@ -3496,10 +3487,12 @@ ____Using |fallback| theme.''', Priority.HIGH)
             self._open_message_win_by_key('H_EXTERNAL_LINE_EDITOR')
 
     def _show_config_player_help(self):
+
         if self._player_select_win.editing > 0:
             self._show_line_editor_help()
             return None
-        elif self._player_select_win.focus:
+
+        if self._player_select_win.focus:
             txt = r'''TAB                           <*> Move selection to |Extra Parameters| column.
                      Up|, |j|, |Down|, |k           <*> Change player selection.
                      Enter|, |Space                 <*>
@@ -3978,59 +3971,59 @@ ____Using |fallback| theme.''', Priority.HIGH)
                 self.playing, self.selection, self.startPos = (-1, 0, 0)
             self.refreshBody()
             return
-        else:
-            #if logger.isEnabledFor(logging.DEBUG):
-            #    logger.debug('self.playing = {}'.format(self.playing))
-            if cur_mode == self.ws.REMOVE_STATION_MODE:
-                # ok
-                self.detect_if_player_exited = False
-                ''' Remove selected station '''
-                if self.player.isPlaying():
-                    if self.selection == self.playing:
-                        self.stopPlayer()
-                        self.playing = -1
-                    elif self.selection < self.playing:
-                        self.playing -= 1
-                else:
+
+        #if logger.isEnabledFor(logging.DEBUG):
+        #    logger.debug('self.playing = {}'.format(self.playing))
+        if cur_mode == self.ws.REMOVE_STATION_MODE:
+            # ok
+            self.detect_if_player_exited = False
+            ''' Remove selected station '''
+            if self.player.isPlaying():
+                if self.selection == self.playing:
+                    self.stopPlayer()
                     self.playing = -1
-                if self.selection > self.number_of_items - self.bodyMaxY:
-                    self.startPos -= 1
-                    if self.selection >= self.number_of_items or \
-                            self.selection >= self.startPos + self.maxY - 4:
-                        self.selection -= 1
-                self.startPos = max (0, self.startPos)
+                elif self.selection < self.playing:
+                    self.playing -= 1
             else:
-                if not force_scan_playlist and self.player.isPlaying():
-                    if self._last_played_playlist == self._cnf.station_title:
-                        ''' The playlist is not empty '''
-                        if self.playing > self.number_of_items - 1 or self._cnf.is_register:
-                            ''' Previous playing station is now invalid
-                                Need to scan playlist '''
-                            need_to_scan_playlist = True
+                self.playing = -1
+            if self.selection > self.number_of_items - self.bodyMaxY:
+                self.startPos -= 1
+                if self.selection >= self.number_of_items or \
+                        self.selection >= self.startPos + self.maxY - 4:
+                    self.selection -= 1
+            self.startPos = max (0, self.startPos)
+        else:
+            if not force_scan_playlist and self.player.isPlaying():
+                if self._last_played_playlist == self._cnf.station_title:
+                    ''' The playlist is not empty '''
+                    if self.playing > self.number_of_items - 1 or self._cnf.is_register:
+                        ''' Previous playing station is now invalid
+                            Need to scan playlist '''
+                        need_to_scan_playlist = True
+                    else:
+                        if self.stations[self.playing][0] == self.active_stations[1][0]:
+                            ''' ok, self.playing found, just find selection '''
+                            self.selection = self._get_station_id(self.active_stations[0][0])
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug(f'** Selected station is {self.stations[self.selection]} at {self.selection}')
                         else:
+                            ''' station playing id changed, try previous station '''
+                            self.playing -= 1
+                            if self.playing == -1:
+                                self.playing = len(self.stations) - 1
                             if self.stations[self.playing][0] == self.active_stations[1][0]:
                                 ''' ok, self.playing found, just find selection '''
                                 self.selection = self._get_station_id(self.active_stations[0][0])
                                 if logger.isEnabledFor(logging.DEBUG):
-                                    logger.debug(f'** Selected station is {self.stations[self.selection]} at {self.selection}')
+                                    logger.debug(f'** Selection station is {self.stations[self.playing]} at {self.playing}')
                             else:
-                                ''' station playing id changed, try previous station '''
-                                self.playing -= 1
-                                if self.playing == -1:
-                                    self.playing = len(self.stations) - 1
-                                if self.stations[self.playing][0] == self.active_stations[1][0]:
-                                    ''' ok, self.playing found, just find selection '''
-                                    self.selection = self._get_station_id(self.active_stations[0][0])
-                                    if logger.isEnabledFor(logging.DEBUG):
-                                        logger.debug(f'** Selection station is {self.stations[self.playing]} at {self.playing}')
-                                else:
-                                    ''' self.playing still not found, have to scan playlist '''
-                                    need_to_scan_playlist = True
-                    else:
-                        need_to_scan_playlist = True
+                                ''' self.playing still not found, have to scan playlist '''
+                                need_to_scan_playlist = True
                 else:
-                    ''' not playing, can i get a selection? '''
                     need_to_scan_playlist = True
+            else:
+                ''' not playing, can i get a selection? '''
+                need_to_scan_playlist = True
 
             if need_to_scan_playlist:
                 # ok
@@ -4467,8 +4460,7 @@ and |remove the file manually|.
                 if ret is None:
                     return 'First page loaded'
                 return ret.replace('\n', '').replace('_', '')
-            else:
-                return 'Already on first page...'
+            return 'Already on first page...'
         return 'RadioBrowser is not active'
 
     def _next_page_rb(self):
@@ -4506,30 +4498,28 @@ and |remove the file manually|.
             self._show_win_no_record()
             if html:
                 return '<div class="alert alert-danger">Recording <b>not</b> supported</div>'
-            else:
-                return 'Recording not supported'
-        else:
-            self.player.recording = 1 if self.player.recording == 0 else 0
-            if self.player.recording > 0:
-                if self.player.isPlaying():
-                    self.player.already_playing = True
-                else:
-                    self.player.already_playing = False
+            return 'Recording not supported'
+
+        self.player.recording = 1 if self.player.recording == 0 else 0
+        if self.player.recording > 0:
+            if self.player.isPlaying():
+                self.player.already_playing = True
             else:
                 self.player.already_playing = False
-            with self._buffering_lock:
-                self._show_recording_status_in_header()
-            if self._cnf.show_recording_start_message:
-                self._show_recording_toggle_window()
-            else:
-                self.refreshBody()
-            if html:
-                return '<div class="alert alert-{0}">Recording in now <b>{1}</b></div>'.format(
-                        'info' if self.player.recording == 0 else 'success',
-                        'disabled' if self.player.recording == 0 else 'enabled'
-                        )
-            else:
-                return "Recording in now {}".format('disabled' if self.player.recording == 0 else 'enabled')
+        else:
+            self.player.already_playing = False
+        with self._buffering_lock:
+            self._show_recording_status_in_header()
+        if self._cnf.show_recording_start_message:
+            self._show_recording_toggle_window()
+        else:
+            self.refreshBody()
+        if html:
+            return '<div class="alert alert-{0}">Recording in now <b>{1}</b></div>'.format(
+                    'info' if self.player.recording == 0 else 'success',
+                    'disabled' if self.player.recording == 0 else 'enabled'
+                    )
+        return "Recording in now {}".format('disabled' if self.player.recording == 0 else 'enabled')
 
     def _previous_page_rb(self):
         if self._cnf.browsing_station_service:
@@ -4818,8 +4808,7 @@ and |remove the file manually|.
     def get_active_encoding(self, an_encoding):
         if an_encoding:
             return an_encoding
-        else:
-            return self._cnf.default_encoding
+        return self._cnf.default_encoding
 
     def play_random(self):
         # Pick a random radio station
@@ -5031,9 +5020,8 @@ and |remove the file manually|.
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('detectUpdateStationsThread: Asked to stop. Stoping...')
                     return
-                else:
-                    # logger.error('\n\nsetting need to update stations\n\n')
-                    self._need_to_update_stations_csv = 2
+                # logger.error('\n\nsetting need to update stations\n\n')
+                self._need_to_update_stations_csv = 2
         else:
             if logger.isEnabledFor(logging.DEBUG):
                 if x:
@@ -5142,54 +5130,54 @@ and |remove the file manually|.
                     if logger.isEnabledFor(logging.INFO):
                         logger.info(f'detectUpdateThread: No update found. Will check again in {check_days} days. Terminating...')
                     break
-                else:
-                    existing_version = version_string_to_list(this_version)
-                    new_version = version_string_to_list(last_tag)
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug(f'current version = {existing_version}, upstream version = {new_version}')
-                    if existing_version < new_version:
-                        if stop():
-                            if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug('detectUpdateThread: Asked to stop. Stoping...')
-                            break
-                        ''' remove all existing date files '''
-                        clean_date_files(date_files, -1)
-                        if stop():
-                            if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug('detectUpdateThread: Asked to stop. Stoping...')
-                            break
-                        ''' set new version '''
-                        if logger.isEnabledFor(logging.INFO):
-                            logger.info(f'detectUpdateThread: Update available: {last_tag}')
-                        a_lock.acquire()
+
+                existing_version = version_string_to_list(this_version)
+                new_version = version_string_to_list(last_tag)
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f'current version = {existing_version}, upstream version = {new_version}')
+                if existing_version < new_version:
+                    if stop():
                         if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('detectUpdateThread: Update notification sent!!!')
-                        self._update_version = last_tag
-                        a_lock.release()
-                        while True:
-                            ''' Wait until self._update_version becomes ''
-                                which means that notification window has been
-                                displayed. Then create date file and exit.
-                                If asked to terminate, do not write date file
-                            '''
-                            delay(5, stop)
-                            if stop():
-                                if logger.isEnabledFor(logging.DEBUG):
-                                    logger.debug('detectUpdateThread: Asked to stop. Stoping but not writing date file...')
-                                return
-                            a_lock.acquire()
-                            if self._update_version == '':
-                                a_lock.release()
-                                ''' create today's date file '''
-                                create_todays_date_file(a_path)
-                                if logger.isEnabledFor(logging.INFO):
-                                    logger.info(f'detectUpdateThread: Terminating after notification issued... I will check again in {check_days} days')
-                                return
-                            a_lock.release()
-                    else:
-                        if logger.isEnabledFor(logging.ERROR):
-                            logger.error(f'detectUpdateThread: Ahead of upstream? (current version: {this_version}, upstream version: {last_tag})')
+                            logger.debug('detectUpdateThread: Asked to stop. Stoping...')
                         break
+                    ''' remove all existing date files '''
+                    clean_date_files(date_files, -1)
+                    if stop():
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('detectUpdateThread: Asked to stop. Stoping...')
+                        break
+                    ''' set new version '''
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info(f'detectUpdateThread: Update available: {last_tag}')
+                    a_lock.acquire()
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('detectUpdateThread: Update notification sent!!!')
+                    self._update_version = last_tag
+                    a_lock.release()
+                    while True:
+                        ''' Wait until self._update_version becomes ''
+                            which means that notification window has been
+                            displayed. Then create date file and exit.
+                            If asked to terminate, do not write date file
+                        '''
+                        delay(5, stop)
+                        if stop():
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug('detectUpdateThread: Asked to stop. Stoping but not writing date file...')
+                            return
+                        a_lock.acquire()
+                        if self._update_version == '':
+                            a_lock.release()
+                            ''' create today's date file '''
+                            create_todays_date_file(a_path)
+                            if logger.isEnabledFor(logging.INFO):
+                                logger.info(f'detectUpdateThread: Terminating after notification issued... I will check again in {check_days} days')
+                            return
+                        a_lock.release()
+                else:
+                    if logger.isEnabledFor(logging.ERROR):
+                        logger.error(f'detectUpdateThread: Ahead of upstream? (current version: {this_version}, upstream version: {last_tag})')
+                    break
 
             else:
                 if logger.isEnabledFor(logging.ERROR):
@@ -5633,7 +5621,8 @@ and |remove the file manually|.
                         logger.debug('Mouse event: assuming volume down')
                     self._volume_down()
                 return True
-            elif a_button & curses.BUTTON4_PRESSED:
+
+            if a_button & curses.BUTTON4_PRESSED:
                 if self._cnf.wheel_adjusts_volume:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Mouse event: page up')
@@ -5643,19 +5632,19 @@ and |remove the file manually|.
                         logger.debug('Mouse event: volume up')
                     self._volume_up()
                 return True
+
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Mouse event: not applicable')
             return False
-        elif no_modifiers(a_button):
+
+        if no_modifiers(a_button):
             if a_button & curses.BUTTON2_CLICKED:
                 ''' middle mouse: do not handle here '''
                 return False
-            elif self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
+            if self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
                 self._handle_passive_windows()
                 return True
-            return False
-        else:
-            return False
+        return False
 
     def _handle_middle_mouse(self, a_button):
         if a_button & curses.BUTTON2_CLICKED:
@@ -5669,16 +5658,17 @@ and |remove the file manually|.
     def _handle_main_window_mouse_event(self, my, mx, a_button):
         if no_modifiers(a_button):
             if a_button not in self.buttons:
+
                 if self._cnf.wheel_adjusts_volume:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Mouse event on main window: volume down')
                     self._volume_down()
                     return True, False
-                else:
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Mouse event on main window: page down')
-                    self._page_down()
-                    return True, True
+
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Mouse event on main window: page down')
+                self._page_down()
+                return True, True
 
             if a_button & curses.BUTTON4_PRESSED:
                 if self._cnf.wheel_adjusts_volume:
@@ -5686,11 +5676,11 @@ and |remove the file manually|.
                         logger.debug('Mouse event on main window: volume up')
                     self._volume_up()
                     return True, False
-                else:
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Mouse event on main window: page up')
-                    self._page_up()
-                    return True, True
+
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Mouse event on main window: page up')
+                self._page_up()
+                return True, True
 
             ''' looging for BUTTON 1 events '''
             do_update = True
@@ -5726,18 +5716,18 @@ and |remove the file manually|.
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug(f'Mouse button 1 click on line {my} with start pos {self.startPos} and selection {self.selection}')
                     return True, do_update
-                else:
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Mouse event on main window: button not handled')
-                    return False, False
-            else:
+
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Mouse event on main window: not on Body window')
+                    logger.debug('Mouse event on main window: button not handled')
                 return False, False
-        else:
+
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Mouse event on main window: not applicable')
+                logger.debug('Mouse event on main window: not on Body window')
             return False, False
+
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Mouse event on main window: not applicable')
+        return False, False
 
     def _handle_passive_windows(self):
         if logger.isEnabledFor(logging.DEBUG):
@@ -6036,15 +6026,17 @@ and |remove the file manually|.
     def _html_play_next_station(self):
         self._reset_status_bar_right()
         ret = self._html_check_op_mode()
+
         if ret is not None:
             return ret
+
         if self.player.connecting:
             return '<div class="alert alert-success">Please wait for the player to settle...</div>'
-        else:
-            self._move_cursor_one_down()
-            self.playSelection()
-            self.refreshBody()
-            return f'<div class="alert alert-success">Playing <b>{self.stations[self.selection][0]}</b>!</div>'
+
+        self._move_cursor_one_down()
+        self.playSelection()
+        self.refreshBody()
+        return f'<div class="alert alert-success">Playing <b>{self.stations[self.selection][0]}</b>!</div>'
 
     def _play_next_station(self):
         self._reset_status_bar_right()
@@ -6064,15 +6056,17 @@ and |remove the file manually|.
     def _html_play_previous_station(self):
         self._reset_status_bar_right()
         ret = self._html_check_op_mode()
+
         if ret is not None:
             return ret
+
         if self.player.connecting:
             return '<div class="alert alert-success">Please wait for the player to settle...</div>'
-        else:
-            self._move_cursor_one_up()
-            self.playSelection()
-            self.refreshBody()
-            return f'<div class="alert alert-success">Playing <b>{self.stations[self.selection][0]}</b>!</div>'
+
+        self._move_cursor_one_up()
+        self.playSelection()
+        self.refreshBody()
+        return f'<div class="alert alert-success">Playing <b>{self.stations[self.selection][0]}</b>!</div>'
 
     def _play_previous_station(self):
         self._reset_status_bar_right()
@@ -6352,8 +6346,7 @@ and |remove the file manually|.
     def _can_show_theme_window_in_browser_search(self):
         if self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE:
             return not self._cnf._online_browser.line_editor_has_focus()
-        else:
-            return True
+        return True
 
     def _text_toggle_titles_logging(self):
         if not self.toggle_titles_logging():
@@ -6361,8 +6354,7 @@ and |remove the file manually|.
         self.log.write_start_log_station_and_title()
         if self._cnf.titles_log.titles_handler:
             return 'Titles Logging Enabled'
-        else:
-            return 'Titles Logging Disabled'
+        return 'Titles Logging Disabled'
 
     def _html_toggle_titles_logging(self):
         if not self.toggle_titles_logging():
@@ -6370,8 +6362,7 @@ and |remove the file manually|.
         self.log.write_start_log_station_and_title()
         if self._cnf.titles_log.titles_handler:
             return '<div class="alert alert-success">Title Log <b>Enabled</b></div>'
-        else:
-            return '<div class="alert alert-success">Title Log <b>Disabled</b></div>'
+        return '<div class="alert alert-success">Title Log <b>Disabled</b></div>'
 
     def _toggle_titles_logging(self):
         if self.toggle_titles_logging():
@@ -6405,16 +6396,19 @@ and |remove the file manually|.
                 if not path.exists(self._cnf.recording_dir):
                     if logger.isEnabledFor(logging.ERROR):
                         logger.error(f'cannot like title; directory "{self._cnf.recording_dir}" does not exist')
+
                     if text:
                         return 'Error: Recodring dir does not exist!'
-                    elif html:
+
+                    if html:
                         return '<div class="alert alert-danger"><b>Error!</b><br />Recording dir does <b>not exist!</b></div>'
-                    else:
-                        self._show_delayed_notification(
-                            '___|Error|: Recording dir does |not exist|!___',
-                            delay=1.5
-                        )
-                        return
+
+                    self._show_delayed_notification(
+                        '___|Error|: Recording dir does |not exist|!___',
+                        delay=1.5
+                    )
+                    return
+
                 toggled = False
                 if self._cnf.titles_log.titles_handler is None:
                     self.toggle_titles_logging()
@@ -6428,31 +6422,35 @@ and |remove the file manually|.
             if ret == 0:
                 if text:
                     return 'Title tagged as liked!'
-                elif html:
+
+                if html:
                     return '<div class="alert alert-success">Title <b>tagged</b> as liked!</div>'
-                else:
-                    self._show_delayed_notification('___Title tagged as liked___')
+
+                self._show_delayed_notification('___Title tagged as liked___')
             elif ret == 1:
                 if text:
                     return 'Error liking Title'
-                elif html:
+
+                if html:
                     return '<div class="alert alert-danger"><b>Error</b> liking Title</div>'
-                else:
-                    self._show_delayed_notification('___Error liking Title___', delay=1.2)
+
+                self._show_delayed_notification('___Error liking Title___', delay=1.2)
             else:
                 if text:
                     return 'Title already tagged as liked!'
-                elif html:
+
+                if html:
                     return '<div class="alert alert-info">Title <b>already tagged</b> as liked!</div>'
-                else:
-                    self._show_delayed_notification('___Title already tagged as liked___')
+
+                self._show_delayed_notification('___Title already tagged as liked___')
         else:
             if text:
                 return M_STRINGS['player-stopped']
-            elif html:
+
+            if html:
                 return M_STRINGS['html-player-stopped']
-            else:
-                self._show_delayed_notification('___Error: Player not in playback___', delay=1.2)
+
+            self._show_delayed_notification('___Error: Player not in playback___', delay=1.2)
 
     def _show_stations_history_notification(self, msg_id):
         if self._limited_height_mode or self._limited_width_mode:
@@ -6484,18 +6482,22 @@ and |remove the file manually|.
     def _html_stations_history_previous(self):
         self._reset_status_bar_right()
         ret = self._html_check_op_mode()
+
         if ret is not None:
             return ret
+
         if self.player.connecting:
             return '<div class="alert alert-danger">Please wait for the player to settle...</div>'
-        else:
-            if self._cnf.stations_history.item == -1:
-                return '<div class="alert alert-danger">History is <b>empty</b>!</div>'
-            elif self._cnf.stations_history.item == 0:
-                return '<div class="alert alert-danger">Already at <b>first</b> item!</div>'
-            self._cnf.play_from_history = True
-            self._cnf.stations_history.play_previous()
-            return f'<div class="alert alert-success">Playing <b>{self.stations[self.selection][0]}</b>!</div>'
+
+        if self._cnf.stations_history.item == -1:
+            return '<div class="alert alert-danger">History is <b>empty</b>!</div>'
+
+        if self._cnf.stations_history.item == 0:
+            return '<div class="alert alert-danger">Already at <b>first</b> item!</div>'
+
+        self._cnf.play_from_history = True
+        self._cnf.stations_history.play_previous()
+        return f'<div class="alert alert-success">Playing <b>{self.stations[self.selection][0]}</b>!</div>'
 
     def _stations_history_previous(self):
         self._set_playing = False
@@ -6526,18 +6528,22 @@ and |remove the file manually|.
     def _html_stations_history_next(self):
         self._reset_status_bar_right()
         ret = self._html_check_op_mode()
+
         if ret is not None:
             return ret
+
         if self.player.connecting:
             return '<div class="alert alert-danger">Please wait for the player to settle...</div>'
-        else:
-            if self._cnf.stations_history.item == -1:
-                return '<div class="alert alert-danger">History is <b>empty</b>!</div>'
-            elif self._cnf.stations_history.item == len(self._cnf.stations_history.items) - 1:
-                return '<div class="alert alert-danger">Already at <b>last</b> item!</div>'
-            self._cnf.play_from_history = True
-            self._cnf.stations_history.play_next()
-            return f'<div class="alert alert-success">Playing <b>{self.stations[self.selection][0]}</b>!</div>'
+
+        if self._cnf.stations_history.item == -1:
+            return '<div class="alert alert-danger">History is <b>empty</b>!</div>'
+
+        if self._cnf.stations_history.item == len(self._cnf.stations_history.items) - 1:
+            return '<div class="alert alert-danger">Already at <b>last</b> item!</div>'
+
+        self._cnf.play_from_history = True
+        self._cnf.stations_history.play_next()
+        return f'<div class="alert alert-success">Playing <b>{self.stations[self.selection][0]}</b>!</div>'
 
     def _stations_history_next(self):
         self._set_playing = False
@@ -6801,47 +6807,47 @@ and |remove the file manually|.
             self.refreshBody()
             self._speak_selection()
             return True
-        else:
-            if self._cnf.is_register:
-                ''' go back to playlist history '''
+
+        if self._cnf.is_register:
+            ''' go back to playlist history '''
+            self._open_playlist_from_history()
+            return True
+        if self._cnf.browsing_station_service:
+            ''' go back to playlist history '''
+            if self._cnf.online_browser.is_config_dirty():
+                self._ask_to_save_browser_config_to_exit()
+            else:
                 self._open_playlist_from_history()
-                return True
-            elif self._cnf.browsing_station_service:
-                ''' go back to playlist history '''
-                if self._cnf.online_browser.is_config_dirty():
-                    self._ask_to_save_browser_config_to_exit()
-                else:
-                    self._open_playlist_from_history()
-                    sleep(1.5)
-                return True
-            ''' exit program '''
-            ''' stop updating the status bar '''
-            #with self.log.lock:
-            #    self.log.asked_to_stop = True
-            self.log.asked_to_stop = True
-            if self._cnf.dirty_playlist:
-                if self._cnf.auto_save_playlist:
-                    ''' save playlist and exit '''
-                    ret = self.saveCurrentPlaylist()
-                    #if ret == -1:
-                    #    # do not exit program
-                    #    return
-                else:
-                    ''' ask to save playlist '''
-                    self._print_save_modified_playlist(self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE)
-                    return
-            #else:
-            #    self._open_playlist()
-            if self.player:
-                # ok
-                self.detect_if_player_exited = False
-                self.stopPlayer(
-                    show_message=False,
-                    reset_playing=False
-                )
-            self.ctrl_c_handler(0,0)
-            self._cnf.EXTERNAL_PLAYER_OPTS = None
-            return False
+                sleep(1.5)
+            return True
+        ''' exit program '''
+        ''' stop updating the status bar '''
+        #with self.log.lock:
+        #    self.log.asked_to_stop = True
+        self.log.asked_to_stop = True
+        if self._cnf.dirty_playlist:
+            if self._cnf.auto_save_playlist:
+                ''' save playlist and exit '''
+                ret = self.saveCurrentPlaylist()
+                #if ret == -1:
+                #    # do not exit program
+                #    return
+            else:
+                ''' ask to save playlist '''
+                self._print_save_modified_playlist(self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE)
+                return
+        #else:
+        #    self._open_playlist()
+        if self.player:
+            # ok
+            self.detect_if_player_exited = False
+            self.stopPlayer(
+                show_message=False,
+                reset_playing=False
+            )
+        self.ctrl_c_handler(0,0)
+        self._cnf.EXTERNAL_PLAYER_OPTS = None
+        return False
 
     def _speak_high(self, msg):
         self.tts.queue_speech(msg, Priority.HIGH, mode=self.ws.operation_mode)
@@ -6963,12 +6969,13 @@ and |remove the file manually|.
                 self._global_functions[l_char]()
             else:
                 self.ws.close_window()
+
                 if char in (kbkey['y'], ) or \
                         check_localized(char, (kbkey['y'],)):
                     return -1
-                else:
-                    self._cnf.WIN_UNINSTALL = False
-                    self.refreshBody()
+
+                self._cnf.WIN_UNINSTALL = False
+                self.refreshBody()
             return
 
         if self.ws.operation_mode == self.ws.LOCALIZED_CONFIG_MODE:
@@ -7101,7 +7108,6 @@ _____"|f|" to see the |free| keys you can use.
                     logger.debug(msg)
 
             elif ret == -4:
-                pass
                 self._messaging_win.set_a_message(
                         'UNIVERSAL',
                         ('Free Keys', self._keyboard_config_win.keys_string, Priority.HIGH)
@@ -7112,7 +7118,7 @@ _____"|f|" to see the |free| keys you can use.
 
             return
 
-        elif self.ws.operation_mode == self.ws.KEYBOARD_CONFIG_ERROR_MODE:
+        if self.ws.operation_mode == self.ws.KEYBOARD_CONFIG_ERROR_MODE:
             self.ws.close_window()
             self.refreshBody()
             self._redisplay_keyboard_config()
@@ -7147,7 +7153,6 @@ _____"|f|" to see the |free| keys you can use.
                 self._cnf.open_a_dir(self._open_dir_win.dir)
             elif ret == 1:
                 ''' continue '''
-                pass
             elif ret == 2:
                 ''' show help '''
                 self._open_message_win_by_key('H_DIR', len(self._open_dir_win.items))
@@ -7214,7 +7219,7 @@ _____"|f|" to see the |free| keys you can use.
                 logger.info(f'*** terminating due to op. mode: {self.ws.MODE_NAMES[self.ws.operation_mode]}')
             return -1
 
-        elif (self.jumpnr or self._cnf.jump_tag > -1) and \
+        if (self.jumpnr or self._cnf.jump_tag > -1) and \
                 (char in (curses.KEY_EXIT, kbkey['q'], 27) or \
                     check_localized(char, (kbkey['q'],))) and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -7231,7 +7236,7 @@ _____"|f|" to see the |free| keys you can use.
                 Open Register - char = '
 
             '''
-        elif not self._register_open_pressed and \
+        if not self._register_open_pressed and \
                 (char == kbkey['open_regs'] or \
                 check_localized(char, (kbkey['open_regs'],))) and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -7246,7 +7251,8 @@ _____"|f|" to see the |free| keys you can use.
             self._cnf.jump_tag = -1
             self._random_requested = False
             return
-        elif (self._register_open_pressed
+
+        if (self._register_open_pressed
                 and self.ws.operation_mode == self.ws.NORMAL_MODE):
             if char == kbkey['?'] or \
                     check_localized(char, (kbkey['?'],)):
@@ -7313,15 +7319,15 @@ _____"|f|" to see the |free| keys you can use.
                         logger.error(f'{self.player.volume = }')
                         if self.player.volume == -1:
                             ''' inform no change '''
-                            if (logger.isEnabledFor(logging.DEBUG)):
+                            if logger.isEnabledFor(logging.DEBUG):
                                 logger.debug('Volume is -1. Aborting...')
                             ret_string = 'Station volume: no initial value set...'
                         elif self.player.volume == -2:
-                            if (logger.isEnabledFor(logging.DEBUG)):
+                            if logger.isEnabledFor(logging.DEBUG):
                                 logger.debug('Error saving volume...')
                             ret_string = 'Station volume: NOT saved (Error writing file)'
                         else:
-                            if (logger.isEnabledFor(logging.DEBUG)):
+                            if logger.isEnabledFor(logging.DEBUG):
                                 logger.debug(f'Volume is {self.player.volume}%. Saving...')
                             if self.stations[self.selection][Station.volume] != self.player.volume:
                                 ret_string = f'Station volume saved: {self.player.volume}%'
@@ -7876,10 +7882,12 @@ _____"|f|" to see the |free| keys you can use.
             self._reset_status_bar_right()
             self._config_win = None
             self.theme_forced_selection = None
+
             if not self._cnf.use_themes:
                 # TODO show msg
                 self._show_colors_cannot_change()
                 return
+
             if self._cnf.headless:
                 self._show_notification_with_delay(
                         txt='__Sorry, you cannot change themes__\n______on a headless session...',
@@ -7887,7 +7895,8 @@ _____"|f|" to see the |free| keys you can use.
                         mode_to_set=self.ws.operation_mode,
                         callback_function=self.refreshBody)
                 return
-            elif self._cnf.locked:
+
+            if self._cnf.locked:
                 self._show_notification_with_delay(
                         txt='__Sorry, you cannot change themes__\n___when the session is locked...',
                         delay=1.5,
@@ -7982,7 +7991,7 @@ _____"|f|" to see the |free| keys you can use.
             ret, buf = self._buffering_win.keypress(char)
             if ret == 0:
                 return
-            elif ret == 1:
+            if ret == 1:
                 self.ws.close_window()
                 self.stations[self.selection][Station.buffering] = buf
                 self._cnf.dirty_playlist = True
@@ -9865,7 +9874,6 @@ _____"|f|" to see the |free| keys you can use.
 
             elif ret > 1:
                 ''' error '''
-                pass
             ''' set params for player at backup params, even when
                 operration has been canceled
             '''
@@ -10040,12 +10048,14 @@ _____"|f|" to see the |free| keys you can use.
 
                     return -1
 
-                elif char in self._local_functions:
+                if char in self._local_functions:
                     self._local_functions[char]()
                     return
-                elif (l_char := check_localized(char, self._local_functions.keys(), True)) is not None:
+
+                if (l_char := check_localized(char, self._local_functions.keys(), True)) is not None:
                     self._local_functions[l_char]()
                     return
+
                 if char == kbkey['fav'] or \
                         check_localized(char, (kbkey['fav'], )):
                     if self._cnf.station_path == self._cnf.favorites_path:
@@ -10720,7 +10730,8 @@ _____"|f|" to see the |free| keys you can use.
             if not os.path.exists(self._cnf.recording_dir):
                 if mode == 'text':
                     return 'Error: Recording not available; Recording dir does not exist!'
-                elif mode == 'html':
+
+                if mode == 'html':
                     return '<div class="alert alert-danger"><b>Error!</b><br />Recording <b>not available!</b><br />Recording dir does <b>not exist!</b></div>'
         return None
 
@@ -11245,15 +11256,17 @@ _____"|f|" to see the |free| keys you can use.
                 self.player.playback_is_on:
             if self.player.muted:
                 return '<div class="alert alert-danger">Player is <b>muted</b>; command not applicable</div>'
-            elif self.player.paused:
+
+            if self.player.paused:
                 return '<div class="alert alert-danger">Player is <b>paused</b>; command not applicable</div>'
-            elif self.player.buffering:
+
+            if self.player.buffering:
                 return '<div class="alert alert-danger">Player is <b>buffering</b>; <b>cannot adjust volume</b>...</div>'
-            else:
-                self.player.volumeUp()
-                return '<div class="alert alert-success">Volume <b>increased</b>!</div>'
-        else:
-            return '<div class="alert alert-danger">Player is <b>stopped</b>; command not applicable</div>'
+
+            self.player.volumeUp()
+            return '<div class="alert alert-success">Volume <b>increased</b>!</div>'
+
+        return '<div class="alert alert-danger">Player is <b>stopped</b>; command not applicable</div>'
 
     def _volume_up(self):
         if self.player.isPlaying() and \
@@ -11279,15 +11292,17 @@ _____"|f|" to see the |free| keys you can use.
                 self.player.playback_is_on:
             if self.player.muted:
                 return '<div class="alert alert-danger">Player is <b>muted</b>; command not applicable</div>'
-            elif self.player.paused:
+
+            if self.player.paused:
                 return '<div class="alert alert-danger">Player is <b>paused</b>; command not applicable</div>'
-            elif self.player.buffering:
+
+            if self.player.buffering:
                 return '<div class="alert alert-danger">Player is <b>buffering</b>; <b>cannot adjust volume</b>...</div>'
-            else:
-                self.player.volumeDown()
-                return '<div class="alert alert-success">Volume <b>decreased</b>!</div>'
-        else:
-            return '<div class="alert alert-danger">Player is <b>stopped</b>; command not applicable</div>'
+
+            self.player.volumeDown()
+            return '<div class="alert alert-success">Volume <b>decreased</b>!</div>'
+
+        return '<div class="alert alert-danger">Player is <b>stopped</b>; command not applicable</div>'
 
     def _volume_down(self):
         if self.player.isPlaying() and \
@@ -11311,14 +11326,15 @@ _____"|f|" to see the |free| keys you can use.
     def _html_volume_mute(self):
         if self.player.isPlaying() and \
                 self.player.playback_is_on:
+
             if self.player.buffering:
                 return '<div class="alert alert-danger">Player is <b>buffering</b>; <b>cannot mute</b>...</div>'
                 # self.player.threadUpdateTitle()
-            else:
-                self.player.toggleMute()
-                return '<div class="alert alert-success">Player muted state <b>toggled!</b></div>'
-        else:
-            return '<div class="alert alert-danger">Player is <b>stopped</b>; command not applicable</div>'
+
+            self.player.toggleMute()
+            return '<div class="alert alert-success">Player muted state <b>toggled!</b></div>'
+
+        return '<div class="alert alert-danger">Player is <b>stopped</b>; command not applicable</div>'
 
     def _volume_mute(self):
         if self.player.isPlaying():
@@ -11338,21 +11354,21 @@ _____"|f|" to see the |free| keys you can use.
     def _html_volume_save(self):
         if self.player.isPlaying() and \
                 self.player.playback_is_on:
+
             if self.player.buffering:
                 return '<div class="alert alert-danger">Player is <b>buffering</b>; <b>cannot save volume</b>...</div>'
                 # self.player.threadUpdateTitle()
-            else:
-                if self.player.muted:
-                    return '<div class="alert alert-danger">Player is <b>muted!</b></div>'
-                else:
-                    ret_string = self.player.save_volume()
-                    if ret_string:
-                        self.log.write(msg_id=STATES.VOLUME, msg=ret_string)
-                        self.player.threadUpdateTitle()
-                        return '<div class="alert alert-success">Volume <b>saved!</b></div>'
-                    return '<div class="alert alert-danger">Volume <b>not saved!</b></div>'
-        else:
-            return '<div class="alert alert-danger">Player is <b>stopped</b>; command not applicable</div>'
+
+            if self.player.muted:
+                return '<div class="alert alert-danger">Player is <b>muted!</b></div>'
+
+            ret_string = self.player.save_volume()
+            if ret_string:
+                self.log.write(msg_id=STATES.VOLUME, msg=ret_string)
+                self.player.threadUpdateTitle()
+                return '<div class="alert alert-success">Volume <b>saved!</b></div>'
+            return '<div class="alert alert-danger">Volume <b>not saved!</b></div>'
+        return '<div class="alert alert-danger">Player is <b>stopped</b>; command not applicable</div>'
 
     def _volume_save(self):
         if self.player.isPlaying():
@@ -11481,7 +11497,6 @@ _____"|f|" to see the |free| keys you can use.
                         self.bodyWin.addstr(n, 0, line, curses.color_pair(5))
                     except:
                         pass
-                pass
             else:
                 self.bodyWin.erase()
         else:
@@ -11510,16 +11525,16 @@ _____"|f|" to see the |free| keys you can use.
                                     pass
                                 lineNum += 1
                         break
-                    else:
+
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug(f'clearing window from line {i} to end.')
+                    try:
+                        self.bodyWin.move(i, 0)
+                        self.bodyWin.clrtobot()
+                    except:
                         if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug(f'clearing window from line {i} to end.')
-                        try:
-                            self.bodyWin.move(i, 0)
-                            self.bodyWin.clrtobot()
-                        except:
-                            if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug('====---- clear to end of window failed----====')
-                        break
+                            logger.debug('====---- clear to end of window failed----====')
+                    break
 
         if self._cnf.browsing_station_service:
             if self._cnf.internal_header_height > 0:
@@ -11646,42 +11661,44 @@ _____"|f|" to see the |free| keys you can use.
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'Error loading playlist: "{self.stations[self.selection][-1]}"')
             return
-        elif ret == -2:
+
+        if ret == -2:
             self._print_playlist_not_found_error()
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'Playlist not found: "{self.stations[self.selection][-1]}"')
             return
-        elif ret == -7:
+
+        if ret == -7:
             self._print_playlist_recovery_error()
             return
-        else:
-            self._playlist_in_editor = a_file
-            self._playlist_error_message = ''
-            self.number_of_items = ret
-            # self.ll('ENTER')
+
+        self._playlist_in_editor = a_file
+        self._playlist_error_message = ''
+        self.number_of_items = ret
+        # self.ll('ENTER')
+        self.ws.close_window()
+        while self.ws.operation_mode != self.ws.NORMAL_MODE:
             self.ws.close_window()
-            while self.ws.operation_mode != self.ws.NORMAL_MODE:
-                self.ws.close_window()
-            self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
-            self._align_stations_and_refresh(self.ws.PLAYLIST_MODE)
-            self._give_me_a_search_class(self.ws.operation_mode)
-            if self.playing < 0:
-                self._put_selection_in_the_middle(force=True)
-                self.refreshBody()
-            # logger.error('DE path = {}'.format(self._cnf.station_path))
-            # logger.error('DE station = {}'.format(self._cnf.station_file_name))
-            # logger.error('DE title = {}\n'.format(self._cnf.station_title))
-            self._cnf.set_playlist_elements(a_file)
-            if is_copy:
-                self._cnf.add_to_playlist_history(
-                        station_path=a_file,
-                        station_title=self._cnf.station_title,
-                        startPos=self.startPos,
-                        selection=self.selection,
-                        playing=self.playing)
-            # logger.error('DE path = {}'.format(self._cnf.station_path))
-            # logger.error('DE station = {}'.format(self._cnf.station_file_name))
-            # logger.error('DE title = {}\n'.format(self._cnf.station_title))
+        self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
+        self._align_stations_and_refresh(self.ws.PLAYLIST_MODE)
+        self._give_me_a_search_class(self.ws.operation_mode)
+        if self.playing < 0:
+            self._put_selection_in_the_middle(force=True)
+            self.refreshBody()
+        # logger.error('DE path = {}'.format(self._cnf.station_path))
+        # logger.error('DE station = {}'.format(self._cnf.station_file_name))
+        # logger.error('DE title = {}\n'.format(self._cnf.station_title))
+        self._cnf.set_playlist_elements(a_file)
+        if is_copy:
+            self._cnf.add_to_playlist_history(
+                    station_path=a_file,
+                    station_title=self._cnf.station_title,
+                    startPos=self.startPos,
+                    selection=self.selection,
+                    playing=self.playing)
+        # logger.error('DE path = {}'.format(self._cnf.station_path))
+        # logger.error('DE station = {}'.format(self._cnf.station_file_name))
+        # logger.error('DE title = {}\n'.format(self._cnf.station_title))
 
     def _search_sublist__stem(self, a_list, a_search):
         return self._search_sublist(a_list, 0, a_search)
@@ -11708,11 +11725,11 @@ _____"|f|" to see the |free| keys you can use.
                     len(self._cnf.params[self._cnf.PLAYER_NAME]) - 1
                 ))
             return False
-        else:
-            self._cnf.backup_player_params[1][0] = a_param_id
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug(f'Activating parameter No {a_param_id} for player "{self._cnf.PLAYER_NAME}"')
-            return True
+
+        self._cnf.backup_player_params[1][0] = a_param_id
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'Activating parameter No {a_param_id} for player "{self._cnf.PLAYER_NAME}"')
+        return True
 
     def toggle_titles_logging(self):
         return self._cnf.titles_log.configure_logger(
@@ -12103,8 +12120,7 @@ _____"|f|" to see the |free| keys you can use.
             self.ws.NORMAL_MODE,
         ):
             return True
-        else:
-            return False
+        return False
 
     def _start_remote_control_server(self):
         self._remote_control_server = PyRadioServer(
@@ -12806,12 +12822,11 @@ def drain_getch(win, timeout_ms=100, existing_timeout=-1):
             if nxt == -1:
                 # pure ESC
                 return 27
-            else:
-                # consume rest of alt-sequence / CSI / icat noise
-                while nxt != -1:
-                    logger.error(f'consuming {nxt}')
-                    nxt = win.getch()
-                return -1
+            # consume rest of alt-sequence / CSI / icat noise
+            while nxt != -1:
+                logger.error(f'consuming {nxt}')
+                nxt = win.getch()
+            return -1
         return ch
     finally:
         win.timeout(existing_timeout)

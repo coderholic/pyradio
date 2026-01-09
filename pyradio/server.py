@@ -1918,29 +1918,29 @@ Content-Length: {len(b_msg)}
         if len(sp) == 1:
             if sp[0] in ('stations', 'st'):
                 return '/stations'
-            elif sp[0] in ('playlists', 'pl'):
+            if sp[0] in ('playlists', 'pl'):
                 return '/playlists'
-            else:
-                return None
-        elif len(sp) == 2:
+            return None
+
+        if len(sp) == 2:
             if sp[0] in ('stations', 'st'):
                 if sp[1] in ('next', 'n'):
                     return '/next'
-                elif sp[1] in ('previous', 'p'):
+                if sp[1] in ('previous', 'p'):
                     return '/previous'
-                elif sp[1] in ('histnext', 'hn'):
+                if sp[1] in ('histnext', 'hn'):
                     return '/histnext'
-                elif sp[1] in ('histprev', 'hp'):
+                if sp[1] in ('histprev', 'hp'):
                     return '/histprev'
-                else:
-                    ''' do i have a number? '''
-                    try:
-                        int(sp[1])
-                    except ValueError:
-                        return None
-                    logger.error(f'\n\nsong number = {sp[1]}\n\n')
-                    return sp[1]
-            elif sp[0] in ('playlists', 'pl'):
+                ''' do i have a number? '''
+                try:
+                    int(sp[1])
+                except ValueError:
+                    return None
+                logger.error(f'\n\nsong number = {sp[1]}\n\n')
+                return sp[1]
+
+            if sp[0] in ('playlists', 'pl'):
                 ''' do i have a number? '''
                 nsp = sp[1].split(',')
                 if len(nsp) == 1:
@@ -1949,12 +1949,8 @@ Content-Length: {len(b_msg)}
                     except ValueError:
                         return None
                     return sp[1]
-                else:
-                    return None
-            else:
-                return None
-        else:
-            return None
+
+        return None
 
     def _get_playlist_id(self, a_playlist):
         try:
@@ -2034,8 +2030,7 @@ Content-Length: {len(b_msg)}
                 out[i] = tok + pad_str.format(i+1) + out[i]
         if stations is None:
             return 'Stations List for Playlist: "' + p_name + '"\n' +  '\n'.join(out) + '\n\nFirst column\n  [> ]: Selected, [+ ]: Playing, [+>]: Both'
-        else:
-            return 'Stations List for Playlist: "' + p_name + '"\n' +  '\n'.join(out)
+        return 'Stations List for Playlist: "' + p_name + '"\n' +  '\n'.join(out)
 
     def _list_playlists(self, html=False):
         # logger.error('playlist_in_editor = "{}"'.format(self.playlist_in_editor()))

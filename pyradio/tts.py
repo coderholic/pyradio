@@ -55,8 +55,7 @@ class TTSConfig:
         """Get config file path for current platform"""
         if platform.system() == "Windows":
             return os.path.expanduser("~\\AppData\\Local\\pyradio\\tts.conf")
-        else:
-            return os.path.expanduser("~/.config/pyradio/tts.conf")
+        return os.path.expanduser("~/.config/pyradio/tts.conf")
 
     def _load_config(self):
         """Load configuration from file with cross-platform support"""
@@ -109,11 +108,10 @@ class TTSConfig:
         # Replace placeholder or append text
         if '{}' in cmd_template:
             return cmd_template.replace('{}', text)
-        else:
-            # Use shlex.split to properly handle quoted arguments
-            base_cmd = shlex.split(cmd_template)
-            base_cmd.append(text)
-            return base_cmd
+        # Use shlex.split to properly handle quoted arguments
+        base_cmd = shlex.split(cmd_template)
+        base_cmd.append(text)
+        return base_cmd
 
     def get_linux_restart_commands(self):
         """Get Linux restart commands as a list of command lists"""
@@ -291,10 +289,9 @@ class TTSLinux(TTSBase):
 
             if result.returncode == 0:
                 return True
-            else:
-                if logger.isEnabledFor(logging.WARNING):
-                    logger.warning(f"spd-say failed with return code {result.returncode}")
-                return False
+            if logger.isEnabledFor(logging.WARNING):
+                logger.warning(f"spd-say failed with return code {result.returncode}")
+            return False
 
         except subprocess.TimeoutExpired:
             if logger.isEnabledFor(logging.WARNING):
@@ -482,11 +479,11 @@ class TTSWindows(TTSBase):
                     self.current_stream = None
                     self.state = TTSState.IDLE
                     return True
-                else:
-                    # NAVIGATION and NORMAL: async execution without waiting
-                    self.speaker.Speak(text, 1)  # flags=1 for async
-                    self.state = TTSState.SPEAKING
-                    return True
+
+                # NAVIGATION and NORMAL: async execution without waiting
+                self.speaker.Speak(text, 1)  # flags=1 for async
+                self.state = TTSState.SPEAKING
+                return True
 
             except Exception as e:
                 if logger.isEnabledFor(logging.ERROR):
@@ -560,7 +557,7 @@ class TTSMacOS(TTSBase):
                     return True
 
                 # For NAVIGATION, HIGH, DIALOG: wait for completion with interruption checks
-                elif priority in (Priority.NAVIGATION, Priority.HIGH, Priority.DIALOG):
+                if priority in (Priority.NAVIGATION, Priority.HIGH, Priority.DIALOG):
                     return self._wait_for_completion_with_interrupt(priority)
 
                 return True
@@ -793,11 +790,11 @@ class TTSManager:
             context = self.context()
             if context == 'all':
                 return True
-            elif context == 'window':
-                if priority.value <= Priority.DIALOG.value:
+            if context == 'window' and \
+                priority.value <= Priority.DIALOG.value:
                     return True
-            elif context == 'limited':
-                if priority.value <= Priority.HIGH.value:
+            if context == 'limited' and \
+                priority.value <= Priority.HIGH.value:
                     return True
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'Speech request rejected: priority is "{priority.name}" but context is "{context}"')
@@ -830,10 +827,9 @@ class TTSManager:
         """Create the appropriate TTS engine for the current platform"""
         if self.system == "Windows":
             return TTSWindows(self.config, self.volume, self.rate, self.pitch, self.verbosity)
-        elif self.system == "Darwin":
+        if self.system == "Darwin":
             return TTSMacOS(self.config, self.volume, self.rate, self.pitch, self.verbosity)
-        else:
-            return TTSLinux(self.config, self.volume, self.rate, self.pitch, self.verbosity)
+        return TTSLinux(self.config, self.volume, self.rate, self.pitch, self.verbosity)
 
     def _check_linux_availability(self):
         """Check if spd-say is available on Linux"""
@@ -1055,7 +1051,7 @@ class TTSManager:
         context = self.context()
         if context == 'all':
             return Context.ALL.value
-        elif context == 'window':
+        if context == 'window':
             return Context.WINDOW.value
         return Context.LIMITED.value
 
@@ -1202,36 +1198,35 @@ class TTSManager:
                     logger.debug(f"Queued {priority.name} priority: {text[:50]}...")
                 return True
 
-            else:
-                # NORMAL priority request
-                # Clean normal queue to avoid accumulation
-                self._clean_normal_queue()
+            # NORMAL priority request
+            # Clean normal queue to avoid accumulation
+            self._clean_normal_queue()
 
-                # Stop any currently speaking NORMAL for new NORMAL
-                self._stop_normal_speech()
+            # Stop any currently speaking NORMAL for new NORMAL
+            self._stop_normal_speech()
 
-                # Check if HIGH/DIALOG/NAVIGATION/HELP is playing or queued
-                if not self.high_priority_queue.empty() or (
-                    self._current_request and
-                    self._current_request.priority in (Priority.HIGH, Priority.DIALOG, Priority.NAVIGATION, Priority.HELP)
-                ):
-                    # HIGH/DIALOG/NAVIGATION/HELP is playing or queued
-                    if self._is_title(text):
-                        # Title during HIGH/NAVIGATION/HELP: save as pending
-                        self.pending_title = text
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug(f"Title saved as pending: {text[:50]}...")
-                        return True
-                    else:
-                        # Non-title NORMAL during HIGH/DLG/NAV/HELP: reject
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug("Rejected NORMAL request during HIGH/DLG/NAV/HELP playback")
-                        return False
-                else:
-                    self.normal_priority_queue.put(request)
+            # Check if HIGH/DIALOG/NAVIGATION/HELP is playing or queued
+            if not self.high_priority_queue.empty() or (
+                self._current_request and
+                self._current_request.priority in (Priority.HIGH, Priority.DIALOG, Priority.NAVIGATION, Priority.HELP)
+            ):
+                # HIGH/DIALOG/NAVIGATION/HELP is playing or queued
+                if self._is_title(text):
+                    # Title during HIGH/NAVIGATION/HELP: save as pending
+                    self.pending_title = text
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug(f"Queued NORMAL: {text[:50]}...")
+                        logger.debug(f"Title saved as pending: {text[:50]}...")
                     return True
+                # Non-title NORMAL during HIGH/DLG/NAV/HELP: reject
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug("Rejected NORMAL request during HIGH/DLG/NAV/HELP playback")
+                return False
+
+            # NORMAL priority
+            self.normal_priority_queue.put(request)
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f"Queued NORMAL: {text[:50]}...")
+            return True
 
         except Exception as e:
             if logger.isEnabledFor(logging.ERROR):

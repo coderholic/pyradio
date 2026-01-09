@@ -342,8 +342,7 @@ def get_github_long_description(
     if ret is None:
         if only_tag_name:
             return None
-        else:
-            return None, None
+        return None, None
 
     if only_tag_name:
         return returns[0][0]['name']
@@ -405,10 +404,8 @@ def get_devel_version():
     if long_descpr[0]:
         if long_descpr[1]:
             return 'PyRadio ' + long_descpr[1]
-        else:
-            return 'PyRadio ' + long_descpr[0]
-    else:
-        return None
+        return 'PyRadio ' + long_descpr[0]
+    return None
 
 def windows_put_devel_version():
     ''' not used '''
@@ -475,8 +472,7 @@ def get_a_linux_resource_opener():
         if which_str:
             if a_prog[1]:
                 return [which_str] + a_prog[1].split(' ')
-            else:
-                return [which_str]
+            return [which_str]
     return None
 
 def open_cache_dir():
@@ -617,9 +613,9 @@ class PyRadioCache():
         if unit not in exponents_map:
             raise ValueError("Must select from \
             ['bytes', 'kb', 'mb', 'gb']")
-        else:
-            size = file_size / 1024 ** exponents_map[unit]
-            return round(size, 3)
+
+        size = file_size / 1024 ** exponents_map[unit]
+        return round(size, 3)
 
     def delete(self):
         ''' delete the cache dir and all file in it '''
@@ -770,7 +766,7 @@ class PythonExecutable():
                     'python 2.' in str_com:
                 self._python[0] = 'python'
                 break
-            elif 'Python 3.' in str_com or \
+            if 'Python 3.' in str_com or \
                     'python 3.' in str_com:
                 self._python[1] = 'python'
                 break

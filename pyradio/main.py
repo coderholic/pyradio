@@ -794,11 +794,11 @@ If nothing else works, try the following command:
             if pyradio_config.locked:
                 print_session_is_locked()
                 return
-            else:
-                pyradio_config.opts['open_last_playlist'][1] = not pyradio_config.opts['open_last_playlist'][1]
-                pyradio_config.opts['dirty_config'][1] =  True
-                print(f"Setting auto load last playlist to: \"[red]{pyradio_config.opts['open_last_playlist'][1]}[/red]\"")
-                save_config()
+
+            pyradio_config.opts['open_last_playlist'][1] = not pyradio_config.opts['open_last_playlist'][1]
+            pyradio_config.opts['dirty_config'][1] =  True
+            print(f"Setting auto load last playlist to: \"[red]{pyradio_config.opts['open_last_playlist'][1]}[/red]\"")
+            save_config()
             return
 
         package = 0
@@ -1459,12 +1459,12 @@ def csv_vs_m3u_output_filename(input_file, output_dir, resource_type="csv"):
         return full_path
 
     def _detect_input_type(filename):
-        basename = path.basename(filename)
-        if basename.lower().endswith('.csv'):
+        basename = path.basename(filename).lower()
+        if basename.endswith('.csv'):
             return 'csv'
-        elif basename.lower().endswith('.m3u'):
+        if basename.endswith('.m3u'):
             return 'm3u'
-        elif basename.lower().endswith('.m3u8'):
+        if basename.endswith('.m3u8'):
             return 'm3u'
         return None
 

@@ -185,7 +185,7 @@ class PyRadioClient():
                     return 1
                 ''' not recording to file '''
                 return 0
-            elif ret == 2:
+            if ret == 2:
                 ''' request timeout '''
                 return -1
             ''' error '''

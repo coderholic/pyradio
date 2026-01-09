@@ -782,7 +782,6 @@ class PyRadioConfigWindow():
             ''' ESCAPE '''
             logger.error('dirty config is {}, and ESC pressed'.format(self._cnf.dirty_config))
             if self._cnf.dirty_config and not self.cancel_confirmed:
-                pass
                 self._show_confirm_cancel_config_changes()
 
             else:
@@ -883,12 +882,15 @@ class PyRadioConfigWindow():
                 kbkey['h'], kbkey['l'],
             )):
                 ret = self._local_functions[char]()
+
                 if self._local_functions[char] == self._go_exit:
                     if self.cancel_confirmed:
                         return 1, []
                     return -1, []
-                elif self._local_functions[char] == self._go_save and ret:
+
+                if self._local_functions[char] == self._go_save and ret:
                     return 0, []
+
                 return -1, []
 
         if char in self._global_functions or \
@@ -923,7 +925,7 @@ class PyRadioConfigWindow():
                 logger.debug(f'headless client returned: {ret}')
             if ret == 1:
                 return 6, [client.server_ip + ':' + client.server_port]
-            elif ret < 0:
+            if ret < 0:
                 return 7, [
                         client.server_ip + ':' + client.server_port,
                         client.last_reply
@@ -946,7 +948,7 @@ class PyRadioConfigWindow():
                     self._win.refresh()
                 return -1, []
 
-            elif char in (curses.KEY_LEFT, kbkey['h']) or \
+            if char in (curses.KEY_LEFT, kbkey['h']) or \
                     check_localized(char, (kbkey['h'], )):
                 t = int(val[1][1])
                 if t > 5:
@@ -1002,7 +1004,8 @@ class PyRadioConfigWindow():
                 self._print_title()
                 self._win.refresh()
                 return -1, []
-            elif char in (curses.KEY_LEFT, kbkey['h']) or \
+
+            if char in (curses.KEY_LEFT, kbkey['h']) or \
                     check_localized(char, (kbkey['h'], )):
                 t = int(val[1][1])
                 if t == -1:
@@ -1043,7 +1046,7 @@ class PyRadioConfigWindow():
                     self._cnf._show_colors_cannot_change()
                 return -1, []
 
-            elif char in (curses.KEY_LEFT, kbkey['h']) or \
+            if char in (curses.KEY_LEFT, kbkey['h']) or \
                     check_localized(char, (kbkey['h'], )):
                 if self._cnf.use_themes:
                     t = float(val[1][1])
@@ -1085,7 +1088,8 @@ class PyRadioConfigWindow():
                 self._print_title()
                 self._win.refresh()
                 return -1, []
-            elif char in (curses.KEY_LEFT, kbkey['h']) or \
+
+            if char in (curses.KEY_LEFT, kbkey['h']) or \
                     check_localized(char, (kbkey['h'], )):
                 if self._config_options[val[0]][1] == 'localhost':
                     self._config_options[val[0]][1] = 'LAN'
@@ -1126,7 +1130,8 @@ class PyRadioConfigWindow():
                 self._print_title()
                 self._win.refresh()
                 return -1, []
-            elif char in (curses.KEY_LEFT, kbkey['h']) or \
+
+            if char in (curses.KEY_LEFT, kbkey['h']) or \
                     check_localized(char, (kbkey['h'], )):
                 t = int(val[1][1]) - 1
                 if t < 0:
@@ -1139,7 +1144,7 @@ class PyRadioConfigWindow():
                 self._win.refresh()
                 return -1, []
 
-            elif char in (curses.KEY_LEFT, kbkey['h']) or \
+            if char in (curses.KEY_LEFT, kbkey['h']) or \
                     check_localized(char, (kbkey['h'], )):
                 t = int(val[1][1])
                 if t > 5:
@@ -1170,7 +1175,7 @@ class PyRadioConfigWindow():
                     self._win.refresh()
                 return -1, []
 
-            elif char in (curses.KEY_LEFT, kbkey['h']) or \
+            if char in (curses.KEY_LEFT, kbkey['h']) or \
                     check_localized(char, (kbkey['h'], )):
                 t = int(val[1][1])
                 if t > 5:
@@ -1200,7 +1205,7 @@ class PyRadioConfigWindow():
                     self._win.refresh()
                 return -1, []
 
-            elif char in (curses.KEY_LEFT, kbkey['h']) or \
+            if char in (curses.KEY_LEFT, kbkey['h']) or \
                     check_localized(char, (kbkey['h'], )):
                 t = int(val[1][1])
                 if t > self._tts_volume_data[0]:
@@ -1229,7 +1234,7 @@ class PyRadioConfigWindow():
                 self._win.refresh()
                 return -1, []
 
-            elif char in (curses.KEY_LEFT, kbkey['h']) or \
+            if char in (curses.KEY_LEFT, kbkey['h']) or \
                     check_localized(char, (kbkey['h'], )):
                 t = int(val[1][1])
 
@@ -1263,7 +1268,7 @@ class PyRadioConfigWindow():
                     self._win.refresh()
                 return -1, []
 
-            elif char in (curses.KEY_LEFT, kbkey['h']) or \
+            if char in (curses.KEY_LEFT, kbkey['h']) or \
                     check_localized(char, (kbkey['h'], )):
                 t = int(val[1][1])
                 logger.error(f'{self._tts_pitch_data = }')
@@ -1316,11 +1321,14 @@ class PyRadioConfigWindow():
             ''' alter option value '''
             vals = list(self._config_options.items())
             sel = vals[self.selection][0]
+
             if sel == 'player':
                 return Window_Stack_Constants.SELECT_PLAYER_MODE, []
-            elif sel == 'default_encoding':
+
+            if sel == 'default_encoding':
                 return Window_Stack_Constants.SELECT_ENCODING_MODE, []
-            elif sel == 'theme':
+
+            if sel == 'theme':
                 if self._cnf.use_themes:
                     self._cnf.theme = self._old_theme
                     if logger.isEnabledFor(logging.ERROR):
@@ -1439,17 +1447,18 @@ class PyRadioExtraParams():
             )
             self.show()
             return
-        else:
-            self._too_small = False
-            self.maxX = pX - 2 if pX < 40 else 40
-            logger.error('maxX = {}'.format(self.maxX))
-            logger.error('max_lines = {}'.format(self._max_lines))
-            self._Y = int((pY - self._max_lines) / 2) + 2
-            self._X = int((pX - self.maxX) / 2)
-            self._win = curses.newwin(
-                self._max_lines, self.maxX,
-                self._Y, self._X
-            )
+
+        self._too_small = False
+        self.maxX = pX - 2 if pX < 40 else 40
+        logger.error('maxX = {}'.format(self.maxX))
+        logger.error('max_lines = {}'.format(self._max_lines))
+        self._Y = int((pY - self._max_lines) / 2) + 2
+        self._X = int((pX - self.maxX) / 2)
+        self._win = curses.newwin(
+            self._max_lines, self.maxX,
+            self._Y, self._X
+        )
+
         if self._extra:
             self._extra.set_window(self._win, do_show=False)
             self.show()
@@ -1693,11 +1702,13 @@ class ExtraParametersEditor():
         '''
         ret = 1
         l_char = None
+
         if (char == kbkey['?'] or \
                 check_localized(char, (kbkey['?'], ))) and \
                 self._focus > 0:
             return 2
-        elif (char in (curses.KEY_EXIT, 27, kbkey['q']) or \
+
+        if (char in (curses.KEY_EXIT, 27, kbkey['q']) or \
                 check_localized(char, (kbkey['q'], ))) and \
                 self._focus > 0:
             self.edit_string = ''
@@ -1772,8 +1783,7 @@ class ExtraParametersEditor():
             self._count = 1
         if self._count > 2:
             return 0
-        else:
-            return 1
+        return 1
 
     def _update_focus(self):
         ''' use _focused here to avoid triggering
@@ -1889,7 +1899,7 @@ class ExtraParameters():
     def selection(self):
         if self._list:
             return self._list.selection
-        return(self._selections[self._player][0])
+        return self._selections[self._player][0]
 
     @selection.setter
     def selection(self, val):
@@ -1901,7 +1911,7 @@ class ExtraParameters():
     def startPos(self):
         if self._list:
             return self._list.startPos
-        return(self._selections[self._player][1])
+        return self._selections[self._player][1]
 
     @startPos.setter
     def startPos(self, val):
@@ -1912,7 +1922,7 @@ class ExtraParameters():
         ''' this is the parameter to be used by the player '''
         if self._list:
             return self._list.active
-        return(self._selections[self._player][2])
+        return self._selections[self._player][2]
 
     @active.setter
     def active(self, val):
@@ -1924,8 +1934,7 @@ class ExtraParameters():
     def original_active(self):
         if self._player == self._cnf.PLAYER_NAME:
             return self._original_active
-        else:
-            return self.selection
+        return self.selection
 
     @original_active.setter
     def original_active(self, val):
@@ -2331,7 +2340,8 @@ class ExtraParameters():
                 l_char = char
             self._global_functions[l_char]()
             return -1
-        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
+
+        if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
                       kbkey['pause'], kbkey['l'], curses.KEY_RIGHT, kbkey['s']) or \
                     check_localized(char, (kbkey['s'], kbkey['pause'], kbkey['l'])):
             ''' activate selection '''
@@ -2346,7 +2356,7 @@ class ExtraParameters():
                 self.save_results()
             return 0
 
-        elif char in (
+        if char in (
             curses.KEY_EXIT, 27,
             kbkey['q'], curses.KEY_LEFT,
             kbkey['h']
@@ -2359,10 +2369,11 @@ class ExtraParameters():
                 self.reset()
                 return -2
 
-        elif char == kbkey['?'] or \
+        if char == kbkey['?'] or \
                 check_localized(char, (kbkey['?'], )):
             ''' display help '''
             return 1
+
         ret = self._list.keypress(char)
         if ret == 1:
             ret = -1
@@ -2438,8 +2449,7 @@ class PyRadioSelectPlayer():
     def from_config(self):
         if self._extra:
             return self._extra.from_config
-        else:
-            return True
+        return True
 
     @from_config.setter
     def from_config(self, val):
@@ -2680,13 +2690,16 @@ class PyRadioSelectPlayer():
             else:
                 ''' focus on parameters '''
                 ret = self._extra.keypress(char)
+
                 if ret == 2:
                     ''' error, number of max lines reached '''
                     return -2
-                elif ret == 3:
+
+                if ret == 3:
                     ''' error, cannot edit or delete first item '''
                     return -3
-                elif ret == 4:
+
+                if ret == 4:
                     ''' edit parameter '''
                     self.editing = 2
                     self._parameter_editor = ExtraParametersEditor(
@@ -2697,7 +2710,8 @@ class PyRadioSelectPlayer():
                     )
                     self.refresh_win()
                     return 3
-                elif ret == 5:
+
+                if ret == 5:
                     ''' add parameter '''
                     self._parameter_editor = ExtraParametersEditor(
                         self._win,
@@ -2713,6 +2727,10 @@ class PyRadioSelectPlayer():
                 adding or editing a parameter
             '''
             ret = self._parameter_editor.keypress(char)
+            if ret == 2:
+                ''' show editor help '''
+                return ret
+
             if ret == 0:
                 ''' accept parameter or cancel '''
                 if self._parameter_editor.edit_string:
@@ -2733,10 +2751,6 @@ class PyRadioSelectPlayer():
                 self.refresh_win(True)
                 self._parameter_editor = None
                 return 4
-            elif ret == 2:
-                ''' show editor help '''
-                return ret
-
         return -1
 
     def _switch_column(self):
@@ -3385,8 +3399,7 @@ class PyRadioSelectPlaylist():
         if not self._select_playlist_error:
             self.print_select_playlist_error()
             return -1, ''
-        else:
-            return 0, self._items[self._selected_playlist_id]
+        return 0, self._items[self._selected_playlist_id]
 
     def print_select_playlist_error(self):
         if self._select_playlist_error in (-1, 0):
@@ -3629,10 +3642,9 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
         if not self._is_from_schedule:
             if self._selected_playlist_id == 0:
                 return 0, 'False'
-            elif self._selected_playlist_id == 1:
+            if self._selected_playlist_id == 1:
                 return 0, 'Random'
-            else:
-                return 0, str(self._selected_playlist_id - 1)
+            return 0, str(self._selected_playlist_id - 1)
         return 0, self._items[self._selected_playlist_id]
 
     def _read_items(self, a_station=None):
@@ -3728,7 +3740,7 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
             self.setStation(self._orig_playlist)
             return -1, ''
 
-        elif char in self._global_functions or \
+        if char in self._global_functions or \
                 (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
             if l_char is None:
                 l_char = char
@@ -3988,18 +4000,21 @@ class PyRadioKeyboardConfig():
     def _speak_button(self, priority=Priority.NAVIGATION):
         tts = self.tts()
         if tts and tts.can_i_use_tts(priority):
+
             if self._b_ok.focused:
                 tts.queue_speech(
                     'Current item: Button - OK',
                     priority, Context.LIMITED, self.op_mode()
                 )
                 return True
-            elif self._b_cancel.focused:
+
+            if self._b_cancel.focused:
                 tts.queue_speech(
                     'Current item: Button - Cancel',
                     priority, Context.LIMITED, self.op_mode()
                 )
                 return True
+
         return False
 
     def _update_focus(self):
@@ -5378,11 +5393,10 @@ class PyRadioLocalized():
                     else:
                         self.lang = None
                     return 4
-                else:
-                    if self.localize == 'No Layout':
-                        self.localize = None
-                    return 0
-                return 1
+                if self.localize == 'No Layout':
+                    self.localize = None
+                return 0
+            return 1
         elif self._focus == 3:
             # cancel button
             if self.editing:

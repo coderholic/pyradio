@@ -402,21 +402,22 @@ class XdgDirs():
     @classmethod
     def get_xdg_dir(cls, xdg_var):
         xdg = getenv(xdg_var)
+
         if xdg:
             return xdg
-        else:
-            # build dirs
-            not_set = {}
-            not_set['HOME'] = path.expanduser('~')
-            not_set['XDG_CONFIG_HOME'] = path.join(not_set['HOME'], '.config')
-            not_set['XDG_DATA_HOME'] = path.join(not_set['HOME'], '.local', 'share')
-            not_set['XDG_STATE_HOME'] = path.join(not_set['HOME'], '.local', 'state')
-            not_set['XDG_CACHE_HOME'] = path.join(not_set['HOME'], '.cache')
-            not_set['XDG_RUNTIME_DIR'] = path.join('/run/user', str(getuid()))
-            try:
-                return not_set[xdg_var]
-            except KeyError:
-                return None
+
+        # build dirs
+        not_set = {}
+        not_set['HOME'] = path.expanduser('~')
+        not_set['XDG_CONFIG_HOME'] = path.join(not_set['HOME'], '.config')
+        not_set['XDG_DATA_HOME'] = path.join(not_set['HOME'], '.local', 'share')
+        not_set['XDG_STATE_HOME'] = path.join(not_set['HOME'], '.local', 'state')
+        not_set['XDG_CACHE_HOME'] = path.join(not_set['HOME'], '.cache')
+        not_set['XDG_RUNTIME_DIR'] = path.join('/run/user', str(getuid()))
+        try:
+            return not_set[xdg_var]
+        except KeyError:
+            return None
 
     def ensure_paths_exist(self):
         ''' Make sure config dirs exists '''
@@ -451,22 +452,19 @@ class XdgDirs():
     def home_dir(self):
         if sys.platform.startswith('win'):
             return path.expanduser('~')
-        else:
-            return self._new_dirs[self.HOME]
+        return self._new_dirs[self.HOME]
 
     @property
     def stations_dir(self):
         if self._xdg_compliant:
             return self._new_dirs[self.STATIONS]
-        else:
-            return self._old_dirs[self.STATIONS]
+        return self._old_dirs[self.STATIONS]
 
     @property
     def data_dir(self):
         if self._xdg_compliant:
             return self._new_dirs[self.DATA]
-        else:
-            return self._old_dirs[self.DATA]
+        return self._old_dirs[self.DATA]
 
     @property
     def cache_dir(self):
@@ -480,15 +478,13 @@ class XdgDirs():
     def state_dir(self):
         if self._xdg_compliant:
             return self._new_dirs[self.STATE]
-        else:
-            return self._old_dirs[self.STATE]
+        return self._old_dirs[self.STATE]
 
     @property
     def registers_dir(self):
         if self._xdg_compliant:
             return self._new_dirs[self.REGISTERS]
-        else:
-            return self._old_dirs[self.REGISTERS]
+        return self._old_dirs[self.REGISTERS]
 
     @property
     def recording_dir(self):
@@ -580,9 +576,8 @@ class XdgDirs():
                             except:
                                 if silent:
                                     return False
-                                else:
-                                    print(f"\nCannot remove empty target dir: {self._new_dirs[self.RECORDINGS]}")
-                                    sys.exit(1)
+                                print(f"\nCannot remove empty target dir: {self._new_dirs[self.RECORDINGS]}")
+                                sys.exit(1)
                         else:
                             self._new_dirs[self.RECORDINGS] = path.join(self._new_dirs[self.RECORDINGS], 'pyradio-recordings')
                             dir_is_fixed = True
@@ -592,17 +587,15 @@ class XdgDirs():
                     except:
                         if silent:
                             return False
-                        else:
-                            print(f"\nCannot create target's parent dir: {parent_dir}")
-                            sys.exit(1)
+                        print(f"\nCannot create target's parent dir: {parent_dir}")
+                        sys.exit(1)
                 try:
                     move(self._old_dirs[self.RECORDINGS], self._new_dirs[self.RECORDINGS])
                 except:
                     if silent:
                         return False
-                    else:
-                        print(f'\nCannot copy files\nfrom: "{self._old_dirs[self.RECORDINGS]}"\nto: {self._new_dirs[self.RECORDINGS]}')
-                        sys.exit(1)
+                    print(f'\nCannot copy files\nfrom: "{self._old_dirs[self.RECORDINGS]}"\nto: {self._new_dirs[self.RECORDINGS]}')
+                    sys.exit(1)
                 if dir_is_fixed and self.dir_fixed_function is not None:
                     # save config if dir is "fixed"
                     self.dir_fixed_function(self._new_dirs[self.RECORDINGS])

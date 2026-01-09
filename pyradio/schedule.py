@@ -12,6 +12,7 @@ from dateutil.rrule import rrule, \
     SU, MO, TU, WE, TH, FR, SA, \
     DAILY, WEEKLY, MONTHLY
 from dateutil.parser import parser
+from enum import IntEnum
 
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
@@ -42,8 +43,7 @@ def datetime_to_my_time(a_date, shorten=True):
 
     if dt.datetime.now().year == a_date.year:
         return t[0] + ', ' + t[1] + ' ' + t[2] + ', ' + t[-2]
-    else:
-        return t[0] + ', ' + t[1] + ' ' + t[2] + ' ' + t[-1] +', ' + t[-2]
+    return t[0] + ', ' + t[1] + ' ' + t[2] + ' ' + t[-1] +', ' + t[-2]
 
 def random_string(length=10):
     return ''.join(choice(printable) for i in range(length))
@@ -63,41 +63,37 @@ def format_date_to_iso8851(a_date=None):
         cur_month + ' ' + str(a_date.year) + \
         a_date.strftime(' %H:%M:%S')
 
-class PyRadioScheduleItemType():
-
+class PyRadioScheduleItemType(IntEnum):
     TYPE_START_END = 0
     TYPE_START = 1
     TYPE_END = 2
 
-    items = TYPE_START_END, TYPE_START, TYPE_END
+    @property
+    def items(cls):
+        return tuple(member.value for member in cls)
 
     @classmethod
     def to_string(cls, a_type):
-        if a_type == 0:
-            return 'TYPE_START_END'
-        elif a_type == 1:
-            return 'TYPE_START'
-        elif a_type == 2:
-            return 'TYPE_END'
-        else:
-            return 'UNKNOUN'
+        try:
+            return cls(a_type).name
+        except ValueError:
+            return 'UNKNOWN'
 
-
-class PyRadioScheduleTimeType():
+class PyRadioScheduleTimeType(IntEnum):
 
     TIME_ABSOLUTE = 0
     TIME_RELATIVE = 1
 
-    items = 0, 1
+    @property
+    def items(cls):
+        return tuple(member.value for member in cls)
 
     @classmethod
     def to_string(cls, a_type):
-        if a_type == 0:
-            return 'TIME_ABSOLUTE'
-        elif a_type == 1:
-            return 'TIME_RELATIVE'
-        else:
-            return 'UNKNOUN'
+        try:
+            return cls(a_type).name
+        except ValueError:
+            return 'UNKNOWN'
 
 
 class PyRadioScheduleList():
@@ -323,8 +319,7 @@ class PyRadioScheduleList():
             if a_link == n['link']:
                 if to_dict:
                     return str(i + 1)
-                else:
-                    return f'  ->   linked to Task {i + 1}'
+                return f'  ->   linked to Task {i + 1}'
         return ''
 
     def get_list_of_tasks(self):
@@ -814,7 +809,7 @@ class PyRadioTime():
     def to_string(cls, a_time_format):
         if a_time_format == 1:
             return 'AM_FORMAT'
-        elif a_time_format == 2:
+        if a_time_format == 2:
             return 'PM_FORMAT'
         return 'NO_AM_PM_FORMAT'
 
@@ -961,32 +956,33 @@ class PyRadioTime():
             minutes=a_time[1],
             seconds=a_time[2]
         )
+
         if a_time[-1] == 0:
             ''' 24-hour format '''
             return a_date.strftime('%H:%M:%S')
-        else:
-            if a_time[-1] == 2:
-                if a_date.hour > 12:
-                    a_date = a_date.replace(hour=a_date.hour - 12)
-            return '{0} {1}'.format(
-                a_date.strftime('%H:%M:%S'),
-                'PM' if a_time[-1] == PyRadioTime.PM_FORMAT else 'AM'
-            )
+
+        if a_time[-1] == 2 and a_date.hour > 12:
+            a_date = a_date.replace(hour=a_date.hour - 12)
+        return '{0} {1}'.format(
+            a_date.strftime('%H:%M:%S'),
+            'PM' if a_time[-1] == PyRadioTime.PM_FORMAT else 'AM'
+        )
 
     @classmethod
     def to_24_format(cls, a_time):
         if a_time[-1] == PyRadioTime.NO_AM_PM_FORMAT:
             return a_time
-        elif a_time[-1] == PyRadioTime.PM_FORMAT:
+
+        if a_time[-1] == PyRadioTime.PM_FORMAT:
             ''' PM '''
             out = list(a_time)
             out[-1] = 0
             return tuple(out)
-        else:
-            out = list(a_time)
-            out[-1] = 0
-            out[0] += 12
-            return tuple(out)
+
+        out = list(a_time)
+        out[-1] = 0
+        out[0] += 12
+        return tuple(out)
 
     @classmethod
     def pyradio_time_to_timedelta(cls, a_time):
@@ -997,14 +993,14 @@ class PyRadioTime():
                 seconds=a_time[2]
             )
 
-        elif a_time[-1] == PyRadioTime.AM_FORMAT:
+        if a_time[-1] == PyRadioTime.AM_FORMAT:
             return dt.timedelta(
                 hours=a_time[0] if a_time[0] < 12 else a_time[0] - 12,
                 minutes=a_time[1],
                 seconds=a_time[2]
             )
 
-        elif a_time[-1] == PyRadioTime.PM_FORMAT:
+        if a_time[-1] == PyRadioTime.PM_FORMAT:
             return dt.timedelta(
                 hours=a_time[0] + 12,
                 minutes=a_time[1],

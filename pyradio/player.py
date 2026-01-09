@@ -64,8 +64,7 @@ try:  # Forced testing
         pr = which(cmd)
         if pr:
             return pr
-        else:
-            return None
+        return None
 except:
     # Versions prior to Python 3.3 don't have shutil.which
 
@@ -434,8 +433,7 @@ class Player():
     def recording(self):
         if self._recording_from_schedule > 0:
             return self._recording_from_schedule
-        else:
-            return self._recording
+        return self._recording
 
     @recording.setter
     def recording(self, val):
@@ -521,8 +519,7 @@ class Player():
         f = datetime.now().strftime('%Y-%m-%d %H-%M-%S') + " " + name  + extension
         if self._chapters.HAS_MKVTOOLNIX:
             return os.path.join(self._cnf.recording_dir, 'tmp_' + f)
-        else:
-            return os.path.join(self._cnf.recording_dir, f)
+        return os.path.join(self._cnf.recording_dir, f)
 
     def _get_all_config_files(self):
         ''' MPV config files '''
@@ -579,12 +576,10 @@ class Player():
     def _url_to_use(self, streamUrl, station_force_http):
         if self.force_http or station_force_http:
             return streamUrl.replace('https://', 'http://')
-        else:
-            return streamUrl
+        return streamUrl
 
     def _on_connect(self):
         logger.error('empty on_connect')
-        pass
 
     def set_volume(self, vol):
         if self.isPlaying() and \
@@ -750,68 +745,69 @@ class Player():
                        'Volume is {}%. Saving...',
                        'Error saving profile "{}"',
                        'Error saving volume...')
+
         if self.volume == -1:
             ''' inform no change '''
-            if (logger.isEnabledFor(logging.DEBUG)):
+            if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(log_strings[0])
             return ret_strings[0]
-        elif self.volume == -2:
-            if (logger.isEnabledFor(logging.DEBUG)):
+
+        if self.volume == -2:
+            if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(log_strings[3])
             return ret_strings[3]
-        else:
-            ''' change volume '''
-            if (logger.isEnabledFor(logging.DEBUG)):
-                logger.debug(log_strings[1].format(self.volume))
-            config_file = self.config_files[0]
-            ret_string = ret_strings[1].format(str(self.volume))
-            if self.PLAYER_NAME == 'vlc':
-                ret = self._write_config()
-                if not ret:
-                    ret_string = ret_strings[2]
-            else:
-                if os.path.exists(config_file):
-                    if self._mplayer_on_windows7:
-                        ''' we are on Windows7 with player
-                            write global mplayer config section
-                        '''
-                        """ This is actually only for mplayer
-                            which does not support profiles on Windows
-                        """
-                        lines_no_profile, lines_with_profile = \
-                                self._split_config_file(config_file)
-                        ind = [(i,x) for i,x in enumerate(lines_no_profile) if 'volume=' in x]
-                        if ind:
-                            lines_no_profile[ind[0][0]] = f'volume={self.volume}'
-                        else:
-                            lines_no_profile.append(f'volume={self.volume}\n')
-                        try:
-                            with open(config_file, "w", encoding='utf-8') as c_file:
-                                c_file.write(
-                                    '\n'.join(lines_no_profile) + \
-                                    '\n'.join(lines_with_profile)
-                                )
-                            # self.volume = -1
-                            self.PROFILE_FROM_USER = False
-                            return ret_strings[1].format(str(self.volume))
-                        except:
-                            if (logger.isEnabledFor(logging.DEBUG)):
-                                logger.debug(log_strings[2].format(config_file))
-                            return ret_strings[2].format(str(self.volume))
-                    else:
-                        # logger.error('\n\nprofile_token = {}\n\n'.format(self.profile_token))
-                        # logger.error(f'{self.PROFILE_FROM_USER}')
-                        if self.PROFILE_FROM_USER:
-                            ret = self._cnf.profile_manager.save_volume(
-                                self.PLAYER_NAME, self.profile_token, self.volume
-                            )
-                            if ret is None:
-                                return ret_strings[2].format(str(self.volume))
-                            else:
-                                self.volume = -1
 
-            self.bck_win_player_config_file(config_file)
-            return ret_string
+        ''' change volume '''
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(log_strings[1].format(self.volume))
+        config_file = self.config_files[0]
+        ret_string = ret_strings[1].format(str(self.volume))
+        if self.PLAYER_NAME == 'vlc':
+            ret = self._write_config()
+            if not ret:
+                ret_string = ret_strings[2]
+        else:
+            if os.path.exists(config_file):
+                if self._mplayer_on_windows7:
+                    ''' we are on Windows7 with player
+                        write global mplayer config section
+                    '''
+                    """ This is actually only for mplayer
+                        which does not support profiles on Windows
+                    """
+                    lines_no_profile, lines_with_profile = \
+                            self._split_config_file(config_file)
+                    ind = [(i,x) for i,x in enumerate(lines_no_profile) if 'volume=' in x]
+                    if ind:
+                        lines_no_profile[ind[0][0]] = f'volume={self.volume}'
+                    else:
+                        lines_no_profile.append(f'volume={self.volume}\n')
+                    try:
+                        with open(config_file, "w", encoding='utf-8') as c_file:
+                            c_file.write(
+                                '\n'.join(lines_no_profile) + \
+                                '\n'.join(lines_with_profile)
+                            )
+                        # self.volume = -1
+                        self.PROFILE_FROM_USER = False
+                        return ret_strings[1].format(str(self.volume))
+                    except:
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug(log_strings[2].format(config_file))
+                        return ret_strings[2].format(str(self.volume))
+                else:
+                    # logger.error('\n\nprofile_token = {}\n\n'.format(self.profile_token))
+                    # logger.error(f'{self.PROFILE_FROM_USER}')
+                    if self.PROFILE_FROM_USER:
+                        ret = self._cnf.profile_manager.save_volume(
+                            self.PLAYER_NAME, self.profile_token, self.volume
+                        )
+                        if ret is None:
+                            return ret_strings[2].format(str(self.volume))
+                        self.volume = -1
+
+        self.bck_win_player_config_file(config_file)
+        return ret_string
 
     def _split_config_file(self, config_file):
         with open(config_file, 'r', encoding='utf-8') as c_file:
@@ -890,7 +886,7 @@ class Player():
         on_connect = args[6]
         log_player_input = args[7]
         has_error = False
-        if (logger.isEnabledFor(logging.DEBUG)):
+        if logger.isEnabledFor(logging.DEBUG):
             logger.debug('updateStatus thread started.')
         #with lock:
         #    self.oldUserInput['Title'] = M_STRINGS['connecting_'] + self.name
@@ -903,7 +899,7 @@ class Player():
                 self.oldUserInput['Title'] = M_STRINGS['playing_'] + self.name
         try:
             out = self.process.stdout
-            while(True):
+            while True:
                 http_error=False
                 subsystemOutRaw = out.readline()
                 with recording_lock:
@@ -925,13 +921,15 @@ class Player():
                 # logger.error('\nchecking\n{}\n'.format(subsystemOut))
                 if stop():
                     break
-                elif subsystemOut == '':
+                if subsystemOut == '':
                     if logger.isEnabledFor(logging.INFO):
                         logger.info(f'----==== {self.PLAYER_NAME} got empty input ====----')
                     break
-                elif not is_accepted:
+
+                if not is_accepted:
                     continue
-                elif '404' in subsystemOut and 'Not Available' in subsystemOut:
+
+                if '404' in subsystemOut and 'Not Available' in subsystemOut:
                     http_error = 404
                 elif 'Name or service not known' in subsystemOut or \
                         "Couldn't resolve name for AF_INET:" in subsystemOut:
@@ -1110,7 +1108,7 @@ class Player():
                                             logger.debug(f'***** Title change inhibited: ok_to_display = {ok_to_display}, playbabk_is_on = {self.playback_is_on}')
                             else:
                                 ok_to_display = True
-                                if (logger.isEnabledFor(logging.INFO)):
+                                if logger.isEnabledFor(logging.INFO):
                                     logger.info('Icy-Title is NOT valid')
                                 if ok_to_display and self.playback_is_on:
                                     # logger.error('\n\nhere - self.buffering: {}'.format(self.buffering))
@@ -1187,7 +1185,7 @@ class Player():
             else:
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('Crash detection is off; waiting to timeout')
-        if (logger.isEnabledFor(logging.INFO)):
+        if logger.isEnabledFor(logging.INFO):
             logger.info('updateStatus thread stopped.')
         self._clear_empty_mkv()
 
@@ -1197,7 +1195,7 @@ class Player():
         recording_lock = args[2]
         log_player_input = args[3]
         has_error = False
-        if (logger.isEnabledFor(logging.DEBUG)):
+        if logger.isEnabledFor(logging.DEBUG):
             logger.debug('updateRecordingStatus thread started.')
         #with lock:
         #    self.oldUserInput['Title'] = M_STRINGS['connecting_'] + self.name
@@ -1206,7 +1204,7 @@ class Player():
         # self.oldUserInput['Title'] = M_STRINGS['playing_'] + self.name
         try:
             out = self.monitor_process.stdout
-            while(True):
+            while True:
                 subsystemOutRaw = out.readline()
                 with recording_lock:
                     try:
@@ -1285,7 +1283,7 @@ class Player():
                 logger.error('Error in updateRecordingStatus thread.', exc_info=True)
             # return
 
-        if (logger.isEnabledFor(logging.INFO)):
+        if logger.isEnabledFor(logging.INFO):
             logger.info('updateRecordingStatus thread stopped.')
 
     def updateMPVStatus(self, *args):
@@ -1295,13 +1293,13 @@ class Player():
         detect_if_player_exited = args[3]
         enable_crash_detection_function = args[4]
         log_player_input = args[5]
-        if (logger.isEnabledFor(logging.DEBUG)):
+        if logger.isEnabledFor(logging.DEBUG):
             logger.debug('MPV updateStatus thread started.')
 
         sock = None
         while True:
             if stop():
-                if (logger.isEnabledFor(logging.INFO)):
+                if logger.isEnabledFor(logging.INFO):
                     logger.info('MPV updateStatus thread stopped (no connection to socket).')
                 return
             try:
@@ -1311,7 +1309,7 @@ class Player():
             except Exception:
                 pass
         if stop():
-            if (logger.isEnabledFor(logging.INFO)):
+            if logger.isEnabledFor(logging.INFO):
                 logger.info('MPV updateStatus thread was aeked to stopp. Terminating...')
             if sock:
                 self._close_pipe(sock)
@@ -1396,7 +1394,7 @@ class Player():
 
                     if stop():
                         break
-                    elif b'"file_error":"loading failed"' in a_data:
+                    if b'"file_error":"loading failed"' in a_data:
                         self._request_mpv_error(sock)
                     elif a_data == b'':
                         if logger.isEnabledFor(logging.INFO):
@@ -1484,7 +1482,7 @@ class Player():
             else:
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('Crash detection is off; waiting to timeout')
-        if (logger.isEnabledFor(logging.INFO)):
+        if logger.isEnabledFor(logging.INFO):
             logger.info('MPV updateStatus thread stopped.')
         self._clear_empty_mkv()
 
@@ -1508,12 +1506,11 @@ class Player():
                             except:
                                 pass
                             return True
-                        else:
-                            if logger.isEnabledFor(logging.INFO):
-                                logger.info('Crash detection is off; waiting to timeout')
+                        if logger.isEnabledFor(logging.INFO):
+                            logger.info('Crash detection is off; waiting to timeout')
             return False
         has_error = False
-        if (logger.isEnabledFor(logging.DEBUG)):
+        if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Win VLC updateStatus thread started.')
         fn = args[0]
         enc = args[1]
@@ -1545,7 +1542,7 @@ class Player():
                 pass
 
         try:
-            while(True):
+            while True:
                 if stop():
                     break
                 # self._chapter_time = datetime.now()
@@ -1681,7 +1678,7 @@ class Player():
                                     self.outputStream.write(msg_id=STATES.TITLE, msg=string_to_show, counter='')
                             else:
                                 ok_to_display = True
-                                if (logger.isEnabledFor(logging.INFO)):
+                                if logger.isEnabledFor(logging.INFO):
                                     logger.info('Icy-Title is NOT valid')
                                 if ok_to_display and self.playback_is_on:
                                     if self.buffering:
@@ -1910,7 +1907,7 @@ class Player():
                     if not return_value:
                         return False
             else:
-                if (logger.isEnabledFor(logging.INFO)):
+                if logger.isEnabledFor(logging.INFO):
                     logger.info('Icy-Title is NOT valid')
                 self.buffering = False
                 with self.buffering_lock:
@@ -1951,7 +1948,7 @@ class Player():
                 pass
             return True
 
-        elif b'request_id' in a_data and b'"error":"success"' in a_data:
+        if b'request_id' in a_data and b'"error":"success"' in a_data:
             if b'"request_id":200' in a_data:
                 try:
                     d = json.loads(a_data)
@@ -1987,9 +1984,9 @@ class Player():
             # logger.error('DE 1 {}'.format(self._icy_data))
             self.info_display_handler()
             return True
-        else:
-            return return_value
-            # return False
+
+        return return_value
+        # return False
 
     def _set_mpv_playback_is_on(self, stop, enable_crash_detection_function):
         self.stop_timeout_counter_thread = True
@@ -2037,7 +2034,7 @@ class Player():
                         )
                 self.delay_thread.start()
             except:
-                if (logger.isEnabledFor(logging.DEBUG)):
+                if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('delay thread start failed')
 
     def updateTitle(self, *arg, **karg):
@@ -2069,16 +2066,16 @@ class Player():
                 pass
 
         i = a_string.find(' - text="')
+
         if i == -1:
             return a_string
-        else:
-            ret_string = a_string[:i]
-            text_string = a_string[i+9:]
-            final_text_string = text_string[:text_string.find('"')]
-            if ret_string == self.icy_title_prefix + final_text_string:
-                return ret_string
-            else:
-                return ret_string + ': ' + final_text_string
+
+        ret_string = a_string[:i]
+        text_string = a_string[i+9:]
+        final_text_string = text_string[:text_string.find('"')]
+        if ret_string == self.icy_title_prefix + final_text_string:
+            return ret_string
+        return ret_string + ': ' + final_text_string
 
     def _format_volume_string(self, volume_string):
         return self._title_string_format_text_tag(volume_string)
@@ -2283,12 +2280,12 @@ class Player():
                           lambda: self.stop_timeout_counter_thread)
                 )
                 self.connection_timeout_thread.start()
-                if (logger.isEnabledFor(logging.DEBUG)):
+                if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('playback detection thread started')
             except:
                 self.connecting = False
                 self.connection_timeout_thread = None
-                if (logger.isEnabledFor(logging.ERROR)):
+                if logger.isEnabledFor(logging.ERROR):
                     logger.error('playback detection thread failed to start')
         else:
             self.connecting = False
@@ -2538,14 +2535,12 @@ class Player():
 
     def _mute(self):
         ''' to be implemented on subclasses '''
-        pass
 
     def _stop(self, player_disappeared):
-        pass
+        ''' to be implemented on subclasses '''
 
     def get_volume(self):
-        ''' get volume, if player can report it '''
-        pass
+        ''' to be implemented on subclasses '''
 
     def volumeUp(self):
         ''' increase volume '''
@@ -2554,7 +2549,6 @@ class Player():
 
     def _volume_up(self):
         ''' to be implemented on subclasses '''
-        pass
 
     def volumeDown(self):
         ''' decrease volume '''
@@ -2563,13 +2557,11 @@ class Player():
 
     def _volume_down(self):
         ''' to be implemented on subclasses '''
-        pass
 
     def _no_mute_on_stop_playback(self, player_disappeared=False):
         ''' make sure player does not stop muted, i.e. volume=0
 
             Currently implemented for vlc only.'''
-        pass
 
     def _is_accepted_input(self, input_string):
         ''' subclasses are able to reject input messages
@@ -2738,13 +2730,13 @@ class MpvPlayer(Player):
                         profile = ret
                         profile_string = f'Using profile: "[{profile}]", volume: {self.station_volume}'
                 opts.append('--profile=' + profile)
-                if (logger.isEnabledFor(logging.INFO)):
+                if logger.isEnabledFor(logging.INFO):
                     if profile_string:
                         logger.info(profile_string)
                     else:
                         logger.info(f'Using profile: "[{profile}]"')
             else:
-                if (logger.isEnabledFor(logging.INFO)):
+                if logger.isEnabledFor(logging.INFO):
                     if self.USE_PROFILE == 0:
                         logger.info(f'Profile "[{profile}]" not found in config file!!!')
                     else:
@@ -2989,8 +2981,7 @@ class MpvPlayer(Player):
         if sock is None:
             if return_response:
                 return ''
-            else:
-                return False
+            return False
 
         # Send data
         try:
@@ -3008,8 +2999,7 @@ class MpvPlayer(Player):
             self._close_pipe(sock)
             if return_response:
                 return ''
-            else:
-                return False
+            return False
         # read the response
         if platform.startswith('win'):
             try:
@@ -3040,8 +3030,7 @@ class MpvPlayer(Player):
         self._close_pipe(sock)
         if return_response:
             return data
-        else:
-            return True
+        return True
 
     def get_volume(self):
         ''' Display volume for MPV '''
@@ -3299,13 +3288,13 @@ class MpPlayer(Player):
                         profile_string = f'Using profile: "[{profile}]", volume: {self.station_volume}'
                 opts.append('-profile')
                 opts.append(profile)
-                if (logger.isEnabledFor(logging.INFO)):
+                if logger.isEnabledFor(logging.INFO):
                     if profile_string:
                         logger.info(profile_string)
                     else:
                         logger.info(f'Using profile: "[{profile}]"')
             else:
-                if (logger.isEnabledFor(logging.INFO)):
+                if logger.isEnabledFor(logging.INFO):
                     if self.USE_PROFILE == 0:
                         logger.info(f'Profile "[{profile}]" not found in config file!!!')
                     else:
@@ -3976,7 +3965,7 @@ class VlcPlayer(Player):
                 sock.sendall(bytes(msg + '\n', 'utf-8'))
                 if msg != 'quit':
                     try:
-                        while (True):
+                        while True:
                             received = (sock.recv(4096)).decode()
                             response = response + received
                             if full:
@@ -4204,14 +4193,17 @@ class PyRadioChapters():
                 opts.extend([
                     '--chapters', self._chapters_file,
                     ])
+
         if self._output_file is None:
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Output file is None... Quiting mkvmerge')
             return
-        elif self._mkv_file is None:
+
+        if self._mkv_file is None:
             if logger.isEnabledFor(logging.INFO):
                 logger.info('MKV file is None... Quiting mkvmerge')
             return
+
         t_dir_dir = os.path.dirname(self._tag_file)
         cover_file = None
         default_cover_resource = files("pyradio").joinpath("icons", "cover.png")
@@ -4247,6 +4239,7 @@ class PyRadioChapters():
                     stderr=subprocess.PIPE
                     )
             _, err = p.communicate()
+
             # logger.error('outs = "{0}", err = "{1}"'.format(outs, err))
             if p.returncode == 0:
                 if logger.isEnabledFor(logging.INFO):
@@ -4258,10 +4251,10 @@ class PyRadioChapters():
                     except:
                         pass
                 return True
-            else:
-                if logger.isEnabledFor(logging.ERROR):
-                    logger.error(f'mkvmerge failed with error:\n{err}')
-                return False
+
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error(f'mkvmerge failed with error:\n{err}')
+            return False
 
     def _remove_starting_tmp_string(self, a_string):
         sp = a_string.split(os.sep)
@@ -4341,9 +4334,9 @@ class PyRadioChapters():
                     logger.debug('failed to write tag file!')
                 return False
             return True
-        else:
-            logger.error('mkvmerge or input file not found')
-            return False
+
+        logger.error('mkvmerge or input file not found')
+        return False
 
     def _create_chapters(self):
         zero_time = self._list[0][0]
@@ -4423,10 +4416,9 @@ class PlayerCache():
     def delay(self):
         if self._player_name == 'mpv':
             return int(self._data['mpv'][0].replace('--cache-secs=', ''))
-        elif self._player_name == 'mplayer':
+        if self._player_name == 'mplayer':
             return int(self._data['mplayer'][1])
-        else:
-            return int(int(self._data['vlc'][1]) / 1000)
+        return int(int(self._data['vlc'][1]) / 1000)
 
     @delay.setter
     def delay(self, a_delay):
@@ -4507,8 +4499,7 @@ def probePlayer(config, requested_player=''):
         if logger.isEnabledFor(logging.INFO):
             logger.info(f'Requested player "{requested_player}" not supported')
         return None
-    else:
-        return available_players[0] if available_players else None
+    return available_players[0] if available_players else None
 
 def check_player(a_player):
     try:

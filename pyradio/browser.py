@@ -102,10 +102,8 @@ def country_from_server(a_server):
         up = country[:-1].upper()
         if up in countries:
             return countries[up]
-        else:
-            return country
-    else:
-        return None
+        return country
+    return None
 
 def capitalize_comma_separated_string(a_string):
     sp = a_string.split(',')
@@ -256,7 +254,6 @@ class PyRadioStationsBrowser():
                 True or False
 
         '''
-        pass
 
     def search(self, go_back_in_history=True):
         return []
@@ -494,15 +491,14 @@ class RadioBrowser(PyRadioStationsBrowser):
         '''
         if self._config_win:
             return self._config_win.save_config()
-        else:
-            return self.browser_config.save_config(
-                self.AUTO_SAVE_CONFIG,
-                self._search_history,
-                self._default_search_history_index,
-                self._default_server if 'Random' not in self._default_server else '',
-                self._default_ping_count,
-                self._default_ping_timeout,
-                self._default_max_number_of_results)
+        return self.browser_config.save_config(
+            self.AUTO_SAVE_CONFIG,
+            self._search_history,
+            self._default_search_history_index,
+            self._default_server if 'Random' not in self._default_server else '',
+            self._default_ping_count,
+            self._default_ping_timeout,
+            self._default_max_number_of_results)
 
     def url(self, id_in_list):
         ''' Get a station's url using resolved_url
@@ -521,8 +517,7 @@ class RadioBrowser(PyRadioStationsBrowser):
             if id_in_list < len(self._raw_stations):
                 if self._raw_stations[id_in_list]['url_resolved']:
                     return self._raw_stations[id_in_list]['url_resolved']
-                else:
-                    return self._raw_stations[id_in_list]['url']
+                return self._raw_stations[id_in_list]['url']
         return ''
 
     def click(self, a_station):
@@ -863,9 +858,7 @@ class RadioBrowser(PyRadioStationsBrowser):
             """ if not found return None """
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'forward search term "{search_term}" not found')
-            return None
-        else:
-            return None
+        return None
 
     def get_previous(self, search_term, start=0, stop=None):
         if search_term:
@@ -883,9 +876,7 @@ class RadioBrowser(PyRadioStationsBrowser):
             """ if not found return None """
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'backward search term "{search_term}" not found')
-            return None
-        else:
-            return None
+        return None
 
     def _search_in_station(self, a_search_term, a_station):
         guide = (
@@ -2296,9 +2287,8 @@ class RadioBrowserConfigWindow():
                 self._config.dirty = False
                 ''' config saved '''
                 return -2
-            else:
-                ''' error saving config '''
-                return -3
+            ''' error saving config '''
+            return -3
         ''' config not modified '''
         return -4
 
@@ -2392,12 +2382,12 @@ class RadioBrowserConfigWindow():
             self._global_functions[l_char]()
             return 1
 
-        elif char in (
+        if char in (
             curses.KEY_EXIT, 27, kbkey['q']
         ) or  check_localized(char, (kbkey['q'], )):
             return -1
 
-        elif (char in (kbkey['pause'], curses.KEY_ENTER, ord('\n'), ord('\r')) or \
+        if (char in (kbkey['pause'], curses.KEY_ENTER, ord('\n'), ord('\r')) or \
                 check_localized(char, (kbkey['pause'], ))) and \
                 self._focus == len(self._widgets) - 2:
             ''' enter on ok button  '''
@@ -2405,10 +2395,10 @@ class RadioBrowserConfigWindow():
             # self._print_params()
             return 0 if ret == 1 else ret
 
-        elif char == kbkey['?'] or check_localized(char, (kbkey['?'])):
+        if char == kbkey['?'] or check_localized(char, (kbkey['?'])):
             return 2
 
-        elif char in (ord('\t'), 9, kbkey['tab']) or \
+        if char in (ord('\t'), 9, kbkey['tab']) or \
                 check_localized(char, (kbkey['tab'], )):
             # EDIT: fixed for H, L
             self._focus_next()
@@ -3457,10 +3447,10 @@ class RadioBrowserSearchWindow():
                 if ret == -1:
                     # Cancel
                     return -1
-                elif ret == 2:
+                if ret == 2:
                     ''' display Line Editor Help '''
                     return 3
-                elif ret < 2:
+                if ret < 2:
                     return 1
 
             if char in (kbkey['s'], ) or \
@@ -3470,7 +3460,7 @@ class RadioBrowserSearchWindow():
                 ret = self._handle_new_or_existing_search_term()
                 return 0 if ret == 1 else ret
 
-            elif char == curses.KEY_HOME:
+            if char == curses.KEY_HOME:
                 self._goto_first_history_item()
 
             elif char in (curses.KEY_END, kbkey['g']) or \
@@ -3662,9 +3652,9 @@ class RadioBrowserSearchWindow():
     def _get_column_list(self, this_id):
         if this_id in self._left_column:
             return self._left_column.index(this_id), self._left_column
-        elif this_id in self._middle_column:
+        if this_id in self._middle_column:
             return self._middle_column.index(this_id), self._middle_column
-        elif this_id in self._right_column:
+        if this_id in self._right_column:
             return self._right_column.index(this_id), self._right_column
 
 class RadioBrowserData():
@@ -3951,8 +3941,7 @@ class RadioBrowserDns():
                 if num == start_num:
                     return None
             return self._urls[num]
-        else:
-            return None
+        return None
 
     def servers(self):
         ''' server urls as generator '''
@@ -4086,7 +4075,7 @@ class RadioBrowserSort():
         ) or check_localized(char, (kbkey['q'], kbkey['h'])):
             return -1
 
-        elif char in (
+        if char in (
             kbkey['l'], kbkey['pause'], curses.KEY_RIGHT,
             ord('\n'), ord('\r'), curses.KEY_ENTER
         ) or check_localized(char, (kbkey['pause'], kbkey['l'])):
@@ -4097,7 +4086,7 @@ class RadioBrowserSort():
                     break
             return 0
 
-        elif char in (kbkey['g'], curses.KEY_HOME) or \
+        if char in (kbkey['g'], curses.KEY_HOME) or \
                 check_localized(char, (kbkey['g'], )):
             self.selection = 0
             self._refresh()
@@ -4398,13 +4387,14 @@ class RadioBrowserServers():
                 l_char = char
             self._global_functions[l_char]()
             return 1
-        elif char in (
+
+        if char in (
             curses.KEY_EXIT, kbkey['q'], 27,
             kbkey['h'], curses.KEY_LEFT
         ) or check_localized(char, (kbkey['q'], kbkey['h'])):
             return -1
 
-        elif char in (
+        if char in (
             kbkey['l'], kbkey['pause'], curses.KEY_RIGHT,
             ord('\n'), ord('\r'), curses.KEY_ENTER
         ) or check_localized(char, (kbkey['pause'], kbkey['l'])):
@@ -4418,11 +4408,11 @@ class RadioBrowserServers():
                     break
             return 0
 
-        elif char in (kbkey['?'], ) or \
+        if char in (kbkey['?'], ) or \
                 check_localized(char, (kbkey['?'], )):
             return 2
 
-        elif char in (kbkey['g'], curses.KEY_HOME) or \
+        if char in (kbkey['g'], curses.KEY_HOME) or \
                 check_localized(char, (kbkey['g'], )):
             self.selection = 0
             self.show()
@@ -4912,7 +4902,7 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
         if char == kbkey['?'] or \
                 check_localized(char, (kbkey['?'], )):
             return 2
-        elif char == kbkey['del'] or \
+        if char == kbkey['del'] or \
                 check_localized(char, (kbkey['del'], )):
             if len(self._items) > 2:
                 self._remove_item()

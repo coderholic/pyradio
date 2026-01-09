@@ -1805,8 +1805,7 @@ unintentionally disrupt functionality.
     def _remove_start_char(self, txt, char):
         if txt.startswith(char):
             return txt[1:]
-        else:
-            return txt
+        return txt
 
     def _get_txt(self, *args):
         '''
@@ -2032,62 +2031,62 @@ unintentionally disrupt functionality.
         if p_width < self._maxX or self._maxY < 10:
             self._show_too_small()
             return
+
+        self.too_small = False
+        pY, pX = self._parent.getbegyx()
+        p_height, p_width = self._parent.getmaxyx()
+        if self._lines_count + 2 <= self._maxY:
+            self._can_scroll = False
+            self._maxY = self._lines_count + 2
+            self._winY = int((p_height - self._maxY) / 2) + pY
         else:
-            self.too_small = False
-            pY, pX = self._parent.getbegyx()
-            p_height, p_width = self._parent.getmaxyx()
-            if self._lines_count + 2 <= self._maxY:
-                self._can_scroll = False
-                self._maxY = self._lines_count + 2
-                self._winY = int((p_height - self._maxY) / 2) + pY
-            else:
-                if self.active_message_key in(
-                        'M_STATION_INFO',
-                        'M_DB_INFO'):
-                    self._show_too_small()
-                    return
-                self._can_scroll = True
-                self._winY = int((p_height - self._maxY) / 2) + pY
-            # if not ( p_height % 2 ):
-            #     self._winY += 1
-            self._winX = int((p_width - self._maxX) / 2) + pX
-            # logger.error('newwin maxX = {}'.format(self._maxX))
-            self._win = curses.newwin(
-                    self._maxY,
-                    self._maxX,
-                    self._winY,
-                    self._winX
-                )
-            self._win.bkgd(' ', self.col_box)
-            self._win.erase()
-            self._win.box()
-            if self._can_scroll:
-                # if platform.startswith('win') or \
-                #         platform.lower().startswith('darwin'):
-                #     self._win.addstr(0, self._maxX-1, '^', self.col_box)
-                #     self._win.addstr(1, self._maxX-1, '^', self.col_box)
-                # else:
-                #     self._win.addstr(0, self._maxX-1, '⮝', self.col_box)
-                #     self._win.addstr(1, self._maxX-1, '⮟', self.col_box)
-                self._win.addstr(0, self._maxX-1, '^', self.col_box)
-                # self._win.addstr(1, self._maxX-1, '^', self.col_box)
-            if self._caption:
-                self._win.addstr(
-                        0, int((self._maxX - len(self._caption)) / 2) - 2,
-                        ' ' + self._caption + ' ',
-                        self.col_highlight
-                )
-            if not (self.active_message_key.startswith('D') or \
-                    self.active_message_key.startswith('X') or \
-                    self._can_scroll
-                    ):
-                prompt = ' Press any key... '
-                self._win.addstr(
-                        self._maxY-1,
-                        self._maxX - len(prompt) - 1,
-                        prompt,
-                        self.col_box
-                        )
+            if self.active_message_key in(
+                    'M_STATION_INFO',
+                    'M_DB_INFO'):
+                self._show_too_small()
+                return
+            self._can_scroll = True
+            self._winY = int((p_height - self._maxY) / 2) + pY
+        # if not ( p_height % 2 ):
+        #     self._winY += 1
+        self._winX = int((p_width - self._maxX) / 2) + pX
+        # logger.error('newwin maxX = {}'.format(self._maxX))
+        self._win = curses.newwin(
+                self._maxY,
+                self._maxX,
+                self._winY,
+                self._winX
+            )
+        self._win.bkgd(' ', self.col_box)
+        self._win.erase()
+        self._win.box()
+        if self._can_scroll:
+            # if platform.startswith('win') or \
+            #         platform.lower().startswith('darwin'):
+            #     self._win.addstr(0, self._maxX-1, '^', self.col_box)
+            #     self._win.addstr(1, self._maxX-1, '^', self.col_box)
+            # else:
+            #     self._win.addstr(0, self._maxX-1, '⮝', self.col_box)
+            #     self._win.addstr(1, self._maxX-1, '⮟', self.col_box)
+            self._win.addstr(0, self._maxX-1, '^', self.col_box)
+            # self._win.addstr(1, self._maxX-1, '^', self.col_box)
+        if self._caption:
+            self._win.addstr(
+                    0, int((self._maxX - len(self._caption)) / 2) - 2,
+                    ' ' + self._caption + ' ',
+                    self.col_highlight
+            )
+        if not (self.active_message_key.startswith('D') or \
+                self.active_message_key.startswith('X') or \
+                self._can_scroll
+                ):
+            prompt = ' Press any key... '
+            self._win.addstr(
+                    self._maxY-1,
+                    self._maxX - len(prompt) - 1,
+                    prompt,
+                    self.col_box
+                    )
 
     def _echo_line(self, Y, X, formated, reverse=False):
         for k, a_string in enumerate(formated):

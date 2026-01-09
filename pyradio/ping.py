@@ -14,8 +14,7 @@ def ping(server, count=10, timeout_in_seconds=1):
     '''
     if platform.lower().startswith('win'):
         return windows_ping(server, count=count, timeout_in_miliseconds=timeout_in_seconds * 1000)
-    else:
-        return linux_ping(server, count=count, timeout_in_seconds=timeout_in_seconds)
+    return linux_ping(server, count=count, timeout_in_seconds=timeout_in_seconds)
 
 def windows_ping(server, count=1, timeout_in_miliseconds=1000):
     ''' ping a server on windows

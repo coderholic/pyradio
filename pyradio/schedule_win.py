@@ -831,7 +831,7 @@ class PyRadioSimpleScheduleWindow():
         if self._focus >= len(self._widgets):
             self._focus = 0
 
-        while(not self._widgets[self._focus].enabled):
+        while not self._widgets[self._focus].enabled:
             self._focus += 1
 
         if self._focus in (5, 7, 11, 13):
@@ -843,7 +843,7 @@ class PyRadioSimpleScheduleWindow():
         if self._focus < 0:
             self._focus = len(self._widgets) - 1
 
-        while(not self._widgets[self._focus].enabled):
+        while not self._widgets[self._focus].enabled:
             self._focus -= 1
             if self._focus == -1:
                 self._focus = len(self._widgets) -1
@@ -1195,7 +1195,7 @@ class PyRadioSimpleScheduleWindow():
                 self._stop = True
                 self._exit = True
                 return -1
-            elif ret == 2:
+            if ret == 2:
                 # line editor help
                 return 9
 
@@ -1380,7 +1380,7 @@ class PyRadioSimpleScheduleWindow():
                 ''' Cancel '''
                 return -1
 
-            elif self._widgets[self._focus].w_id == 20 \
+            if self._widgets[self._focus].w_id == 20 \
                     and not ret:
                 ''' OK '''
                 self._error_num = self._validate_selection()
@@ -1391,13 +1391,12 @@ class PyRadioSimpleScheduleWindow():
                 logger.error(f'return {self._error_num}')
                 return self._error_num
 
-            elif self._widgets[self._focus].w_id in (3, 5, 7, 9, 11, 13):
+            if self._widgets[self._focus].w_id in (3, 5, 7, 9, 11, 13):
                 ''' Time
                       -1: Cancel
                        0: Continue
                        1: Show help
                 '''
-                pass
 
             elif self._widgets[self._focus].w_id == 14:
                 if char in (kbkey['l'], curses.KEY_RIGHT) or \

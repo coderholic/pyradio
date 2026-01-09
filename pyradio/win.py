@@ -97,18 +97,17 @@ def install_module(a_module, do_not_exit=False, print_msg=True):
             stderr=subprocess.DEVNULL)
         if ret == 0:
             break
+        if count < 5:
+            if print_msg:
+                print(f'  Download failed. Retrying [magenta]{count + 1}[/magenta]/[red]5[/red]')
         else:
-            if count < 5:
-                if print_msg:
-                    print(f'  Download failed. Retrying [magenta]{count + 1}[/magenta]/[red]5[/red]')
+            if print_msg:
+                print('Failed to download module...\nPlease check your internet connection and try again...')
             else:
-                if print_msg:
-                    print('Failed to download module...\nPlease check your internet connection and try again...')
-                else:
-                    print('Failed to download module "[magenta]{}[/magenta]"...\nPlease check your internet connection and try again...').format(a_module)
-                if do_not_exit:
-                    return False
-                sys.exit(1)
+                print('Failed to download module "[magenta]{}[/magenta]"...\nPlease check your internet connection and try again...').format(a_module)
+            if do_not_exit:
+                return False
+            sys.exit(1)
         return True
 
 try:
@@ -339,13 +338,11 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
             patool_exec = join(site.USER_SITE.replace('site-packages', 'Scripts'), 'patool')
             if exists(patool_exec):
                 break
-            else:
-                patool_exec = glob.glob(join(dirname(environ['APPDATA']), '**', 'patool.exe'), recursive=True)
-                if patool_exec:
-                    patool_exec = patool_exec[0]
-                    break
-                else:
-                    install_module('patool', print_msg=False)
+            patool_exec = glob.glob(join(dirname(environ['APPDATA']), '**', 'patool.exe'), recursive=True)
+            if patool_exec:
+                patool_exec = patool_exec[0]
+                break
+            install_module('patool', print_msg=False)
             count += 1
             if count > 2:
                 break

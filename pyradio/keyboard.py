@@ -706,9 +706,8 @@ def get_unicode_and_cjk_char(win, char):
         enqueue_input(char)
         if 128 <= char <= 191:
             return char
-        else:
-            return None
-            raise UnicodeError
+        return None
+        raise UnicodeError
 
 
     set_kb_cjk(False)
@@ -763,22 +762,23 @@ def get_unicode_and_cjk_char(win, char):
 def add_l10n_to_functions_dict(functions):
     # logger.error(local_functions)
     local_keys = get_lkbkey()
+
     if local_keys is None:
         return functions
-    else:
-        local_functions = functions.copy()
-        new_keys = {}
-        # for key, value in local_functions.items():
-        #     logger.error(f'{key}: {value}')
-        #     for lkey, lvalue in local_keys.items():
-        #         if ord(lvalue) == key:
-        #             logger.error(f'    {lkey}: {lvalue}')
-        #             logger.error('      {} {}'.format(ord(lvalue), value))
-        #             new_keys[ord(lvalue)] = value
-        #             break
-        # logger.error('\n\n{}'.format(new_keys))
-        for key, value in new_keys.items():
-            local_functions[key] = value
+
+    local_functions = functions.copy()
+    new_keys = {}
+    # for key, value in local_functions.items():
+    #     logger.error(f'{key}: {value}')
+    #     for lkey, lvalue in local_keys.items():
+    #         if ord(lvalue) == key:
+    #             logger.error(f'    {lkey}: {lvalue}')
+    #             logger.error('      {} {}'.format(ord(lvalue), value))
+    #             new_keys[ord(lvalue)] = value
+    #             break
+    # logger.error('\n\n{}'.format(new_keys))
+    for key, value in new_keys.items():
+        local_functions[key] = value
     return local_functions
 
 def remove_l10n_from_global_functions(global_functions, shortcut_names):
@@ -1270,9 +1270,11 @@ class LetterDisplay:
                 self._selection = 0
             elif char == curses.KEY_END and self._focused:
                 self._selection = len(self._letters) - 1
+
         if char == ord('?'):
              return 2
-        elif char == ord('\x1b'):
+
+        if char == ord('\x1b'):
             return -1
 
         self.show()

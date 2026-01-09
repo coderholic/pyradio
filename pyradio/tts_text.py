@@ -88,23 +88,21 @@ def describe_single_key(key_string):
 
         if char in special_controls:
             return f"Control {special_controls[char]}"
-        elif char.isalpha():
+        if char.isalpha():
             return f"Control {char.upper()}"
-        elif char.isdigit():
+        if char.isdigit():
             return f"Control {char}"
-        else:
-            return f"Control {char}"
+        return f"Control {char}"
 
     # 2. Check for single character
     if len(key_string) == 1:
         if key_string.islower():
             return key_string
-        elif key_string.isupper():
+        if key_string.isupper():
             return f"capital {key_string}"
-        elif key_string in special_chars:
+        if key_string in special_chars:
             return special_chars[key_string]
-        else:
-            return key_string
+        return key_string
 
     # 3. Check for special keys
     if key_string in special_chars:
@@ -148,8 +146,7 @@ def convert_pipe_content(text):
         # Check if it's a single uppercase English letter
         if len(content) == 1 and content.isalpha() and content.isupper():
             return f"capital {content.lower()}"
-        else:
-            return content
+        return content
 
     return re.sub(pattern, replace_match, text)
 
@@ -236,12 +233,11 @@ def replace_control_keys_in_text(text, verbosity):
         char = match.group(1)
         if char in special_controls:
             return f' Control {special_controls[char]} '
-        elif char.isalpha():
+        if char.isalpha():
             return f' Control {char.upper()} '
-        elif char.isdigit():
+        if char.isdigit():
             return f' Control {char} '
-        else:
-            return f' Control {char} '
+        return f' Control {char} '
 
     return re.sub(pattern, replace_match, text)
 

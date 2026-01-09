@@ -31,8 +31,7 @@ class CompareFiles():
         '''
         if self._compare_files():
             return True if self.sha1 == self.sha2 else False
-        else:
-            return None
+        return None
 
     @equal.setter
     def equal(self, val):
@@ -48,8 +47,7 @@ class CompareFiles():
         '''
         if self._compare_files():
             return False if self.sha1 == self.sha2 else True
-        else:
-            return None
+        return None
 
     @different.setter
     def different(self, val):

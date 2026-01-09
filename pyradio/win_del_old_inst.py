@@ -13,7 +13,8 @@ def win_del_old_inst():
     path = os.getenv('PROGRAMFILES')
 
     out = []
-    pdirs = [f for f in glob.glob(path + "**/Python*", recursive=False)]
+    # pdirs = [f for f in glob.glob(path + "**/Python*", recursive=False)]
+    pdirs = list(glob.glob(path + '**/Python*', recursive=False))
 
     for f in pdirs:
         # print('Searching in "' + f + '"')
@@ -25,7 +26,8 @@ def win_del_old_inst():
         site_packages = os.path.join(f, 'Lib', 'site-packages')
         if os.path.exists(site_packages):
             # # print('site-packages: "{}"'.format(site_packages))
-            pydir = [f for f in glob.glob(site_packages + "**/pyradio*.egg", recursive=False)]
+            # pydir = [f for f in glob.glob(site_packages + "**/pyradio*.egg", recursive=False)]
+            pydir = list(glob.glob(site_packages + '**/pyradio*.egg', recursive=False))
             for n in pydir:
                 # print('  Found "' + n + '"')
                 out.append('RD /Q /S "' + n + '"\n')

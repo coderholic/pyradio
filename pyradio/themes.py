@@ -447,7 +447,7 @@ class PyRadioTheme():
             # print(self._colors)
             if ret == 0:
                 return True, f'Theme created: "{out_theme_name}"'
-            elif ret == -2:
+            if ret == -2:
                 return False, f'Error writing theme file: "{out_theme_name}"'
         else:
             ''' copy theme file '''
@@ -1174,7 +1174,7 @@ class PyRadioThemeSelector():
     def _short_to_normal_theme_name(self, a_theme_name):
         if a_theme_name == 'bow':
             return 'black_on_white'
-        elif a_theme_name == 'wob':
+        if a_theme_name == 'wob':
             return 'white_on_black'
         return a_theme_name
 
@@ -1480,7 +1480,7 @@ class PyRadioThemeSelector():
         if char in (kbkey['edit'], ) or \
                 check_localized(char, (kbkey['edit'], )):
             ''' edit theme '''
-            pass
+            # not implemented yet
             # if self._themes[self._selection][1] == '' or \
             #         self._is_theme_read_only(self._themes[self._selection][1]):
             #     ''' display question to create theme instead '''
@@ -1490,7 +1490,7 @@ class PyRadioThemeSelector():
         elif char in (kbkey['add'], ) or \
                 check_localized(char, (kbkey['add'], )):
             ''' new theme '''
-            pass
+            # not implemented yet
         elif char == kbkey['reload'] or \
                 check_localized(char, (kbkey['reload'], )):
             return -4, False

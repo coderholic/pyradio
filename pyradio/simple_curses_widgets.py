@@ -262,8 +262,6 @@ class SimpleCursesWidget():
         '''Resize the widget.
         The window (_win) gets created here'''
 
-        pass
-
     def resize_and_show(self):
         '''Resize and show the widget'''
         self.resize()
@@ -275,7 +273,6 @@ class SimpleCursesWidget():
 
     def refresh(self):
         '''Refresh the widget'''
-        pass
 
     def keypress(self, char):
         ''' SimpleCursesWidget keypress
@@ -569,7 +566,7 @@ class SimpleCursesDate(SimpleCursesWidget):
     def _set_date(self, date_string=None, date_tuple=None):
         ''' set date
             Either specify:
-                sting: format "YYYY-MM-YY"
+                string: format "YYYY-MM-YY"
             or
                 date_tuple = (YYYY, M, D) of int
 
@@ -579,7 +576,7 @@ class SimpleCursesDate(SimpleCursesWidget):
         if date_string is None and date_tuple is None:
             self._date = datetime.now()
             return True
-        elif date_string is not None:
+        if date_string is not None:
             sp = date_string.split('-')
             try:
                 for i in range(0, 3):
@@ -634,7 +631,7 @@ class SimpleCursesDate(SimpleCursesWidget):
                     self.color_focused if self.selected == 2 else self._color
                 )
             else:
-                self._win.addstr(self._Y, self._X, self.__str__(), self._color)
+                self._win.addstr(self._Y, self._X, str(self), self._color)
         else:
             self._win.addstr(self._Y, self._X, '====-==-==', self._color)
         self._win.refresh()
@@ -667,11 +664,11 @@ class SimpleCursesDate(SimpleCursesWidget):
                 check_localized(char, (kbkey['q'], )):
             return -1
 
-        elif char == kbkey['?'] or \
+        if char == kbkey['?'] or \
                 check_localized(char, (kbkey['?'], )):
             return 1
 
-        elif char in (curses.KEY_HOME, ):
+        if char in (curses.KEY_HOME, ):
             self._date = datetime.today()
             self.show()
 
@@ -729,7 +726,7 @@ class SimpleCursesDate(SimpleCursesWidget):
             self._date = datetime.now()
 
         return 0
-    pass
+
 
 class SimpleCursesTime(SimpleCursesWidget):
     ''' A class to provide a time insertion widget
@@ -1029,10 +1026,9 @@ class SimpleCursesTime(SimpleCursesWidget):
         if self._show_am_pm:
             if self.time_format == PyRadioTime.AM_FORMAT:
                 return self._char if chbox_id == 3 else ' '
-            elif self.time_format == PyRadioTime.PM_FORMAT:
+            if self.time_format == PyRadioTime.PM_FORMAT:
                 return self._char if chbox_id == 4 else ' '
-            else:
-                return ' '
+            return ' '
         return ''
 
     def keypress(self, char):
@@ -1060,12 +1056,12 @@ class SimpleCursesTime(SimpleCursesWidget):
                 check_localized(char, (kbkey['q'], )):
             return -1
 
-        elif char in (ord('f'), ):
-            self.set_time_format(PyRadioTime.NO_AM_PM_FORMAT)
-
-        elif char == kbkey['?'] or \
+        if char == kbkey['?'] or \
                 check_localized(char, (kbkey['?'], )):
             return 1
+
+        if char in (ord('f'), ):
+            self.set_time_format(PyRadioTime.NO_AM_PM_FORMAT)
 
         elif self.selected in (3, 4) and \
                 char in (curses.KEY_LEFT, curses.KEY_RIGHT,
@@ -1355,30 +1351,30 @@ class SimpleCursesCounter(SimpleCursesWidget):
         ) or check_localized(char, (kbkey['q'], )):
             return -1
 
-        elif char == kbkey['?'] or \
+        if char == kbkey['?'] or \
                 check_localized(char, (kbkey['?'], )):
             return 2
 
-        elif char in (curses.KEY_NPAGE, ):
+        if char in (curses.KEY_NPAGE, ):
             self._value -= self._big_step
             self._value = max(self._value, self._min)
             self.show(self._win)
             return 0
 
-        elif char in (curses.KEY_PPAGE, ):
+        if char in (curses.KEY_PPAGE, ):
             self._value += self._big_step
             self._value = min(self._value, self._max)
             self.show(self._win)
             return 0
 
-        elif char in (kbkey['h'], curses.KEY_LEFT) or \
+        if char in (kbkey['h'], curses.KEY_LEFT) or \
                 check_localized(char, (kbkey['h'], )):
             self._value -= self._step
             self._value = max(self._value, self._min)
             self.show(self._win)
             return 0
 
-        elif char in (kbkey['l'], curses.KEY_RIGHT) or \
+        if char in (kbkey['l'], curses.KEY_RIGHT) or \
                 check_localized(char, (kbkey['l'], )):
             self._value += self._step
             self._value = min(self._value, self._max)
@@ -1716,11 +1712,11 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
         ) or check_localized(char, (kbkey['q'], )):
             return -1
 
-        elif char == kbkey['?'] or \
+        if char == kbkey['?'] or \
                 check_localized(char, (kbkey['?'], )):
             return 3
 
-        elif self._right_arrow_selects and char in (
+        if self._right_arrow_selects and char in (
                 curses.KEY_RIGHT, kbkey['l'], kbkey['pause'],
                 ord('\n'), ord('\r'), curses.KEY_ENTER
                 ) or \
@@ -1734,7 +1730,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                 self._on_activate_callback_function()
             return 0
 
-        elif not self._right_arrow_selects and char in (
+        if not self._right_arrow_selects and char in (
                 kbkey['pause'], ord('\n'), ord('\r'), curses.KEY_ENTER
                 ) or check_localized(char, (kbkey['pause'], )):
             self.active = self.selection
@@ -1742,19 +1738,19 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
             self.show()
             return 0
 
-        elif char in (kbkey['g'], curses.KEY_HOME) or \
+        if char in (kbkey['g'], curses.KEY_HOME) or \
                 check_localized(char, (kbkey['g'], )):
             self.selection = 0
             self.show()
             return 2
 
-        elif char in (kbkey['G'], curses.KEY_END) or \
+        if char in (kbkey['G'], curses.KEY_END) or \
                 check_localized(char, (kbkey['G'], )):
             self.selection = len(self.items) - 1
             self.show()
             return 2
 
-        elif char in (curses.KEY_PPAGE, ):
+        if char in (curses.KEY_PPAGE, ):
             if self.selection == 0:
                 self.selection = len(self.items) - 1
             else:
@@ -1763,7 +1759,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
             self.show()
             return 2
 
-        elif char in (curses.KEY_NPAGE, ):
+        if char in (curses.KEY_NPAGE, ):
             if self.selection == len(self.items) - 1:
                 self.selection = 0
             else:
@@ -1773,7 +1769,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
             self.show()
             return 2
 
-        elif char in (kbkey['k'], curses.KEY_UP) or \
+        if char in (kbkey['k'], curses.KEY_UP) or \
                 check_localized(char, (kbkey['k'], )):
             pY, pX = self._coords[self.selection]
             # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
@@ -1787,7 +1783,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                 self.show()
             return 2
 
-        elif char in (kbkey['j'], curses.KEY_DOWN) or \
+        if char in (kbkey['j'], curses.KEY_DOWN) or \
                 check_localized(char, (kbkey['j'], )):
             pY, pX = self._coords[self.selection]
             # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
@@ -1802,7 +1798,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                 self.show()
             return 2
 
-        elif char in (kbkey['l'], curses.KEY_RIGHT) or \
+        if char in (kbkey['l'], curses.KEY_RIGHT) or \
                 check_localized(char, (kbkey['l'], )):
             pY, pX = self._coords[self.selection]
             if self._on_right_callback_function and \
@@ -1831,7 +1827,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                 self.show()
             return 2
 
-        elif char in (kbkey['h'], curses.KEY_LEFT) or \
+        if char in (kbkey['h'], curses.KEY_LEFT) or \
                 check_localized(char, (kbkey['h'], )):
             pY, pX = self._coords[self.selection]
             if self._on_left_callback_function and pX == 0:
@@ -2607,7 +2603,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 disp_item = '─ ' + self._items[item_id][:active_item_length-2] + ' ─'
                 self._win.addstr(i + self._Y, self._X, disp_item, self._color_captions)
                 return None
-            elif self._display_count:
+
+            if self._display_count:
                 if self._scroll:
                     count_len = len(str(self._start_pos + self._body_maxY))
                     # log_it('scroll count_len = {0}, start_pos = {1}'.format(count_len, self._start_pos))
@@ -2842,18 +2839,18 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._global_functions[l_char]()
             return 1
 
-        elif char in (
+        if char in (
             curses.KEY_EXIT, kbkey['q'], 27,
             kbkey['h'], curses.KEY_LEFT
         ) or \
                 check_localized(char, (kbkey['q'], kbkey['h'])):
             return -1
 
-        elif char == kbkey['?'] or \
+        if char == kbkey['?'] or \
                 check_localized(char, (kbkey['?'], )):
             return 2
 
-        elif self._can_add_items and \
+        if self._can_add_items and \
                 char in (kbkey['add'], ) or \
                 check_localized(char, (kbkey['add'], )):
             if len(self._items) == 0:
@@ -2862,7 +2859,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._add_item_function(self, self._selection, self._items[self._selection])
             return 3
 
-        elif self._can_delete_items and \
+        if self._can_delete_items and \
                 char in (kbkey['del'], curses.KEY_DC) or \
                 check_localized(char, (kbkey['del'], )):
             if len(self._items) == 0:
@@ -2881,7 +2878,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._refresh()
             return 0
 
-        elif self._can_edit_items and \
+        if self._can_edit_items and \
                 char == kbkey['edit'] or \
                 check_localized(char, (kbkey['edit'], )):
             if len(self._items) == 0:
@@ -2900,12 +2897,12 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._on_edit_item_callback_function(self._selection, self._items[self._selection])
             return 4
 
-        elif self._can_delete_items and \
+        if self._can_delete_items and \
                     char == kbkey['add'] or \
                 check_localized(char, (kbkey['add'], )):
             return 5
 
-        elif not self._right_arrow_selects and char in (
+        if not self._right_arrow_selects and char in (
                 ord('\n'), ord('\r'), curses.KEY_ENTER,
                 kbkey['l'], kbkey['pause'], curses.KEY_RIGHT
                 ) or \
@@ -2918,7 +2915,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._on_select_callback_function()
             return 0
 
-        elif self._right_arrow_selects and char in (
+        if self._right_arrow_selects and char in (
                 kbkey['l'], kbkey['pause'], ord('\n'), ord('\r'),
                 curses.KEY_ENTER, curses.KEY_RIGHT
                 ) or check_localized(char, (kbkey['pause'], kbkey['l'])):
@@ -3616,7 +3613,7 @@ class SimpleCursesLineEdit():
     ''' Cursor position within _max_chars_to_display '''
     _curs_pos = 0
     _disp_curs_pos = 0
-    ''' First char of sting to display '''
+    ''' First char of string to display '''
     _first = 0
     _last = 0
 
@@ -4137,34 +4134,26 @@ class SimpleCursesLineEdit():
         else:
             self._curs_pos = self._disp_curs_pos = len(self._displayed_string)
 
-    def _at_end_of_sting(self):
-        if self._at_end_of_displayed_sting():
-            if self.string.endswith(self._displayed_string):
-                return True
-            return False
-        else:
-            return False
+    def _at_end_of_string(self):
+        return (
+            self._at_end_of_displayed_string and
+            self.string.endswith(self._displayed_string)
+        )
 
-    def _at_end_of_displayed_sting(self):
-        if self._disp_curs_pos >= cjklen(self._displayed_string):
-            return True
-        return False
+    def _at_end_of_displayed_string(self):
+        return self._disp_curs_pos >= cjklen(self._displayed_string)
 
     def _at_last_char_of_string(self):
-        if self._at_last_char_of_displayed_string():
-            if self.string.endswith(self._displayed_string):
-                return True
-            return False
-        else:
-            return False
+        return (
+            self._at_last_char_of_displayed_string() and
+            self.string.endswith(self._displayed_string)
+        )
 
     def _at_last_char_of_displayed_string(self):
-        if self._disp_curs_pos == cjklen(self._displayed_string):
-            return True
-        return False
+        return self._disp_curs_pos == cjklen(self._displayed_string)
 
     def _delete_char(self):
-        if self.string and not self._at_end_of_sting():
+        if self.string and not self._at_end_of_string():
             self._string = self._string[:self._first + self._curs_pos] + self._string[self._first + self._curs_pos+1:]
             if self._first + self._max_chars_to_display > cjklen(self.string):
                 if self._first > 0:
@@ -4193,7 +4182,7 @@ class SimpleCursesLineEdit():
 
                 str_len = cjklen(self.string)
                 if self._cjk:
-                    if self._at_end_of_sting():
+                    if self._at_end_of_string():
                         if len(self.string) == 1:
                             self.string = ''
                             self._displayed_string = ''
@@ -4253,22 +4242,22 @@ class SimpleCursesLineEdit():
                 ''' word_delimiter not found: '''
                 self._go_to_start()
                 return
+
+            ''' word delimiter found '''
+            if str_len < self._max_chars_to_display or \
+                    pos >= self._first:
+                ''' pos is on screen '''
+                self._curs_pos = pos - self._first + 1
             else:
-                ''' word delimiter found '''
-                if str_len < self._max_chars_to_display or \
-                        pos >= self._first:
-                    ''' pos is on screen '''
-                    self._curs_pos = pos - self._first + 1
-                else:
-                    self._first = n + 1
-                    self._curs_pos = 0
-                    self._displayed_string = self.string[self._first:self._first+self._max_chars_to_display]
-                self._disp_curs_pos = cjklen(self._displayed_string[:self._curs_pos])
-                while cjklen(self._displayed_string) > self._max_chars_to_display:
-                    self._displayed_string = self._displayed_string[:-1]
+                self._first = n + 1
+                self._curs_pos = 0
+                self._displayed_string = self.string[self._first:self._first+self._max_chars_to_display]
+            self._disp_curs_pos = cjklen(self._displayed_string[:self._curs_pos])
+            while cjklen(self._displayed_string) > self._max_chars_to_display:
+                self._displayed_string = self._displayed_string[:-1]
 
     def _next_word(self):
-        if self._at_end_of_sting():
+        if self._at_end_of_string():
             return
         if self._first + self._curs_pos + 1 >= len(self.string):
             self._go_to_end()
@@ -4307,7 +4296,7 @@ class SimpleCursesLineEdit():
             self._go_to_end()
 
     def _go_right(self):
-        if self.string and not self._at_end_of_sting():
+        if self.string and not self._at_end_of_string():
             if self._cjk:
                 if cjklen(self.string) < self._max_chars_to_display:
                     ''' just go to next char '''
@@ -4462,7 +4451,8 @@ class SimpleCursesLineEdit():
                     if self._mode_changed:
                         self._mode_changed()
                 return 1
-            elif char == 422:
+
+            if char == 422:
                 ''' A-F, move to next word '''
                 if self.string:
                     if logger.isEnabledFor(logging.DEBUG):
@@ -4476,7 +4466,8 @@ class SimpleCursesLineEdit():
                             if self._mode_changed:
                                 self._mode_changed()
                 return 1
-            elif char == 418:
+
+            if char == 418:
                 ''' A-B, move to previous word '''
                 if self.string:
                     if logger.isEnabledFor(logging.DEBUG):
@@ -4495,7 +4486,7 @@ class SimpleCursesLineEdit():
                 self._mode_changed()
             return 1
 
-        elif (char in (kbkey['?'], ) or \
+        if (char in (kbkey['?'], ) or \
                 check_localized(char, (kbkey['?'], ))) and \
                 self._can_show_help():
             ''' display help '''
@@ -4512,7 +4503,7 @@ class SimpleCursesLineEdit():
                         self._mode_changed()
             return 2
 
-        elif char == curses.ascii.CAN and \
+        if char == curses.ascii.CAN and \
                 self._has_history:
             self._backslash_pressed = False
             self._input_history.remove_from_history(self._string)
@@ -4567,36 +4558,36 @@ class SimpleCursesLineEdit():
                         if self._mode_changed:
                             self._mode_changed()
                 return -1
+
+            if self.log is not None:
+                self.log(f'   *** char = {char}\n')
+            if char in (ord('d'), ):
+                ''' A-D, clear to end of line '''
+                if self.string:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('action: clear-to-end')
+                    self._clear_to_end_of_line()
+                    if self._string_changed_handler:
+                        self._string_changed_handler()
+            elif char in (ord('f'), ):
+                ''' A-F, move to next word '''
+                if self.string:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('action: next-word')
+                    self._next_word()
+            elif char in (ord('b'), ):
+                ''' A-B, move to previous word '''
+                if self.string:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('action: previous-word')
+                    self._previous_word()
             else:
-                if self.log is not None:
-                    self.log(f'   *** char = {char}\n')
-                if char in (ord('d'), ):
-                    ''' A-D, clear to end of line '''
-                    if self.string:
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('action: clear-to-end')
-                        self._clear_to_end_of_line()
-                        if self._string_changed_handler:
-                            self._string_changed_handler()
-                elif char in (ord('f'), ):
-                    ''' A-F, move to next word '''
-                    if self.string:
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('action: next-word')
-                        self._next_word()
-                elif char in (ord('b'), ):
-                    ''' A-B, move to previous word '''
-                    if self.string:
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('action: previous-word')
-                        self._previous_word()
-                else:
-                    if not self._paste_mode_always_on:
-                        if self._use_paste_mode and self._paste_mode:
-                            self._paste_mode = self._disable_paste_mode = False
-                            if self._mode_changed:
-                                self._mode_changed()
-                    return 1
+                if not self._paste_mode_always_on:
+                    if self._use_paste_mode and self._paste_mode:
+                        self._paste_mode = self._disable_paste_mode = False
+                        if self._mode_changed:
+                            self._mode_changed()
+                return 1
 
         elif char in (curses.KEY_RIGHT, ):
             ''' KEY_RIGHT '''
@@ -4837,7 +4828,7 @@ class SimpleCursesLineEdit():
                 if self._chars_to_accept:
                     if char not in self._chars_to_accept:
                         return 1
-                if self._at_end_of_sting():
+                if self._at_end_of_string():
                     self._string += char
                     self._add_to_end = True
                     self._curs_pos += 1
@@ -4887,8 +4878,8 @@ class SimpleCursesLineEdit():
                 logger.info(f'3---> {char = }')
             if 128 <= char <= 191:
                 return char
-            else:
-                raise UnicodeError
+            return None
+            raise UnicodeError
 
         bytes_data = []
         if char <= 127:
@@ -5191,10 +5182,10 @@ class SimpleCursesBoolean(SimpleCursesCounter):
                 check_localized(char, (kbkey['q'], )):
             return -1
 
-        elif char == kbkey['?']:
+        if char == kbkey['?']:
             return 2
 
-        elif char in (kbkey['pause'],
+        if char in (kbkey['pause'],
                       ord('\n'), ord('\r'), curses.KEY_ENTER,
                       kbkey['h'], curses.KEY_LEFT,
                       kbkey['l'], curses.KEY_RIGHT) or \
@@ -5285,7 +5276,7 @@ def main(stdscr):
             c = stdscr.getch()
             # logger.error('DE pressed "{0} - {1}"'.format(c, chr(c)))
             ret = x.keypress(c)
-            if (ret == -1):
+            if ret == -1:
                 return
         except KeyboardInterrupt:
             break

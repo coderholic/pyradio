@@ -519,14 +519,14 @@ class PyRadioStations():
         if path.exists(path.join(usr, 'stations.csv')):
             self._user_csv_found = True
             return
-        else:
-            # root_traversable είναι το files(...).joinpath(...)
-            with as_file(root) as root_real:
-                copyfile(root_real, path.join(usr, 'stations.csv'))
-            with open(path.join(self.state_dir, 'last-sync'), 'w', encoding='utf-8') as f:
-                self.get_pyradio_version()
-                v = self.current_pyradio_version.replace('.', ', ')
-                f.write(v)
+
+        # root_traversable είναι το files(...).joinpath(...)
+        with as_file(root) as root_real:
+            copyfile(root_real, path.join(usr, 'stations.csv'))
+        with open(path.join(self.state_dir, 'last-sync'), 'w', encoding='utf-8') as f:
+            self.get_pyradio_version()
+            v = self.current_pyradio_version.replace('.', ', ')
+            f.write(v)
 
     def copy_playlist_to_config_dir(self):
         ''' Copy a foreign playlist in config dir
@@ -557,10 +557,7 @@ class PyRadioStations():
 
     def is_same_playlist(self, a_playlist):
         ''' Checks if a playlist is already loaded '''
-        if a_playlist == self.station_path:
-            return True
-        else:
-            return False
+        return a_playlist == self.station_path
 
     def is_playlist_reloaded(self):
         return self.is_same_playlist(self.previous_station_path)
@@ -622,19 +619,16 @@ class PyRadioStations():
                 if sel == -1:
                     stationFile = path.join(self.stations_dir, 'stations.csv')
                     return stationFile, 0
-                elif sel < 0:
+                if sel < 0:
                     ''' negative playlist number '''
                     return '', -3
-                else:
-                    n, _ = self.read_playlists()
-                    if sel <= n-1:
-                        stationFile = self.playlists[sel][-1]
-                        return stationFile, 0
-                    else:
-                        ''' playlist number sel does not exit '''
-                        return '', -4
-            else:
-                return '', -2
+                n, _ = self.read_playlists()
+                if sel <= n-1:
+                    stationFile = self.playlists[sel][-1]
+                    return stationFile, 0
+                ''' playlist number sel does not exit '''
+                return '', -4
+            return '', -2
 
     def read_playlist_for_server(self, stationFile):
         """ read the station names only from a playlist """
@@ -931,11 +925,11 @@ class PyRadioStations():
         B = float(B)
         if KB <= B < MB:
             return f'{B / KB:.2f} KB'
-        elif MB <= B < GB:
+        if MB <= B < GB:
             return f'{B / MB:.2f} MB'
-        elif GB <= B < TB:
+        if GB <= B < TB:
             return f'{B / GB:.2f} GB'
-        elif TB <= B:
+        if TB <= B:
             return f'{B / TB:.2f} TB'
 
     def append_station(self, params, stationFile=''):
@@ -1121,12 +1115,11 @@ class PyRadioStations():
 
         if len(csv_files) == 0 and len(m3u_files) == 0:
             return 0, -1
-        else:
-            for a_file in csv_files:
-                a_file_name = ''.join(path.basename(a_file).split('.')[:-1])
-                a_file_size = self._bytes_to_human(path.getsize(a_file))
-                a_file_time = ctime(path.getmtime(a_file))
-                self.playlists.append([a_file_name, a_file_time, a_file_size, a_file])
+        for a_file in csv_files:
+            a_file_name = ''.join(path.basename(a_file).split('.')[:-1])
+            a_file_size = self._bytes_to_human(path.getsize(a_file))
+            a_file_time = ctime(path.getmtime(a_file))
+            self.playlists.append([a_file_name, a_file_time, a_file_size, a_file])
 
         if m3u_files:
             for a_file in m3u_files:
@@ -1583,8 +1576,7 @@ class PyRadioConfig(PyRadioStations):
     def remote_control_server_report_file(self):
         if self.headless:
             return path.join(self.state_dir, 'server-headless.txt')
-        else:
-            return path.join(self.state_dir, 'server.txt')
+        return path.join(self.state_dir, 'server.txt')
 
     @property
     def enable_clock(self):
@@ -1946,12 +1938,11 @@ class PyRadioConfig(PyRadioStations):
                     for res in theme_dir.iterdir()
                     if res.name.endswith('.pyradio-theme')
                 ))
-            else:
-                # normal filesystem path
-                return tuple(sorted(
-                    path.basename(x).replace('.pyradio-theme', '')
-                    for x in glob.glob(path.join(theme_dir, '*.pyradio-theme'), recursive=False)
-                ))
+            # normal filesystem path
+            return tuple(sorted(
+                path.basename(x).replace('.pyradio-theme', '')
+                for x in glob.glob(path.join(theme_dir, '*.pyradio-theme'), recursive=False)
+            ))
         except Exception:
             return tuple()
 
@@ -2732,7 +2723,7 @@ class PyRadioConfig(PyRadioStations):
                 tmp = sp[1].split(' ')[0]
                 try:
                     x = int(tmp)
-                    if not (0 <= x < len(TIME_FORMATS)):
+                    if not 0 <= x < len(TIME_FORMATS):
                         tmp = '0'
                 except (ValueError, TypeError):
                         tmp = '0'
@@ -2943,8 +2934,7 @@ class PyRadioConfig(PyRadioStations):
                         print('=> Opening last playlist: "' + playlist + '"')
                         self._last_opened_playlist_name = playlist
                         return playlist
-                    else:
-                        print('=> Last playlist does not exist: "' + playlist + '"')
+                    print('=> Last playlist does not exist: "' + playlist + '"')
                 else:
                     print('=> Last playlist name is invalid!')
                 try:
@@ -3019,15 +3009,15 @@ class PyRadioConfig(PyRadioStations):
         comment = ''
         if a_key == 'theme':
             return None if self.config_opts[a_key][-1] == theme else a_key + ' = ' + str(theme)
-        elif a_key == 'use_transparency':
+        if a_key == 'use_transparency':
             return None if self.config_opts[a_key][-1] == trnsp else a_key + ' = ' + str(trnsp)
-        elif a_key == 'force_transparency':
+        if a_key == 'force_transparency':
             return None if self.config_opts[a_key][-1] == f_trnsp else a_key + ' = ' + str(f_trnsp)
-        elif a_key == 'calculated_color_factor':
+        if a_key == 'calculated_color_factor':
             return None if self.config_opts[a_key][-1] == calcf else a_key + ' = ' + str(calcf)
-        elif a_key == 'auto_update_theme':
+        if a_key == 'auto_update_theme':
             return None if self.config_opts[a_key][-1] == auto else a_key + ' = ' + str(auto)
-        elif a_key == 'recording_dir':
+        if a_key == 'recording_dir':
             comment = r'''# Please do not change the recording_dir paramter manually
 # Use the following program option instead:
 #     Config / General Options / Recordings dir
@@ -3037,10 +3027,9 @@ class PyRadioConfig(PyRadioStations):
                     rec_dir == 'default':
                 # logger.error('returning None')
                 return None
-            else:
-                # logger.error('returning {}'.format(comment + a_key + ' = ' + rec_dir))
-                return comment + a_key + ' = ' + rec_dir
-        elif self.config_opts[a_key][-1] == self.opts[a_key][-1]:
+            # logger.error('returning {}'.format(comment + a_key + ' = ' + rec_dir))
+            return comment + a_key + ' = ' + rec_dir
+        if self.config_opts[a_key][-1] == self.opts[a_key][-1]:
             return None
         return comment + a_key + ' = ' + str(self.opts[a_key][-1])
 
@@ -3361,8 +3350,7 @@ class PyRadioPlaylistStack():
         if self._p:
             return not self._p[-1][self._id['is_register']] and \
                 not self._p[-1][self._id['browsing_station_service']]
-        else:
-            return True
+        return True
 
     @is_local_playlist.setter
     def is_local_playlist(self, value):
@@ -3372,8 +3360,7 @@ class PyRadioPlaylistStack():
     def is_register(self):
         if self._p:
             return self._p[-1][self._id['is_register']]
-        else:
-            return False
+        return False
 
     @is_register.setter
     def is_register(self, value):
@@ -3384,8 +3371,7 @@ class PyRadioPlaylistStack():
     def browsing_station_service(self):
         if self._p:
             return self._p[-1][self._id['browsing_station_service']]
-        else:
-            return False
+        return False
 
     @browsing_station_service.setter
     def browsing_station_service(self, value):
@@ -3396,8 +3382,7 @@ class PyRadioPlaylistStack():
     def station_path(self):
         if self._p:
             return self._p[-1][self._id['station_path']]
-        else:
-            return ''
+        return ''
 
     @station_path.setter
     def station_path(self, value):
@@ -3408,8 +3393,7 @@ class PyRadioPlaylistStack():
     def station_file_name(self):
         if self._p:
             return self._p[-1][self._id['station_file_name']]
-        else:
-            return ''
+        return ''
 
     @station_file_name.setter
     def station_file_name(self, value):
@@ -3420,8 +3404,7 @@ class PyRadioPlaylistStack():
     def station_title(self):
         if self._p:
             return self._p[-1][self._id['station_title']]
-        else:
-            return ''
+        return ''
 
     @station_title.setter
     def station_title(self, value):
@@ -3432,8 +3415,7 @@ class PyRadioPlaylistStack():
     def selection(self):
         if self._p:
             return self._p[-1][self._id['selection']]
-        else:
-            return 0
+        return 0
 
     @selection.setter
     def selection(self, value):
@@ -3444,8 +3426,7 @@ class PyRadioPlaylistStack():
     def startPos(self):
         if self._p:
             return self._p[-1][self._id['startPos']]
-        else:
-            return 0
+        return 0
 
     @startPos.setter
     def startPos(self, value):
@@ -3456,8 +3437,7 @@ class PyRadioPlaylistStack():
     def playing(self):
         if self._p:
             return self._p[-1][self._id['playing']]
-        else:
-            return -1
+        return -1
 
     @playing.setter
     def playing(self, value):
@@ -3522,8 +3502,7 @@ class PyRadioPlaylistStack():
     def get_item_member(self, member, item_id=-1):
         if member in self._id:
             return self._p[item_id][self._id[member]]
-        else:
-            raise ValueError(f'member "{member}" does not exist')
+        raise ValueError(f'member "{member}" does not exist')
 
     def _find_history_by_id(self, a_search, it_id, start=0):
         ''' Find a history item
@@ -3549,10 +3528,9 @@ class PyRadioPlaylistStack():
     def pop(self):
         if len(self._p) > 1:
             return self._p.pop()
-        else:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Refusing to remove first entry')
-            return self._p[0]
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Refusing to remove first entry')
+        return self._p[0]
 
     def set(self, a_list):
         if a_list:
@@ -3579,9 +3557,8 @@ class PyRadioPlaylistStack():
         if not isinstance(new_item, list) and \
                 not isinstance(new_item, tuple):
             return -2
-        else:
-            if len(new_item) != 8:
-                return -1
+        if len(new_item) != 8:
+            return -1
         ret = 0
         for i,n in enumerate(self._p):
             if n[0] == a_search_path:
@@ -3789,24 +3766,24 @@ class PyRadioLog():
                     if logger.isEnabledFor(logging.ERROR):
                         logger.error(f'cannot start titles log on: "{recording_dir}"; directory does not exist')
                     return False
-                else:
-                    self.titles_handler = logging.handlers.RotatingFileHandler(
-                        path.join(
-                            recording_dir,
-                            'pyradio-titles.log'),
-                        maxBytes=50000,
-                        backupCount=5)
-                    self.titles_handler.setFormatter(logging.Formatter(
-                        fmt=self.PATTERN_TITLE,
-                        datefmt='%b %d (%a) %H:%M')
-                    )
-                    self.titles_handler.setLevel(logging.CRITICAL)
-                    #l = logging.getLogger()
-                    logger.addHandler(self.titles_handler)
-                    self.log_titles = True
-                    logger.critical('=== Logging started')
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info(f'starting titles log on: "{recording_dir}"')
+
+                self.titles_handler = logging.handlers.RotatingFileHandler(
+                    path.join(
+                        recording_dir,
+                        'pyradio-titles.log'),
+                    maxBytes=50000,
+                    backupCount=5)
+                self.titles_handler.setFormatter(logging.Formatter(
+                    fmt=self.PATTERN_TITLE,
+                    datefmt='%b %d (%a) %H:%M')
+                )
+                self.titles_handler.setLevel(logging.CRITICAL)
+                #l = logging.getLogger()
+                logger.addHandler(self.titles_handler)
+                self.log_titles = True
+                logger.critical('=== Logging started')
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info(f'starting titles log on: "{recording_dir}"')
 
         if (not titles) and self.log_titles:
             if self.titles_handler:
@@ -3837,8 +3814,7 @@ class PyRadioLog():
             # Double-check if the folder was created successfully
             if path.isdir(self._cnf.check_output_folder):
                 return True
-            else:
-                return False
+            return False
         except Exception:
             # print(f"Error creating directory: {e}")
             return False
@@ -4190,12 +4166,12 @@ transparency        0
 
         if ret:
             return True, w_path
-        else:
-            try:
-                remove(w_path)
-            except:
-                pass
-            return False, None
+
+        try:
+            remove(w_path)
+        except:
+            pass
+        return False, None
 
 
 class PyRadioThemesShThemes(PyRadioBase16Themes):
@@ -4473,12 +4449,12 @@ transparency        0
 
         if ret:
             return True, w_path
-        else:
-            try:
-                remove(w_path)
-            except:
-                pass
-            return False, None
+
+        try:
+            remove(w_path)
+        except:
+            pass
+        return False, None
 
     def _read_last_line_from_ln(self):
         last_line = ''
