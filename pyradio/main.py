@@ -798,7 +798,7 @@ If nothing else works, try the following command:
             pyradio_config.opts['open_last_playlist'][1] = not pyradio_config.opts['open_last_playlist'][1]
             pyradio_config.opts['dirty_config'][1] =  True
             print(f"Setting auto load last playlist to: \"[red]{pyradio_config.opts['open_last_playlist'][1]}[/red]\"")
-            save_config()
+            save_config(pyradio_config)
             return
 
         package = 0

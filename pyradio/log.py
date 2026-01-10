@@ -52,8 +52,8 @@ def fix_chars(s):
     out = [s]
     from_str = ('\r', '\n', r'\"', r"\'")
     to_str = ('' , '', '"', "'")
-    for n, _ in enumerate(to_str):
-        out.append(out[-1].replace(from_str[n], to_str[n]))
+    for n, item in enumerate(to_str):
+        out.append(out[-1].replace(from_str[n], item))
     return out[-1].strip()
 
 
@@ -249,15 +249,18 @@ class Log():
                  active_player_id,
                  get_web_song_title,
                  tts,
-                 mode
+                 mode,
+                 can_display_help_msg,
+                 program_restart
                  ):
-        self.program_restart = False
+        self.program_restart = program_restart
         self.error_msg = False
         self._active_width = 0
         self._desktop_notification_title = None
         self._desktop_notification_message = None
         self._repeat_notification = None
         self._mode = mode
+        self.can_display_help_msg  = can_display_help_msg
 
         self.msg = None
         self.suffix = None
@@ -293,8 +296,6 @@ class Log():
         self._last = ['', '']
 
         self._add_chapter_function = None
-
-        self.can_display_help_msg = None
 
         self._check_start_time = None
 

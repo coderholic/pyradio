@@ -1389,11 +1389,9 @@ class Player():
                                     logger.info('----==== HTTP Error Message not handled ====----')
                                 http_error = 1001
 
-                    if http_error:
+                    if http_error or stop():
                         break
 
-                    if stop():
-                        break
                     if b'"file_error":"loading failed"' in a_data:
                         self._request_mpv_error(sock)
                     elif a_data == b'':

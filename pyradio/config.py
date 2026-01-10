@@ -453,14 +453,6 @@ class PyRadioStations():
     def can_go_cack_in_time(self, value):
         raise ValueError('property is read only')
 
-    @property
-    def playlist_version(self):
-        return self._playlist_version
-
-    @playlist_version.setter
-    def playlist_version(self, value):
-        self._playlist_version = value
-
     def set_station_history(self,
                             execute_funct,
                             pass_first_item_funct,
@@ -2960,6 +2952,7 @@ class PyRadioConfig(PyRadioStations):
 
     def get_player_params_from_backup(self, param_type=0):
         # logger.error('DE ==== get_player_params_from_backup  ====')
+        the_param_type = 0
         if param_type in (0, 'config'):
             the_param_type = 0
         elif param_type in (1, 'session'):

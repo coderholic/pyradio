@@ -1335,38 +1335,3 @@ class TTSManager:
             'pending_title': self.pending_title is not None
         }
 
-# Demo and test code
-if __name__ == "__main__":
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
-
-    tts = TTSManager()
-    print("=== TTS Manager Demo ===")
-    print(f"Status: {tts.get_status()}")
-
-    # Test basic speech
-    if tts.queue_speech("Hello, this is a test of the TTS system"):
-        time.sleep(3)
-
-    # Test title preservation
-    print("Testing title preservation...")
-    tts.queue_speech("Playing: Test Station", Priority.HIGH)
-    tts.queue_speech("Title: First Song", Priority.NORMAL)  # Should be preserved
-    time.sleep(2)
-
-    # The title should play after the HIGH priority
-    time.sleep(3)
-
-    # Test rapid navigation
-    print("Testing rapid navigation...")
-    for i in range(5):
-        tts.queue_speech(f"Station {i}", Priority.NORMAL)
-        time.sleep(0.1)
-
-    time.sleep(2)
-
-    tts.shutdown()
-    tts.wait_for_shutdown()
-    print("Demo completed")

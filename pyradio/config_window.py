@@ -2948,7 +2948,7 @@ class PyRadioSelectEncodings():
 
     def _resize(self, init=False):
         _, row = self._selection_to_col_row(self.selection)
-        if not (self.startPos <= row <= self.startPos + self.list_maxY - 1):
+        if not self.startPos <= row <= self.startPos + self.list_maxY - 1:
             while row > self.startPos:
                 self.startPos += 1
             while row < self.startPos + self.list_maxY - 1:
@@ -2998,7 +2998,7 @@ class PyRadioSelectEncodings():
         _, row = self._selection_to_col_row(self.selection)
         startRow = self.startPos
         endRow = self.startPos + self.list_maxY - 1
-        if not (startRow <= row <= endRow):
+        if not startRow <= row <= endRow:
             self.startPos = self.startPos + direction
             if direction > 0:
                 #if self.startPos >= self.list_maxY or row == 0:
@@ -3522,7 +3522,7 @@ class PyRadioSelectPlaylist():
                     self._selected_playlist_id = 0
                     self.startPos = 0
                 else:
-                    if not (self.startPos < self._selected_playlist_id < self.startPos + self.maxY - 2):
+                    if not self.startPos < self._selected_playlist_id < self.startPos + self.maxY - 2:
                         self.startPos = old_id - self.pageChange
                         self.startPos = min(self.startPos, self._num_of_items - self.maxY + 2)
                 self.refresh_selection()
@@ -3538,7 +3538,7 @@ class PyRadioSelectPlaylist():
                 self._selected_playlist_id = self._num_of_items - 1
                 self.startPos = self._num_of_items - self.maxY + 2
             else:
-                if not (self.startPos < self._selected_playlist_id < self.startPos + self.maxY - 2):
+                if not self.startPos < self._selected_playlist_id < self.startPos + self.maxY - 2:
                     self.startPos = old_id + self.pageChange
                     self.startPos = min(self.startPos, self._num_of_items - self.maxY + 2)
             self.refresh_selection()

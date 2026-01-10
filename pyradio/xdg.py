@@ -133,6 +133,7 @@ class XdgMigrate():
         return max_length
 
     def rename_files(self, to_console=True):
+        caption = no_files_caption = () # make pylint happy
         if to_console:
             caption = (
                 '> Copying files to "data" dir',

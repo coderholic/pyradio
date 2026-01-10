@@ -4106,7 +4106,7 @@ class SimpleCursesLineEdit():
         if self._boxed:
             self._caption_win.box()
             if self._disp_title:
-                self._title_win.addstr(
+                self._caption_win.addstr(
                     0, 1, self._disp_title, self.title_color
                 )
         self._caption_win.refresh()
@@ -4943,22 +4943,6 @@ class SimpleCursesLineEdit():
     def _log(self, msg):
         with open(self._log_file, 'a', encoding='utf-8') as log_file:
             log_file.write(msg)
-
-    def run(self):
-        self._edit_win.nodelay(False)
-        self._edit_win.keypad(True)
-        ''' make sure we don't get into an infinite loop '''
-        self._ungetch_unbound_keys = False
-        try:
-            curses.curs_set(0)
-        except:
-            pass
-
-        while True:
-            char = self._edit_win.getch()
-            ret = self.keypress(char)
-            if ret != 1:
-                return ret
 
 
 class SimpleCursesLineEditHistory():

@@ -83,32 +83,25 @@ def is_ascii(s):
     return all(ord(c) < 128 for c in s)
 
 def shift_only(event):
-    if (event & curses.BUTTON_SHIFT) \
-            and not (event & curses.BUTTON_CTRL) \
-            and not (event & curses.BUTTON_ALT):
-        return True
-    return False
+    """Return True if event has only SHIFT modifier."""
+    return (event & curses.BUTTON_SHIFT and
+            not event & curses.BUTTON_CTRL and
+            not event & curses.BUTTON_ALT)
 
 def ctrl_only(event):
-    if (event & curses.BUTTON_CTRL) \
-            and not (event & curses.BUTTON_SHIFT) \
-            and not (event & curses.BUTTON_ALT):
-        return True
-    return False
+    return (event & curses.BUTTON_CTRL and
+            not event & curses.BUTTON_SHIFT and
+            not event & curses.BUTTON_ALT)
 
 def alt_only(event):
-    if (event & curses.BUTTON_ALT) \
-            and not (event & curses.BUTTON_SHIFT) \
-            and not (event & curses.BUTTON_CTRL):
-        return True
-    return False
+    return (event & curses.BUTTON_ALT and
+            not event & curses.BUTTON_SHIFT and
+            not event & curses.BUTTON_CTRL)
 
 def alt_ctrl(event):
-    if (event & curses.BUTTON_ALT) \
-            and not (event & curses.BUTTON_SHIFT) \
-            and (event & curses.BUTTON_CTRL):
-        return True
-    return False
+    return (event & curses.BUTTON_ALT and
+            not event & curses.BUTTON_SHIFT and
+            event & curses.BUTTON_CTRL)
 
 def number_of_modifiers(event):
     ret = 0
@@ -121,7 +114,7 @@ def number_of_modifiers(event):
 
 def no_modifiers(event):
     ret = number_of_modifiers(event)
-    return True if ret == 0 else False
+    return ret == 0
 
 def multi_modifiers(event):
     return not no_modifiers(event)
@@ -1261,11 +1254,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             lambda: self._active_player_id,
             lambda: self._remote_control_server,
             lambda: self.tts,
-            lambda: self.ws.operation_mode
+            lambda: self.ws.operation_mode,
+            self._can_display_help_msg,
+            self.program_restart
         )
-        self.log.program_restart = self.program_restart
         self.program_restart = False
-        self.log.can_display_help_msg = self._can_display_help_msg
+
         ''' For the time being, supported players are mpv, mplayer and vlc. '''
         # self.player = player.probePlayer(
         #     config=self._cnf,
@@ -2361,8 +2355,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         # logger.error('signum = {}'.format(signum))
         # logger.error('frame = {}'.format(frame))
         search_cls = [x for x in self._search_classes if x is not None]
-        for n, _ in enumerate(search_cls):
-            search_cls[n].save_search_history()
+        for n, item in enumerate(search_cls):
+            item.save_search_history()
             search_cls[n] = None
         self.player.stop_update_notification_thread = True
         self.player.stop_win_vlc_status_update_thread = True
@@ -3614,7 +3608,7 @@ ____Using |fallback| theme.''', Priority.HIGH)
             'M_FOREIGN',
             self._cnf.foreign_title,
             self._cnf.station_title,
-            self.we.MESSAGING_MODE
+            self.ws.MESSAGING_MODE
         )
 
     def _print_foreign_playlist_copy_error(self):
@@ -7287,7 +7281,7 @@ _____"|f|" to see the |free| keys you can use.
 
                 Extra Commands - char = \
             '''
-        elif not self._backslash_pressed and \
+        if not self._backslash_pressed and \
                 ( char == kbkey['open_extra'] or \
                  check_localized(char, (kbkey['open_extra'],))) and \
                 self.ws.operation_mode in (self.ws.NORMAL_MODE,
@@ -7300,7 +7294,7 @@ _____"|f|" to see the |free| keys you can use.
             self._random_requested = False
             return
 
-        elif self._backslash_pressed and \
+        if self._backslash_pressed and \
                 char == ord('R'):
             self._backslash_pressed = False
             self._update_status_bar_right(status_suffix='')
@@ -7884,7 +7878,6 @@ _____"|f|" to see the |free| keys you can use.
             self.theme_forced_selection = None
 
             if not self._cnf.use_themes:
-                # TODO show msg
                 self._show_colors_cannot_change()
                 return
 
@@ -10866,8 +10859,10 @@ _____"|f|" to see the |free| keys you can use.
         self.refreshBody()
 
     def _can_display_help_msg(self, msg):
+        logger.error(f'{msg = }')
         if msg:
             if ' (' + M_STRINGS['error-str'] + ' ' in msg:
+                logger.error('1 return False')
                 return False
         # logger.error(f'{msg = }')
         ''' len("Press ? for help") = 16 '''
@@ -10878,11 +10873,14 @@ _____"|f|" to see the |free| keys you can use.
         if self._limited_height_mode or \
                 self._limited_width_mode or \
                 msg is None:
+            logger.error('2 return False')
             ret = False
         else:
             if self.outerBodyWin:
                 ret = self.outerBodyMaxX - cjklen(msg) - out_msg_len > 10 if msg else True
+                logger.error(f'3 return {ret}')
             else:
+                logger.error('4 return False')
                 ret = False
         return ret
 
@@ -11808,8 +11806,8 @@ _____"|f|" to see the |free| keys you can use.
         if self._cnf.titles_log.titles_handler:
             logger.critical('=== Logging stopped')
         search_cls = [x for x in self._search_classes if x is not None]
-        for n, _ in enumerate(search_cls):
-            search_cls[n].save_search_history()
+        for n, item in enumerate(search_cls):
+            item.save_search_history()
             search_cls[n] = None
         self._cls_update_stations = None
         self.detect_if_player_exited = False
@@ -11869,8 +11867,8 @@ _____"|f|" to see the |free| keys you can use.
             https://danielkaes.wordpress.com/2009/06/04/how-to-catch-kill-events-with-python/
         '''
         search_cls = [x for x in self._search_classes if x is not None]
-        for n, _ in enumerate(search_cls):
-            search_cls[n].save_search_history()
+        for n, item in enumerate(search_cls):
+            item.save_search_history()
             search_cls[n] = None
         if self._cnf.titles_log.titles_handler:
             logger.critical('=== Logging stopped')
@@ -12099,7 +12097,7 @@ _____"|f|" to see the |free| keys you can use.
         self._reading_stations = []
         csv_in = CsvReadWrite(
             a_file=playlist_file,
-            sncoding_to_remove=self._cnf.default_encoding
+            encoding_to_remove=self._cnf.default_encoding
         )
         ret = csv_in.read()
         if not ret:

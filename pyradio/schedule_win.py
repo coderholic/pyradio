@@ -974,9 +974,9 @@ class PyRadioSimpleScheduleWindow():
 
         if err_out:
             length = max(len(x) for x in out)
-            for i, _ in enumerate(err_out):
-                num = int((length - len(err_out[i].replace('|', ''))) / 2)
-                err_out[i] = num * '_' + err_out[i]
+            for i, item in enumerate(err_out):
+                num = int((length - len(item.replace('|', ''))) / 2)
+                err_out[i] = num * '_' + item
             err_out.append('')
             out = err_out + out
 

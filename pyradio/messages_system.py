@@ -1833,7 +1833,7 @@ unintentionally disrupt functionality.
             cap, out, priority, context = self._txt[self.active_message_key]
         # logger.info('--> out\n{}'.format(out))
         if out is None:
-            logger.error('return None, None, 0, 0', 0)
+            logger.error('return None, None, 0, 0, 0')
             return None, None, 0, 0, 0
 
         ''' apply per item customization / variables '''

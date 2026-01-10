@@ -84,7 +84,7 @@ class PyRadioScheduleTimeType(IntEnum):
     TIME_ABSOLUTE = 0
     TIME_RELATIVE = 1
 
-    @property
+    @classmethod
     def items(cls):
         return tuple(member.value for member in cls)
 
@@ -544,7 +544,7 @@ class PyRadioScheduleItem():
     @type.setter
     def type(self, val):
         try:
-            if val in (PyRadioScheduleItemType.items):
+            if val in PyRadioScheduleItemType.items():
                 self._item['type'] = val
                 return
         except:

@@ -2756,7 +2756,7 @@ class PyRadioBuffering():
             self.bitrate_value = '128'
         if self.buffering_value != '0':
             try:
-                if not (5 <= int(self.buffering_value) <= 60):
+                if not 5 <= int(self.buffering_value) <= 60:
                     self.buffering_value = '0'
             except ValueError:
                 self.buffering_value = '0'
@@ -2870,7 +2870,7 @@ class PyRadioBuffering():
                     check_localized(char, (kbkey['k'], )):
                 delay += 1
                 delay = max(delay, self._min)
-                delay =min(delay, self._max)
+                delay = min(delay, self._max)
                 self.buffering_value = str(delay)
             elif char in (kbkey['j'], curses.KEY_DOWN) or \
                     check_localized(char, (kbkey['j'], )):

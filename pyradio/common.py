@@ -421,6 +421,10 @@ class StationsChanges():
             try:
                 with open(in_file, 'r', encoding='utf-8') as sync_file:
                     line = sync_file.readline().strip()
+                    try:
+                        line = tuple([int(ver.strip()) for ver in line.split(',')])
+                    except (ValueError, AttributeError):
+                        return None
                     return line
             except:
                 pass
@@ -573,7 +577,12 @@ class StationsChanges():
             if self.last_sync is None:
                 ret = True
             else:
-                ret = True if self.keys[-1] > self.last_sync else False
+                try:
+                    last_sync = tuple([int(ver.strip()) for ver in self.last_sync.split(',')])
+                except (ValueError, AttributeError):
+                    # make sure ret gets False
+                    last_sync = self.keys[-1]
+                ret = True if self.keys[-1] > last_sync else False
         else:
             if stop is not None:
                 if stop():
