@@ -253,6 +253,7 @@ class Log():
                  can_display_help_msg,
                  program_restart
                  ):
+        logger.error(f'getting {program_restart = }')
         self.program_restart = program_restart
         self.error_msg = False
         self._active_width = 0
@@ -492,11 +493,14 @@ class Log():
             with self.lock:
                 # logger.error(f'{suffix =  }')
                 # logger.error(f'{counter =  }')
+                # logger.error(f'{self.program_restart = }')
                 if current_player_id != active_player_id:
                     if suffix != '' or suffix is not None or p_time is not None:
-                        if self.program_restart:
+                        if self.program_restart and msg:
                             self.program_restart = False
+                            # logger.error(f'reseting {self.program_restart = }')
                         else:
+                            # logger.error(f'\n\n********* setting {msg = } to None *********\n\n')
                             msg = None
                         counter = None
                     else:

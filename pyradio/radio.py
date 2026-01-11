@@ -1258,6 +1258,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self._can_display_help_msg,
             self.program_restart
         )
+        # logger.error(f'setting Log {self.program_restart = }')
         self.program_restart = False
 
         ''' For the time being, supported players are mpv, mplayer and vlc. '''
