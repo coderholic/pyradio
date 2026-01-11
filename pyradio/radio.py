@@ -7573,14 +7573,14 @@ _____"|f|" to see the |free| keys you can use.
                         self.ws.operation_mode == self.ws.NORMAL_MODE) or \
                         (self.ws.operation_mode == self.ws.PLAYLIST_MODE and \
                         self._cnf.open_register_list)):
-                        ''' c pressed - clear register '''
-                        if self.number_of_items > 0:
-                            self._print_clear_register()
-                        else:
-                            self._show_notification_with_delay(
-                                    txt='___Register is already empty!!!___',
-                                    mode_to_set=self.ws.NORMAL_MODE,
-                                    callback_function=self.refreshBody)
+                    ''' c pressed - clear register '''
+                    if self.number_of_items > 0:
+                        self._print_clear_register()
+                    else:
+                        self._show_notification_with_delay(
+                                txt='___Register is already empty!!!___',
+                                mode_to_set=self.ws.NORMAL_MODE,
+                                callback_function=self.refreshBody)
 
             elif char == kbkey['clear_all_reg'] or \
                     check_localized(char, (kbkey['clear_all_reg'],)):
@@ -7838,16 +7838,16 @@ _____"|f|" to see the |free| keys you can use.
                   check_localized(char, (kbkey['screen_middle'],))) and \
                   self.ws.operation_mode in \
                   (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
-              self._reset_status_bar_right()
-              if self.number_of_items > 0:
-                  if self.number_of_items < self.bodyMaxY:
-                      self.selection = int(self.number_of_items / 2)
-                  else:
-                      self.selection = self.startPos + int((self.bodyMaxY - 1) / 2)
-                  self.refreshBody()
-              self._do_display_notify()
-              self._speak_selection()
-              return
+            self._reset_status_bar_right()
+            if self.number_of_items > 0:
+                if self.number_of_items < self.bodyMaxY:
+                    self.selection = int(self.number_of_items / 2)
+                else:
+                    self.selection = self.startPos + int((self.bodyMaxY - 1) / 2)
+                self.refreshBody()
+            self._do_display_notify()
+            self._speak_selection()
+            return
 
         elif (char == kbkey['screen_bottom'] or \
                   check_localized(char, (kbkey['screen_bottom'],))) and \
@@ -12238,21 +12238,21 @@ _____"|f|" to see the |free| keys you can use.
         logger.error(f'got called with {http_error = }')
         if http_error == 'write_header':
             with open(self._cnf.check_output_file, mode='w', newline='') as file:
-                    writer = csv.writer(file)
-                    writer.writerow(
-                        ['#', 'Error', 'Station Name', 'URL', 'Playlist: ' + self._cnf.station_title]
-                    )
+                writer = csv.writer(file)
+                writer.writerow(
+                    ['#', 'Error', 'Station Name', 'URL', 'Playlist: ' + self._cnf.station_title]
+                )
         elif http_error == 'accumulated':
             with open(self._cnf.check_output_file, mode='a', newline='') as file:
-                    writer = csv.writer(file)
-                    writer.writerows(self._accumulated_errors)
+                writer = csv.writer(file)
+                writer.writerows(self._accumulated_errors)
         else:
             if self._cnf.check_output_file is not None:
                 with open(self._cnf.check_output_file, mode='a', newline='') as file:
-                        writer = csv.writer(file)
-                        writer.writerow(
-                            [str(station_to_check_id+1), str(http_error)] + station_to_check
-                        )
+                    writer = csv.writer(file)
+                    writer.writerow(
+                        [str(station_to_check_id+1), str(http_error)] + station_to_check
+                    )
                 if http_error is not None:
                     if self._accumulated_errors is None:
                         self._accumulated_errors = [http_error]

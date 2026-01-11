@@ -173,7 +173,7 @@ class PyRadioTimer:
             self.current_time = None
         else:
             if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug("Timer thread is not running.")
+                logger.debug("Timer thread is not running.")
 
     def update_time(self):
         """

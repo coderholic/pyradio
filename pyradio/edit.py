@@ -2102,9 +2102,9 @@ class PyRadioResourceOpener():
             return 2, None
 
         if (char == kbkey['?'] or \
-               check_localized(char, (kbkey['?'], ))) and \
-               self.focus > 0:
-           return 4, None
+                check_localized(char, (kbkey['?'], ))) and \
+                self.focus > 0:
+            return 4, None
 
         if char in (ord('\t'), 9, curses.KEY_DOWN):
             # EDIT: fixed H, L

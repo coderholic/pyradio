@@ -135,11 +135,11 @@ class HtmlHelp():
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('HtmlHelp: executing: "{}"'.format(cmd))
             try:
-                 subprocess.Popen(
-                        cmd,
-                        shell=False,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE, close_fds=True)
+                subprocess.Popen(
+                       cmd,
+                       shell=False,
+                       stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE, close_fds=True)
             except (FileNotFoundError, PermissionError):
                 pass
 

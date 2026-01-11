@@ -1272,7 +1272,7 @@ class LetterDisplay:
                 self._selection = len(self._letters) - 1
 
         if char == ord('?'):
-             return 2
+            return 2
 
         if char == ord('\x1b'):
             return -1
@@ -1283,7 +1283,6 @@ class LetterDisplay:
 
 
 if __name__ == '__main__':
-    import json
     with open('/home/spiros/projects/my-gits/pyradio/pyradio/keyboard/classes.json', 'r', encoding='utf-8') as f:
         res = json.load(f)
     print('===> classes.py: res')

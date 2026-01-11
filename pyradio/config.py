@@ -2718,7 +2718,7 @@ class PyRadioConfig(PyRadioStations):
                     if not 0 <= x < len(TIME_FORMATS):
                         tmp = '0'
                 except (ValueError, TypeError):
-                        tmp = '0'
+                    tmp = '0'
                 self.opts['time_format'][1] = tmp
             elif sp[0] == 'buffering':
                 try:

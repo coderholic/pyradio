@@ -791,11 +791,11 @@ class TTSManager:
             if context == 'all':
                 return True
             if context == 'window' and \
-                priority.value <= Priority.DIALOG.value:
-                    return True
+                    priority.value <= Priority.DIALOG.value:
+                return True
             if context == 'limited' and \
-                priority.value <= Priority.HIGH.value:
-                    return True
+                    priority.value <= Priority.HIGH.value:
+                return True
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'Speech request rejected: priority is "{priority.name}" but context is "{context}"')
         return False

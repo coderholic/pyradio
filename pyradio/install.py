@@ -1277,7 +1277,7 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
         ''' change to pyradio directory '''
         self._install_dir = os.path.join(self._dir, self._install_dir)
         if os.path.isdir(self._install_dir):
-           os.chdir(self._install_dir)
+            os.chdir(self._install_dir)
         else:
             print('Error: Failed to download PyRadio source code...\n')
             sys.exit(1)
@@ -1500,8 +1500,8 @@ if __name__ == '__main__':
             # is pyradio.exe in PATH
             ret = subprocess.call('pyradio -h 1>NUL 2>NUL', shell=True)
             if ret == 0 or not first_install:
-                    print('PyRadio is already installed.\n')
-                    sys.exit(1)
+                print('PyRadio is already installed.\n')
+                sys.exit(1)
         for a_module in (
                 'setuptools',
                 'windows-curses',
