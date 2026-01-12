@@ -2399,7 +2399,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         if self._simple_schedule:
             self._simple_schedule.exit()
             self._simple_schedule = None
-        if hasattr(self, 'tts') and self.tts:
+        if self.tts:
             # Phase 2: Wait for TTS to fully stop (with timeout)
             clean_shutdown = self.tts.wait_for_shutdown(timeout=2.0)
             if clean_shutdown:
@@ -2521,17 +2521,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     from shutil import rmtree
                     rmtree(self._cnf.logos_dir, ignore_errors=True)
 
-    def _what_is_the_station_player(self):
-        logger.error(f'{self.selection = }')
-        station_player = self.stations[self.selection][Station.player]
-        if station_player == '':
-            station_player = self._default_player_name
-        if station_player not in [x.PLAYER_NAME for x in self._cnf.AVAILABLE_PLAYERS]:
-            station_player = self._default_player_name
-        logger.error('\n\n')
-        logger.error(f'station_player = {station_player}')
-        return station_player
-
     def _get_the_stations_player(self, station_player):
         if station_player != self.active_player_name:
             sel = self.selection
@@ -2539,33 +2528,37 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.selection = sel
 
     def _what_is_the_station_player(self):
-        for i, n in enumerate(self.stations):
-            logger.error(f'{i} -> {n}')
-        logger.error('len(self.stations) = {}'.format(len(self.stations)))
-        logger.error(f'{self.selection = }')
-        logger.error('Station.player = {}'.format(Station.player.value))
-        logger.error('self.stations[self.selection] = {}'.format(self.stations[self.selection]))
+        """Determine which player to use for the selected station."""
+        # Debug: show all stations (DEBUG level only)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('All stations:')
+            for i, station in enumerate(self.stations):
+                logger.debug(f'  {i}: {station}')
+            logger.debug(f'Total stations: {len(self.stations)}')
+            logger.debug(f'Current selection: {self.selection}')
+        # Get the player from station
         station_player = self.stations[self.selection][Station.player]
         if logger.isEnabledFor(logging.DEBUG):
-            logger.error(f'{self._default_player_name =  }')
-            logger.error(f'from station: {station_player =  }')
+            logger.debug(f'Player from station: "{station_player}"')
+            logger.debug(f'Default player: "{self._default_player_name}"')
+        # If station doesn't specify a player, use default
         if station_player == '':
             station_player = self._default_player_name
             if logger.isEnabledFor(logging.DEBUG):
-                logger.error(f'self._default_player_name = {station_player =  }')
-        if station_player not in [x.PLAYER_NAME for x in self._cnf.AVAILABLE_PLAYERS]:
+                logger.debug(f'Using default player: "{station_player}"')
+        # Validate player exists
+        available_players = [x.PLAYER_NAME for x in self._cnf.AVAILABLE_PLAYERS]
+        if station_player not in available_players:
+            if logger.isEnabledFor(logging.WARNING):
+                logger.warning(
+                    f'Player "{station_player}" not available. '
+                    f'Using default "{self._default_player_name}"'
+                )
             station_player = self._default_player_name
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.error(f'self._default_player_name = {station_player =  }')
+        # Log final decision
         if logger.isEnabledFor(logging.INFO):
-            logger.info(f'using {station_player = }')
+            logger.info(f'Selected player for station: {station_player}')
         return station_player
-
-    def _get_the_stations_player(self, station_player):
-        if station_player != self.active_player_name:
-            sel = self.selection
-            self._activate_player(station_player)
-            self.selection = sel
 
     def playSelection(self, restart=False):
         ''' start playback using current selection
@@ -11556,10 +11549,6 @@ _____"|f|" to see the |free| keys you can use.
             # self._redisplay_stations_and_playlists()
             self._player_select_win.set_parrent(self.bodyWin)
 
-    def _redisplay_encoding_select_win_refresh_and_resize(self):
-        if not self._config_win.too_small:
-            self._encoding_select_win.refresh_and_resize(self.outerBodyMaxY, self.outerBodyMaxX)
-
     def _playlist_select_paste_win_refresh_and_resize(self):
         self._playlist_select_win.refresh_and_resize(self.bodyWin.getmaxyx())
 
@@ -11576,10 +11565,8 @@ _____"|f|" to see the |free| keys you can use.
             self._schedule_station_select_win.refresh_and_resize(self.bodyWin.getmaxyx())
 
     def _redisplay_encoding_select_win_refresh_and_resize(self):
-        if self._config_win:
-            if not self._config_win.too_small:
-                self._encoding_select_win.refresh_and_resize(self.outerBodyMaxY, self.outerBodyMaxX)
-        else:
+        if self._config_win and \
+                not self._config_win.too_small:
             self._encoding_select_win.refresh_and_resize(self.outerBodyMaxY, self.outerBodyMaxX)
 
     def _redisplay_station_select_win_refresh_and_resize(self):
