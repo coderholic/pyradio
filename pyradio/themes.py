@@ -58,7 +58,7 @@ def is_light_or_dark(rgb_color=None):
     hsp = sqrt(0.241 * (r * r) + 0.691 * (g * g) + 0.068 * (b * b))
     # logger.error('hsp = {}'.format(hsp))
 
-    return True if hsp > 130 else False
+    return hsp > 130
 
 def calculate_fifteenth_color(colors, an_amount, inhibit_if_color15_exists=True):
     if an_amount == '0' or \
@@ -408,7 +408,7 @@ class PyRadioTheme():
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Recalculating color15...')
             logger.debug(f"Stations background color: {self._colors['css'][2]}")
-        self._cnf.use_calculated_colors = False if self._cnf.opts['calculated_color_factor'][1] == '0' else True
+        self._cnf.use_calculated_colors = not self._cnf.opts['calculated_color_factor'][1] == '0'
         # logger.error('\n\nself._colors before recalculate\n{}\n\n'.format(self._colors))
         if self._colors['color_factor'] == 0:
             fact = self._cnf.opts['calculated_color_factor'][1]

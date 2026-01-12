@@ -689,16 +689,16 @@ def set_kb_cjk(value):
 def get_unicode_and_cjk_char(win, char):
     # logger.error(f'{char = }')
     def _decode_string(data):
+        """ convert bytes to string """
         encodings = ['utf-8', locale.getpreferredencoding(False), 'latin1']
         for enc in encodings:
-            try:
-                data = data.decode(enc)
-            except:
-                continue
-            break
-
-        assert type(data) != bytes  # Latin1 should have worked.
-        return data
+            if enc:      # in case locale.getpreferredencoding returns None
+                try:
+                    return data.decode(enc)
+                except UnicodeDecodeError:
+                    continue
+        # if nothing works, play safe
+        return data.decode('latin1', errors='replace')
 
     def get_check_next_byte(win):
         # logger.error(f'{win = }')

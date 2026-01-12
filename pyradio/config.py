@@ -447,7 +447,7 @@ class PyRadioStations():
 
     @property
     def can_go_back_in_time(self):
-        return True if len(self._ps._p) > 1 else False
+        return len(self._ps._p) > 1
 
     @can_go_back_in_time.setter
     def can_go_cack_in_time(self, value):
@@ -1081,7 +1081,7 @@ class PyRadioStations():
         return True, self.number_of_stations
 
     def registers_exist(self):
-        return True if glob.glob(path.join(self.registers_dir, '*.[Cc][Ss][Vv]')) else False
+        return glob.glob(path.join(self.registers_dir, '*.[Cc][Ss][Vv]'))
 
     def just_read_playlists(self):
         self.playlists = [
@@ -1467,7 +1467,7 @@ class PyRadioConfig(PyRadioStations):
         self.theme = 'dark'
         self.active_transparency = False
         self._distro = 'None'
-        self.dirty_config = True if self.params_changed else False
+        self.dirty_config = self.params_changed
         ''' True if player changed by config window '''
         self.player_changed = False
         ''' [ old player, new player ] '''
@@ -2639,7 +2639,7 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['calculated_color_factor'][1] = s_t
                 except (ValueError, TypeError):
                     self.opts['calculated_color_factor'][1] = '0'
-                self.use_calculated_colors = False if self.opts['calculated_color_factor'][1] == '0' else True
+                self.use_calculated_colors = not self.opts['calculated_color_factor'][1] == '0'
             elif sp[0] == 'force_http':
                 if sp[1].lower() == 'true':
                     self.opts['force_http'][1] = True
@@ -3241,7 +3241,7 @@ class PyRadioConfig(PyRadioStations):
             is_register=is_register)
 
     def can_like_a_station(self):
-        return True if self._current_log_title != self._last_liked_title else False
+        return self._current_log_title != self._last_liked_title
 
     def is_blacklisted_terminal(self):
         self.terminal_is_blacklisted = False
@@ -3897,7 +3897,7 @@ class PyRadioBase16Themes():
         if sys.platform.startswith('win'):
             ''' base16 does not work on windows '''
             return False
-        return True if path.exists(self._ln) else False
+        return path.exists(self._ln)
 
     @property
     def last_used_theme(self):

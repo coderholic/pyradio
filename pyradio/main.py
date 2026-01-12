@@ -60,7 +60,7 @@ locale.setlocale(locale.LC_ALL, "")
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 PATTERN_TITLE = '%(asctime)s | %(message)s'
 
-HAS_PIPX = True if shutil.which('pipx') else False
+HAS_PIPX = bool(shutil.which('pipx'))
 
 try:
     import netifaces

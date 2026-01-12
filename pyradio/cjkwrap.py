@@ -71,25 +71,29 @@ def cjkslices(text, index):
         i = i + 1
     return text[:i-1], text[i-1:]
 
-def cjkljust(text, width, char= ' '):
+def cjkljust(text, width, char=None):
+    if char is None:
+        char = ' '
     txt_len = cjklen(text)
     out = text
     if width == txt_len:
         return text
     if width > txt_len:
         return out + (width - txt_len) * char
-    if width < txt_len:
-        return cjkslices(text, width)[0]
+    # width < txt_len:
+    return cjkslices(text, width)[0]
 
-def cjkrjust(text, width, char= ' '):
+def cjkrjust(text, width, char=None):
+    if char is None:
+        char = ' '
     txt_len = cjklen(text)
     out = text
     if width == txt_len:
         return text
     if width > txt_len:
         return (width - txt_len) * char + out
-    if width < txt_len:
-        return cjkslices(text, width)[0]
+    # width < txt_len:
+    return cjkslices(text, width)[0]
 
 def cjkcenter(text, width, char= ' '):
     txt_len = cjklen(text)
@@ -102,8 +106,8 @@ def cjkcenter(text, width, char= ' '):
         while cjklen(out) < width:
             out = char + out
         return out
-    if width < txt_len:
-        return cjkslices(text, width)[0]
+    # width < txt_len:
+    return cjkslices(text, width)[0]
 
 
 class CJKWrapper(textwrap.TextWrapper):

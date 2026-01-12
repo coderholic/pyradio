@@ -925,7 +925,7 @@ class PyRadioEditor():
 
     def _update_focus(self):
         for i in range(0, 4):
-            self._line_editor[i].focused = True if i == self._focus else False
+            self._line_editor[i].focused = i == self._focus
 
     def _return_station(self):
         ret = self._validate()
@@ -3137,7 +3137,7 @@ class PyRadioServerWindow():
 
         self._win.addstr(12, 2, 'Any other key will hide the window (not in editor).', curses.color_pair(10))
 
-        self._editor.focused = False if self._selection == 0 else True
+        self._editor.focused = not self._selection == 0
         self._refresh()
         self._showed = True
 

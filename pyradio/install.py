@@ -44,7 +44,7 @@ except ImportError:
 
 VERSION = ''
 
-HAS_PIPX = True if shutil.which('pipx') else False
+HAS_PIPX = bool(shutil.which('pipx'))
 
 try:
     from rich import print
@@ -195,7 +195,7 @@ def is_pyradio_user_installed():
     if not pyradio_path:
         return False
     home = os.path.expanduser('~')
-    return True if pyradio_path.startswith(home) else False
+    return pyradio_path.startswith(home)
 
 def is_process_running(process_name):
     """Check if there is any running process that contains the given name, excluding the current process."""
@@ -641,7 +641,7 @@ class PyRadioCache():
 
     def exists(self):
         ''' does the cache dir exists? '''
-        return True if os.path.exists(self._cache_dir) else False
+        return os.path.exists(self._cache_dir)
 
     def is_empty(self):
         ''' is the cache dir empty?
@@ -649,7 +649,7 @@ class PyRadioCache():
             in the dir, or only the latest version ZIP file
             exists
         '''
-        return False if self.files else True
+        return not self.files
 
     def _read_cache(self):
         if self.exists():
@@ -749,7 +749,7 @@ class PythonExecutable():
             stderr=subprocess.PIPE
         )
         p.communicate()
-        self.is_debian = True if p.returncode == 0 else False
+        self.is_debian = p.returncode == 0
         return self.is_debian
 
     def _get_pythons(self):
@@ -802,7 +802,7 @@ If you get en error, you have to add it to your PATH.
     def can_use(self):
         ''' Can I use the python I requested?
         '''
-        return True if self._python[self.requested_python_version - 2] else False
+        return self._python[self.requested_python_version - 2]
 
 class PyRadioUpdate():
 
@@ -1386,7 +1386,7 @@ if __name__ == '__main__':
         print_pipx_error()
         print_distro_packages()
         sys.exit()
-    use_logo = False if args.no_logo else True
+    use_logo = not args.no_logo
 
     if use_logo and not args.open_cache:
         print_pyradio_on()

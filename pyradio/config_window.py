@@ -668,7 +668,7 @@ class PyRadioConfigWindow():
     def _apply_a_theme(self, a_theme, use_transparency=None):
         theme = PyRadioTheme(self._cnf)
         theme.readAndApplyTheme(a_theme, use_transparency=use_transparency)
-        self._cnf.use_calculated_colors = False if self._cnf.opts['calculated_color_factor'][1] == '0' else True
+        self._cnf.use_calculated_colors = not self._cnf.opts['calculated_color_factor'][1] == '0'
         self._cnf.update_calculated_colors(theme)
         theme = None
         curses.doupdate()
@@ -1958,17 +1958,17 @@ class ExtraParameters():
             self._list.add_item(an_item, select)
 
     def _validate_add_entry(self, index, item):
-        return False if item.startswith('profile:') else True
+        return not item.startswith('profile:')
 
     def _validate_delete_entry(self, index, item):
         if item.startswith('Do not use'):
             return False
-        return False if item.startswith('profile:') else True
+        return not item.startswith('profile:')
 
     def _validate_edit_entry(self, index, item):
         if item.startswith('Do not use'):
             return False
-        return False if item.startswith('profile:') else True
+        return not item.startswith('profile:')
 
     def _reposition_list(self):
         Y, X = self._win.getbegyx()
@@ -4927,7 +4927,7 @@ class PyRadioLocalized():
                         if file.startswith('lkb_') and file.endswith('.json'):
                             dict_filenames[file[4:-5]] = (
                                 str(dir_path / file),
-                                True if i == 0 else False
+                                i == 0
                             )
 
         # Prepare the list with default items first
@@ -4969,7 +4969,7 @@ class PyRadioLocalized():
             self._files[index][-1] = data
 
     def _print_title(self):
-        self._dirty_config = False if self.localize == self._orig_localize else True
+        self._dirty_config = not self.localize == self._orig_localize
         title = 'Localized Shortcuts'
         col = 12
         dirty_title = ' *' if self._dirty_config else '─ '
@@ -5143,7 +5143,7 @@ class PyRadioLocalized():
 
     def _update_focus(self):
         for i, _ in enumerate(self._widgets):
-            self._widgets[i].focused = True if i == self._focus else False
+            self._widgets[i].focused = i == self._focus
 
     def _focus_next(self):
         self._needs_update = True

@@ -551,7 +551,7 @@ def parse_m3u(m3u_path, max_entries=10000):
                     pass
 
             elif line.startswith("#EXTINF"):
-                if entry_count >= max_entries and max_entries > 0:
+                if entry_count >= max_entries > 0:
                     clean_temp_file(temp_file_path)
                     return None, f"Maximum entries ({max_entries}) reached"
 

@@ -56,8 +56,6 @@ except:
 
 logger = logging.getLogger(__name__)
 
-available_players = []
-
 try:  # Forced testing
     from shutil import which
     def pywhich (cmd):
@@ -1925,6 +1923,7 @@ class Player():
                     if stop():
                         return False
                     bytes_icy = bytes(icy, encoding='utf-8')
+                    enc = self._station_encoding
                     if icy in ('icy-name', 'icy-genre'):
                         enc = self._station_encoding
                     else:
@@ -2291,7 +2290,7 @@ class Player():
                 logger.debug('playback detection thread not starting (timeout is 0)')
         if logger.isEnabledFor(logging.INFO):
             logger.info(f'----==== {self.PLAYER_NAME} player started ====----')
-        self.currently_recording = True if self.recording > 0 else False
+        self.currently_recording = self.recording > 0
         if self.recording == self.RECORD_AND_LISTEN \
                 and self.PLAYER_NAME != 'mpv':
             self.buffering = False
@@ -2369,7 +2368,7 @@ class Player():
         self.currently_recording = False
         if self.process:
             self.close()
-            self._stop()
+            self._stop(False)
 
     def close(self, player_disappeared=False):
         self.currently_recording = False
@@ -3776,7 +3775,7 @@ class VlcPlayer(Player):
                 self._sendCommand('volume 0\n')
             self.muted = True
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('VLC muted: 0 (0%)')
+                logger.debug('VLC muted: 0 - 0%')
 
     def _pause(self):
         ''' pause streaming (if possible) '''
@@ -4119,7 +4118,7 @@ class PyRadioChapters():
                     stderr=subprocess.PIPE
                     )
             r = p.communicate()
-            self.HAS_MKVTOOLNIX = True if p.returncode == 0 else False
+            self.HAS_MKVTOOLNIX = p.returncode == 0
             if self.HAS_MKVTOOLNIX:
                 self.mkvmerge = r[0].decode('utf-8').strip()
             if not self.HAS_MKVTOOLNIX and platform.lower().startswith('dar'):
@@ -4466,9 +4465,10 @@ class PlayerCache():
             self._data['mpv'][2] = '--cache-on-disk=yes'
 
 
-def probePlayer(config, requested_player=''):
+def probePlayer(config, requested_player=None):
     ''' Probes the multimedia players which are
         available on the host system. '''
+    available_players = []
     if logger.isEnabledFor(logging.INFO):
         logger.info('Probing available multimedia players...')
     implementedPlayers = Player.__subclasses__()
@@ -4486,7 +4486,7 @@ def probePlayer(config, requested_player=''):
                     ', '.join([player.PLAYER_NAME
                               for player in available_players]))
     config.AVAILABLE_PLAYERS = available_players[:]
-    if requested_player:
+    if requested_player is not None:
         req = requested_player.split(',')
         for r_player in req:
             if r_player == 'cvlc':

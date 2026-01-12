@@ -450,7 +450,7 @@ def is_cpu_mpv_v3_compatible(print_flags=False):
             if print_flags:
                 print(n, '\t', 'nok')
 
-    return True if len(mpv_v3_cpu_flags) == count else False
+    return len(mpv_v3_cpu_flags) == count
 
 def _post_download(package, output_folder, do_not_exit):
 

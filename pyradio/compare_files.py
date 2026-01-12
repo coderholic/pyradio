@@ -30,7 +30,7 @@ class CompareFiles():
                 None    error reading files
         '''
         if self._compare_files():
-            return True if self.sha1 == self.sha2 else False
+            return self.sha1 == self.sha2
         return None
 
     @equal.setter
@@ -46,7 +46,7 @@ class CompareFiles():
                 None    error reading files
         '''
         if self._compare_files():
-            return False if self.sha1 == self.sha2 else True
+            return not self.sha1 == self.sha2
         return None
 
     @different.setter

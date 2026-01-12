@@ -461,11 +461,11 @@ class Log():
                 with self.lock:
                     self._current_msg_id = msg_id
             with self.lock:
-                if msg_id < self._current_msg_id and msg_id > STATES.ANY:
+                if STATES.ANY < msg_id < self._current_msg_id:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug(f'refusing to print message with id {msg_id}, currently at {self._current_msg_id}')
                     return
-            if msg_id > STATES.ANY and msg_id < STATES.CONNECT_ERROR:
+            if STATES.ANY < msg_id < STATES.CONNECT_ERROR:
                 with self.lock:
                     if msg_id in (STATES.PLAYER_ACTIVATED, STATES.STOPPED):
                         self._current_msg_id = STATES.RESET
@@ -578,7 +578,7 @@ class Log():
                     self.suffix = suffix
                 if counter is not None:
                     self.counter = counter
-                self.error_msg = True if error_msg else False
+                self.error_msg = bool(error_msg)
 
                 #if logger.isEnabledFor(logging.DEBUG):
                 #    logger.debug('after ----------------------------')

@@ -1608,7 +1608,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
         # logger.error('DE pY = {0}, pX = {1}'.format(pY, pX))
         test = [x for x in self._coords if x[0] == pY]
         # logger.error('DE test = {}'.format(test))
-        return True if test[-1] == (pY, pX) else False
+        return test[-1] == (pY, pX)
 
     def set_items(self, items=None):
         if items:
@@ -2304,7 +2304,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
         return len(self._items)
 
     def _set_selection(self, a_sel):
-        if a_sel >= 0 and a_sel < len(self._items):
+        if 0 <= a_sel < len(self._items):
             self._old_selection = self._selection
             self._old_start_pos = self._start_pos
 
@@ -2477,7 +2477,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._items = items
                 self._captions = []
             self._showed = False
-        self._scroll = True if len(self._items) > self._body_maxY else False
+        self._scroll = len(self._items) > self._body_maxY
         # if self._items_changed_function:
         #     self._items_changed_function()
 
@@ -2666,8 +2666,10 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 False   self._start_pos not changed (use self._toggle_selected_item)
         '''
         if len(self._items) <= self._body_maxY:
-            self._start_pos = 0
-            return
+            if self._start_pos != 0:
+                self._start_pos = 0
+                return True
+            return False
         self._verify_selection_not_on_caption(mov)
         self._old_start_pos = self._start_pos
         meso = int(self._body_maxY / 2)
@@ -2924,7 +2926,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._on_activate_callback_function()
             return 0
 
-        elif char in (kbkey['g'], curses.KEY_HOME) or \
+        if char in (kbkey['g'], curses.KEY_HOME) or \
                 check_localized(char, (kbkey['g'], )):
             if len(self._items) == 0:
                 return 1
@@ -4870,14 +4872,11 @@ class SimpleCursesLineEdit():
     def get_unicode_and_cjk_char(self, win, char):
         logger.info(f'1---> {char = }')
         def get_check_next_byte():
-            if win is None:
-                char = curses.getch()
-                logger.info(f'2---> {char = }')
-            else:
+            if win is not None:
                 char = win.getch()
                 logger.info(f'3---> {char = }')
-            if 128 <= char <= 191:
-                return char
+                if 128 <= char <= 191:
+                    return char
             return None
             raise UnicodeError
 
@@ -4916,29 +4915,29 @@ class SimpleCursesLineEdit():
         return out
 
     def _encode_string(self, data):
+        """ convert string to bytes """
         encodings = ['utf-8', locale.getpreferredencoding(False), 'latin1']
         for enc in encodings:
-            try:
-                data = data.encode(enc)
-            except:
-                continue
-            break
-
-        assert type(data) != bytes  # Latin1 should have worked.
-        return data
+            if enc:      # in case locale.getpreferredencoding returns None
+                try:
+                    return data.encode(enc)
+                except UnicodeEncodeError:
+                    continue
+        # if nothing works, play safe
+        return data.encode('latin1', errors='replace')
 
     @classmethod
     def _decode_string(cls, data):
+        """ convert bytes to string """
         encodings = ['utf-8', locale.getpreferredencoding(False), 'latin1']
         for enc in encodings:
-            try:
-                data = data.decode(enc)
-            except:
-                continue
-            break
-
-        assert type(data) != bytes  # Latin1 should have worked.
-        return data
+            if enc:      # in case locale.getpreferredencoding returns None
+                try:
+                    return data.decode(enc)
+                except UnicodeDecodeError:
+                    continue
+        # if nothing works, play safe
+        return data.decode('latin1', errors='replace')
 
     def _log(self, msg):
         with open(self._log_file, 'a', encoding='utf-8') as log_file:
@@ -5269,7 +5268,7 @@ def add_i(me, index, item):
     me.add_item('New!!!', select=True)
 
 def validate_delete_entry(index, item):
-    return False if item.startswith('profile:') else True
+    return item.startswith('profile:')
 
 def up():
     logger.error('up')

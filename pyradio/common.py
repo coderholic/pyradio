@@ -582,7 +582,7 @@ class StationsChanges():
                 except (ValueError, AttributeError):
                     # make sure ret gets False
                     last_sync = self.keys[-1]
-                ret = True if self.keys[-1] > last_sync else False
+                ret = self.keys[-1] > last_sync
         else:
             if stop is not None:
                 if stop():

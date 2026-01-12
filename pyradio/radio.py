@@ -149,7 +149,7 @@ def calc_can_change_colors(config):
 
 class SelectPlayer():
 
-    def __init__(self, active_player, parent, recording, vlc_no_recording):
+    def __init__(self, active_player, all_players, parent, recording, vlc_no_recording):
         self._players = {
             'mpv': '  MPV Media Player',
             'mplayer': '  MPlayer Media Player',
@@ -166,9 +166,9 @@ class SelectPlayer():
                 platform.startswith('win'):
             self._players['vlc'] += ' (Not Supported)'
             self._no_vlc = True
-        self._available_players = [x.PLAYER_NAME for x in player.available_players if x.PLAYER_NAME != self._active_player]
+        self._available_players = [x.PLAYER_NAME for x in all_players if x.PLAYER_NAME != self._active_player]
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f'available players = {player.available_players}')
+            logger.debug(f'available players = {all_players}')
             logger.debug(f'players: active = {self._active_player}, available = {self._available_players}')
         self.maxX = 45
         self.hline = 36
@@ -1233,12 +1233,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             ret, ret_theme_name = self._theme.readAndApplyTheme(self._theme_name, print_errors=stdscr)
             if ret == 0:
                 self._theme_name = self._theme.applied_theme_name
-                self._cnf.use_calculated_colors = False if self._cnf.opts['calculated_color_factor'][1] == '0' else True
+                self._cnf.use_calculated_colors = not self._cnf.opts['calculated_color_factor'][1] == '0'
                 self._update_calculated_colors()
             else:
                 self._theme_name = ret_theme_name
                 self._cnf.theme_not_supported = True
-                self._cnf.theme_has_error = True if ret == -1 else False
+                self._cnf.theme_has_error = ret == -1
                 if self._cnf.is_project_theme:
                     stdscr.addstr('\nTheme download failed...', curses.color_pair(0))
                     stdscr.refresh()
@@ -1262,17 +1262,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.program_restart = False
 
         ''' For the time being, supported players are mpv, mplayer and vlc. '''
-        # self.player = player.probePlayer(
-        #     config=self._cnf,
-        #     requested_player=self.requested_player)(
-        #         self._cnf,
-        #         self.log,
-        #         self.playbackTimeoutCounter,
-        #         self.connectionFailed,
-        #         self._show_station_info_from_thread,
-        #         self._add_station_to_stations_history,
-        #         self._recording_lock
-        #     )
         try:
             self.player = player.probePlayer(
                 config=self._cnf,
@@ -1347,26 +1336,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.playlist_selections[self.ws.PLAYLIST_MODE] = self.selections[self.ws.PLAYLIST_MODE][:-1][:]
         self.ll('setup')
         self.run()
-
-    def change_player(self, a_player):
-        new_player = None
-        if a_player == self.player.PLAYER_NAME:
-            pass
-        else:
-            for a_available_player in player.available_players:
-                if a_player == a_available_player.PLAYER_NAME:
-                    new_player = a_player(
-                        self._cnf,
-                        self.log,
-                        self.playbackTimeoutCounter,
-                        self.connectionFailed,
-                        self._show_station_info_from_thread,
-                        self._add_station_to_stations_history
-                    )
-        if new_player:
-            pass
-        else:
-            pass
 
     def _redraw(self):
         self.footerWin.noutrefresh()
@@ -1994,11 +1963,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         ret, ret_theme_name = self._theme.readAndApplyTheme(self._cnf.theme)
         if ret == 0:
             self._theme_name = self._cnf.theme
-            self._cnf.use_calculated_colors = False if self._cnf.opts['calculated_color_factor'][1] == '0' else True
+            self._cnf.use_calculated_colors = not self._cnf.opts['calculated_color_factor'][1] == '0'
             self._update_calculated_colors()
         else:
             self._theme_name = ret_theme_name
-            self._cnf.theme_has_error = True if ret == -1 else False
+            self._cnf.theme_has_error = ret == -1
             self._cnf.theme_not_supported = True
         self._redraw()
         curses.doupdate()
@@ -5534,7 +5503,7 @@ and |remove the file manually|.
         self._reset_status_bar_right()
         if self.number_of_items > 0:
             sel = self.selection - self.pageChange
-            if sel < 0 and self.selection > 0:
+            if sel < 0 < self.selection:
                 sel = 0
             self.setStation(sel)
             self._handle_cursor_move_up()
@@ -6728,12 +6697,12 @@ and |remove the file manually|.
         if self.player.isPlaying():
             self.stopPlayer()
         self.player = None
-        for i, n in enumerate(player.available_players):
+        for i, n in enumerate(self._cnf.AVAILABLE_PLAYERS):
             if n.PLAYER_NAME == player_name:
                 player_index = i
                 break
         self.detect_if_player_exited = True
-        self.player = player.available_players[player_index](
+        self.player = self._cnf.AVAILABLE_PLAYERS[player_index](
             self._cnf,
             self.log,
             self.playbackTimeoutCounter,
@@ -7406,12 +7375,13 @@ _____"|f|" to see the |free| keys you can use.
                     self.ws.operation_mode == self.ws.NORMAL_MODE:
                 ''' change player  '''
                 self._update_status_bar_right(status_suffix='')
-                if len(player.available_players) == 1:
+                if len(self._cnf.AVAILABLE_PLAYERS) == 1:
                     self._print_change_player_one_player_error()
                 else:
                     self.ws.operation_mode = self.ws.CHANGE_PLAYER_MODE
                     self._change_player = SelectPlayer(
                         active_player=self.player.PLAYER_NAME,
+                        all_players=self._cnf.AVAILABLE_PLAYERS,
                         parent=self.bodyWin,
                         recording=self.player.recording,
                         vlc_no_recording=self._show_win_no_record
@@ -7457,7 +7427,7 @@ _____"|f|" to see the |free| keys you can use.
                     self._rename_playlist_dialog = PyRadioRenameFile(
                         self._cnf.station_path if self.ws.operation_mode == self.ws.NORMAL_MODE else self.stations[self.selection][3],
                         self.outerBodyWin,
-                        opened_from_editor=True if self.ws.operation_mode == self.ws.NORMAL_MODE else False,
+                        opened_from_editor=self.ws.operation_mode == self.ws.NORMAL_MODE,
                         global_functions=self._global_functions,
                     )
                     if self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -8355,11 +8325,11 @@ _____"|f|" to see the |free| keys you can use.
                         ret, ret_theme_name = self._theme.readAndApplyTheme(self._cnf.opts['theme'][1])
                         if ret == 0:
                             self._theme_name = self._cnf.theme
-                            self._cnf.use_calculated_colors = False if self._cnf.opts['calculated_color_factor'][1] == '0' else True
+                            self._cnf.use_calculated_colors = not self._cnf.opts['calculated_color_factor'][1] == '0'
                             self._update_calculated_colors()
                         else:
                             self._theme_name = ret_theme_name
-                            self._cnf.theme_has_error = True if ret == -1 else False
+                            self._cnf.theme_has_error = ret == -1
                             self._cnf.theme_not_supported = True
                         self._redraw()
                         curses.doupdate()
@@ -9149,7 +9119,7 @@ _____"|f|" to see the |free| keys you can use.
                 if isinstance(ret, tuple):
                     ret = ret[0]
                 if ret == 0:
-                    self._cnf.use_calculated_colors = False if self._cnf.opts['calculated_color_factor'][1] == '0' else True
+                    self._cnf.use_calculated_colors = not self._cnf.opts['calculated_color_factor'][1] == '0'
                     self._update_calculated_colors()
                 elif ret < 0:
                     ch_ret, _ = self._cnf.is_project_theme(self._theme_name)
@@ -9157,7 +9127,7 @@ _____"|f|" to see the |free| keys you can use.
                             not self._cnf.auto_update_theme:
                         self._theme_name = ret_theme_name
                     self._cnf.theme_not_supported = True
-                    self._cnf.theme_has_error = True if ret == -1 else False
+                    self._cnf.theme_has_error = ret == -1
                     self._cnf.theme_not_supported_notification_shown = False
                     self._show_theme_not_supported()
                 #self.refreshBody()
@@ -9823,7 +9793,7 @@ _____"|f|" to see the |free| keys you can use.
             elif ret == 1:
                 ''' changed '''
                 force_http = self._connection_type_edit.connection_type
-                restart = False if force_http == self.player.force_http else True
+                restart = not force_http == self.player.force_http
                 self.player.force_http = force_http
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug(f'force http connections = {self.player.force_http}')
@@ -11189,7 +11159,7 @@ _____"|f|" to see the |free| keys you can use.
         #self.refreshBody()
 
     def _rename_playlist_from_normal_mode(self, copy, open_file, create, last_history):
-        old_file_is_reg = True if os.path.basename(self.old_filename).startswith('register_') else False
+        old_file_is_reg = os.path.basename(self.old_filename).startswith('register_')
         # logger.error('DE\n\n **** {}'.format(self._cnf._ps._p))
 
         # logger.error('DE title = {}'.format(self._cnf.station_title))

@@ -801,7 +801,7 @@ class RadioBrowser(PyRadioStationsBrowser):
             if 'order' in a_search['post_data'].keys():
                 self.search_by = a_search['post_data']['order']
             if 'reverse' in a_search['post_data']:
-                self.reverse = True if a_search['post_data']['reverse'] == 'true' else False
+                self.reverse = a_search['post_data']['reverse'] == 'true'
 
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(f'searching by was: "{self.search_by}"')
@@ -1644,7 +1644,7 @@ class RadioBrowserConfig():
             # logger.error('DE line = "' + line + '"')
             if value:
                 if key == 'AUTO_SAVE_CONFIG':
-                    self.auto_save = True if value.lower() == 'true' else False
+                    self.auto_save = value.lower() == 'true'
                 elif key == 'DEFAULT_SERVER':
                     self.server = value
                 elif key == 'DEFAULT_LIMIT':
@@ -1968,7 +1968,7 @@ class RadioBrowserConfigWindow():
 
     def _fix_focus(self, show=True):
         for i, widg in enumerate(self._widgets):
-            widg.focused = True if self._focused == i else False
+            widg.focused = self._focused == i
         if show:
             for n in self._widgets:
                 n.show(self._win)
@@ -3558,7 +3558,7 @@ class RadioBrowserSearchWindow():
 
     def _fix_widgets_enabling(self):
         self._fix_search_captions_color()
-        col = True if self._widgets[0].checked else False
+        col = self._widgets[0].checked
         self._widgets[1].enabled = col
         for i in range(self._checkbox_to_enable_widgets[1] + 1, len(self._widgets) - self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION):
             self._widgets[i].enabled = not col

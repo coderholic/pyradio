@@ -271,7 +271,7 @@ class MKVToolNix:
                     stderr=subprocess.PIPE
                     )
             r = p.communicate()
-            self.HAS_MKVTOOLNIX = True if p.returncode == 0 else False
+            self.HAS_MKVTOOLNIX = p.returncode == 0
             if self.HAS_MKVTOOLNIX:
                 self.mkvmerge = r[0].decode('utf-8').strip()
             if not self.HAS_MKVTOOLNIX and sys.platform.lower().startswith('dar'):
