@@ -162,3 +162,5 @@ If you are a packager and would like to produce a package for your distribution 
 2. [amano-kenji](https://github.com/amano-kenji), for his valuable suggestions and bug reports.
 
 3. [Scary-Guy](https://github.com/Scary-Guy), for his suggestions on improving user experience.
+
+4. [travis-jeans](https://github.com/travis-jeans), for his suggestions on the TTS system.

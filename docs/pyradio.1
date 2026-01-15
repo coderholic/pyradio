@@ -2,7 +2,7 @@
 .\" Copyright (C) 2018-2025 Spiros Georgaras <sng@hellug.gr>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH pyradio 1 "July 2025" pyradio
+.TH pyradio 1 "January 2026" pyradio
 
 .SH Name
 .PP
@@ -72,8 +72,12 @@ Display version information.
 .IP\ \fB-ls\fR,\ \fB--list\fR\fB-playlists\fR
 List of available playlists in config dir.
 .IP\ \fB-s\fR\ \fIPLAYLIST\fR,\ \fB--stations\fR\ \fIPLAYLIST\fR
-Load the specified playlist instead of the default
-one.
+Load the specified playlist instead of the default one.
+
+\fIPLAYLIST\fR can be the path to a \fICSV\fR or an \fIM3U\fR file, the name (without extension) of a \fICSV\fR or an \fIM3U\fR file which is in the station's folder, or the number which corresponds to a file presented at the output of the \fB-ls\fR command line parameter.
+
+If \fIPLAYLIST\fR is an \fIM3U\fR file, it will be converted to a \fICSV\fR file and this file will be loaded instead.
+
 .IP\ \fB-tlp\fR,\ \fB--toggle\fR\fB-load\fR\fB-last\fR\fB-playlist\fR
 Toggle autoload last opened playlist.
 
@@ -2112,6 +2116,9 @@ You can see a complete list of contributors at
 
 .IP \fI3. 3
 \fBScary-Guy\fR (\fIhttps://github.com/Scary-Guy\fR), for his suggestions on improving user experience.
+
+.IP \fI4. 3
+\fBtravis-jeans\fR (\fIhttps://github.com/travis-jeans\fR), for his suggestions on the TTS system.
 
 .SH See also
 

@@ -587,17 +587,18 @@ class PyRadioStations():
         orig_input = stationFile
 
         if stationFile:
-            if stationFile.endswith('.csv'):
+            if stationFile.lower().endswith(('.csv', 'm3u')):
                 ''' relative or absolute path '''
                 stationFile = path.abspath(stationFile)
             else:
                 ''' try to find it in config dir '''
                 if path.exists(stationFile):
                     return '', -8
-                stationFile += '.csv'
-                stationFile = path.join(self.stations_dir, stationFile)
-            if path.exists(stationFile) and path.isfile(stationFile):
-                return stationFile, 0
+                for an_ext in ('.csv', '.m3u', '.CSV', '.M3U'):
+                    test_file = path.join(self.stations_dir, stationFile + an_ext)
+                    if path.exists(test_file) and path.isfile(test_file):
+                        return test_file, 0
+                return '', -2
         else:
             for p in [path.join(self.stations_dir, 'pyradio.csv'),
                       path.join(self.stations_dir, 'stations.csv'),
@@ -621,7 +622,7 @@ class PyRadioStations():
                     return stationFile, 0
                 ''' playlist number sel does not exit '''
                 return '', -4
-            return '', -2
+        return '', -2
 
     def read_playlist_for_server(self, stationFile):
         """ read the station names only from a playlist """
@@ -661,7 +662,7 @@ class PyRadioStations():
             stationFile, ret = self._get_playlist_abspath_from_data(stationFile=stationFile)
             self._is_register = False
 
-        if ret == 0 and stationFile.endswith(('.m3u', '.M3U')):
+        if ret == 0 and stationFile.lower().endswith('.m3u'):
             print('Converting [green]M3U[/green] to [green]CSV[/green]...')
             # Coming from -s command line parameter
             # Try to convert m3u to csv

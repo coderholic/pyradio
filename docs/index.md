@@ -138,13 +138,15 @@ Furthermore, please refrain from using any third-party packaging methods, such a
 
 Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-x] [-u PLAYER]
                [-l] [-lt] [-sds] [-sd] [-od] [-pc] [-d]
-               [--d-player-input D_PLAYER_INPUT] [-ul] [-cp] [-us] [-U] [-R]
-               [-V] [-ls] [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes]
+               [--d-player-input D_PLAYER_INPUT] [-ul] [-us] [-U] [-R] [-V]
+               [-ls] [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes]
                [--no-themes] [--write-theme IN_THEME OUT_THEME,]
                [--terminal TERMINAL] [--terminal-param ...] [-oc] [-sc] [-cc]
                [-gc] [-r] [-or] [-lr] [-mkv MKV_FILE] [-scv PNG_FILE] [-srt]
                [-ach] [--headless IP_AND_PORT] [--address] [-fd]
-               [-cvt CONVERT] [-o OUTPUT] [-y] [-lm LIMIT]
+               [-cvt CONVERT] [--validate [{mark,drop}]] [--threads THREADS]
+               [--timeout TIMEOUT] [--max-per-host MAX_PER_HOST] [--with-date]
+               [--no-color] [--quiet] [-o OUTPUT] [-y] [-lm LIMIT]
 
 Curses based Internet Radio Player
 
@@ -179,8 +181,6 @@ General options:
                         (value = 0), log accepted input (value = 1) or raw
                         input (value = 2).
   -ul, --unlock         Remove sessions' lock file.
-  -cp, --check-playlist
-                        Enter playlist check mode.
   -us, --update-stations
                         Update "stations.csv" (if needed).
   -U, --update          Update PyRadio.
@@ -192,7 +192,11 @@ Playlist selection:
                         List of available playlists in config dir.
   -s, --stations PLAYLIST
                         Load the specified playlist instead of the default
-                        one.
+                        one. PLAYLIST can be the path to a CSV or an M3U file,
+                        the name (without extension) of a CSV or an M3U file
+                        which is in the station's folder, or the number which
+                        corresponds to a file presented at the output of the
+                        -ls command line parameter.
   -tlp, --toggle-load-last-playlist
                         Toggle autoload last opened playlist.
 
@@ -274,6 +278,30 @@ m3u playlist handling:
                         specified. With -lm: specify maximum number of
                         stations in an M3U file (default is 10,000, 0 disables
                         it, effectively accepting any number of entries).
+
+Playlist validation:
+  Validate playlists given with --convert. Requires a CSV file or an M3U
+  file or URL as input.
+
+  --validate [{mark,drop}]
+                        Validate a playlist (CSV or M3U). If no value is
+                        given, defaults to "mark". Options: mark: mark failed
+                        stations with [X], drop: save working and failed
+                        stations separately
+  --threads THREADS     Number of parallel threads to use when checking
+                        stations (default: 5).
+  --timeout TIMEOUT     Timeout in seconds for each station request (default:
+                        5).
+  --max-per-host MAX_PER_HOST
+                        Maximum concurrent requests per host (default: 2).
+                        Prevents server banning by throttling requests to the
+                        same host.
+  --with-date           Add timestamp to output filenames. Useful for
+                        scheduled checks to preserve history.
+  --no-color            Disable colored output. Useful for logging or when
+                        running in non-interactive environments.
+  --quiet               Reduce verbosity (suppress per-station output). Only
+                        show summary and errors.
 
 General options:
   -o, --output OUTPUT   Output file path (see specific commands for default
@@ -468,22 +496,6 @@ If a profile is set for the station, a "**[P]**" will be displayed at the left t
 
 - The last column will define the **Player** to be used (more on this at [Specifying a station's preferred station](#specifying-a-stations-preferred-player)).
 
-The following table presents the **Station's fields** and the current level of support.
-
-| Station Field   | Takes Effect in Playlist  | Customizable in Program  |
-|-----------------|---------------------------|--------------------------|
-| Name            | <0.9.3.11.5               | <0.9.3.11.5              |
-| URL             | <0.9.3.11.5               | <0.9.3.11.5              |
-| Encoding        | <0.9.3.11.5               | <0.9.3.11.5              |
-| Icon            | <0.9.3.11.5               | <0.9.3.11.5              |
-| Profile         | 0.9.3.11.10               | 0.9.3.11.10              |
-| Buffering       | 0.9.3.11.8                | 0.9.3.11.8               |
-| Force HTTP      | 0.9.3.11.6                | 0.9.3.11.10              |
-| Volume          | 0.9.3.11.10               | 0.9.3.11.5               |
-| Referer URL     | <0.9.3.11.5               | 0.9.3.11.10              |
-| Player          | 0.9.3.11.16               | 0.9.3.11.16              |
-
-
 **PyRadio** will by default load the user's stations file (e.g. *~/.config/pyradio/stations.csv*) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.
 
 **Note:** Older versions used to use **~/.pyradio** as default stations file. If this file is found, it will be copied to use's config directory (e.g. **~/.config/pyradio**) and renamed to **stations.csv** or if this file exists, to **pyradio.csv**. In this case, this file will be the default one.
@@ -565,6 +577,8 @@ The **-s** option will accept:
 * the name of a playlist file which is already in its configuration directory.
 * the number of a playlist file, as provided by the **-ls** command line option.
 
+**Note:** **PyRadio** can also open an **M3U** file using this option; the program will actually convert the **M3U** file to a **CSV** and load this file instead. One can use its absolute path, its name or its playlist number as described bellow.
+
 Examples:
 
 To load a playlist called "**blues.csv**", one would use the command:
@@ -580,17 +594,17 @@ To use the playlist number, one would execute the commands:
     $ pyradio -ls
 
            Playlists found in "/home/user/.config/pyradio"
-           ┏━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-           ┃  # ┃ Name     ┃    Size ┃ Date                     ┃
-           ┡━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-           │  1 │ hip-hop  │ 6.41 KB │ Mon Nov  7 18:17:47 2022 │
-           │  2 │ party    │ 1.94 KB │ Fri Nov 29 10:49:39 2021 │
-           │  3 │ stations │ 5.30 KB │ Sat Jul 18 23:32:04 2022 │
-           │  4 │ huge     │ 1.94 MB │ Wed Oct 23 11:05:09 2019 │
-           │  5 │ blues    │ 5.30 KB │ Thu Jul 16 16:30:51 2020 │
-           │  6 │ rock     │ 2.56 KB │ Fri Jan 10 00:20:07 2023 │
-           │  7 │ pop      │ 1.01 KB │ Fri Sep 18 00:06:51 2020 │
-           └────┴──────────┴─────────┴──────────────────────────┘
+           ┏━━━━┳━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+           ┃  # ┃ Name       ┃    Size ┃ Date                     ┃
+           ┡━━━━╇━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+           │  1 │ hip-hop    │ 6.41 KB │ Mon Nov  7 18:17:47 2022 │
+           │  2 │ party      │ 1.94 KB │ Fri Nov 29 10:49:39 2021 │
+           │  3 │ stations   │ 5.30 KB │ Sat Jul 18 23:32:04 2022 │
+           │  4 │ huge       │ 1.94 MB │ Wed Oct 23 11:05:09 2019 │
+           │  5 │ blues      │ 5.30 KB │ Thu Jul 16 16:30:51 2020 │
+           │  6 │ rock (m3u) │ 2.56 KB │ Fri Jan 10 00:20:07 2023 │
+           │  7 │ pop        │ 1.01 KB │ Fri Sep 18 00:06:51 2020 │
+           └────┴────────────┴─────────┴──────────────────────────┘
 
     $ pyradio -s 5
 

@@ -313,7 +313,13 @@ If nothing else works, try the following command:
     pl_group.add_argument('-ls', '--list-playlists', action='store_true',
                         help='List of available playlists in config dir.')
     pl_group.add_argument('-s', '--stations', default='', metavar=('PLAYLIST', ),
-                        help='Load the specified playlist instead of the default one.')
+                        help='Load the specified playlist instead of the default one.'
+                          ' PLAYLIST can be the path to a CSV or an M3U file, '
+                          'the name (without extension) of a CSV or an M3U file '
+                          'which is in the station\'s folder, or the number which '
+                          'corresponds to a file presented at the output of the '
+                          '-ls command line parameter.'
+                          )
     pl_group.add_argument('-tlp', '--toggle-load-last-playlist', action='store_true',
                         help='Toggle autoload last opened playlist.')
 
