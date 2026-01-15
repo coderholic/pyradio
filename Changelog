@@ -1,3 +1,12 @@
+2026-01-15 s-n-g
+    * version 0.9.3.11.23 - 0.9.3.12-beta23
+    * the -s (--stations) comamd line parameter will open M3U files as well
+    * fixing the importlib_resources dependency problem for Python 3.8
+    * fixing a typo that would crash the program
+    * implementing pylint suggestion
+    * updating MPV Windows download link
+    * updating documentation
+
 2026-01-04 s-n-g
     * version 0.9.3.11.22 - 0.9.3.12-beta22
     * fixing ##317 - Not starting fresh install on fresh fedora 43
