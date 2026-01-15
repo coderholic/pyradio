@@ -121,7 +121,8 @@ class XdgMigrate():
 
         self.files_to_other = [[x, self._replace_dir_in_path(x, self.other_dir) ] for x in files_in_path if x not in flag_files]
         for n in range(len(self.files_to_other)-1, -1, -1):
-            if self.files_to_other[0][0].endswith('.referer.txt'):
+            if (self.files_to_other[0][0].endswith('.referer.txt') or
+                    self.files_to_other[0][0].endswith('.m3u')):
                 self.files_to_other.pop(n)
 
     def _get_max_length(self):

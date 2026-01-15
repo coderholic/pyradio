@@ -51,6 +51,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#desktop-notification-icons-(optional)">Desktop Notification Icons (optional)</a></li>
 </ul></li>
 <li><a href="#desktop-file-location">Desktop File location</a></li>
+<li><a href="#importlib_resources">importlib_resources</a></li>
 <li><a href="#pyradio/__pycache__">pyradio/__pycache__</a></li>
 </ul></li>
 <li><a href="#recordings-directory">Recordings Directory</a></li>
@@ -80,6 +81,7 @@ a:visited{color: SaddleBrown;}
 <li>netifaces</li>
 <li>dateutil</li>
 <li>charset-normalizer</li>
+<li>importlib_resources (depending on python version)</li>
 </ol>
 <h2 id="files-to-change">Files to change <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>You will have to modify a couple of files to tailor <strong>PyRadio</strong>’ to your needs and liking.</p>
@@ -112,6 +114,9 @@ a:visited{color: SaddleBrown;}
 <h3 id="desktop-file-location">Desktop File location</h3>
 <p>If the Desktop File is not installed in <em>/usr/share/applications</em> or <em>/usr/local/share/applications</em>, it will have to be passed as a parameter to the script that will handle it, like so:</p>
 <pre>sed -i &quot;s,&#39; -t &#39;,&#39; -d /path/to/desktop_file&#39; + &amp;,&quot; pyradio/main.py</pre>
+<h3 id="importlib_resources">importlib_resources</h3>
+<p>Depending on the Python version used by your distro, you may also have to add <strong>importlib_resources</strong> to your dependencies.</p>
+<p>Experience says Python 3.8 and 3.10 will probably need this package installed.</p>
 <h3 id="pyradio__pycache__">pyradio/__pycache__</h3>
 <p>This is a directory that is needed for some build systems to succesfully build <strong>PyRadio</strong>.</p>
 <p>Depending on the build system:</p>

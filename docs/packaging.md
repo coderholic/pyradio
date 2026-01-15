@@ -11,6 +11,7 @@
     * [Desktop Notifications (optional)](#desktop-notifications-(optional))
         * [Desktop Notification Icons (optional)](#desktop-notification-icons-(optional))
     * [Desktop File location](#desktop-file-location)
+    * [importlib_resources](#importlib_resources)
     * [pyradio/\_\_pycache\_\_](#pyradio/\_\_pycache\_\_)
 * [Recordings Directory](#recordings-directory)
 * [MKVToolNix cli installation](#mkvtoolnix-cli-installation)
@@ -50,6 +51,7 @@ Then you have to add the following python modules to the relevant section of you
 5. netifaces
 6. dateutil
 7. charset-normalizer
+8. importlib_resources (depending on python version)
 
 ## Files to change
 
@@ -125,6 +127,12 @@ If the Desktop File is not installed in */usr/share/applications* or */usr/local
 ```
 sed -i "s,' -t ',' -d /path/to/desktop_file' + &," pyradio/main.py
 ```
+
+### importlib_resources
+
+Depending on the Python version used by your distro, you may also have to add **importlib_resources** to your dependencies.
+
+Experience says Python 3.8 and 3.10 will probably need this package installed.
 
 ### pyradio/\_\_pycache\_\_
 

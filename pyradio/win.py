@@ -45,7 +45,7 @@ purl = (
         https://sourceforge.net/projects/mpv-player-windows/files/latest/download
 '''
 zurl = [
-    'https://sourceforge.com/projects/mpv-player-windows/files/64bit/mpv-x86_64-20260104-git-a3350e2.7z/download',
+    'https://sourceforge.com/projects/mpv-player-windows/files/64bit/mpv-x86_64-20260111-git-9483d6e.7z/download',
     'https://sourceforge.net/projects/mplayerwin/files/MPlayer-MEncoder/r38151/mplayer-svn-38151-x86_64.7z/download'
 ]
 

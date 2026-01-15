@@ -2401,11 +2401,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self._simple_schedule = None
         if self.tts:
             # Phase 2: Wait for TTS to fully stop (with timeout)
-            clean_shutdown = self.tts.wait_for_shutdown(timeout=2.0)
-            if clean_shutdown:
-                logger.debug("TTS threads stopped cleanly")
-            else:
-                logger.warning("TTS threads forced to stop")
+            self.tts.wait_for_shutdown(timeout=2.0)
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("TTS threads stopped")
 
     def _goto_playing_station(self, changing_playlist=False):
         ''' make sure playing station is visible '''
