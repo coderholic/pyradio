@@ -6818,8 +6818,8 @@ and |remove the file manually|.
                 Priority.NORMAL,
                 mode=self.ws.operation_mode
             )
-        else:
-            logger.error('not speaking')
+        # else:
+        #     logger.error('not speaking')
 
     def keypress(self, char):
         ''' PyRadio keypress '''
@@ -10821,28 +10821,23 @@ _____"|f|" to see the |free| keys you can use.
         self.refreshBody()
 
     def _can_display_help_msg(self, msg):
-        logger.error(f'{msg = }')
         if msg:
             if ' (' + M_STRINGS['error-str'] + ' ' in msg:
                 logger.error('1 return False')
                 return False
-        # logger.error(f'{msg = }')
         ''' len("Press ? for help") = 16 '''
         out_msg_len = cjklen(M_STRINGS['press-?'])
         # if (not self._limited_height_mode and \
         #         not self._limited_width_mode) or \
         #         msg is None:
-        if self._limited_height_mode or \
-                self._limited_width_mode or \
-                msg is None:
-            logger.error('2 return False')
+        if (self._limited_height_mode or
+                self._limited_width_mode or
+                msg is None):
             ret = False
         else:
             if self.outerBodyWin:
                 ret = self.outerBodyMaxX - cjklen(msg) - out_msg_len > 10 if msg else True
-                logger.error(f'3 return {ret}')
             else:
-                logger.error('4 return False')
                 ret = False
         return ret
 

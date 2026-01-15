@@ -9,7 +9,7 @@ import collections
 import json
 from pathlib import Path
 # import socket
-from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, getpid, listdir, access, R_OK, environ, fspath
+from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, getpid, listdir, access, R_OK, environ, fspath, unlink
 from time import ctime, sleep
 from datetime import datetime
 from shutil import which, copyfile, move, Error as shutil_Error, rmtree as remove_tree
@@ -38,6 +38,7 @@ from .xdg import XdgDirs, XdgMigrate, CheckDir
 from .install import get_a_linux_resource_opener
 from .html_help import is_graphical_environment_running
 from .log import TIME_FORMATS
+from .m3u import parse_m3u
 
 try:
     from subprocess import Popen, DEVNULL
@@ -659,6 +660,34 @@ class PyRadioStations():
         else:
             stationFile, ret = self._get_playlist_abspath_from_data(stationFile=stationFile)
             self._is_register = False
+
+        if ret == 0 and stationFile.endswith(('.m3u', '.M3U')):
+            print('Converting [green]M3U[/green] to [green]CSV[/green]...')
+            # Coming from -s command line parameter
+            # Try to convert m3u to csv
+            stations, error = parse_m3u(stationFile)
+            if error:
+                print(f'[bold red]Error:[/bold red] Cannot convert file: "{stationFile}" : "[red]{error}[/red]"')
+                sys.exit(1)
+            csv_file_to_save = stationFile[:-3] + 'csv'
+            if path.exists(csv_file_to_save):
+                print(f'[red]Error:[/red] File already exists: "{csv_file_to_save}"')
+                sys.exit(1)
+            out_csv = CsvReadWrite(csv_file_to_save)
+            ret = out_csv.write(items=stations)
+            out_csv = None
+            # logger.error(f'{ret = }')
+            if ret == 0:
+                stationFile = csv_file_to_save
+            else:
+                print(f'[bold red]Error:[/bold red] Cannot save CSV file: "{csv_file_to_save}')
+                if not path.exists(csv_file_to_save):
+                    try:
+                        unlink(csv_file_to_save)
+                    except (FileNotFoundError, PermissionError, IsADirectoryError, OSError) as e:
+                        pass
+                sys.exit(1)
+
         read_file = True
         prev_file = ''
         if ret < 0:

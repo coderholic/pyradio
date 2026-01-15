@@ -15,7 +15,8 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    'importlib_resources; python_version<"3.9"'
+    'importlib_resources; python_version<"3.9"',
+    'importlib_resources; python_version=="3.10"'
 ]
 
 [project.optional-dependencies]
