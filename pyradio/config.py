@@ -590,6 +590,8 @@ class PyRadioStations():
             if stationFile.lower().endswith(('.csv', 'm3u')):
                 ''' relative or absolute path '''
                 stationFile = path.abspath(stationFile)
+                if path.exists(stationFile) and path.isfile(stationFile):
+                    return stationFile, 0
             else:
                 ''' try to find it in config dir '''
                 if path.exists(stationFile):
@@ -598,7 +600,6 @@ class PyRadioStations():
                     test_file = path.join(self.stations_dir, stationFile + an_ext)
                     if path.exists(test_file) and path.isfile(test_file):
                         return test_file, 0
-                return '', -2
         else:
             for p in [path.join(self.stations_dir, 'pyradio.csv'),
                       path.join(self.stations_dir, 'stations.csv'),
@@ -622,7 +623,7 @@ class PyRadioStations():
                     return stationFile, 0
                 ''' playlist number sel does not exit '''
                 return '', -4
-        return '', -2
+            return '', -2
 
     def read_playlist_for_server(self, stationFile):
         """ read the station names only from a playlist """
@@ -875,7 +876,7 @@ class PyRadioStations():
         if a_title:
             self.station_title = a_title
         else:
-            self.station_title = ''.join(self.station_file_name.split('.')[:-1])
+            self.station_title = '.'.join(self.station_file_name.split('.')[:-1])
         if self.is_register and self.station_title.startswith('register_'):
             self.station_title = self.station_title.replace('register_', 'Register: ')
         self._ps.remove_duplicates()
@@ -1137,15 +1138,18 @@ class PyRadioStations():
 
         if len(csv_files) == 0 and len(m3u_files) == 0:
             return 0, -1
+        # logger.error('\n\n\n------------------')
         for a_file in csv_files:
-            a_file_name = ''.join(path.basename(a_file).split('.')[:-1])
+            # logger.error(f'{a_file = }')
+            a_file_name = '.'.join(path.basename(a_file).split('.')[:-1])
+            # logger.error(f'{a_file_name = }')
             a_file_size = self._bytes_to_human(path.getsize(a_file))
             a_file_time = ctime(path.getmtime(a_file))
             self.playlists.append([a_file_name, a_file_time, a_file_size, a_file])
 
         if m3u_files:
             for a_file in m3u_files:
-                a_file_name = ''.join(path.basename(a_file).split('.')[:-1])
+                a_file_name = '.'.join(path.basename(a_file).split('.')[:-1])
                 a_file_size = self._bytes_to_human(path.getsize(a_file))
                 a_file_time = ctime(path.getmtime(a_file))
                 self.playlists.append([a_file_name + ' (m3u)', a_file_time, a_file_size, a_file])
