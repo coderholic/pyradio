@@ -928,7 +928,7 @@ class PyRadio():
             if self._cnf._online_browser.page > 0:
                 out.append('    Results page: {}'.format(self._cnf._online_browser.page + 1))
         else:
-            out.append('  Playlist: "{}'.format(basename(self._playlist_in_editor)[:-4]))
+            out.append('  Playlist: "{}"'.format(basename(self._playlist_in_editor)[:-4]))
         if self.player.isPlaying():
             out.append('  Status: In playback{0} {1}'.format(
                 ', recording' if self.player.currently_recording else '',

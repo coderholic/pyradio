@@ -230,8 +230,7 @@ class PyRadioClient():
 
 
 class MyArgParser(ArgumentParser):
-    def __init__(self):
-        description = None
+    def __init__(self, description):
         super().__init__(description=description)
 
     def print_usage(self, file=None):
