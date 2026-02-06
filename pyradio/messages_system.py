@@ -83,7 +83,7 @@ class PyRadioMessagesSystem():
     def set_text(self, parent, *args):
         self._args = args
         self._txt = {
-        'UNIVERSAL': (),
+        'UNIVERSAL': ('', '', Priority.HIGH),
 
         'H_MAIN': ('PyRadio Help',
 kb2str(r'''__Welcome to |PyRadio Main Help
@@ -283,11 +283,11 @@ _____in the current playlist.
 ''', Priority.HIGH
 ),
 
-    'M_STATION_INFO': ('', Priority.DIALOG),
+    'M_STATION_INFO': ('', '', Priority.DIALOG),
 
-    'M_DB_INFO': ('', Priority.DIALOG),
+    'M_DB_INFO': ('', '', Priority.DIALOG),
 
-    'D_WITH_DELAY': ('', Priority.DIALOG),
+    'D_WITH_DELAY': ('', '', Priority.DIALOG),
 
     'H_PLAYLIST': ('Playlist Help',
 kb2str(r'''Up|, |{j}|, |PgUp|,                  <*>
@@ -337,8 +337,7 @@ Press "|{y}|" to confirm, or any other key to cancel
 '''
 ), Priority.HIGH),
 
-    'M_PLAYLIST_LOAD_ERROR': ('Error',
-),
+    'M_PLAYLIST_LOAD_ERROR': ('Error', '', Priority.HIGH),
 
     'D_PLAYLIST_DIRTY_CONFIRM_LOCKED': ('Playlist Reload',
 kb2strL(r'''
@@ -879,7 +878,7 @@ and be asked next time you execute |PyRadio|.
 '''
 ), Priority.HIGH),
 
-    'M_UPDATE_STATIONS_RESULT': ('', ''),
+    'M_UPDATE_STATIONS_RESULT': ('', '', Priority.HIGH),
 
     'H_CONFIG': ('Configuration Help',
 kb2str(r'''Up|, |{j}|, |PgUp|,                  <*>
@@ -1015,7 +1014,7 @@ Global functions work when preceded with a "|\|".
 '''
 ), Priority.HELP),
 
-    'H_EXTERNAL_LINE_EDITOR': ('', Priority.HELP),
+    'H_EXTERNAL_LINE_EDITOR': ('', '', Priority.HELP),
 
     'H_LINE_EDITOR': ('Line Editor Help',
 kb2str(r'''Left| / |Right           <*> Move to next / previous character.
@@ -1824,6 +1823,7 @@ unintentionally disrupt functionality.
         # except ValueError:
         #     cap, out, priority = self._txt[self.active_message_key]
 
+        logger.error(f'{self.active_message_key =  }')
         logger.error('\n\nself._txt[self.active_message_key] = {}\n\n'.format(self._txt[self.active_message_key]))
 
         try:

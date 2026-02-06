@@ -294,6 +294,10 @@ def handle_punctuation_marks(text, verbosity):
     Returns:
         Text with punctuation marks handled appropriately
     """
+
+    text = text.replace(r'\"', '"')
+    text = text.replace(r"\'", "'")
+
     if verbosity == 'punctuation':
         # Handle dashes and hyphens
         if any(c in text for c in ['-', '–', '—', '‒']):

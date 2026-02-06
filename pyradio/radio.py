@@ -6204,7 +6204,7 @@ and |remove the file manually|.
         else:
             return
         #logger.error('caption = "{}"\ntxt = "{}"'.format(caption, txt))
-        return caption, txt
+        return caption, txt, Priority.HIGH
 
     def _ask_to_update_stations_csv(self):
         self._open_simple_message_by_key_and_mode(

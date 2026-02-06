@@ -578,7 +578,7 @@ class StationsChanges():
                 ret = True
             else:
                 try:
-                    last_sync = tuple([int(ver.strip()) for ver in self.last_sync.split(',')])
+                    last_sync = tuple(int(ver.strip()) for ver in self.last_sync.split(','))
                 except (ValueError, AttributeError):
                     # make sure ret gets False
                     last_sync = self.keys[-1]
@@ -592,8 +592,19 @@ class StationsChanges():
             ret = True
 
         if ret and self.last_sync is not None:
+            logger.error(f'==\n==\n{self.last_sync = }\n==\n==')
             self.keys.reverse()
-            while self.keys[-1] <= self.last_sync:
+            logger.error(f'==\n==\n{self.keys = }\n==\n==')
+            logger.error(f'==\n==\n{self.keys[-1] = }\n==\n==')
+
+            if isinstance(self.last_sync, str):
+                try:
+                    last_sync = tuple(int(n.strip()) for n in self.last_sync.split(','))
+                except ValueError, AttributeError:
+                    last_sync = self.keys[-1]
+            else:
+                last_sync = self.last_sync
+            while self.keys[-1] <= last_sync:
                 self.keys.pop()
             self.keys.reverse()
         if stop is not None:

@@ -1,6 +1,13 @@
+2026-02-06 s-n-g
+    * version 0.9.3.11.26 - 0.9.3.12-beta26
+    * fixing #321 - stations update crash
+    * TTS will concert \" \' to " '
+    * updating documentation
+    * updating MPV Windows download link
+
 2026-01-21 s-n-g
     * version 0.9.3.11.25 - 0.9.3.12-beta25
-    * fixing #320 - pyradio-slient unuseable
+    * fixing #320 - pyradio-client unusable
     * updating MPV Windows download link
 
 2026-01-16 s-n-g
@@ -10,7 +17,7 @@
 
 2026-01-15 s-n-g
     * version 0.9.3.11.23 - 0.9.3.12-beta23
-    * the -s (--stations) comamd line parameter will open M3U files as well
+    * the -s (--stations) commamd line parameter will open M3U files as well
     * fixing the importlib_resources dependency problem for Python 3.8
     * fixing a typo that would crash the program
     * implementing pylint suggestion
