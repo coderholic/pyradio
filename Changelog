@@ -1,3 +1,7 @@
+2026-02-07 s-n-g
+    * version 0.9.3.11.27 - 0.9.3.12-beta27
+    * fixing #322 - pyradio dont start
+
 2026-02-06 s-n-g
     * version 0.9.3.11.26 - 0.9.3.12-beta26
     * fixing #321 - stations update crash

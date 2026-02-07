@@ -600,7 +600,8 @@ class StationsChanges():
             if isinstance(self.last_sync, str):
                 try:
                     last_sync = tuple(int(n.strip()) for n in self.last_sync.split(','))
-                except ValueError, AttributeError:
+                except (ValueError, AttributeError) as e:
+                    logger.error(f'last_sync exception: {e}')
                     last_sync = self.keys[-1]
             else:
                 last_sync = self.last_sync
