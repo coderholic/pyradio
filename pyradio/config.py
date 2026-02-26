@@ -1357,8 +1357,8 @@ class PyRadioConfig(PyRadioStations):
         self.opts['tts_pitch'] = ['  Pitch: ', '0']
         self.opts['tts_verbosity'] = ['Verbosity: ', 'default']
         self.opts['tts_context'] = ['Context: ', 'all']
-        self.opts['tts_speak_volume'] = ['Speak volume change: ', '0']
-        self.opts['tts_speak_volume_start'] = ['  Speak start too: ', False]
+        self.opts['tts_speak_volume_change'] = ['Speak volume change: ', '0']
+        self.opts['tts_speak_volume_change_start'] = ['  Speak start too: ', False]
         self.opts['clock_title'] = ['Clock', '']
         self.opts['enable_clock'] = ['Display on startup: ', False]
         self.opts['time_format'] = ['Time format: ', '1']
@@ -1767,21 +1767,21 @@ class PyRadioConfig(PyRadioStations):
         self.opts['dirty_config'][1] = True
 
     @property
-    def tts_speak_volume(self):
-        return self.opts['tts_speak_volume'][1]
+    def tts_speak_volume_change(self):
+        return self.opts['tts_speak_volume_change'][1]
 
-    @tts_speak_volume.setter
-    def tts_speak_volume(self, val):
-        self.opts['tts_speak_volume'][1] = val
+    @tts_speak_volume_change.setter
+    def tts_speak_volume_change(self, val):
+        self.opts['tts_speak_volume_change'][1] = val
 
     @property
-    def tts_speak_volume_start(self):
+    def tts_speak_volume_change_start(self):
         ''' connection timeout as string '''
-        return self.opts['tts_speak_volume_start'][1]
+        return self.opts['tts_speak_volume_change_start'][1]
 
-    @tts_speak_volume_start.setter
-    def tts_speak_volume_start(self, val):
-        self.opts['tts_speak_volume_start'][1] = val
+    @tts_speak_volume_change_start.setter
+    def tts_speak_volume_change_start(self, val):
+        self.opts['tts_speak_volume_change_start'][1] = val
         self.opts['dirty_config'][1] = True
 
     @property
@@ -2654,19 +2654,19 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['tts_context'][1] = 'window'
                 elif cont == 'limited':
                     self.opts['tts_context'][1] = 'limited'
-            elif sp[0] == 'tts_speak_volume':
+            elif sp[0] == 'tts_speak_volume_change':
                 try:
                     speak_vol = int(sp[1])
                 except ValueError:
                     speak_vol = 0
-                if not 300 < speak_vol < 3000:
+                if not 300 <= speak_vol <= 3000:
                     speak_vol = 0
-                self.opts['tts_speak_volume'][1] = str(speak_vol)
-            elif sp[0] == 'tts_speak_volume_start':
+                self.opts['tts_speak_volume_change'][1] = str(speak_vol)
+            elif sp[0] == 'tts_speak_volume_change_start':
                 if sp[1].lower() == 'true':
-                    self.opts['tts_speak_volume_start'][1] = True
+                    self.opts['tts_speak_volume_change_start'][1] = True
                 else:
-                    self.opts['tts_speak_volume_start'][1] = False
+                    self.opts['tts_speak_volume_change_start'][1] = False
             elif sp[0] == 'confirm_station_deletion':
                 if sp[1].lower() == 'false':
                     self.opts['confirm_station_deletion'][1] = False

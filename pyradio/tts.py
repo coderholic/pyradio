@@ -1142,7 +1142,7 @@ class TTSManager:
                     pass
                 if delay_volume_speak == 0:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Rejecting volume request: tts_speak_volume = 0')
+                        logger.debug('Rejecting volume request: tts_speak_volume_change = 0')
                     return True
 
                 # Prepare the TTS notification

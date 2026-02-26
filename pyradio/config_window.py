@@ -858,8 +858,8 @@ class PyRadioConfigWindow():
                     pitch=lambda: self._config_options['tts_pitch'][1],
                     verbosity=lambda: self._config_options['tts_verbosity'][1],
                     context=lambda: self._config_options['tts_context'][1],
-                    speak_volume=lambda: self._config_options['tts_speak_volume'][1],
-                    speak_volume_start=lambda: self._config_options['tts_speak_volume_start'][1],
+                    speak_volume=lambda: self._config_options['tts_speak_volume_change'][1],
+                    speak_volume_start=lambda: self._config_options['tts_speak_volume_change_start'][1],
                     tts_in_config=lambda: True,
                 )
                 if not self.tmp_tts.available:
@@ -880,7 +880,7 @@ class PyRadioConfigWindow():
                 'tts_volume',
                 'tts_rate',
                 'tts_pitch',
-                'tts_speak_volume',
+                'tts_speak_volume_change',
             ) and char in (
                 curses.KEY_LEFT,
                 curses.KEY_RIGHT,
@@ -1292,7 +1292,7 @@ class PyRadioConfigWindow():
                 self._win.refresh()
                 return -1, []
 
-        elif val[0] == 'tts_speak_volume':
+        elif val[0] == 'tts_speak_volume_change':
             if char in (curses.KEY_RIGHT, kbkey['l']) or \
                     check_localized(char, (kbkey['l'], )):
                 t = int(val[1][1])
@@ -1392,7 +1392,7 @@ class PyRadioConfigWindow():
                 'mplayer_save_br',
                 'continuous_playback',
                 'enable_tts',
-                'tts_speak_volume_start',
+                'tts_speak_volume_change_start',
             ):
                 logger.error('5')
                 self._config_options[sel][1] = not self._config_options[sel][1]

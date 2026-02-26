@@ -68,6 +68,7 @@ a:visited{color: SaddleBrown;}
 <ul>
 <li><a href="#smart-queue-management">Smart Queue Management</a></li>
 <li><a href="#intelligent-behavior">Intelligent Behavior</a></li>
+<li><a href="#volume-change-announcements">Volume Change Announcements</a></li>
 </ul></li>
 <li><a href="#usage-guidelines">Usage Guidelines</a>
 <ul>
@@ -95,6 +96,7 @@ a:visited{color: SaddleBrown;}
 <li><strong>Playback Status</strong>: Connection establishment, playback start/stop</li>
 <li><strong>Media Metadata</strong>: Song titles and artist information from stream metadata</li>
 <li><strong>System Events</strong>: Connection errors, volume changes, status alerts</li>
+<li><strong>Volume Adjustment Feedback</strong>: Optional debounced announcements during volume changes</li>
 <li><strong>Dialog Interaction</strong>: Menu items, help text, configuration options</li>
 </ul>
 <h2 id="activation">Activation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
@@ -160,6 +162,15 @@ a:visited{color: SaddleBrown;}
 <li>Song titles are queued and spoken after high-priority interruptions</li>
 <li>Rapid navigation triggers queue optimization</li>
 </ul>
+<h3 id="volume-change-announcements">Volume Change Announcements</h3>
+<p>When enabled, PyRadio provides spoken feedback for volume adjustments using a debounce mechanism.</p>
+<p>A “volume change session” begins with the first volume modification and ends after no further changes occur within the configured delay period. At the end of the session, the system announces:</p>
+<p>“Volume set to XX%”</p>
+<p>The debounce delay (300–3000 ms) prevents repetitive announcements while rapidly adjusting the volume.</p>
+<p>Optionally, an additional start notification:</p>
+<p>“Volume change initiated”</p>
+<p>can be enabled to indicate the beginning of a volume adjustment session.</p>
+<p>Typical values: 300–500 ms for responsive feedback.</p>
 <h2 id="usage-guidelines">Usage Guidelines <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <h3 id="for-english-dominant-users">For English-Dominant Users</h3>
 <ul>
@@ -225,6 +236,18 @@ a:visited{color: SaddleBrown;}
 <td>default/punctuation</td>
 <td>default</td>
 <td>Controls how punctuation is spoken</td>
+</tr>
+<tr>
+<td><strong>tts_speak_volume_change</strong></td>
+<td>0, 300 to 3000</td>
+<td>0</td>
+<td>Enables announcements during volume changes</td>
+</tr>
+<tr>
+<td><strong>tts_speak_volume_shange_start</strong></td>
+<td>True / False</td>
+<td>False</td>
+<td>Enables “Volume change initiated” announcement</td>
 </tr>
 </tbody>
 </table>

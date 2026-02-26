@@ -25,6 +25,7 @@
 * [Technical Features](#technical-features)
     * [Smart Queue Management](#smart-queue-management)
     * [Intelligent Behavior](#intelligent-behavior)
+    * [Volume Change Announcements](#volume-change-announcements)
 * [Usage Guidelines](#usage-guidelines)
     * [For English-Dominant Users](#for-english-dominant-users)
     * [For Multi-Language Content](#for-multi-language-content)
@@ -48,6 +49,7 @@ The TTS system provides spoken feedback for:
 - **Playback Status**: Connection establishment, playback start/stop
 - **Media Metadata**: Song titles and artist information from stream metadata
 - **System Events**: Connection errors, volume changes, status alerts
+- **Volume Adjustment Feedback**: Optional debounced announcements during volume changes
 - **Dialog Interaction**: Menu items, help text, configuration options
 
 ## Activation
@@ -125,6 +127,24 @@ TTS voices generally fall into two categories:
 - Song titles are queued and spoken after high-priority interruptions
 - Rapid navigation triggers queue optimization
 
+### Volume Change Announcements
+
+When enabled, PyRadio provides spoken feedback for volume adjustments using a debounce mechanism.
+
+A "volume change session" begins with the first volume modification and ends after no further changes occur within the configured delay period. At the end of the session, the system announces:
+
+"Volume set to XX%"
+
+The debounce delay (300–3000 ms) prevents repetitive announcements while rapidly adjusting the volume.
+
+Optionally, an additional start notification:
+
+"Volume change initiated"
+
+can be enabled to indicate the beginning of a volume adjustment session.
+
+Typical values: 300–500 ms for responsive feedback.
+
 ## Usage Guidelines
 
 ### For English-Dominant Users
@@ -148,6 +168,8 @@ TTS voices generally fall into two categories:
 | **tts_rate** | -100 to 100 | 0 | Speech speed (negative=slower, positive=faster) |
 | **tts_pitch** | -100 to 100 | 0 | Voice pitch adjustment |
 | **tts_verbosity** | default/punctuation | default | Controls how punctuation is spoken |
+| **tts_speak_volume_change** | 0, 300 to 3000| 0 | Enables announcements during volume changes | 
+| **tts_speak_volume_shange_start** | True / False | False | Enables "Volume change initiated" announcement |
 
 ### Speech Characteristics
 
