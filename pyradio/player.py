@@ -1032,6 +1032,7 @@ class Player():
                             on_connect()
                             if self.mpris():
                                 self.mpris().update_playback(True)
+                                self.mpris().update_nav_caps(True, True)
                         self.outputStream.write(msg_id=msg_id, msg=new_input, counter='')
                         with recording_lock:
                             self.playback_is_on = True
@@ -1046,6 +1047,7 @@ class Player():
                                 on_connect()
                                 if self.mpris():
                                     self.mpris().update_playback(True)
+                                    self.mpris().update_nav_caps(True, True)
                             with self.buffering_lock:
                                 self.buffering_change_function()
                             with self.status_update_lock:
@@ -1080,6 +1082,7 @@ class Player():
                                     on_connect()
                                     if self.mpris():
                                         self.mpris().update_playback(True)
+                                        self.mpris().update_nav_caps(True, True)
                             with self.status_update_lock:
                                 self.playback_is_on = True
                                 self.connecting = False
@@ -1141,6 +1144,7 @@ class Player():
                                         on_connect()
                                         if self.mpris():
                                             self.mpris().update_playback(True)
+                                            self.mpris().update_nav_caps(True, True)
                                 self.stop_timeout_counter_thread = True
                                 try:
                                     self.connection_timeout_thread.join()
@@ -2025,6 +2029,7 @@ class Player():
         self.connecting = False
         if self.mpris():
             self.mpris().update_playback(True)
+            self.mpris().update_nav_caps(True, True)
         if stop():
             return False
         enable_crash_detection_function()

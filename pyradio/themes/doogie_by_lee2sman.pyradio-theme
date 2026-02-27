@@ -1,0 +1,49 @@
+# Doogie theme for PyRadio
+# Inspired by Doogie Howser M.D.'s DOS diary computer
+# Classic blue screen, white text, yellow and grey accents
+
+# Main foreground and background
+# bright white text on classic DOS blue
+Stations            #ffffff #0000aa
+
+# Playing station text color
+# (background color will come from Stations)
+# yellow for the now-playing station, like a highlighted DOS entry
+Active Station      #ffff55
+
+# Status bar foreground and background
+# blue text on light grey, like a DOS menu bar
+Status Bar          #0000aa #aaaaaa
+
+# Normal cursor foreground and background
+# blue text on white, DOS block cursor feel
+Normal Cursor       #0000aa #ffffff
+
+# Cursor foreground and background when cursor is on playing station
+# blue on yellow so it's clearly the active one
+Active Cursor       #0000aa #ffff55
+
+# Line Editor cursor
+# blue text on grey
+Edit Cursor         #0000aa #aaaaaa
+
+# Text color for extra function indication and jump numbers in status bar
+# (background color will come from Stations)
+# yellow, like DOS function key labels
+Extra Func          #ffff55
+
+# Text color for URL
+# (background color will come from Stations)
+# light grey, subtle on the blue
+PyRadio URL         #aaaaaa
+
+# Message window border foreground and background
+# yellow border for popups, like a DOS dialog box
+Messages Border     #ffff55
+
+# Theme Transparency
+# Values are:
+#   0: No transparency
+#   1: Theme is transparent
+#   2: Obey config setting (default)
+transparency        0

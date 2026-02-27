@@ -1177,6 +1177,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
     def _send_mpris_stop_data(self):
         if self._mpris:
             self._mpris.update_playback(False)
+            self._mpris.update_nav_caps(True, True)
             trackid = "/org/mpris/MediaPlayer2/track/idle"
             self._mpris.update_metadata(
                 trackid,
@@ -1434,6 +1435,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 self.maxX - 2,
                 self.bodyWinStartY,
                 1)
+            if self._mpris:
+                self.bodyWin.timeout(100)
 
             ''' set browser parent so that ir resizes correctly '''
             if self._cnf.browsing_station_service:
@@ -1475,6 +1478,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self._limited_height_mode = True
         if self.maxY == 1:
             self.bodyWin = self.footerWin
+            if self._mpris:
+                self.bodyWin.timeout(100)
         else:
             ''' this is so that on windows I will not crash '''
             try:
@@ -1485,6 +1490,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
             self.bodyWin.bkgdset(' ', curses.color_pair(5))
             self.bodyWin.erase()
+            if self._mpris:
+                self.bodyWin.timeout(100)
             if self.player.isPlaying():
                 try:
                     if self.player.recording and self.player.recording_filename:
@@ -2295,7 +2302,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
                     if c == -1:
                         # serve MPRIS here!
-                        self._mpris.poll()
+                        mpris_poll_enabled = self.ws.operation_mode == self.ws.NORMAL_MODE
+                        self._mpris.poll(mpris_poll_enabled)
                         continue
 
                     if remaining_keys > 0:
@@ -2706,6 +2714,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         # if self._random_requested:
         #     self.detect_if_player_exited = False
         logger.error(f'\n====\n====\nself._last_played_station = {self._last_played_station}\n====\n====\n')
+        if self._mpris:
+            self._mpris.update_nav_caps(False, False)
         try:
             self.player.play(
                 self._last_played_station,
@@ -10457,6 +10467,7 @@ _____"|f|" to see the |free| keys you can use.
                         check_localized(char, (kbkey['random'], )):
                     self._reset_status_bar_right(random_request=True)
                     ''' Pick a random radio station '''
+                    self._send_mpris_stop_data()
                     self.play_random()
                     return
 

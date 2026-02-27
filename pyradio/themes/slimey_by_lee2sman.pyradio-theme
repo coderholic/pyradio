@@ -1,0 +1,48 @@
+# Slimey theme for Pyradio
+# adopted from Amfora Slimey theme https://github.com/makew0rld/amfora/blob/master/contrib/themes/slimey.toml
+
+# Main foreground and background
+# deep purple text on slime green bg
+Stations            #a369ef #c7fcd6
+
+# Playing station text color
+# (background color will come from Stations)
+# hot pink 
+Active Station      #f4295f
+
+# Status bar foreground and background
+# mint green text on deep purple
+Status Bar          #c7fcd6 #a369ef
+
+# Normal cursor foreground and background
+# mint green text on pink cursor
+Normal Cursor       #c7fcd6 #ef69ba
+
+# Cursor foreground and background when cursor is on playing station
+# mint green on hot pink-red 
+Active Cursor       #c7fcd6 #f4295f
+
+# Line Editor cursor
+# mint green on soft pink
+Edit Cursor         #c7fcd6 #f49ab9
+
+# Text color for extra function indication and jump numbers in status bar
+# (background color will come from Stations)
+# pink, readable on slime green
+Extra Func          #ef69ba
+
+# Text color for URL
+# (background color will come from Stations)
+# amfora_link purple for URLs
+PyRadio URL         #A020F0
+
+# Message window border foreground and background
+# hdg_2 pink border for popups
+Messages Border     #ef69ba
+
+# Theme Transparency
+# Values are:
+#   0: No transparency
+#   1: Theme is transparent
+#   2: Obey config setting (default)
+transparency        0

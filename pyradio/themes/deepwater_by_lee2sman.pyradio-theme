@@ -1,0 +1,47 @@
+# Deepwater theme for PyRadio
+
+# Main foreground and background
+# steel blue text on deep navy bg
+Stations            #a8c4d4 #0d1b2a
+
+# Playing station text color
+# (background color will come from Stations)
+# gold for now-playing 
+Active Station      #e6b84a
+
+# Status bar foreground and background
+# deep navy text on muted gold
+Status Bar          #0d1b2a #e6b84a
+
+# Normal cursor foreground and background
+# dark text on mid blue
+Normal Cursor       #0d1b2a #4a90c4
+
+# Cursor foreground and background when cursor is on playing station
+# dark text on gold 
+Active Cursor       #0d1b2a #e6b84a
+
+# Line Editor cursor
+# dark text on slate grey
+Edit Cursor         #0d1b2a #7a94a8
+
+# Text color for extra function indication and jump numbers in status bar
+# (background color will come from Stations)
+# muted grey-blue
+Extra Func          #7a94a8
+
+# Text color for URL
+# (background color will come from Stations)
+# bright sky blue for URLs
+PyRadio URL         #4a90c4
+
+# Message window border foreground and background
+# gold border 
+Messages Border     #e6b84a
+
+# Theme Transparency
+# Values are:
+#   0: No transparency
+#   1: Theme is transparent
+#   2: Obey config setting (default)
+transparency        0

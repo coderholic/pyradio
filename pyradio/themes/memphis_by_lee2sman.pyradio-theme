@@ -1,0 +1,49 @@
+# Memphis theme for PyRadio
+# Inspired by Memphis design 
+# Red - Green - Blue - Yellow - Purple - Orange, no apologies
+
+# Main foreground and background
+# blue bg, yellow text
+Stations            #ffee00 #0047ab
+
+# Playing station text color
+# (background color will come from Stations)
+# orange 
+Active Station      #ff6600
+
+# Status bar foreground and background
+# yellow text on red
+Status Bar          #ffee00 #cc0000
+
+# Normal cursor foreground and background
+# blue text on green 
+Normal Cursor       #0047ab #00bb55
+
+# Cursor foreground and background when cursor is on playing station
+# blue on orange 
+Active Cursor       #0047ab #ff6600
+
+# Line Editor cursor
+# yellow on purple
+Edit Cursor         #ffee00 #7700cc
+
+# Text color for extra function indication and jump numbers in status bar
+# (background color will come from Stations)
+# orange
+Extra Func          #ff6600
+
+# Text color for URL
+# (background color will come from Stations)
+# bright green on blue
+PyRadio URL         #00bb55
+
+# Message window border foreground and background
+# red border
+Messages Border     #cc0000
+
+# Theme Transparency
+# Values are:
+#   0: No transparency
+#   1: Theme is transparent
+#   2: Obey config setting (default)
+transparency        0

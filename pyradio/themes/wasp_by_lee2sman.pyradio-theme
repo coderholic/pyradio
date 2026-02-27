@@ -1,0 +1,48 @@
+# Wasp theme for PyRadio
+# Yellow and black base, purple and white accents
+
+# Main foreground and background
+# yellow text on black
+Stations            #ffe600 #111111
+
+# Playing station text color
+# (background color will come from Stations)
+# white 
+Active Station      #ffffff
+
+# Status bar foreground and background
+# black text on yellow - inverts main palette
+Status Bar          #111111 #ffe600
+
+# Normal cursor foreground and background
+# black text on purple
+Normal Cursor       #111111 #9900ff
+
+# Cursor foreground and background when cursor is on playing station
+# black on yellow
+Active Cursor       #111111 #ffe600
+
+# Line Editor cursor
+# black text on white
+Edit Cursor         #111111 #ffffff
+
+# Text color for extra function indication and jump numbers in status bar
+# (background color will come from Stations)
+# purple
+Extra Func          #9900ff
+
+# Text color for URL
+# (background color will come from Stations)
+# white
+PyRadio URL         #ffffff
+
+# Message window border foreground and background
+# yellow border — danger, pay attention
+Messages Border     #ffe600
+
+# Theme Transparency
+# Values are:
+#   0: No transparency
+#   1: Theme is transparent
+#   2: Obey config setting (default)
+transparency        0

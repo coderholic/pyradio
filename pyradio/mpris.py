@@ -209,18 +209,24 @@ class _MprisPlayer(ServiceInterface):
         out = {}
 
         if "PlaybackStatus" in changed:
-            self._playback_status = str(changed["PlaybackStatus"])
-            out["PlaybackStatus"] = self._playback_status
+            this_value = str(changed["PlaybackStatus"])
+            if self._playback_status != this_value:
+                self._playback_status = this_value
+                out["PlaybackStatus"] = self._playback_status
 
         if "CanGoNext" in changed:
-            self._can_go_next = bool(changed["CanGoNext"])
-            # out["CanGoNext"] = Variant("b", self._can_go_next)
-            out["CanGoNext"] = self._can_go_next
+            this_value = bool(changed["CanGoNext"])
+            if self._can_go_next != this_value:
+                self._can_go_next = this_value
+                # out["CanGoNext"] = Variant("b", self._can_go_next)
+                out["CanGoNext"] = self._can_go_next
 
         if "CanGoPrevious" in changed:
-            self._can_go_prev = bool(changed["CanGoPrevious"])
-            # out["CanGoPrevious"] = Variant("b", self._can_go_prev)
-            out["CanGoPrevious"] = self._can_go_prev
+            this_value = bool(changed["CanGoPrevious"])
+            if self._can_go_prev != this_value:
+                self._can_go_prev = this_value
+                # out["CanGoPrevious"] = Variant("b", self._can_go_prev)
+                out["CanGoPrevious"] = self._can_go_prev
 
         if "Volume" in changed:
             try:
@@ -254,7 +260,7 @@ class _MprisPlayer(ServiceInterface):
 
         if out:
             # org.freedesktop.DBus.Properties.PropertiesChanged for this interface
-            logger.error(f'MPRIS self.emit_properties_changed_signal: {out = }')
+            logger.error(f'MPRIS self.emit_properties_changed: {out = }')
             # self.emit_properties_changed_signal(out, [])
             self.emit_properties_changed(out, [])
 
@@ -467,7 +473,7 @@ class MprisController:
 
     # ------------- main-loop servicing -------------
 
-    def poll(self):
+    def poll(self, enabled):
         """
         Call this from main thread when c == -1 (idle slot).
         - drains commands from MPRIS
@@ -479,6 +485,12 @@ class MprisController:
                 cmd, arg = self._cmdq.get_nowait()
             except queue.Empty:
                 break
+
+            if not enabled:
+                # drop everything when not in NORMAL_MODE
+                if not enabled and logger.isEnabledFor(logging.INFO):
+                    logger.info('**** MPRIS actions are allowed in NORMAL MODE only')
+                continue
 
             if cmd == "PLAY" and self.cb_play:
                 self.cb_play()
@@ -510,7 +522,11 @@ class MprisController:
                 self._vol_last_req_ts = time.monotonic()
 
         # Debounced apply of last requested volume
-        self._apply_pending_volume_if_due()
+        if enabled:
+            self._apply_pending_volume_if_due()
+        else:
+            # also drop any pending volume when disabled
+            self._vol_pending = None
 
     def _apply_pending_volume_if_due(self):
         if self._vol_pending is None:

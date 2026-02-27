@@ -1,0 +1,39 @@
+# Cyberterminal Theme for Pyradio
+
+# Main foreground and background
+# mint green text on near-black bg
+Stations            #c7fcd6 #04000c
+
+# Playing station text color
+# (background color will come from Stations)
+Active Station      #f4295f
+
+# Status bar foreground and background
+Status Bar          #04000c #c7fcd6
+
+# Normal cursor foreground and background
+Normal Cursor       #04000c #1fbde0
+
+# Cursor foreground and background when cursor is on playing station
+Active Cursor       #04000c #f49ab9
+
+# Line Editor cursor
+Edit Cursor         #04000c #a369ef
+
+# Text color for extra function indication and jump numbers in status bar
+# (background color will come from Stations)
+Extra Func          #1fbde0
+
+# Text color for URL
+# (background color will come from Stations)
+PyRadio URL         #ef69ba
+
+# Message window border foreground and background
+Messages Border     #117bf4
+
+# Theme Transparency
+# Values are:
+#   0: No transparency
+#   1: Theme is transparent
+#   2: Obey config setting (default)
+transparency        0
