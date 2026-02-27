@@ -2656,6 +2656,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
         # logger.error('DE \n\nselection = {0}, playing = {1}\nlast played = {2}\n\n'.format(self.selection, self.playing, self._last_played_station))
         # logger.error('DE \n\nselection = {}'.format(self.selections))
+        self._send_mpris_stop_data()
         stream_url = ''
         self.log.display_help_message = False
         station_player = self._what_is_the_station_player()

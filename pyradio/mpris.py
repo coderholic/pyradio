@@ -137,7 +137,7 @@ class _MprisPlayer(ServiceInterface):
 
     @dbus_property(access=PropertyAccess.READ)
     def CanPause(self) -> "b":
-        return False
+        return True
 
     @dbus_property(access=PropertyAccess.READ)
     def CanSeek(self) -> "b":
@@ -181,6 +181,10 @@ class _MprisPlayer(ServiceInterface):
     @method()
     def Stop(self):
         self._cmdq.put(("STOP", None))
+
+    @method()
+    def Pause(self):
+        self._cmdq.put(("PAUSE", None))
 
     @method()
     def Next(self):
@@ -495,7 +499,7 @@ class MprisController:
             if cmd == "PLAY" and self.cb_play:
                 self.cb_play()
 
-            elif cmd == "STOP" and self.cb_stop:
+            elif cmd in ("STOP", "PAUSE") and self.cb_stop:
                 self.cb_stop()
 
             elif cmd == "NEXT" and self.cb_next:
