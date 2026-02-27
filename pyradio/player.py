@@ -1030,6 +1030,8 @@ class Player():
                                     msg_id = STATES.PLAY
                         if not self.playback_is_on:
                             on_connect()
+                            if self.mpris():
+                                self.mpris().update_playback(True)
                         self.outputStream.write(msg_id=msg_id, msg=new_input, counter='')
                         with recording_lock:
                             self.playback_is_on = True
@@ -1042,6 +1044,8 @@ class Player():
                             self.buffering = False
                             if self.PLAYER_NAME == 'vlc':
                                 on_connect()
+                                if self.mpris():
+                                    self.mpris().update_playback(True)
                             with self.buffering_lock:
                                 self.buffering_change_function()
                             with self.status_update_lock:
@@ -1074,6 +1078,8 @@ class Player():
                                 if logger.isEnabledFor(logging.INFO):
                                     logger.info('*** updateStatus(): Start of playback detected (Icy-Title received) ***')
                                     on_connect()
+                                    if self.mpris():
+                                        self.mpris().update_playback(True)
                             with self.status_update_lock:
                                 self.playback_is_on = True
                                 self.connecting = False
@@ -1133,6 +1139,8 @@ class Player():
                                     if logger.isEnabledFor(logging.INFO):
                                         logger.info('*** updateStatus(): Start of playback detected (Icy audio token received) ***')
                                         on_connect()
+                                        if self.mpris():
+                                            self.mpris().update_playback(True)
                                 self.stop_timeout_counter_thread = True
                                 try:
                                     self.connection_timeout_thread.join()
@@ -2015,6 +2023,8 @@ class Player():
         self.oldUserInput['Title'] = new_input
         self.playback_is_on = True
         self.connecting = False
+        if self.mpris():
+            self.mpris().update_playback(True)
         if stop():
             return False
         enable_crash_detection_function()

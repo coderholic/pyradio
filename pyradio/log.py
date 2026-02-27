@@ -249,6 +249,7 @@ class Log():
                  active_player_id,
                  get_web_song_title,
                  tts,
+                 mpris_title_function,
                  mode,
                  can_display_help_msg,
                  program_restart
@@ -321,6 +322,7 @@ class Log():
         self.timer = None
         self._started_station_name = None
         self.tts = tts
+        self.mpris_title_function = mpris_title_function
 
     def __del__(self):
         self._stop_desktop_notification_thread = True
@@ -654,6 +656,7 @@ class Log():
                         self.set_win_title()
                     self._write_title_to_log(msg if msg else 'No')
                     self._show_notification(msg)
+                    self._update_mpris_title(msg)
                     self._set_web_title(msg)
                     if self._show_status_updates:
                         if logger.isEnabledFor(logging.DEBUG):
@@ -860,6 +863,17 @@ class Log():
             self.icon_path = chosen
 
         self._repeat_notification.icon_path = self.icon_path
+
+    def _update_mpris_title(self, msg):
+        if self.mpris_title_function and msg:
+            if msg.startswith(M_STRINGS['playing_']):
+                title = 'Title: N/A'
+            elif msg.startswith(M_STRINGS['title_']):
+                sp = msg.split(':')
+                title = ':'.join(sp[1:]).strip()
+            else:
+                return
+            self.mpris_title_function()(title, self._cnf.notification_image_file)
 
     def _show_notification(self, msg):
         self._enable_notifications = int(self._cnf.enable_notifications)

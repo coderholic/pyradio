@@ -3852,6 +3852,7 @@ class PyRadioLog():
                 self.log_titles = False
                 self.titles_handler = None
 
+        logger.propagate = False
         logging.raiseExceptions = False
         logging.lastResort = None
         # logger.info('self.log_titles = {}'.format(self.log_titles))

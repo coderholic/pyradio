@@ -38,6 +38,11 @@ except ImportError:
         from importlib.resources import files, as_file   # 3.14
     except ImportError:
         from importlib_resources import files, as_file   # backport for 3.7–3.8
+try:
+    from dbus_next import Variant
+    HAVE_DBUS_NEXT = True
+except ImportError:
+    HAVE_DBUS_NEXT = False
 from .player import PlayerCache
 from .config import HAS_REQUESTS, HAS_DNSPYTHON, Station
 from .common import StationsChanges, CsvReadWrite, STATES, M_STRINGS, player_start_stop_token, get_cached_icon_path
@@ -506,6 +511,8 @@ class PyRadio():
         '''
 
         self.tts = TTSManagerDummy()
+        self._mpris = None
+        self._playlist_open_count = 0
         self._message_box_tts_thread = None
         self._tts_in_config = False
         self._tts_volume = pyradio_config.tts_volume
@@ -1167,6 +1174,36 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('currently not in playback, aborting!')
 
+    def _send_mpris_stop_data(self):
+        if self._mpris:
+            self._mpris.update_playback(False)
+            trackid = "/org/mpris/MediaPlayer2/track/idle"
+            self._mpris.update_metadata(
+                trackid,
+                'Title: N/A',
+                'No station playing',
+                self._cnf.station_title,
+                art_url='file://' + path.join(self._cnf.data_dir, 'pyradio.png')
+            )
+
+    def _send_mpris_title(self, title, art_url=None):
+        logger.error(f'\n\nMPRIS {title = }\n{art_url = }\n\n')
+        if self._mpris and title:
+            if art_url is None:
+                art_url = 'file://' + path.join(self._cnf.data_dir, 'pyradio.png')
+            trackid = self._mpris.make_trackid(self._playlist_open_count, self.playing)
+            cur_station = self.stations[self.selection]
+            if self._last_played_station:
+                cur_station = self._last_played_station
+            self._mpris.update_metadata(
+                trackid,
+                title,
+                cur_station[Station.name],
+                self._cnf.station_title,
+                url=cur_station[Station.url],
+                art_url=art_url
+            )
+
     def setup(self, stdscr):
         self.stdscr = stdscr
         if logger.isEnabledFor(logging.INFO):
@@ -1256,6 +1293,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             lambda: self._active_player_id,
             lambda: self._remote_control_server,
             lambda: self.tts,
+            lambda: self._send_mpris_title if self._mpris else None,
             lambda: self.ws.operation_mode,
             self._can_display_help_msg,
             self.program_restart
@@ -1284,6 +1322,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.player.handle_old_referer = self._handle_old_referer
             self.player.update_bitrate = self._update_bitrate
             self.player.tts = lambda: self.tts
+            self.player.mpris = lambda: self._mpris
             if self._request_recording:
                 if not (platform.startswith('win') and \
                         self.player.PLAYER_NAME == 'vlc'):
@@ -1316,7 +1355,28 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 self._start_remote_control_server()
 
         self.stdscr.nodelay(0)
-        # self.stdscr.timeout(100)
+
+        self._enable_mpris = True
+        self._use_mpris = HAVE_DBUS_NEXT and self._enable_mpris and not self._cnf.locked
+        self._mpris = None
+        if self._use_mpris:
+            from .mpris import MprisController
+            self._mpris = MprisController()
+            self._mpris.set_callbacks(
+                play=self.playSelection,
+                stop=self.stopPlayer,
+                next_=self._play_next_station,
+                prev=self._play_previous_station,
+                set_volume=self.player.set_volume
+            )
+            self._mpris.start()
+            root = logging.getLogger()
+            if not root.handlers:
+                root.addHandler(logging.NullHandler())
+            self._send_mpris_stop_data()
+        else:
+            if logger.isEnabledFor(logging.INFO):
+                logger.info(f'MPRIS not staring: {self._enable_mpris = }, {HAVE_DBUS_NEXT = }, {self._cnf.locked = }')
 
         self.setupAndDrawScreen(init_from_function_setup=True)
         self._screen_ready = True
@@ -2222,6 +2282,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self._global_letter = None
             remaining_keys = 0
             self._accumulated_errors = None
+            if self._mpris:
+                self.bodyWin.timeout(100)
             while True:
                 try:
                     if self._do_launch_external_palyer:
@@ -2231,9 +2293,10 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
                     c = self.bodyWin.getch()
 
-                    # if c == -1:
-                    #     # serve MPRIS here!
-                    #     continue
+                    if c == -1:
+                        # serve MPRIS here!
+                        self._mpris.poll()
+                        continue
 
                     if remaining_keys > 0:
                         # Skip processing for replayed keys
@@ -2329,6 +2392,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
     def ctrl_c_handler(self, signum, frame, save_playlist=True):
         # ok
+        if self._mpris:
+            self._mpris.stop()
+            self._mpris = None
         self.log.stop_timer()
         if self._cnf.titles_log.titles_handler:
             logger.critical('=== Logging stopped')
@@ -2654,6 +2720,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                            'Are you sure a supported player is installed?')
             # logger.error('setting playing to 0')
             self.playing = -1
+            self._send_mpris_stop_data()
             return
         self._set_active_stations()
         self.selections[0][2] = self.playing
@@ -2663,6 +2730,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         except ValueError:
             self.playback_timeout = 10
         self._click_station()
+        # if self._mpris:
+        #     self._mpris.update_playback(True)
 
     def _enable_player_crash_detection(self):
         # if logger.isEnabledFor(logging.INFO):
@@ -2767,6 +2836,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             )
         with self._buffering_lock:
             self._show_recording_status_in_header(player_disappeared=player_disappeared)
+        self._send_mpris_stop_data()
         # if from_update_thread and self.ws.operation_mode == self.ws.NORMAL_MODE:
         #     with self.log.lock:
         #         pass
@@ -2776,6 +2846,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             if am_i_playing_random:
                 self._random_requested = am_i_playing_random
                 self.play_random()
+                return
 
     def stopPlayer(self,
                    show_message=True,
@@ -2795,6 +2866,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.detect_if_player_exited = True
         try:
             self.player.close(player_disappeared)
+            self._send_mpris_stop_data()
         except:
             pass
         self.player.connecting = False
@@ -4252,6 +4324,7 @@ and |remove the file manually|.
                         ''' make sure we don't send a wrong click '''
                         self._cnf._online_browser.search()
                         self._speak_selection()
+                        self._playlist_open_count += 1
                     else:
                         self._cnf.remove_from_playlist_history()
                         self._open_simple_message_by_key(
@@ -4306,6 +4379,7 @@ and |remove the file manually|.
             self.playlist_selections[self.ws.REGISTER_MODE] = self.selections[self.ws.REGISTER_MODE][:-1][:]
             self._cnf.register_to_open = None
             # self.ll('opening a register')
+            self._playlist_open_count += 1
         else:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Opening list of playlists or registers...')
@@ -4341,6 +4415,7 @@ and |remove the file manually|.
                 logger.error('1')
                 self.refreshBody()
             self._speak_selection()
+            self._playlist_open_count += 1
         # self.ll('_open_playlist(): returning')
 
     def _return_from_online_browser_search(self, ret):
@@ -6725,6 +6800,7 @@ and |remove the file manually|.
         self.player.log = self.log
         self.player.handle_old_referer = self._handle_old_referer
         self.player.tts = lambda: self.tts
+        self.player.mpris = lambda: self._mpris
         if not (self.player.PLAYER_NAME == 'vlc' and \
                 platform.startswith('win')):
             self.player.recording = to_record
@@ -9600,9 +9676,11 @@ _____"|f|" to see the |free| keys you can use.
                     self.refreshBody()
                 else:
                     # check for ESCAPE
-                    self.bodyWin.nodelay(True)
+                    if not self._use_mpris:
+                        self.bodyWin.nodelay(True)
                     char = self.bodyWin.getch()
-                    self.bodyWin.nodelay(False)
+                    if not self._use_mpris:
+                        self.bodyWin.nodelay(False)
                     if char == -1:
                         ''' ESCAPE '''
                         self._cnf.save_config()
@@ -9639,9 +9717,11 @@ _____"|f|" to see the |free| keys you can use.
                                 self._cnf.removed_playlist_history_item()
                         else:
                             # check for ESCAPE
-                            self.bodyWin.nodelay(True)
+                            if not self._use_mpris:
+                                self.bodyWin.nodelay(True)
                             char = self.bodyWin.getch()
-                            self.bodyWin.nodelay(False)
+                            if not self._use_mpris:
+                                self.bodyWin.nodelay(False)
                             if char == -1:
                                 ''' ESCAPE '''
                                 if self._cnf.browsing_station_service:
@@ -9664,9 +9744,11 @@ _____"|f|" to see the |free| keys you can use.
                         self.refreshBody()
                     else:
                         # check for ESCAPE
-                        self.bodyWin.nodelay(True)
+                        if not self._use_mpris:
+                            self.bodyWin.nodelay(True)
                         char = self.bodyWin.getch()
-                        self.bodyWin.nodelay(False)
+                        if not self._use_mpris:
+                            self.bodyWin.nodelay(False)
                         if char == -1:
                             ''' ESCAPE '''
                             if self._cnf.browsing_station_service:
@@ -9951,9 +10033,11 @@ _____"|f|" to see the |free| keys you can use.
                     check_localized(char, (kbkey['h'],)))):
                 ''' exit program or playlist mode '''
                 # check for ESCAPE
-                self.bodyWin.nodelay(True)
+                if not self._use_mpris:
+                    self.bodyWin.nodelay(True)
                 char = self.bodyWin.getch()
-                self.bodyWin.nodelay(False)
+                if not self._use_mpris:
+                    self.bodyWin.nodelay(False)
                 if char == -1:
                     ''' ESCAPE '''
                     ret = self._exit_program_or_playlist_mode()
