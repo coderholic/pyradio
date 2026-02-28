@@ -5,6 +5,7 @@ import curses
 import logging
 import logging.handlers
 import shutil
+import inspect
 from argparse import ArgumentParser, SUPPRESS as SUPPRESS, REMAINDER
 from os import path, getenv, environ, remove, chmod, makedirs, rmdir, access, R_OK
 from sys import platform
@@ -80,10 +81,12 @@ except:
 
 class MyArgParser(ArgumentParser):
 
-    def __init(self):
-        super().__init__(
-            description = description
-        )
+    def __init__(self, description):
+        sig = inspect.signature(super().__init__)
+        if 'color' in sig.parameters:
+            super().__init__(description=description, color=False)
+        else:
+            super().__init__(description=description)
 
     def print_usage(self, file=None):
         if file is None:
@@ -875,7 +878,7 @@ that window to complete the update process.''')
             print(f'     State dir: "[red]{pyradio_config.state_dir}[/red]"')
             print(f'     Cache dir: "[red]{pyradio_config.cache_dir}[/red]"')
             code_dir = files("pyradio")
-            if code_dir.isdir():
+            if code_dir.is_dir():
                 print(f'      Code dir: "[red]{str(code_dir)}[/red]"')
             else:
                 container = str(code_dir.locate().parent)

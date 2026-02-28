@@ -1358,7 +1358,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.stdscr.nodelay(0)
 
         self._enable_mpris = True
-        self._use_mpris = HAVE_DBUS_NEXT and self._enable_mpris and not self._cnf.locked
+        self._use_mpris = HAVE_DBUS_NEXT and self._enable_mpris and not self._cnf.locked and self.player
         self._mpris = None
         if self._use_mpris:
             from .mpris import MprisController

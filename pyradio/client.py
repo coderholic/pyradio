@@ -3,6 +3,7 @@ from argparse import ArgumentParser, SUPPRESS as SUPPRESS
 from os import path, getenv
 import sys
 import re
+import inspect
 from sys import platform
 from rich import print
 import requests
@@ -231,7 +232,11 @@ class PyRadioClient():
 
 class MyArgParser(ArgumentParser):
     def __init__(self, description):
-        super().__init__(description=description)
+        sig = inspect.signature(super().__init__)
+        if 'color' in sig.parameters:
+            super().__init__(description=description, color=False)
+        else:
+            super().__init__(description=description)
 
     def print_usage(self, file=None):
         if file is None:
