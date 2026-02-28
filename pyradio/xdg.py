@@ -11,6 +11,7 @@ if not system().lower() == 'windows':
 
 data_files = [
     'INSTALLATION_TYPE',
+    'DBUS-NEXT',
     'pyradio.png',
     'cover.png',
     'schedule.json',

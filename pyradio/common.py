@@ -6,7 +6,7 @@ import csv
 import curses
 import hashlib
 from os import rename, remove, access, X_OK, getenv, makedirs
-from os.path import exists, dirname, join, expanduser
+from os.path import exists, dirname, join, expanduser, basename
 from shutil import which, move, Error as shutil_Error
 from enum import IntEnum
 from sys import platform
@@ -721,6 +721,89 @@ and write in it
         # print('\n\n\n')
         # for n in self._stations:
         #     print(n)
+
+
+def install_dbus_next(dbus_next_file):
+    import subprocess
+    def run(cmd):
+        try:
+            p = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            return p.returncode, p.stdout or ''
+        except Exception:
+            return 1, ''
+
+    def check_dbus_next_file(dbus_next_file):
+        if not exists(dbus_next_file):
+            try:
+                with open(dbus_next_file, 'w') as f:
+                    pass
+            except OSError as e:
+                file_dir = basename(dbus_next_file)
+                if e.errno == errno.EACCES:
+                    print(f'[bold red]Error: [/bold red]Cannot write in {file_dir}.')
+                elif e.errno == errno.ENOENT:
+                    print(f'[bold red]Error: [/bold red]The directory does not exit: {file_dir}.')
+                elif e.errno == errno.ROFS:
+                    print('[bold red]Error: [/bold red]This filesystem is readonly.')
+                else:
+                    print(f'[bold red]Error: [/bold red]Cannot create file: {e.strerror}')
+                return 1
+            except Exception as e:
+                print(f'[bold red]Error: [/bold red]{e}')
+                return 1
+        return 0
+
+    # find pipx
+    pipx_base = None
+    for candidate in (
+        ['pipx'],
+        ['python', '-m', 'pipx'],
+        ['python3', '-m', 'pipx'],
+    ):
+        rc, _ = run(candidate + ['--version'])
+        if rc == 0:
+            pipx_base = candidate
+            break
+
+    if not pipx_base:
+        print('[bold magenta]PyRadio[/bold magenta] is not in an isolated environment')
+        return 1
+
+    rc, output = run(pipx_base + ['list', '--include-injected'])
+    if rc != 0:
+        print('[bold magenta]PyRadio[/bold magenta] is not in an isolated environment')
+        return 1
+
+    if 'pyradio' not in output:
+        print('[bold magenta]PyRadio[/bold magenta] not installed through pipx')
+        return 1
+
+    # must have at least one injected package
+    # psutil is always present in an isolated environment
+    if 'psutil' not in output:
+        print('[bold magenta]PyRadio[/bold magenta] is not in an isolated environment')
+        return 1
+
+    # if already injected
+    if 'dbus-next' in output:
+        print('dbus-next injected successfully')
+        return check_dbus_next_file(dbus_next_file)
+
+    # perform injection
+    rc, _ = run(pipx_base + ['inject', 'pyradio', 'dbus-next'])
+    if rc == 0:
+        print('dbus-next injected successfully')
+        return check_dbus_next_file(dbus_next_file)
+    else:
+        print('[bold magenta]PyRadio[/bold magenta] is not in an isolated environment')
+        return 1
+    return 0
+
 
 class CsvReadWrite():
     ''' A base class to read and write a PyRadio playlist '''

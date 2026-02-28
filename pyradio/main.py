@@ -312,6 +312,15 @@ If nothing else works, try the following command:
     parser.add_argument('--devel', action='store_true', help=SUPPRESS)
     parser.add_argument('--force-update', default='', help=SUPPRESS)
 
+    if platform.startswith('lin'):
+        is_group = parser.add_argument_group('• Isolated environment')
+        is_group.add_argument('--mpris', action='store_true',
+                              help='Install "dbus-next" in the isolated environment '
+                              'and make sure it will always be there through updates. '
+                              'This is essential to have MPRIS up and running.'
+                              )
+    else:
+        parser.add_argument('--mpris', action='store_true', help=SUPPRESS)
     pl_group = parser.add_argument_group('• Playlist selection')
     pl_group.add_argument('-ls', '--list-playlists', action='store_true',
                         help='List of available playlists in config dir.')
@@ -497,6 +506,13 @@ If nothing else works, try the following command:
 
     with pyradio_config_file(user_config_dir, args.headless) as pyradio_config:
         read_config(pyradio_config)
+
+        if args.mpris:
+            if not platform.startswith('lin'):
+                print('Operation not supported on this OS')
+                sys.exit(1)
+            from .common import install_dbus_next
+            sys.exit(install_dbus_next(path.join(pyradio_config.data_dir, 'DBUS-NEXT')))
 
         # handle playilst validation
         if args.validate:

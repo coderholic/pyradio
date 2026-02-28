@@ -255,17 +255,6 @@ function create_installation_type_file(){
         OLD=$(find ~/.local/lib -type d -name "pyradio*" 2>/dev/null | grep -v pipx | grep -v venvs)
         if [ ! -z "$OLD" ]
         then
-            if [ "$TO_PYTHON" = "2" ]
-            then
-        echo
-        echo
-        echo "The following pyradio directories have been found:
-$OLD
-
-They probably belong to an older non-pipx installation
-and they should be deleted.
-"
-        else
             msg="
 
 The following [magenta]pyradio[/magenta] directories have been found:
@@ -277,7 +266,6 @@ and they [red]should be deleted[/red].
             python${TO_PYTHON} -c \
                 'import sys; from rich import print; print(sys.argv[1])' \
                 "${msg}"
-        fi
         fi
     fi
 }
@@ -458,6 +446,8 @@ then
                 # pipx installation with isolation
                 check_installation_type
                 PIPX_ISOLATE=1
+                [ -e "${DATA_DIR}"/DBUS-NEXT ] && DBUS_NEXT=1
+                [ -e ~/.local/share/pyradio/DBUS-NEXT ] && DBUS_NEXT=1
             else
                 # normal pip installation
                 if [ ! -z "$PIPX" ]
@@ -507,8 +497,11 @@ Please make sure patch is installed and try again
         inst_type=1
     else
         $PIPX_CMD install $PIPX_EDITABLE --force . || pipx_error
-        [ -z "$PIPX_EDITABLE" ] && \
+        [ -z "$PIPX_EDITABLE" ] && {
+            [ -z "$DBUS_NEXT" ] || echo "dbus-next" >> requirements_pipx.txt
             cat requirements_pipx.txt | sed -e 's/#.*//' | xargs $PIPX_CMD inject pyradio
+            [ -z "$DBUS_NEXT" ] || sed -i '/dbus-next/d' requirements_pipx.txt
+        }
         inst_type=2
     fi
     [ -e  pyproject.toml.BCK ] && mv pyproject.toml.BCK pyproject.toml
