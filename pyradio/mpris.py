@@ -54,6 +54,23 @@ except Exception:
     _NAMEFLAG_DO_NOT_QUEUE = None
 
 
+def _variant_equal(a, b):
+    if a is b:
+        return True
+    if a is None or b is None:
+        return False
+    if not isinstance(a, Variant) or not isinstance(b, Variant):
+        return a == b
+    return (a.signature == b.signature) and (a.value == b.value)
+
+def _metadata_equal(old, new):
+    if old.keys() != new.keys():
+        return False
+    for k in old.keys():
+        if not _variant_equal(old.get(k), new.get(k)):
+            return False
+    return True
+
 # -------------------------------
 # DBus interfaces (thread-owned)
 # -------------------------------
@@ -210,6 +227,8 @@ class _MprisPlayer(ServiceInterface):
           Volume: float 0..1
           Metadata: dict with python-native values
         """
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'MPRIS received: {changed}')
         out = {}
 
         if "PlaybackStatus" in changed:
@@ -241,9 +260,9 @@ class _MprisPlayer(ServiceInterface):
                 v = 0.0
             elif v > 1.0:
                 v = 1.0
-            self._volume = v
-            # out["Volume"] = Variant("d", self._volume)
-            out["Volume"] = self._volume
+            if v != self._volume:
+                self._volume = v
+                out["Volume"] = self._volume
 
         if "Metadata" in changed:
             md_plain = dict(changed["Metadata"])
@@ -258,15 +277,19 @@ class _MprisPlayer(ServiceInterface):
                 else:
                     md[k] = Variant("s", str(v))
 
-            self._metadata = md
-            # out["Metadata"] = Variant("a{sv}", self._metadata)
-            out["Metadata"] = self._metadata
+            if not _metadata_equal(self._metadata, md):
+                self._metadata = md
+                # out["Metadata"] = Variant("a{sv}", self._metadata)
+                out["Metadata"] = self._metadata
 
         if out:
             # org.freedesktop.DBus.Properties.PropertiesChanged for this interface
-            logger.error(f'MPRIS self.emit_properties_changed: {out = }')
-            # self.emit_properties_changed_signal(out, [])
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'MPRIS emit_properties_changed: {out}')
             self.emit_properties_changed(out, [])
+        else:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('MPRIS emit_properties_changed: None')
 
 
 # -----------------------------------
@@ -297,7 +320,8 @@ class _MprisThread:
         return True
 
     def stop(self):
-        logger.error('MPRIS Thread stop called')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('MPRIS Thread stooping')
         self._stop.set()
         if self._loop:
             try:
@@ -307,25 +331,27 @@ class _MprisThread:
         if self._thread and self._thread.is_alive():
             # self._thread.join(timeout=1.0)
             self._thread.join()
-        logger.error('MPRIS Thread stop ended')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('MPRIS Thread stopped')
 
     def _run(self):
-        logger.error('MPRIS Thread start')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('MPRIS Thread starting')
         self._loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self._loop)
 
         main_task = self._loop.create_task(self._main())
         main_task.add_done_callback(lambda _t: self._loop.call_soon_threadsafe(self._loop.stop))
 
-        logger.error('MPRIS Thread before run_forever')
         self._loop.run_forever()
-        logger.error('MPRIS Thread after run_forever')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('MPRIS Thread exited loop')
 
         try:
             self._loop.run_until_complete(asyncio.gather(main_task, return_exceptions=True))
         except Exception as e:
-            logger.error(f'self._loop.run_until_complete 1 exception: {e}')
-            pass
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error(f'MPRIS Thread loop run_until_complete exception 1: {e}')
 
         try:
             pending = {t for t in asyncio.all_tasks(self._loop) if t is not main_task}
@@ -337,10 +363,12 @@ class _MprisThread:
         try:
             self._loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
         except Exception as e:
-            logger.error(f'self._loop.run_until_complete 1 exception: {e}')
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error(f'MPRIS Thread loop run_until_complete exception 2: {e}')
 
         self._loop.close()
-        logger.error('MPRIS Thread exited')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('MPRIS Thread exited')
 
     async def _main(self):
         bus = await MessageBus().connect()
@@ -360,7 +388,8 @@ class _MprisThread:
             else:
                 await bus.request_name(self.bus_name, flags=_NAMEFLAG_DO_NOT_QUEUE)
         except Exception as e:
-            logger.error(f'MPRIS: request_name failed for {self.bus_name}: {repr(e)}')
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error(f'MPRIS: request_name failed for {self.bus_name}: {repr(e)}')
             # If name is taken, clean up exports and disconnect to avoid ghosting
             try:
                 bus.unexport(OBJ_PATH)
@@ -369,8 +398,8 @@ class _MprisThread:
             try:
                 bus.disconnect()
             except Exception as e:
-                pass
-                logger.error(f"MPRIS: could not acquire bus name {self.bus_name}: {e}")
+                if logger.isEnabledFor(logging.ERROR):
+                    logger.error(f"MPRIS: could not acquire bus name {self.bus_name}: {e}")
             return
 
         try:
@@ -384,8 +413,8 @@ class _MprisThread:
                 try:
                     player.apply_changed(changed)
                 except Exception as e:
-                    logger.error(f"MPRIS: player.apply_changed failed: {changed = } - {e}")
-                    pass
+                    if logger.isEnabledFor(logging.ERROR):
+                        logger.error(f"MPRIS: player.apply_changed failed: {changed = } - {e}")
 
         finally:
             # Deterministic shutdown: unexport -> release name -> disconnect
@@ -471,9 +500,11 @@ class MprisController:
         return self._thread.start()
 
     def stop(self):
-        logger.error('MPRIS MprisController stop called')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('MPRIS MprisController stop called')
         self._thread.stop()
-        logger.error('MPRIS MprisController stop ended')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('MPRIS MprisController stop ended')
 
     # ------------- main-loop servicing -------------
 
@@ -582,13 +613,13 @@ class MprisController:
         self._stateq.put({"Volume": vp / 100.0})
 
     def update_metadata(self, trackid, title, station_name, playlist_name, url=None, art_url=None):
-        logger.error(f'{trackid = }')
-        logger.error(f'{title = }')
-        logger.error(f'{station_name = }')
-        logger.error(f'{playlist_name = }')
-        logger.error(f'{url = }')
-        logger.error(f'{art_url = }')
-        logger.error('\n\n\n')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'{trackid = }')
+            logger.debug(f'{title = }')
+            logger.debug(f'{station_name = }')
+            logger.debug(f'{playlist_name = }')
+            logger.debug(f'{url = }')
+            logger.debug(f'{art_url = }')
         md = {}
         md["mpris:trackid"] = trackid
         md["xesam:title"] = title

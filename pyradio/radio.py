@@ -2612,12 +2612,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
     def _what_is_the_station_player(self):
         """Determine which player to use for the selected station."""
         # Debug: show all stations (DEBUG level only)
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('All stations:')
-            for i, station in enumerate(self.stations):
-                logger.debug(f'  {i}: {station}')
-            logger.debug(f'Total stations: {len(self.stations)}')
-            logger.debug(f'Current selection: {self.selection}')
+        # if logger.isEnabledFor(logging.DEBUG):
+        #     logger.debug('All stations:')
+        #     for i, station in enumerate(self.stations):
+        #         logger.debug(f'  {i}: {station}')
+        #     logger.debug(f'Total stations: {len(self.stations)}')
+        #     logger.debug(f'Current selection: {self.selection}')
         # Get the player from station
         station_player = self.stations[self.selection][Station.player]
         if logger.isEnabledFor(logging.DEBUG):

@@ -641,9 +641,9 @@ If nothing else works, try the following command:
                     # script = r[0]
                 chmod(script , 0o700)
                 if args.terminal_param:
-                    command = 'bash -c "' + script + ' -t ' + args.terminal + " -p '" + ' '.join(args.terminal_param) + "'" + '"'
+                    command = 'bash -c "' + str(script) + ' -t ' + args.terminal + " -p '" + ' '.join(args.terminal_param) + "'" + '"'
                 else:
-                    command = 'bash -c "' + script + ' -t ' + args.terminal + '"'
+                    command = 'bash -c "' + str(script) + ' -t ' + args.terminal + '"'
                 subprocess.call(command, shell=True)
                 if r is not None:
                     remove(r[0])
