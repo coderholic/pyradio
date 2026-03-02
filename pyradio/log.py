@@ -865,7 +865,7 @@ class Log():
         self._repeat_notification.icon_path = self.icon_path
 
     def _update_mpris_title(self, msg):
-        if self.mpris_title_function and msg:
+        if msg:
             if msg.startswith(M_STRINGS['playing_']):
                 title = 'Title: N/A'
             elif msg.startswith(M_STRINGS['title_']):
@@ -873,7 +873,7 @@ class Log():
                 title = ':'.join(sp[1:]).strip()
             else:
                 return
-            self.mpris_title_function()(title, self._cnf.notification_image_file)
+            self.mpris_title_function(title, self._cnf.notification_image_file)
 
     def _show_notification(self, msg):
         self._enable_notifications = int(self._cnf.enable_notifications)

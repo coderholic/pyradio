@@ -1188,25 +1188,25 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             )
 
     def _send_mpris_title(self, title, art_url=None):
-        logger.error(f'\n\nMPRIS {title = }\n{art_url = }\n\n')
-        if self._mpris and title:
-            if art_url is None:
-                art_url = 'file://' + path.join(self._cnf.data_dir, 'pyradio.png')
-            trackid = self._mpris.make_trackid(self._playlist_open_count, self.playing)
-            cur_station = self.stations[self.selection]
-            if self._last_played_station:
-                cur_station = self._last_played_station
-            self._mpris.update_metadata(
-                trackid,
-                title,
-                cur_station[Station.name],
-                self._cnf.station_title,
-                url=cur_station[Station.url],
-                art_url=art_url
-            )
+        if self._mpris:
+            if self._mpris and title:
+                if art_url is None:
+                    art_url = 'file://' + path.join(self._cnf.data_dir, 'pyradio.png')
+                trackid = self._mpris.make_trackid(self._playlist_open_count, self.playing)
+                cur_station = self.stations[self.selection]
+                if self._last_played_station:
+                    cur_station = self._last_played_station
+                self._mpris.update_metadata(
+                    trackid,
+                    title,
+                    cur_station[Station.name],
+                    self._cnf.station_title,
+                    url=cur_station[Station.url],
+                    art_url=art_url
+                )
 
     def _enable_os_media_controls_if_possible(self, start=None):
-        use_mpris = HAVE_DBUS_NEXT and self._cnf.use_os_media_controls and not self._cnf.locked and self.player
+        use_mpris = not self._cnf.headless and HAVE_DBUS_NEXT and self._cnf.use_os_media_controls and not self._cnf.locked and self.player
         if use_mpris:
             if self._mpris is None:
                 from .mpris import MprisController
@@ -1328,7 +1328,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             lambda: self._active_player_id,
             lambda: self._remote_control_server,
             lambda: self.tts,
-            lambda: self._send_mpris_title if self._mpris else None,
+            self._send_mpris_title,
             lambda: self.ws.operation_mode,
             self._can_display_help_msg,
             self.program_restart
