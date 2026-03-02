@@ -1337,6 +1337,7 @@ class PyRadioConfig(PyRadioStations):
         self.opts['recording_dir'] = ['Recordings dir: ', '']
         self.opts['resource_opener'] = ['Resource Opener: ', 'auto']
         self.opts['log_titles'] = ['Log titles: ', False]
+        self.opts['use_os_media_controls'] = ['Enable OS Media Controls: ', False]
         self.opts['playlist_manngement_title'] = ['Playlist Management Options', '']
         self.opts['confirm_station_deletion'] = ['Confirm station deletion: ', True]
         self.opts['confirm_playlist_reload'] = ['Confirm playlist reload: ', True]
@@ -1533,6 +1534,15 @@ class PyRadioConfig(PyRadioStations):
 
         self._read_notification_command()
         self.profile_manager = ProfileManager()
+
+    @property
+    def use_os_media_controls(self):
+        return self.opts['use_os_media_controls'][1]
+
+    @use_os_media_controls.setter
+    def use_os_media_controls(self, val):
+        self.opts['use_os_media_controls'][1] = val
+        self.opts['dirty_config'][1] = True
 
     @property
     def continuous_playback(self):
@@ -2590,6 +2600,11 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['default_station'][1] = None
                 else:
                     self.opts['default_station'][1] = st
+            elif sp[0] == 'use_os_media_controls':
+                if sp[1].lower() == 'true':
+                    self.opts['use_os_media_controls'][1] = True
+                else:
+                    self.opts['use_os_media_controls'][1] = False
             elif sp[0] == 'continuous_playback':
                 if sp[1].lower() == 'false':
                     self.opts['continuous_playback'][1] = False

@@ -1205,6 +1205,40 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 art_url=art_url
             )
 
+    def _enable_os_media_controls_if_possible(self, start=None):
+        use_mpris = HAVE_DBUS_NEXT and self._cnf.use_os_media_controls and not self._cnf.locked and self.player
+        if use_mpris:
+            if self._mpris is None:
+                from .mpris import MprisController
+                self._mpris = MprisController()
+                self._set_mpris_callbacks()
+                self._mpris.start()
+                root = logging.getLogger()
+                if not root.handlers:
+                    root.addHandler(logging.NullHandler())
+                if self.bodyWin:
+                    self.bodyWin.timeout(100)
+                self._send_mpris_stop_data()
+        else:
+            if self._mpris:
+                self._mpris.stop()
+                if self.bodyWin:
+                    self.bodyWin.nodelay(0)
+            else:
+                if logger.isEnabledFor(logging.INFO) and start:
+                    logger.info(f'MPRIS not starting: {self._cnf.use_os_media_controls = }, {HAVE_DBUS_NEXT = }, {self._cnf.locked = }')
+            self._mpris = None
+
+    def _set_mpris_callbacks(self):
+        if self.player and self._mpris and self._cnf.use_os_media_controls:
+            self._mpris.set_callbacks(
+                play=self.playSelection,
+                stop=self.stopPlayer,
+                next_=self._play_next_station,
+                prev=self._play_previous_station,
+                set_volume=self.player.set_volume
+            )
+
     def setup(self, stdscr):
         self.stdscr = stdscr
         if logger.isEnabledFor(logging.INFO):
@@ -1324,6 +1358,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.player.update_bitrate = self._update_bitrate
             self.player.tts = lambda: self.tts
             self.player.mpris = lambda: self._mpris
+            self._set_mpris_callbacks()
             if self._request_recording:
                 if not (platform.startswith('win') and \
                         self.player.PLAYER_NAME == 'vlc'):
@@ -1356,28 +1391,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 self._start_remote_control_server()
 
         self.stdscr.nodelay(0)
-
-        self._enable_mpris = True
-        self._use_mpris = HAVE_DBUS_NEXT and self._enable_mpris and not self._cnf.locked and self.player
-        self._mpris = None
-        if self._use_mpris:
-            from .mpris import MprisController
-            self._mpris = MprisController()
-            self._mpris.set_callbacks(
-                play=self.playSelection,
-                stop=self.stopPlayer,
-                next_=self._play_next_station,
-                prev=self._play_previous_station,
-                set_volume=self.player.set_volume
-            )
-            self._mpris.start()
-            root = logging.getLogger()
-            if not root.handlers:
-                root.addHandler(logging.NullHandler())
-            self._send_mpris_stop_data()
-        else:
-            if logger.isEnabledFor(logging.INFO):
-                logger.info(f'MPRIS not staring: {self._enable_mpris = }, {HAVE_DBUS_NEXT = }, {self._cnf.locked = }')
+        self._enable_os_media_controls_if_possible(start=True)
 
         self.setupAndDrawScreen(init_from_function_setup=True)
         self._screen_ready = True
@@ -1437,6 +1451,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 1)
             if self._mpris:
                 self.bodyWin.timeout(100)
+            else:
+                self.bodyWin.nodelay(0)
 
             ''' set browser parent so that ir resizes correctly '''
             if self._cnf.browsing_station_service:
@@ -2299,11 +2315,13 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                         return
 
                     c = self.bodyWin.getch()
+                    # logger.error(f'{c = }')
 
                     if c == -1:
                         # serve MPRIS here!
-                        mpris_poll_enabled = self.ws.operation_mode == self.ws.NORMAL_MODE
-                        self._mpris.poll(mpris_poll_enabled)
+                        if self._mpris:
+                            mpris_poll_enabled = self.ws.operation_mode == self.ws.NORMAL_MODE
+                            self._mpris.poll(mpris_poll_enabled)
                         continue
 
                     if remaining_keys > 0:
@@ -2877,9 +2895,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.detect_if_player_exited = True
         try:
             self.player.close(player_disappeared)
-            self._send_mpris_stop_data()
         except:
             pass
+        self._send_mpris_stop_data()
         self.player.connecting = False
         if self.ws.window_mode == self.ws.PLAYLIST_MODE:
             self._last_played_station_id = self.selections[0][2]
@@ -6812,6 +6830,7 @@ and |remove the file manually|.
         self.player.handle_old_referer = self._handle_old_referer
         self.player.tts = lambda: self.tts
         self.player.mpris = lambda: self._mpris
+        self._set_mpris_callbacks()
         if not (self.player.PLAYER_NAME == 'vlc' and \
                 platform.startswith('win')):
             self.player.recording = to_record
@@ -8285,6 +8304,8 @@ _____"|f|" to see the |free| keys you can use.
                         self.player.playback_timeout = int(self._cnf.connection_timeout)
                         if self._config_win.need_to_update_theme:
                             self._theme.recalculate_theme(False)
+                        if self._config_win.need_to_update_mpris:
+                            self._enable_os_media_controls_if_possible()
                         if self._cnf.active_remote_control_server_ip != self._cnf.remote_control_server_ip or \
                                 self._cnf.active_remote_control_server_port != self._cnf.remote_control_server_port:
                             self._restart_remote_control_server()
@@ -9687,11 +9708,11 @@ _____"|f|" to see the |free| keys you can use.
                     self.refreshBody()
                 else:
                     # check for ESCAPE
-                    if not self._use_mpris:
-                        self.bodyWin.nodelay(True)
+                    if not self._mpris:
+                        self.bodyWin.nodelay(-1)
                     char = self.bodyWin.getch()
-                    if not self._use_mpris:
-                        self.bodyWin.nodelay(False)
+                    if not self._mpris:
+                        self.bodyWin.nodelay(0)
                     if char == -1:
                         ''' ESCAPE '''
                         self._cnf.save_config()
@@ -9728,11 +9749,11 @@ _____"|f|" to see the |free| keys you can use.
                                 self._cnf.removed_playlist_history_item()
                         else:
                             # check for ESCAPE
-                            if not self._use_mpris:
-                                self.bodyWin.nodelay(True)
+                            if not self._mpris:
+                                self.bodyWin.nodelay(-1)
                             char = self.bodyWin.getch()
-                            if not self._use_mpris:
-                                self.bodyWin.nodelay(False)
+                            if not self._mpris:
+                                self.bodyWin.nodelay(0)
                             if char == -1:
                                 ''' ESCAPE '''
                                 if self._cnf.browsing_station_service:
@@ -9755,11 +9776,11 @@ _____"|f|" to see the |free| keys you can use.
                         self.refreshBody()
                     else:
                         # check for ESCAPE
-                        if not self._use_mpris:
-                            self.bodyWin.nodelay(True)
+                        if not self._mpris:
+                            self.bodyWin.nodelay(-1)
                         char = self.bodyWin.getch()
-                        if not self._use_mpris:
-                            self.bodyWin.nodelay(False)
+                        if not self._mpris:
+                            self.bodyWin.nodelay(0)
                         if char == -1:
                             ''' ESCAPE '''
                             if self._cnf.browsing_station_service:
@@ -10044,11 +10065,11 @@ _____"|f|" to see the |free| keys you can use.
                     check_localized(char, (kbkey['h'],)))):
                 ''' exit program or playlist mode '''
                 # check for ESCAPE
-                if not self._use_mpris:
-                    self.bodyWin.nodelay(True)
+                if not self._mpris:
+                    self.bodyWin.nodelay(-1)
                 char = self.bodyWin.getch()
-                if not self._use_mpris:
-                    self.bodyWin.nodelay(False)
+                if not self._mpris:
+                    self.bodyWin.nodelay(0)
                 if char == -1:
                     ''' ESCAPE '''
                     ret = self._exit_program_or_playlist_mode()

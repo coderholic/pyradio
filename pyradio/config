@@ -204,6 +204,13 @@ tts_speak_volume_change_start = False
 # Default value: False
 log_titles = False
 
+# Use OS Media Controls
+# When enabled, PyRadio can be controlled from the system’s media keys,
+# desktop widgets and external tools (e.g. playerctl).
+#
+# Default value: False
+use_os_media_controls = False
+
 # Connection timeout
 # PyRadio will wait for this number of seconds to get a station/server message
 # indicating that playback has actually started. If this does not happen

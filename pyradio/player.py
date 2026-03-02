@@ -2428,6 +2428,8 @@ class Player():
             finally:
                 self.monitor_update_thread = None
         self.monitor = self.monitor_process = self.monitor_opts = None
+        if self.mpris():
+            self.mpris().update_playback(False)
 
     def _kill_process_tree(self, pid):
         if psutil.pid_exists(pid):

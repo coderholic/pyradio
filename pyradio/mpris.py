@@ -42,7 +42,6 @@ try:
     except Exception:
         NameFlag = None
         _NAMEFLAG_DO_NOT_QUEUE = None
-
 except Exception:
     MessageBus = None
     ServiceInterface = None
@@ -321,7 +320,7 @@ class _MprisThread:
 
     def stop(self):
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('MPRIS Thread stooping')
+            logger.debug('MPRIS Thread stoping')
         self._stop.set()
         if self._loop:
             try:
@@ -489,6 +488,7 @@ class MprisController:
         self._vol_debounce_sec = 0.12
 
     def set_callbacks(self, play=None, stop=None, next_=None, prev=None, playpause=None, set_volume=None):
+        self._vol_pending = None
         self.cb_play = play
         self.cb_stop = stop
         self.cb_next = next_

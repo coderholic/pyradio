@@ -75,6 +75,12 @@ class PyRadioConfigWindow():
                        'Default value is "auto", in which case, PyRadio will try to use xdg-open, gio, mimeopen, mimeo or handlr, in that order of detection.  If none if found, the requested file will simply not open.'
                        ])
     _help_text.append(['If this option is True, PyRadio will start logging song titles to a log file at program startup, provided that the station playing does provide title data.', '|', 'This is the same as using the -lt command line option, or pressing "' + to_str('t_tag') +  '" while the program is running.', '|', 'Please keep in mind that this option will only affect program startup.', '|', 'Default value: False'])
+    if SYSTEM == 'Linux':
+        _help_text.append(['Enables integration with the desktop media controls (MPRIS).', '|', "When enabled, PyRadio can be controlled from the system's media keys, desktop widgets and external tools (e.g. playerctl).", '|', 'Default value: False'])
+    elif SYSTEM == 'Windows':
+        _help_text.append(['Enables integration with Windows system media controls.', '|', 'When enabled, PyRadio can be controlled from media keys and system media overlay.', '|', 'Default value: False'])
+    else:
+        _help_text.append(['Enables integration with macOS system media controls.', '|', 'When enabled, PyRadio can be controlled from keyboard media keys and system interfaces.', '|', 'Default value: False'])
     _help_text.append(None)
     _help_text.append(['Specify whether you will be asked to confirm every station deletion action.', '|', 'Default value: True'])
     _help_text.append(['Specify whether you will be asked to confirm playlist reloading, when the playlist has not been modified within PyRadio.', '|', 'Default value: True'])
@@ -265,12 +271,12 @@ class PyRadioConfigWindow():
 
         self._old_use_transparency = self._saved_config_options['use_transparency'][1]
         self._orig_redording_dir = self._config_options['recording_dir'][1]
-        for n in self._default_config_options, \
-                self._saved_config_options, \
-                self._config_options:
-            logger.info('=============')
-            for k in n.keys():
-                logger.info('{}: {}'.format(k, n[k]))
+        # for n in self._default_config_options, \
+        #         self._saved_config_options, \
+        #         self._config_options:
+        #     logger.info('=============')
+        #     for k in n.keys():
+        #         logger.info('{}: {}'.format(k, n[k]))
 
         self._old_theme = self._config_options['theme'][1]
         if logger.isEnabledFor(logging.INFO):
@@ -533,7 +539,7 @@ class PyRadioConfigWindow():
                     elif isinstance(it[1], bool):
                         self._win.addstr('{}'.format(it[1]), hcol)
                     else:
-                        logger.error(f'{it = }')
+                        # logger.error(f'{it = }')
                         if it[1] is None:
                             ''' random station '''
                             self._win.addstr('{}'.format('Random'), hcol)
@@ -806,6 +812,10 @@ class PyRadioConfigWindow():
             self.need_to_update_theme = False
         else:
             self.need_to_update_theme = True
+        if self._saved_config_options['use_os_media_controls'][1] == self._config_options['use_os_media_controls'][1]:
+            self.need_to_update_mpris = False
+        else:
+            self.need_to_update_mpris = True
         self._cnf.rec_dirs = (self._config_options['recording_dir'][1], self._saved_config_options['recording_dir'][1])
         # logger.error('rec_dirs\n{}'.format(self._cnf.rec_dirs))
         self._saved_config_options = deepcopy(self._config_options)
@@ -1393,8 +1403,8 @@ class PyRadioConfigWindow():
                 'continuous_playback',
                 'enable_tts',
                 'tts_speak_volume_change_start',
+                'use_os_media_controls',
             ):
-                logger.error('5')
                 self._config_options[sel][1] = not self._config_options[sel][1]
                 # # if sel == 'open_last_playlist':
                 # #     if self._config_options[sel][1]:
