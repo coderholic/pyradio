@@ -52,24 +52,6 @@ except Exception:
     NameFlag = None
     _NAMEFLAG_DO_NOT_QUEUE = None
 
-
-def _variant_equal(a, b):
-    if a is b:
-        return True
-    if a is None or b is None:
-        return False
-    if not isinstance(a, Variant) or not isinstance(b, Variant):
-        return a == b
-    return (a.signature == b.signature) and (a.value == b.value)
-
-def _metadata_equal(old, new):
-    if old.keys() != new.keys():
-        return False
-    for k in old.keys():
-        if not _variant_equal(old.get(k), new.get(k)):
-            return False
-    return True
-
 # -------------------------------
 # DBus interfaces (thread-owned)
 # -------------------------------
@@ -217,6 +199,24 @@ class _MprisPlayer(ServiceInterface):
 
     # ----- Apply batched changes from main thread -----
 
+
+    def _variant_equal(self, a, b):
+        if a is b:
+            return True
+        if a is None or b is None:
+            return False
+        if not isinstance(a, Variant) or not isinstance(b, Variant):
+            return a == b
+        return (a.signature == b.signature) and (a.value == b.value)
+
+    def _metadata_equal(self, old, new):
+        if old.keys() != new.keys():
+            return False
+        for k in old.keys():
+            if not self._variant_equal(old.get(k), new.get(k)):
+                return False
+        return True
+
     def apply_changed(self, changed):
         """
         changed keys may include:
@@ -276,7 +276,7 @@ class _MprisPlayer(ServiceInterface):
                 else:
                     md[k] = Variant("s", str(v))
 
-            if not _metadata_equal(self._metadata, md):
+            if not self._metadata_equal(self._metadata, md):
                 self._metadata = md
                 # out["Metadata"] = Variant("a{sv}", self._metadata)
                 out["Metadata"] = self._metadata
