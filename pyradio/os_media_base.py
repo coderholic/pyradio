@@ -73,6 +73,9 @@ class MediaControls:
     def poll(self, enabled):
         if enabled:
             self._apply_pending_volume_if_due()
+        else:
+            # also drop any pending volume when disabled
+            self._vol_pending = None
 
     def _apply_pending_volume_if_due(self):
         if self._vol_pending is None:

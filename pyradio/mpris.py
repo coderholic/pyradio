@@ -477,18 +477,26 @@ class MprisController(MediaControls):
         - drains commands from MPRIS
         - applies debounced volume (latest-wins)
         """
+        # if disables, drain all pending commands quickly (send one log)
+        if not enabled:
+            had_cmd = False
+            while True:
+                try:
+                    self._cmdq.get_nowait()
+                    had_cmd = True
+                except queue.Empty:
+                    break
+            if had_cmd and logger.isEnabledFor(logging.INFO):
+                logger.info('**** MPRIS actions are allowed in NORMAL MODE only')
+            super().poll(False)
+            return
+
         # Drain all pending commands quickly (do not process only one!)
         while True:
             try:
                 cmd, arg = self._cmdq.get_nowait()
             except queue.Empty:
                 break
-
-            if not enabled:
-                # drop everything when not in NORMAL_MODE
-                if not enabled and logger.isEnabledFor(logging.INFO):
-                    logger.info('**** MPRIS actions are allowed in NORMAL MODE only')
-                continue
 
             if cmd == "PLAY" and self.cb_play:
                 self.cb_play()
@@ -520,11 +528,7 @@ class MprisController(MediaControls):
                 self._vol_last_req_ts = time.monotonic()
 
         # Debounced apply of last requested volume
-        if enabled:
-            self._apply_pending_volume_if_due()
-        else:
-            # also drop any pending volume when disabled
-            self._vol_pending = None
+        super().poll(enabled)
 
     # ------------- state updates (main -> DBus thread) -------------
 
