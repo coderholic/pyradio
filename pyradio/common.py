@@ -182,6 +182,28 @@ THEME_ITEMS = (
     ('Edit Cursor', 8, 0, 0)
 )
 
+
+def create_os_media_controller(identity="PyRadio", instance_name=None):
+    """
+    Factory: returns an OS-specific controller instance.
+    Keep imports conditional to avoid cross-platform dependency leakage.
+    """
+    if platform.startswith("lin"):
+        from .mpris import MprisController
+        return MprisController(identity=identity, instance_name=instance_name)
+
+    elif platform.startswith("win"):
+        # from .windows_smtc import WindowsMediaController
+        # return WindowsMediaController(identity=identity, instance_name=instance_name)
+        return None
+
+    elif platform.startswith("dar"):
+        # from .macos_nowplaying import MacOSMediaController
+        # return MacOSMediaController(identity=identity, instance_name=instance_name)
+        return None
+
+    return None
+
 def describe_playlist(value):
     # Check if the value is within the range of the enum
     if value < 0 or value >= len(Station.__members__):

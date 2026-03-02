@@ -1209,8 +1209,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         use_mpris = not self._cnf.headless and HAVE_DBUS_NEXT and self._cnf.use_os_media_controls and not self._cnf.locked and self.player
         if use_mpris:
             if self._mpris is None:
-                from .mpris import MprisController
-                self._mpris = MprisController()
+                from .common import create_os_media_controller
+                self._mpris = create_os_media_controller()
                 self._set_mpris_callbacks()
                 self._mpris.start()
                 root = logging.getLogger()
