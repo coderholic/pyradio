@@ -2702,6 +2702,19 @@ class MpvPlayer(Player):
             opts = [self.PLAYER_CMD, '--no-video']
         else:
             opts = [self.PLAYER_CMD, '--no-video', '--quiet']
+        # logger.error('\n\n\n')
+        # logger.error(f'mvp {out = }')
+        # logger.error('\n\n\n')
+        # mpv 0.38+ has SMTC / MPRIS support by default
+        try:
+            cur_v = out[0].decode('utf-8').split(' ')[1].lstrip('v').split('.')[:2]
+            cur_v = tuple([int(x) for x in cur_v])
+            # logger.error(f'\n\n\n{cur_v = }\n\n\n')
+            if cur_v >= (0, 38):
+                opts += ['--input-media-keys=no', '--media-controls=no']
+        except:
+            pass
+            #logger.error('\n\n\ncur_v exception\n\n\n')
         if self.buffering_data:
             if self._cnf.buffering_enabled:
                 opts.extend(self.buffering_data)

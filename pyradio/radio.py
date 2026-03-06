@@ -18,7 +18,7 @@ import signal
 import csv
 import tempfile
 from copy import deepcopy
-from sys import version as python_version, platform
+from sys import version as python_version, version_info, platform
 from os.path import join, basename, getmtime, getsize, exists
 from os import path, remove, rename
 from platform import uname
@@ -38,11 +38,25 @@ except ImportError:
         from importlib.resources import files, as_file   # 3.14
     except ImportError:
         from importlib_resources import files, as_file   # backport for 3.7–3.8
-try:
-    from dbus_next import Variant
-    HAVE_DBUS_NEXT = True
-except ImportError:
-    HAVE_DBUS_NEXT = False
+HAVE_NATIVE_MEDIA = True
+if platform.lower().startswith('lin'):
+    try:
+        from dbus_next import Variant
+    except ImportError:
+        HAVE_NATIVE_MEDIA = False
+elif platform.lower().startswith('win'):
+    try:
+        from winrt.windows.media.playback import MediaPlayer
+    except ImportError:
+        HAVE_NATIVE_MEDIA = False
+elif platform.lower().startswith('darwin'):
+    if version_info > (3, 10, 0):
+        from .common import macos_media_supported()
+        if macos_media_supported():
+            try:
+                from MediaPlayer import MPNowPlayingInfoCenter
+            except ImportError:
+                HAVE_NATIVE_MEDIA = False
 from .player import PlayerCache
 from .config import HAS_REQUESTS, HAS_DNSPYTHON, Station
 from .common import StationsChanges, CsvReadWrite, STATES, M_STRINGS, player_start_stop_token, get_cached_icon_path
@@ -1179,19 +1193,35 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self._mpris.update_playback(False)
             self._mpris.update_nav_caps(True, True)
             trackid = "/org/mpris/MediaPlayer2/track/idle"
+            art_url = path.join(self._cnf.data_dir, 'pyradio.png')
+            if not path.exists(art_url):
+                art_url = path.join(self._cnf.stations_dir, 'help', 'pyradio.png')
             self._mpris.update_metadata(
                 trackid,
-                'Title: N/A',
-                'No station playing',
+                'Idle',
+                'PyRadio',
                 self._cnf.station_title,
-                art_url='file://' + path.join(self._cnf.data_dir, 'pyradio.png')
+                art_url='file://' + art_url
             )
 
     def _send_mpris_title(self, title, art_url=None):
         if self._mpris:
             if self._mpris and title:
+                def_icon = self.log.icon_path[:-3] + 'png'
                 if art_url is None:
-                    art_url = 'file://' + path.join(self._cnf.data_dir, 'pyradio.png')
+                    # a_file = path.join(self._cnf.data_dir, 'pyradio.png')
+                    # if path.exists(a_file):
+                    #     art_url = 'file://' + path.join(a_file)
+                    # else:
+                    #     art_url = 'file://' + path.join(self._cnf.stations_dir, 'help', 'pyradio.png')
+                    art_url = 'file://' + def_icon
+                else:
+                    if path.exists(art_url):
+                        art_url = 'file://' + art_url
+                    else:
+                        art_url = 'file://' + def_icon
+                        # art_url = 'file://' + path.join(self._cnf.stations_dir, 'help', 'pyradio.png')
+                logger.error(f'SMTC: final {art_url = }')
                 trackid = self._mpris.make_trackid(self._playlist_open_count, self.playing)
                 cur_station = self.stations[self.selection]
                 if self._last_played_station:
@@ -1206,7 +1236,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 )
 
     def _enable_os_media_controls_if_possible(self, start=None):
-        use_mpris = not self._cnf.headless and HAVE_DBUS_NEXT and self._cnf.use_os_media_controls and not self._cnf.locked and self.player
+        use_mpris = not self._cnf.headless and HAVE_NATIVE_MEDIA and self._cnf.use_os_media_controls and not self._cnf.locked and self.player
         if use_mpris:
             if self._mpris is None:
                 from .common import create_os_media_controller
@@ -1226,7 +1256,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     self.bodyWin.nodelay(0)
             else:
                 if logger.isEnabledFor(logging.INFO) and start:
-                    logger.info(f'MPRIS not starting: {self._cnf.use_os_media_controls = }, {HAVE_DBUS_NEXT = }, {self._cnf.locked = }')
+                    logger.info(f'MPRIS not starting: {self._cnf.use_os_media_controls = }, {HAVE_NATIVE_MEDIA = }, {self._cnf.locked = }')
             self._mpris = None
 
     def _set_mpris_callbacks(self):
@@ -2418,9 +2448,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
     def ctrl_c_handler(self, signum, frame, save_playlist=True):
         # ok
-        if self._mpris:
-            self._mpris.stop()
-            self._mpris = None
         self.log.stop_timer()
         if self._cnf.titles_log.titles_handler:
             logger.critical('=== Logging stopped')
@@ -2439,6 +2466,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 show_message=False,
                 reset_playing=False
             )
+        if self._mpris:
+            self._mpris.stop()
+            self._mpris = None
         self._cls_update_stations = None
         self.detect_if_player_exited = False
         if self._cnf.dirty_playlist and save_playlist:
@@ -2690,9 +2720,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         else:
             self._get_the_stations_player(station_player)
             self._cnf.notification_image_file = None
-            if self._cnf.enable_notifications and \
-                    self._cnf.use_station_icon and \
-                    not platform.startswith('win'):
+            if (self._cnf.enable_notifications and \
+                    self._cnf.use_station_icon) or \
+                    self._mpris:
                 if self.stations[self.selection][3]:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug(f'+++ need to download icon: "{self.stations[self.selection][3]}"')
@@ -2988,8 +3018,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     logger.debug('+++ icon download: asked to stop. Stopping...')
                 return
             temp_file = tempfile.NamedTemporaryFile(delete=False, dir=self._cnf.logos_dir)
+            temp_file.close()
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
             try:
-                response = requests.get(url)
+                response = requests.get(url, headers=headers, timeout=10)
+                # response = requests.get(url)
             except requests.exceptions.RequestException as e:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug(f'+++ icon download failed: {e}')
@@ -3019,9 +3052,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 rename(temp_file.name, file_to_write)
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('+++ icon downloaded...')
-            except:
+            except Exception as e:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('+++ icon downloaded, but already exists...')
+                    logger.debug(f'+++ icon downloaded, but {e}...')
             update_icon_name_function(file_to_write)
 
     def _ask_to_delete_playlist(self):

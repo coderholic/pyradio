@@ -193,8 +193,8 @@ def create_os_media_controller(identity="PyRadio", instance_name=None):
         return MprisController(identity=identity, instance_name=instance_name)
 
     elif platform.startswith("win"):
-        # from .windows_smtc import WindowsMediaController
-        # return WindowsMediaController(identity=identity, instance_name=instance_name)
+        from .windows_smtc import WindowsSMTCController
+        return WindowsSMTCController(identity=identity, instance_name=instance_name)
         return None
 
     elif platform.startswith("dar"):
@@ -1492,3 +1492,29 @@ def get_cached_icon_path(cache_dir, station_name, icon_url):
 
     # Old filename does not exist - use the new one
     return path2
+
+def macos_media_supported():
+    return macos_version_at_least(10, 12, 2)
+
+def macos_version_at_least(major, minor=0, patch=0):
+    """
+    Return True if the running macOS version is >= (major, minor, patch).
+
+    If version detection fails, return False.
+    """
+    try:
+        ver = platform.mac_ver()[0]
+        if not ver:
+            return False
+
+        parts = ver.split('.')
+        nums = [int(x) for x in parts]
+
+        while len(nums) < 3:
+            nums.append(0)
+
+        return tuple(nums[:3]) >= (major, minor, patch)
+
+    except Exception:
+        return False
+

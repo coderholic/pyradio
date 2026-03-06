@@ -60,6 +60,13 @@ IF %ERRORLEVEL% == 1 (
     GOTO piperror
 )
 
+ECHO Installing / Updating pip_system_certs
+%PROGRAM% -m pip install --upgrade pip_system_certs  1>NUL 2>NUL
+IF %ERRORLEVEL% == 1 (
+    SET ERRPKG=pip_system_certs
+    GOTO piperror
+)
+
 echo pywin32 > requirements.txt
 echo windows-curses >> requirements.txt
 echo requests >> requirements.txt
@@ -72,6 +79,16 @@ echo win10toast >> requirements.txt
 echo python-dateutil >> requirements.txt
 echo py-cpuinfo >> requirements.txt
 echo charset-normalizer >> requirements.txt
+echo pip_system_certs >> requirements.txt
+echo winrt-runtime >> requirements.txt
+echo winrt-Windows.Foundation >> requirements.txt
+echo winrt-Windows.Foundation.Collections >> requirements.txt
+echo winrt-Windows.Media >> requirements.txt
+echo winrt-Windows.Media.Control >> requirements.txt
+echo winrt-Windows.Media.Playback >> requirements.txt
+echo winrt-Windows.Storage >> requirements.txt
+echo winrt-Windows.Storage.Streams >> requirements.txt
+echo comtypes >> requirements.txt
 
 ::Remove the elevation tag and SET the correct working directory
 IF '%1'=='ELEV' ( SHIFT /1 )

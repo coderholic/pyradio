@@ -867,7 +867,7 @@ class Log():
     def _update_mpris_title(self, msg):
         if msg:
             if msg.startswith(M_STRINGS['playing_']):
-                title = 'Title: N/A'
+                title = 'Title Not Available'
             elif msg.startswith(M_STRINGS['title_']):
                 sp = msg.split(':')
                 title = ':'.join(sp[1:]).strip()
