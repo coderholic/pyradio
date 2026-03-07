@@ -498,9 +498,13 @@ Please make sure patch is installed and try again
     else
         $PIPX_CMD install $PIPX_EDITABLE --force . || pipx_error
         [ -z "$PIPX_EDITABLE" ] && {
-            [ -z "$DBUS_NEXT" ] || echo "dbus-next" >> requirements_pipx.txt
             cat requirements_pipx.txt | sed -e 's/#.*//' | xargs $PIPX_CMD inject pyradio
-            [ -z "$DBUS_NEXT" ] || sed -i '/dbus-next/d' requirements_pipx.txt
+            if [ $(uname -s) == "Darwin" ] || [ $(uname -s) == "darwin" ]
+            then
+                $PIPX_CMD inject pyradio pyobjc-core pyobjc-framework-Cocoa pyobjc-framework-MediaPlayer
+            else
+                [ -z  "$DBUS_NEXT" ] || $PIPX_CMD inject pyradio dbus-next
+            fi
         }
         inst_type=2
     fi

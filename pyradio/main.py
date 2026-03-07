@@ -315,9 +315,9 @@ If nothing else works, try the following command:
     if platform.startswith('lin'):
         is_group = parser.add_argument_group('• Isolated environment')
         is_group.add_argument('--mpris', action='store_true',
-                              help='Install "dbus-next" in the isolated environment '
-                              'and make sure it will always be there through updates. '
-                              'This is essential to have MPRIS up and running.'
+                              help='Install "dbus-next" in the isolated environment and '
+                              'ensure it remains available after updates. This is '
+                              'required for MPRIS support.'
                               )
     else:
         parser.add_argument('--mpris', action='store_true', help=SUPPRESS)

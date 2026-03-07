@@ -51,7 +51,7 @@ elif platform.lower().startswith('win'):
         HAVE_NATIVE_MEDIA = False
 elif platform.lower().startswith('darwin'):
     if version_info > (3, 10, 0):
-        from .common import macos_media_supported()
+        from .common import macos_media_supported
         if macos_media_supported():
             try:
                 from MediaPlayer import MPNowPlayingInfoCenter

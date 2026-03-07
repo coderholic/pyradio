@@ -195,12 +195,10 @@ def create_os_media_controller(identity="PyRadio", instance_name=None):
     elif platform.startswith("win"):
         from .windows_smtc import WindowsSMTCController
         return WindowsSMTCController(identity=identity, instance_name=instance_name)
-        return None
 
     elif platform.startswith("dar"):
-        # from .macos_nowplaying import MacOSMediaController
-        # return MacOSMediaController(identity=identity, instance_name=instance_name)
-        return None
+        from .macos_media import MacOSMediaController
+        return MacOSMediaController(identity=identity, instance_name=instance_name)
 
     return None
 

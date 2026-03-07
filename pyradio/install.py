@@ -319,8 +319,7 @@ def get_github_long_description(
         try:
             with urlopen(url) as https_response:
                 ret = https_response.read()
-        except Exception as e:
-            print(f'urlopen exception: {e}')
+        except:
             if do_not_exit:
                 ret = None
             else:
