@@ -171,7 +171,10 @@ class HelperAppDelegate(NSObject):
         self._can_next = True
         self._can_prev = True
         self._has_published_state = False
-
+        self._last_metadata_signature = None
+        self._last_nav_signature = None
+        self._last_playback_signature = None
+        self._resolved_art_url = None
         self._primed = False
 
         return self
@@ -227,7 +230,6 @@ class HelperAppDelegate(NSObject):
 
         except Exception as e:
             logger.error("MEDIA: Failed priming now playing state: %s", e)
-
 
     def _setup_now_playing(self):
         self._center = MPNowPlayingInfoCenter.defaultCenter()
@@ -299,6 +301,25 @@ class HelperAppDelegate(NSObject):
 
             self._apply_command(msg)
 
+    def _metadata_signature(self, trackid, title, artist, album, url, art_url):
+        return (
+            trackid or "",
+            title or "",
+            artist or "",
+            album or "",
+            url or "",
+            art_url or ""
+        )
+
+    def _nav_signature(self, can_next, can_prev):
+        return (
+            bool(can_next),
+            bool(can_prev)
+        )
+
+    def _playback_signature(self, playing):
+        return bool(playing)
+
     def _make_artwork_from_image(self, image):
         if image is None:
             return None
@@ -319,7 +340,11 @@ class HelperAppDelegate(NSObject):
         if not art_url:
             self._image = self._default_image
             self._artwork = self._default_artwork
+            self._resolved_art_url = None
             return self._default_artwork
+
+        if art_url == self._resolved_art_url and self._artwork is not None:
+            return self._artwork
 
         try:
             if art_url.startswith("file://"):
@@ -331,6 +356,7 @@ class HelperAppDelegate(NSObject):
             if not path:
                 self._image = self._default_image
                 self._artwork = self._default_artwork
+                self._resolved_art_url = None
                 return self._default_artwork
 
             image = NSImage.alloc().initWithContentsOfFile_(path)
@@ -338,6 +364,7 @@ class HelperAppDelegate(NSObject):
                 logger.error("MEDIA: Failed loading artwork image from path: %s", path)
                 self._image = self._default_image
                 self._artwork = self._default_artwork
+                self._resolved_art_url = None
                 return self._default_artwork
 
             self._image = image
@@ -346,14 +373,17 @@ class HelperAppDelegate(NSObject):
             if self._artwork is None:
                 self._image = self._default_image
                 self._artwork = self._default_artwork
+                self._resolved_art_url = None
                 return self._default_artwork
 
+            self._resolved_art_url = art_url
             return self._artwork
 
         except Exception as e:
             logger.error("MEDIA: Failed resolving artwork from art_url: %s", e)
             self._image = self._default_image
             self._artwork = self._default_artwork
+            self._resolved_art_url = None
             return self._default_artwork
 
     def _set_playback_state(self, playing):
@@ -453,7 +483,14 @@ class HelperAppDelegate(NSObject):
 
         if msg_type == "playback":
             playing = bool(msg.get("playing"))
+            signature = self._playback_signature(playing)
+
+            if signature == self._last_playback_signature:
+                logger.info("MEDIA: Skipping duplicate playback command")
+                return
+
             try:
+                self._last_playback_signature = signature
                 self._set_playback_state(playing)
 
                 if self._has_published_state:
@@ -465,22 +502,52 @@ class HelperAppDelegate(NSObject):
             return
 
         if msg_type == "nav_caps":
+            can_next = bool(msg.get("can_next", True))
+            can_prev = bool(msg.get("can_prev", True))
+            signature = self._nav_signature(can_next, can_prev)
+
+            if signature == self._last_nav_signature:
+                logger.info("MEDIA: Skipping duplicate nav caps command")
+                return
+
             try:
-                self._can_next = bool(msg.get("can_next", True))
-                self._can_prev = bool(msg.get("can_prev", True))
+                self._last_nav_signature = signature
+                self._can_next = can_next
+                self._can_prev = can_prev
                 self._apply_nav_caps()
             except Exception as e:
                 logger.error("MEDIA: Failed applying nav caps command: %s", e)
             return
 
         if msg_type == "metadata":
+            trackid = msg.get("trackid")
+            title = msg.get("title")
+            artist = msg.get("artist")
+            album = msg.get("album")
+            url = msg.get("url")
+            art_url = msg.get("art_url")
+
+            signature = self._metadata_signature(
+                trackid,
+                title,
+                artist,
+                album,
+                url,
+                art_url
+            )
+
+            if signature == self._last_metadata_signature:
+                logger.info("MEDIA: Skipping duplicate metadata command")
+                return
+
             try:
-                self._trackid = msg.get("trackid")
-                self._title = msg.get("title")
-                self._artist = msg.get("artist")
-                self._album = msg.get("album")
-                self._url = msg.get("url")
-                self._art_url = msg.get("art_url")
+                self._last_metadata_signature = signature
+                self._trackid = trackid
+                self._title = title
+                self._artist = artist
+                self._album = album
+                self._url = url
+                self._art_url = art_url
 
                 self._apply_now_playing_info()
 
