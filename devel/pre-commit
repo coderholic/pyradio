@@ -160,7 +160,8 @@ for afile in index.md \
     buffering.md \
     m3u.md \
     validate_playlist.md \
-    tts.md
+    tts.md \
+    os-media-controls.md
 do
     sed -i -e "s/'s-/s-/g" -e "s/s'-/s-/g"  "$afile"
     git add "$afile"
@@ -211,6 +212,8 @@ do
         echo '% PyRadio Playlist Validation Guide' > tmp.md
     elif [ "$afile" = "tts.md" ];then
         echo '% PyRadio Text-to-Speech Support' > tmp.md
+    elif [ "$afile" = "os-media-controls.md" ];then
+        echo '% PyRadio Media Controls Support' > tmp.md
     fi
     cat ${afile} >> tmp.md
     pandoc --wrap=none -s -t html tmp.md -o ${out} || {
@@ -329,6 +332,10 @@ do
         sed -i -e '/pyradio-buffering-win.jpg/s/src=/style="width: 280px" src=/' \
             -e '/pyradio-b\.jpg/s/src=/style="width: 450px" src=/' \
             "$out"
+    fi
+
+    if [ "$out" = "os-media-controls.html" ];then
+        sed -i 's/support:-/support-/g' "$out"
     fi
 
     sed -i '/^<[Aa]/s|.*|<p>&</p>|' "$out"

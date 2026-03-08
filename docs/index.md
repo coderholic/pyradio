@@ -73,6 +73,7 @@ Command line internet radio player.
 * [Session Locking](#session-locking)
     * [Session unlocking](#session-unlocking)
 * [Update notification](#update-notification)
+* [OS Media Controls integration](#os-media-controls-integration)
 * [Remote Control Server](#remote-control-server)
     * [Remote Control Client](#remote-control-client)
 * [Playing a station in the terminal](#playing-a-station-in-the-terminal)
@@ -1291,6 +1292,13 @@ If for any reason **PyRadio** always starts in "*locked mode*", one can **unlock
 If so, a notification message will be displayed, informing the user about it and asking to proceed with updating the program (provided this is not a distribution package).
 
 **Note:** Packages coming from a distribution repository will display no notification; it's up to the distro to update / uninstall **PyRadio**, as stated in [Packaging PyRadio](packaging.md).
+
+## OS Media Controls integration
+
+**PyRadio** can integrate with the operating system’s media control system.
+
+For more information, please refer to [the relevant page](os-media-controls.md).
+
 
 ## Remote Control Server
 

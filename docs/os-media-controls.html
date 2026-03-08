@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PyRadio Media Controls Support</title>
+    <style> 
+    body {padding: 2em;} 
+    @media screen and (max-width: 770px) { 
+        body {padding: 10px;} 
+    }
+    body {max-width: 750px; margin: auto;} 
+    h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
+    h3 {margin-top: 2em; color: SaddleBrown; text-decoration: underline SaddleBrown} 
+    h4 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 1em;} 
+    h4:before {content: "# "; font-weight: bold; vertical-align: middle;} 
+    h5 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 1em;;} 
+    h5:before {content: "## "; font-weight: bold; vertical-align: middle;} 
+    p, table, ol, ul {margin-left: .8em;} 
+    STRONG {color: SaddleBrown;} 
+    dl {margin: 2em;} 
+    dd {margin: 1em;} 
+    dt {font-weight: bold;} 
+    TABLE {border: 1px solid SaddleBrown; border-collapse: collapse; margin-left: auto; margin-right: auto; border-radius: 5px; -moz-border-radius: 5px; border-collapse:separate; box-shadow: 5px 5px 15px #888888;} 
+    TH {text-align: left; vertical-align: top; padding: 5px;color: SaddleBrown;border: 1px solid SaddleBrown; background-color: SaddleBrown; color: white;} 
+    TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
+    pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; overflow: auto; box-shadow: 5px 5px 15px #C7C7C7;} 
+    .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} 
+    img{display: block; margin-left: auto; margin-right: auto; max-width: 750px; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
+    .indented {text-indent: -1.5em; padding-left: 1.5em; margin-left: 1em;} 
+    a{ color: SaddleBrown;}
+a:visited{color: SaddleBrown;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+</header>
+<h1 style="color: SaddleBrown" id="os-media-controls">OS Media Controls</h1>
+<p><strong>PyRadio</strong> can integrate with the operating system’s media control system.</p>
+<p>When enabled, <strong>PyRadio</strong> appears as a media player in your desktop environment and can be controlled using system media controls and hardware media keys.</p>
+<p>This allows you to:</p>
+<ul>
+<li>Control <strong>PyRadio</strong> using media keys</li>
+<li>Control playback from system media widgets</li>
+<li>View station information in OS media panels</li>
+<li>Display station artwork when available</li>
+</ul>
+<h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<!-- vim-markdown-toc Marked -->
+<ul>
+<li><a href="#what-you-can-do-with-os-media-controls">What You Can Do With OS Media Controls</a>
+<ul>
+<li><a href="#control-playback">Control playback</a></li>
+<li><a href="#view-station-information">View station information</a></li>
+</ul></li>
+<li><a href="#feature-behavior">Feature Behavior</a>
+<ul>
+<li><a href="#playback-behavior">Playback Behavior</a>
+<ul>
+<li><a href="#pause-behavior">Pause behavior</a></li>
+</ul></li>
+<li><a href="#artwork-behavior">Artwork Behavior</a></li>
+<li><a href="#information-displayed-by-the-os">Information Displayed by the OS</a></li>
+</ul></li>
+<li><a href="#supported-platforms">Supported Platforms</a></li>
+<li><a href="#enabling-os-media-controls">Enabling OS Media Controls</a></li>
+<li><a href="#platform-support-linux">Platform Support: Linux</a>
+<ul>
+<li><a href="#integration">Integration</a></li>
+<li><a href="#what-you-will-see">What You Will See</a></li>
+<li><a href="#using-playerctl">Using playerctl</a></li>
+<li><a href="#dependencies">Dependencies</a></li>
+<li><a href="#installation-notes">Installation Notes</a></li>
+</ul></li>
+<li><a href="#platform-support-windows">Platform Support: Windows</a>
+<ul>
+<li><a href="#integration">Integration</a></li>
+<li><a href="#what-you-will-see">What You Will See</a></li>
+<li><a href="#dependencies">Dependencies</a></li>
+</ul></li>
+<li><a href="#platform-support-macos">Platform Support: macOS</a>
+<ul>
+<li><a href="#integration">Integration</a></li>
+<li><a href="#what-you-will-see">What You Will See</a></li>
+<li><a href="#dependencies">Dependencies</a></li>
+</ul></li>
+<li><a href="#notes-and-limitations">Notes and Limitations</a>
+<ul>
+<li><a href="#linux-desktop-environments">Linux desktop environments</a></li>
+<li><a href="#media-keys">Media keys</a></li>
+<li><a href="#station-metadata">Station metadata</a></li>
+</ul></li>
+<li><a href="#faq">FAQ</a>
+<ul>
+<li><a href="#why-does-pause-behave-like-stop?">Why does Pause behave like Stop?</a></li>
+<li><a href="#why-dont-i-see-artwork?">Why don’t I see artwork?</a></li>
+<li><a href="#why-dont-my-media-keys-work-on-linux?">Why don’t my media keys work on Linux?</a></li>
+</ul></li>
+</ul>
+<!-- vim-markdown-toc -->
+<p class="indented">[ <a href="index.html#os-media-controls-integration">Return to main doc</a> ]</p>
+<h2 id="what-you-can-do-with-os-media-controls">What You Can Do With OS Media Controls <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>When OS Media Controls are enabled, <strong>PyRadio</strong> can be controlled directly from your operating system.</p>
+<h3 id="control-playback">Control playback</h3>
+<p>You can control <strong>PyRadio</strong> using system media controls such as:</p>
+<ul>
+<li>Play</li>
+<li>Stop</li>
+<li>Next station</li>
+<li>Previous station</li>
+</ul>
+<p>These controls may appear in:</p>
+<ul>
+<li>Desktop media widgets</li>
+<li>System media overlays</li>
+<li>Lock screen media panels</li>
+<li>Hardware media keys on your keyboard</li>
+</ul>
+<h3 id="view-station-information">View station information</h3>
+<p>Your operating system may display information about the current station, including:</p>
+<ul>
+<li>Station name</li>
+<li>Station title</li>
+<li>Playlist name</li>
+<li>Artwork (when available)</li>
+<li>Playback status</li>
+</ul>
+<h2 id="feature-behavior">Feature Behavior <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<h3 id="playback-behavior">Playback Behavior</h3>
+<p><strong>PyRadio</strong> streams live radio stations, which behave differently from typical music players.</p>
+<p>Supported media actions include:</p>
+<ul>
+<li>Play</li>
+<li>Stop</li>
+<li>Next station</li>
+<li>Previous station</li>
+</ul>
+<h4 id="pause-behavior">Pause behavior</h4>
+<p>Since radio streams cannot normally be paused, the <strong>Pause</strong> action typically behaves like <strong>Stop</strong>.</p>
+<h3 id="artwork-behavior">Artwork Behavior</h3>
+<p>When available, <strong>PyRadio</strong> displays station artwork in the operating system’s media controls.</p>
+<p>If a station provides an icon, <strong>PyRadio</strong> will attempt to retrieve and use it as the station artwork.</p>
+<p>If artwork is not available or cannot be retrieved, the default <strong>PyRadio</strong> icon will be used instead.</p>
+<p>In some cases the default icon may appear temporarily while station artwork is being retrieved.</p>
+<h3 id="information-displayed-by-the-os">Information Displayed by the OS</h3>
+<p>When OS Media Controls are enabled, <strong>PyRadio</strong> exposes playback information to the operating system’s media control interface.</p>
+<p>This will include:</p>
+<ul>
+<li>Station name</li>
+<li>Station title</li>
+<li>Playlist name</li>
+<li>Artwork</li>
+<li>Playback status</li>
+</ul>
+<p>How and where this information is displayed depends entirely on the operating system and the desktop components handling media controls (such as desktop widgets, media overlays, or plugins).</p>
+<p>Some environments display detailed information automatically, while others may show limited information or require additional components.</p>
+<p>Typical playback states include:</p>
+<ul>
+<li>Playing</li>
+<li>Stopped</li>
+</ul>
+<h2 id="supported-platforms">Supported Platforms <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<table>
+<thead>
+<tr>
+<th>Operating System</th>
+<th>Integration</th>
+<th>Media Keys</th>
+<th>System Media Widgets</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Linux</td>
+<td>MPRIS</td>
+<td>Yes</td>
+<td>Varies by desktop environment</td>
+</tr>
+<tr>
+<td>Windows</td>
+<td>SMTC</td>
+<td>Yes</td>
+<td>Varies by system configuration</td>
+</tr>
+<tr>
+<td>macOS</td>
+<td>Now Playing</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<h2 id="enabling-os-media-controls">Enabling OS Media Controls <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>OS Media Controls can be enabled from the <strong>PyRadio</strong> configuration menu.</p>
+<p>Open the configuration screen and navigate to:</p>
+<pre>PyRadio Configuration → General Options → Enable OS Media Controls</pre>
+<p>After enabling the option, the change takes effect immediately.</p>
+<p>When this option is disabled, <strong>PyRadio</strong> behaves like a traditional terminal application and does not interact with the operating system’s media controls.</p>
+<h2 id="platform-support-linux">Platform Support: Linux <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> This section also applies to BSD systems and Raspberry Pi, as long as <em>dbus</em> is already installed.</p>
+<h3 id="integration">Integration</h3>
+<p>PyRadio integrates with Linux desktop environments using the <strong>MPRIS (Media Player Remote Interfacing Specification)</strong> interface.</p>
+<p>When OS Media Controls are enabled, PyRadio appears as an MPRIS media player and can interact with desktop media widgets, media keys, and compatible media control tools.</p>
+<h3 id="what-you-will-see">What You Will See</h3>
+<p>PyRadio may appear in your desktop environment’s media controls or media widget.</p>
+<p>You may also be able to control playback using hardware media keys.</p>
+<p><a href="https://hellug.gr/" target="_blank"><img src="https://hellug.gr/" alt="PyRadio media controls on Linux" /></a></p>
+
+<h3 id="using-playerctl">Using playerctl</h3>
+<p>On Linux systems supporting MPRIS, PyRadio can also be controlled using the <strong>playerctl</strong> command-line tool.</p>
+<p>You can list all MPRIS players currently registered on the system using:</p>
+<pre># playerctl -l
+firefox
+pyradio
+mpv
+spotify</pre>
+<p>PyRadio will typically appear as <strong>pyradio</strong>, so using this name <strong>playerctl</strong> can control it using:</p>
+<pre>playerctl -p pyradio play
+playerctl -p pyradio stop
+playerctl -p pyradio pause
+playerctl -p pyradio next
+playerctl -p pyradio previous</pre>
+<p>The <strong>playerctl</strong> tool can also be used to query playback status and metadata.</p>
+<p>Example:</p>
+<pre>playerctl -p pyradio status
+playerctl -p pyradio metadata</pre>
+<h3 id="dependencies">Dependencies</h3>
+<p>Most modern Linux distributions already include the required components such as DBus and MPRIS support.</p>
+<p>PyRadio depends on the <em>dbus-next</em> Python package, which may not always be installed automatically.</p>
+<h3 id="installation-notes">Installation Notes</h3>
+<p>If PyRadio is installed from your Linux distribution’s package manager, the <em>dbus-next</em> Python package may or may not be installed automatically.</p>
+<p>If it is not installed, use your distro package manager to install it.</p>
+<p>Example:</p>
+<pre>sudo apt install python3-dbus-next
+
+sudo pacman -S python-dbus-next
+
+etc.</pre>
+<p>If PyRadio is installed using <strong>pipx with an isolated environment</strong>, the required MPRIS dependencies will not be available automatically.</p>
+<p>After installing PyRadio with pipx in an isolated environment, you can install the required packages by running:</p>
+<pre>pyradio --mpris</pre>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Media key behavior may depend on the desktop environment and its media control configuration.</p>
+<h2 id="platform-support-windows">Platform Support: Windows <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<h3 id="integration-1">Integration</h3>
+<p>On Windows, PyRadio integrates with <strong>System Media Transport Controls (SMTC)</strong>.</p>
+<h3 id="what-you-will-see-1">What You Will See</h3>
+<p>When OS Media Controls are enabled, PyRadio may appear in the Windows media overlay and system media controls.</p>
+<p>Playback can typically be controlled using media keys.</p>
+<p><a href="https://hellug.gr/" target="_blank"><img src="https://hellug.gr/" alt="PyRadio media controls on Windows" /></a></p>
+
+<h3 id="dependencies-1">Dependencies</h3>
+<p>No additional setup is normally required.</p>
+<h2 id="platform-support-macos">Platform Support: macOS <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<h3 id="integration-2">Integration</h3>
+<p>On macOS, PyRadio integrates with the system <strong>Now Playing</strong> interface.</p>
+<h3 id="what-you-will-see-2">What You Will See</h3>
+<p>When OS Media Controls are enabled, PyRadio may appear in the macOS Control Center media widget and the system Now Playing panel.</p>
+<p>Media keys and system media controls can be used to control playback.</p>
+<p><a href="https://hellug.gr/" target="_blank"><img src="https://hellug.gr/" alt="PyRadio media controls on macOS" /></a></p>
+
+<h3 id="dependencies-2">Dependencies</h3>
+<p>No additional setup is normally required.</p>
+<h2 id="notes-and-limitations">Notes and Limitations <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<h3 id="linux-desktop-environments">Linux desktop environments</h3>
+<p>Media control integration depends on the desktop environment. Most modern environments supporting MPRIS will work correctly.</p>
+<h3 id="media-keys">Media keys</h3>
+<p>Media keys usually work automatically once OS Media Controls are enabled, but behavior may vary depending on the operating system and desktop configuration.</p>
+<h3 id="station-metadata">Station metadata</h3>
+<p>Station information depends on what the radio station provides. Some stations may not transmit full metadata.</p>
+<h2 id="faq">FAQ <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<h3 id="why-does-pause-behave-like-stop">Why does Pause behave like Stop?</h3>
+<p>Radio streams are continuous live streams and typically cannot be paused. For this reason, the Pause action usually stops playback.</p>
+<h3 id="why-dont-i-see-artwork">Why don’t I see artwork?</h3>
+<p>Not all radio stations provide artwork. If no station artwork is available, PyRadio will display its default icon.</p>
+<h3 id="why-dont-my-media-keys-work-on-linux">Why don’t my media keys work on Linux?</h3>
+<p>Media key behavior depends on the desktop environment and whether it supports MPRIS media players.</p>
+</body>
+</html>
