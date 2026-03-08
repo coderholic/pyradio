@@ -1557,11 +1557,10 @@ a:visited{color: SaddleBrown;}
 Furthermore, please refrain from using any third-party packaging methods, such as <strong>Snap</strong> or <strong>AppImage</strong>. I am not affiliated with these services or projects, and I cannot guarantee the functionality or version of <strong>PyRadio</strong> provided through them. Additionally, I am unable to offer support for any issues related to these packaging methods.</p>
 <h2 id="command-line-options">Command line options <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre># pyradio -h
-
 Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-x] [-u PLAYER]
                [-l] [-lt] [-sds] [-sd] [-od] [-pc] [-d]
                [--d-player-input D_PLAYER_INPUT] [-ul] [-us] [-U] [-R] [-V]
-               [-ls] [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes]
+               [--mpris] [-ls] [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes]
                [--no-themes] [--write-theme IN_THEME OUT_THEME,]
                [--terminal TERMINAL] [--terminal-param ...] [-oc] [-sc] [-cc]
                [-gc] [-r] [-or] [-lr] [-mkv MKV_FILE] [-scv PNG_FILE] [-srt]
@@ -1608,6 +1607,11 @@ General options:
   -U, --update          Update PyRadio.
   -R, --uninstall       Uninstall PyRadio.
   -V, --version         Display version information.
+
+Isolated environment:
+  --mpris               Install &quot;dbus-next&quot; in the isolated environment and
+                        ensure it remains available after updates. This is
+                        required for MPRIS support.
 
 Playlist selection:
   -ls, --list-playlists

@@ -44,32 +44,7 @@ A theme for dark terminal background settings.
 6. **black_on_white** or **bow** (b&w theme). \
 A theme for light terminal background settings.
 
-Furthermore, a number of themes (these are actual files saved in the **themes** installation directory) are also available:
-
-- **AM_by_amski1** \
-A simple green on dark theme, created for Windows.
-- **blue-by-boxer** \
-A reddish on blue theme by user **Boxer** at [Mabox Forum](https://forum.maboxlinux.org/).
-- **catppuccin-frappe**, **catppuccin-latte**, **catppuccin-macchiato** and **catppuccin-mocha** \
-Four themes by the [Catppuccin community](https://github.com/catppuccin).
-- **classic_by_obsdg** \
-A clasic theme by [The OpenBSD Guy](https://github.com/OpenBSDGuy), originally created on [OpenBSD](https://www.openbsd.org/).
-- **cupcake_by_edunfelt** and  **fairyflossy_by_edunfelt** \
-Two themes by [edunfelt](https://github.com/edunfelt) inspired by the [base16](https://github.com/base16-project) project.
-- **dracula_by_Plyply99** \
-A theme based of the Dracula theme by [Plyply99](https://github.com/Plyply99).
-- everforest-hard.pyradio-theme
-A theme by [CabalCrow](https://github.com/CabalCrow) based on [Everforest](https://github.com/sainnhe/everforest), "a green based color scheme; it's designed to be warm and soft in order to protect developers' eyes."
-- *gruvbox_dark_by_farparticul*, **gruvbox_dark_by_sng** and **gruvbox_light_by_sng** \
-Three themes based on the [gruvbox](https://github.com/morhetz/gruvbox) theme.
-- **hyprland_amber_gold** and **hyprland_dracula** \
-Two themes by [mechatour](https://github.com/mechatour), from [hyprland_amber_gold](https://github.com/mechatour/hyprland_amber_gold) and [hyprland_dotfiles]([https://github.com/mechatour/hyprland_dotfiles).
-- **lambda_by_amski1** \
-A light theme by user [amski1](https://forum.maboxlinux.org/u/amski1).
-- **minima_by_ben_chile** \
-A theme by user [ben_chile](https://forum.maboxlinux.org/u/ben_chile) created on the [Mabox Linux](https://maboxlinux.org) Forum.
-- **pastel_based_by_sng** \
-A dim but colorful theme.
+Furthermore, a number of themes (these are actual files saved in the **themes** installation directory) are also available, these themes are presented in the **System Themes** section of the *Theme selection window*.
 
 Contrary to the old styling method, which was terminal and palette dependent, a new styling method has been implemented; actual CSS colors can now be defined.
 

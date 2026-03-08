@@ -16,6 +16,7 @@
 * [Recordings Directory](#recordings-directory)
 * [MKVToolNix cli installation](#mkvtoolnix-cli-installation)
 * [Resource opener (Linux only)](#resource-opener-(linux-only))
+* [MPRIS support](#mpris-support)
 
 <!-- vim-markdown-toc -->
 
@@ -167,7 +168,7 @@ This means that your users will eventaually have to **manually** move the files 
 If this is acceptable for you, and you have a way to inform your users about it, go no and
 
 ```
-sed -i 's|recording_dir = default|recording_dir = ~/whatever|' config
+sed -i 's|recording_dir = default|recording_dir = ~/whatever|' pyradio/config
 ```
 
 In any other case, I would suggest you leave this parameter as is and let the user select customize their setup.
@@ -193,9 +194,23 @@ Most Linux distros will probably have *xdg-open* (from *xdg-utils* package) inst
 In case a different *resource opener* is to be used, one can declare it like so:
 
 ```
-sed -i 's/resource_opener = auto/resource_opener = MY_RESOURCE_OPENER/' config
+sed -i 's/resource_opener = auto/resource_opener = MY_RESOURCE_OPENER/' pyradio/config
 ```
 
 This will instruct **PyRadio** to use the file **MY_RESOURCE_OPENER** as a *resource opener*.
 
 **MY_RESOURCE_OPENER** can be just the name of the file (if it is in the *PATH*), or an absolute path to a file, it it's not.
+
+## MPRIS support
+
+In order to have **PyRadio** publish information aout the station it's playing etc.and accept commands from the keyboard's media keys you have to:
+
+1. Install "*dbus-next* \
+Add this one to your dependencies list; the package name will probably be **python-dbus-next** or **python3-dbus-next** depending on the distro.
+
+2. Enable **MPRIS** in the config \
+Execute:
+
+```
+sed -i 's/use_os_media_controls = False/use_os_media_controls = True/' pyradio/config
+```

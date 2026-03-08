@@ -57,6 +57,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#recordings-directory">Recordings Directory</a></li>
 <li><a href="#mkvtoolnix-cli-installation">MKVToolNix cli installation</a></li>
 <li><a href="#resource-opener-(linux-only)">Resource opener (Linux only)</a></li>
+<li><a href="#mpris-support">MPRIS support</a></li>
 </ul>
 <!-- vim-markdown-toc -->
 <p class="indented">[ <a href="index.html#packaging-pyradio">Back to main doc</a> ]</p>
@@ -139,7 +140,7 @@ In this case, just delete it before the build command.</p></li>
 </ol>
 <p>This means that your users will eventaually have to <strong>manually</strong> move the files from <em>~/pyradio-recordings</em> to the new location.</p>
 <p>If this is acceptable for you, and you have a way to inform your users about it, go no and</p>
-<pre>sed -i &#39;s|recording_dir = default|recording_dir = ~/whatever|&#39; config</pre>
+<pre>sed -i &#39;s|recording_dir = default|recording_dir = ~/whatever|&#39; pyradio/config</pre>
 <p>In any other case, I would suggest you leave this parameter as is and let the user select customize their setup.</p>
 <h2 id="mkvtoolnix-cli-installation">MKVToolNix cli installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>Another thing to consider is whether you should mark <strong>MKVToolNix</strong> command line utilities as a dependency for <strong>PyRadio</strong>.</p>
@@ -151,8 +152,17 @@ In this case, just delete it before the build command.</p></li>
 <p>If none of the above if found, the requested file will simply not open.</p>
 <p>Most Linux distros will probably have <em>xdg-open</em> (from <em>xdg-utils</em> package) installed or available (or any of the ones in the list above), so no action will be nesesary.</p>
 <p>In case a different <em>resource opener</em> is to be used, one can declare it like so:</p>
-<pre>sed -i &#39;s/resource_opener = auto/resource_opener = MY_RESOURCE_OPENER/&#39; config</pre>
+<pre>sed -i &#39;s/resource_opener = auto/resource_opener = MY_RESOURCE_OPENER/&#39; pyradio/config</pre>
 <p>This will instruct <strong>PyRadio</strong> to use the file <strong>MY_RESOURCE_OPENER</strong> as a <em>resource opener</em>.</p>
 <p><strong>MY_RESOURCE_OPENER</strong> can be just the name of the file (if it is in the <em>PATH</em>), or an absolute path to a file, it it’s not.</p>
+<h2 id="mpris-support">MPRIS support <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>In order to have <strong>PyRadio</strong> publish information aout the station it’s playing etc.and accept commands from the keyboard’s media keys you have to:</p>
+<ol type="1">
+<li><p>Install “<em>dbus-next</em><br />
+Add this one to your dependencies list; the package name will probably be <strong>python-dbus-next</strong> or <strong>python3-dbus-next</strong> depending on the distro.</p></li>
+<li><p>Enable <strong>MPRIS</strong> in the config<br />
+Execute:</p></li>
+</ol>
+<pre>sed -i &#39;s/use_os_media_controls = False/use_os_media_controls = True/&#39; pyradio/config</pre>
 </body>
 </html>

@@ -335,7 +335,7 @@ do
     fi
 
     if [ "$out" = "os-media-controls.html" ];then
-        sed -i 's/support:-/support-/g' "$out"
+        sed -i  -e '/mpris.jpg/s/src=/style="width: 368px" src=/'  -e '/smtc.jpg/s/src=/style="width: 466px" src=/'  -e '/now-playing.jpg/s/src=/style="width: 700px" src=/'  -e 's/support:-/support-/' "$out"
     fi
 
     sed -i '/^<[Aa]/s|.*|<p>&</p>|' "$out"

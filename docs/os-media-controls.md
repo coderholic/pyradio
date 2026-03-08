@@ -182,8 +182,9 @@ PyRadio may appear in your desktop environment's media controls or media widget.
 
 You may also be able to control playback using hardware media keys.
 
-![PyRadio media controls on Linux](https://hellug.gr/)
+![PyRadio media controls on Linux, KDE, custom plasmoid](https://members.hellug.gr/sng/pyradio/mpris.jpg)
 
+**Image:** PyRadio media controls on Linux, on KDE with a custom plasmoid
 
 
 ### Using playerctl
@@ -269,8 +270,9 @@ When OS Media Controls are enabled, PyRadio may appear in the Windows media over
 
 Playback can typically be controlled using media keys.
 
-![PyRadio media controls on Windows](https://hellug.gr/)
+![PyRadio media controls on Windows, Rainmeter with the MediaPlayer plugin](https://members.hellug.gr/sng/pyradio/smtc.jpg)
 
+**Image:** PyRadio media controls on Windows, Rainmeter with the MediaPlayer plugin
 
 
 ### Dependencies
@@ -295,7 +297,9 @@ When OS Media Controls are enabled, PyRadio may appear in the macOS Control Cent
 
 Media keys and system media controls can be used to control playback.
 
-![PyRadio media controls on macOS](https://hellug.gr/)
+![PyRadio media controls on macOS](https://members.hellug.gr/sng/pyradio/now-playing.jpg)
+
+**Image:** PyRadio media controls on macOS - **Now Playing** and **Control Center**
 
 
 

@@ -136,11 +136,10 @@ Furthermore, please refrain from using any third-party packaging methods, such a
 
 ```
 # pyradio -h
-
 Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-x] [-u PLAYER]
                [-l] [-lt] [-sds] [-sd] [-od] [-pc] [-d]
                [--d-player-input D_PLAYER_INPUT] [-ul] [-us] [-U] [-R] [-V]
-               [-ls] [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes]
+               [--mpris] [-ls] [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes]
                [--no-themes] [--write-theme IN_THEME OUT_THEME,]
                [--terminal TERMINAL] [--terminal-param ...] [-oc] [-sc] [-cc]
                [-gc] [-r] [-or] [-lr] [-mkv MKV_FILE] [-scv PNG_FILE] [-srt]
@@ -187,6 +186,11 @@ General options:
   -U, --update          Update PyRadio.
   -R, --uninstall       Uninstall PyRadio.
   -V, --version         Display version information.
+
+Isolated environment:
+  --mpris               Install "dbus-next" in the isolated environment and
+                        ensure it remains available after updates. This is
+                        required for MPRIS support.
 
 Playlist selection:
   -ls, --list-playlists
