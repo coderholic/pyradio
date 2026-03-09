@@ -949,7 +949,7 @@ class PyRadioUpdate():
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                 b.write('python -m pip install --upgrade py-cpuinfo 1>NUL 2>NUL\n')
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
-                b.write('python -m pip install --upgrade win10toast 1>NUL 2>NUL\n')
+                b.write('python -m pip install --upgrade winotify 1>NUL 2>NUL\n')
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                 b.write('python -m pip install --upgrade python-dateutil 1>NUL 2>NUL\n')
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
@@ -1514,7 +1514,7 @@ if __name__ == '__main__':
                 'patool',
                 'pyunpack',
                 'wheel',
-                'win10toast',
+                'winotify',
                 'py-cpuinfo',
         ):
             print('Checking module: [bold green]' + a_module + '[/bold green] ...')

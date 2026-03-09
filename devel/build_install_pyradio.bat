@@ -75,7 +75,7 @@ echo dnspython >> requirements.txt
 echo psutil >> requirements.txt
 echo wheel >> requirements.txt
 echo pylnk >> requirements.txt
-echo win10toast >> requirements.txt
+echo winotify >> requirements.txt
 echo python-dateutil >> requirements.txt
 echo py-cpuinfo >> requirements.txt
 echo charset-normalizer >> requirements.txt

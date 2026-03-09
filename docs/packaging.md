@@ -137,7 +137,7 @@ Experience says Python 3.8 and 3.10 will probably need this package installed.
 
 ### pyradio/\_\_pycache\_\_
 
-This is a directory that is needed for some build systems to succesfully build **PyRadio**.
+This is a directory that is needed for some build systems to successfully build **PyRadio**.
 
 Depending on the build system:
 
@@ -163,7 +163,7 @@ If you, the packager, provide a different default **recording_dir** in the packa
 
 2. New recordings and titles logs will be saved in the new default location you have provided.
 
-This means that your users will eventaually have to **manually** move the files from *~/pyradio-recordings* to the new location.
+This means that your users will eventually have to **manually** move the files from *~/pyradio-recordings* to the new location.
 
 If this is acceptable for you, and you have a way to inform your users about it, go no and
 
@@ -189,7 +189,7 @@ A [resource opener](https://wiki.archlinux.org/title/default_applications#Resour
 
 If none of the above if found, the requested file will simply not open.
 
-Most Linux distros will probably have *xdg-open* (from *xdg-utils* package) installed or available (or any of the ones in the list above), so no action will be nesesary.
+Most Linux distros will probably have *xdg-open* (from *xdg-utils* package) installed or available (or any of the ones in the list above), so no action will be necessary.
 
 In case a different *resource opener* is to be used, one can declare it like so:
 
@@ -203,9 +203,9 @@ This will instruct **PyRadio** to use the file **MY_RESOURCE_OPENER** as a *reso
 
 ## MPRIS support
 
-In order to have **PyRadio** publish information aout the station it's playing etc.and accept commands from the keyboard's media keys you have to:
+In order to have **PyRadio** publish information about the station it's playing etc. and accept commands from the keyboard's media keys you have to:
 
-1. Install "*dbus-next* \
+1. Install "*dbus-next*" \
 Add this one to your dependencies list; the package name will probably be **python-dbus-next** or **python3-dbus-next** depending on the distro.
 
 2. Enable **MPRIS** in the config \

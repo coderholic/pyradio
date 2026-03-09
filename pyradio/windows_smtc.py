@@ -1,26 +1,7 @@
-# windows_smtc_winrt.py
+# -*- coding: utf-8 -*-
 #
-# Windows SMTC backend for PyRadio using PyWinRT (winrt-*) + MediaPlayer.
+# Windows SMTC backend using PyWinRT (winrt-*) + MediaPlayer.
 #
-# This follows the exact same control model as pyradio_mpris.py:
-# - STA thread: owns WinRT objects, receives state updates from state_queue
-# - Main thread (curses): owns the real player and executes commands
-# - Communication:
-#     STA thread -> main thread: cmd_queue  (PLAY/STOP/PAUSE/NEXT/PREV/PLAYPAUSE)
-#     main thread -> STA thread: state_queue (PlaybackStatus/Caps/Metadata, plus Volume which is ignored)
-#
-# Main loop integration point:
-#     c = getch()
-#     if c == -1:
-#         smtc.poll(enabled)   # drains cmd_queue; applies debounced volume; sends updates to STA thread
-#         continue
-#
-# Constraints:
-# - Python 3.8+
-# - No typing hints
-# - Comments in English
-# - All exceptions -> logger.error(...) (NO print, NO logger.exception)
-
 import ctypes
 import threading
 import queue
@@ -72,7 +53,7 @@ def _coinit_sta():
         hr = ole32.CoInitializeEx(None, COINIT_APARTMENTTHREADED)
         return int(hr)
     except Exception:
-        _log_error("SMTC-WINRT: CoInitializeEx failed")
+        _log_error("OS-MEDIA: SMTC: CoInitializeEx failed")
         return -1
 
 
@@ -81,7 +62,7 @@ def _couninit():
         if ole32:
             ole32.CoUninitialize()
     except Exception:
-        _log_error("SMTC-WINRT: CoUninitialize failed")
+        _log_error("OS-MEDIA: SMTC: CoUninitialize failed")
 
 
 def _roinit():
@@ -94,7 +75,7 @@ def _roinit():
         hr = combase.RoInitialize(0)
         return int(hr)
     except Exception:
-        _log_error("SMTC-WINRT: RoInitialize failed")
+        _log_error("OS-MEDIA: SMTC: RoInitialize failed")
         return -1
 
 
@@ -103,7 +84,7 @@ def _rouninit():
         if combase:
             combase.RoUninitialize()
     except Exception:
-        _log_error("SMTC-WINRT: RoUninitialize failed")
+        _log_error("OS-MEDIA: SMTC: RoUninitialize failed")
 
 
 def _pump_win_messages_once():
@@ -118,7 +99,7 @@ def _pump_win_messages_once():
             user32.TranslateMessage(ctypes.byref(msg))
             user32.DispatchMessageW(ctypes.byref(msg))
     except Exception:
-        _log_error("SMTC-WINRT: message pump failed")
+        _log_error("OS-MEDIA: SMTC: message pump failed")
 
 
 # --------------------------
@@ -172,7 +153,7 @@ class _SMTCWinRTThread(object):
             self._ready.wait(5.0)
             return self._ready.is_set()
         except Exception:
-            _log_error("SMTC-WINRT: thread start failed")
+            _log_error("OS-MEDIA: SMTC: thread start failed")
             return False
 
     def stop(self):
@@ -182,13 +163,13 @@ class _SMTCWinRTThread(object):
                 self._thread.join()
             self._thread = None
         except Exception:
-            _log_error("SMTC-WINRT: thread stop failed")
+            _log_error("OS-MEDIA: SMTC: thread stop failed")
 
     def set_ignore_commands(self, value):
         try:
             self._ignore_commands = True if value else False
         except Exception:
-            _log_error("SMTC-WINRT: set_ignore_commands failed")
+            _log_error("OS-MEDIA: SMTC: set_ignore_commands failed")
 
     def _run(self):
         try:
@@ -210,10 +191,10 @@ class _SMTCWinRTThread(object):
                     self._loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(self._loop)
                 except Exception:
-                    _log_error("SMTC-WINRT: asyncio loop init failed")
+                    _log_error("OS-MEDIA: SMTC: asyncio loop init failed")
                     self._loop = None
             except Exception:
-                _log_error("SMTC-WINRT: import winrt namespaces failed")
+                _log_error("OS-MEDIA: SMTC: import winrt namespaces failed")
                 self._ready.set()
                 return
 
@@ -237,7 +218,7 @@ class _SMTCWinRTThread(object):
                 self._try_hook_buttons()
 
             except Exception:
-                _log_error("SMTC-WINRT: MediaPlayer/SMTC init failed")
+                _log_error("OS-MEDIA: SMTC: MediaPlayer/SMTC init failed")
 
             # Signal ready even if partial
             self._ready.set()
@@ -271,7 +252,7 @@ class _SMTCWinRTThread(object):
                     try:
                         self._apply_changed(pending)
                     except Exception:
-                        _log_error("SMTC-WINRT: apply_changed failed")
+                        _log_error("OS-MEDIA: SMTC: apply_changed failed")
 
                 _pump_win_messages_once()
                 if not did_work:
@@ -279,7 +260,7 @@ class _SMTCWinRTThread(object):
 
 
         except Exception:
-            _log_error("SMTC-WINRT: STA thread crashed")
+            _log_error("OS-MEDIA: SMTC: STA thread crashed")
             try:
                 self._ready.set()
             except Exception:
@@ -288,15 +269,15 @@ class _SMTCWinRTThread(object):
             try:
                 self._cleanup()
             except Exception:
-                _log_error("SMTC-WINRT: cleanup failed")
+                _log_error("OS-MEDIA: SMTC: cleanup failed")
             try:
                 _rouninit()
             except Exception:
-                _log_error("SMTC-WINRT: RoUninitialize failed")
+                _log_error("OS-MEDIA: SMTC: RoUninitialize failed")
             try:
                 _couninit()
             except Exception:
-                _log_error("SMTC-WINRT: CoUninitialize failed")
+                _log_error("OS-MEDIA: SMTC: CoUninitialize failed")
 
     def _try_hook_buttons(self):
         try:
@@ -336,7 +317,7 @@ class _SMTCWinRTThread(object):
                         pass
 
                 except Exception:
-                    _log_error("SMTC-WINRT: button handler failed")
+                    _log_error("OS-MEDIA: SMTC: button handler failed")
 
             # Prefer token-based add/remove
             tok = None
@@ -355,11 +336,11 @@ class _SMTCWinRTThread(object):
                 self._button_token = None
                 return True
             except Exception:
-                _log_error("SMTC-WINRT: ButtonPressed hook failed")
+                _log_error("OS-MEDIA: SMTC: ButtonPressed hook failed")
                 return False
 
         except Exception:
-            _log_error("SMTC-WINRT: try_hook_buttons failed")
+            _log_error("OS-MEDIA: SMTC: try_hook_buttons failed")
             return False
 
 
@@ -386,39 +367,39 @@ class _SMTCWinRTThread(object):
                 return ""
             return v
         except Exception:
-            _log_error("SMTC-WINRT: normalize_thumb_path failed")
+            _log_error("OS-MEDIA: SMTC: normalize_thumb_path failed")
             return ""
 
     def _load_thumb_stream_ref(self, abs_path):
         # Convert absolute file path to RandomAccessStreamReference (STA thread only).
         # Returns None on failure.
-        _log_error("SMTC-WINRT: thumb start")
+        _log_error("OS-MEDIA: SMTC: thumb start")
         try:
             if not abs_path:
-                _log_error("SMTC-WINRT: Error 1")
+                _log_error("OS-MEDIA: SMTC: Error 1")
                 return None
             if not self._storage or not self._streams:
-                _log_error("SMTC-WINRT: Error 2")
+                _log_error("OS-MEDIA: SMTC: Error 2")
                 return None
             if not self._loop:
-                _log_error("SMTC-WINRT: Error 3")
+                _log_error("OS-MEDIA: SMTC: Error 3")
                 return None
             if not os.path.exists(abs_path):
-                _log_error("SMTC-WINRT: Error 4")
+                _log_error("OS-MEDIA: SMTC: Error 4")
                 return None
-            _log_error("SMTC-WINRT: thumb before async")
+            _log_error("OS-MEDIA: SMTC: thumb before async")
             async def _get_ref():
                 f = await self._storage.StorageFile.get_file_from_path_async(abs_path)
                 return self._streams.RandomAccessStreamReference.create_from_file(f)
-            _log_error("SMTC-WINRT: Sending thumb")
+            _log_error("OS-MEDIA: SMTC: Sending thumb")
             try:
                 return self._loop.run_until_complete(_get_ref())
             except Exception:
-                _log_error("SMTC-WINRT: load thumbnail stream failed")
+                _log_error("OS-MEDIA: SMTC: load thumbnail stream failed")
                 return None
 
         except Exception:
-            _log_error("SMTC-WINRT: load_thumb_stream_ref failed")
+            _log_error("OS-MEDIA: SMTC: load_thumb_stream_ref failed")
             return None
 
     def _apply_changed(self, changed):
@@ -436,46 +417,46 @@ class _SMTCWinRTThread(object):
 
             if "CanGoNext" in changed:
                 v = True if changed.get("CanGoNext") else False
-                logger.debug('SMTC-WINRT: \n\n')
-                logger.debug(f'SMTC-WINRT: {self._last_can_next = } -/- {v = }')
+                logger.debug('OS-MEDIA: SMTC: \n\n')
+                logger.debug(f'OS-MEDIA: SMTC: {self._last_can_next = } -/- {v = }')
                 if v != self._last_can_next:
                     self._last_can_next = v
                     try:
                         self._smtc.is_next_enabled = v
-                        logger.debug('SMTC-WINRT: CanGoNext updated\n\n')
+                        logger.debug('OS-MEDIA: SMTC: CanGoNext updated\n\n')
                     except Exception:
-                        _log_error("SMTC-WINRT: set is_next_enabled failed")
+                        _log_error("OS-MEDIA: SMTC: set is_next_enabled failed")
 
             if "CanGoPrevious" in changed:
                 v = True if changed.get("CanGoPrevious") else False
-                logger.debug('SMTC-WINRT: \n\n')
-                logger.debug(f'SMTC-WINRT: {self._last_can_prev = } -/- {v = }')
+                logger.debug('OS-MEDIA: SMTC: \n\n')
+                logger.debug(f'OS-MEDIA: SMTC: {self._last_can_prev = } -/- {v = }')
                 if v != self._last_can_prev:
                     self._last_can_prev = v
                     try:
                         self._smtc.is_previous_enabled = v
-                        logger.debug('SMTC-WINRT: CanGoPrevious updated\n\n')
+                        logger.debug('OS-MEDIA: SMTC: CanGoPrevious updated\n\n')
                     except Exception:
-                        _log_error("SMTC-WINRT: set is_previous_enabled failed")
+                        _log_error("OS-MEDIA: SMTC: set is_previous_enabled failed")
 
             if "PlaybackStatus" in changed:
-                logger.debug('SMTC-WINRT: \n\n')
+                logger.debug('OS-MEDIA: SMTC: \n\n')
                 st = str(changed.get("PlaybackStatus") or "")
-                logger.debug(f'SMTC-WINRT: {self._last_status = } -/- {st= }')
+                logger.debug(f'OS-MEDIA: SMTC: {self._last_status = } -/- {st= }')
                 if st != self._last_status:
                     self._last_status = st
                     try:
                         if st == "Playing":
                             self._smtc.playback_status = media.MediaPlaybackStatus.PLAYING
-                            logger.debug('SMTC-WINRT: PlaybackStatus PLAYING updated\n\n')
+                            logger.debug('OS-MEDIA: SMTC: PlaybackStatus PLAYING updated\n\n')
                         elif st == "Paused":
                             self._smtc.playback_status = media.MediaPlaybackStatus.PAUSED
-                            logger.debug('SMTC-WINRT: PlaybackStatus PAUSED updated\n\n')
+                            logger.debug('OS-MEDIA: SMTC: PlaybackStatus PAUSED updated\n\n')
                         else:
                             self._smtc.playback_status = media.MediaPlaybackStatus.STOPPED
-                            logger.debug('SMTC-WINRT: PlaybackStatus STOPPED updated\n\n')
+                            logger.debug('OS-MEDIA: SMTC: PlaybackStatus STOPPED updated\n\n')
                     except Exception:
-                        _log_error("SMTC-WINRT: set playback_status failed")
+                        _log_error("OS-MEDIA: SMTC: set playback_status failed")
 
             if "Metadata" in changed:
                 md = changed.get("Metadata") or {}
@@ -514,11 +495,11 @@ class _SMTCWinRTThread(object):
                     thumb = ""
 
                 thumb_path = self._normalize_thumb_path(thumb)
-                logger.debug(f'SMTC-WINRT: {thumb_path = }')
+                logger.debug(f'OS-MEDIA: SMTC: {thumb_path = }')
 
-                logger.debug('SMTC-WINRT: \n\n')
-                logger.debug(f'SMTC-WINRT: {title = } -/- {self._last_title = }')
-                logger.debug(f'SMTC-WINRT: {artist = } -/- {self._last_artist = }')
+                logger.debug('OS-MEDIA: SMTC: \n\n')
+                logger.debug(f'OS-MEDIA: SMTC: {title = } -/- {self._last_title = }')
+                logger.debug(f'OS-MEDIA: SMTC: {artist = } -/- {self._last_artist = }')
                 meta_changed = ((title != self._last_title) or (artist != self._last_artist) or (thumb_path != (self._last_thumb or "")))
                 if meta_changed:
                     self._last_title = title
@@ -535,28 +516,28 @@ class _SMTCWinRTThread(object):
                             try:
                                 if thumb_path != (self._last_thumb or ""):
                                     self._last_thumb = thumb_path
-                                    _log_error(f"SMTC-WINRT: thumbnail final {thumb_path = }")
+                                    _log_error(f"OS-MEDIA: SMTC: thumbnail final {thumb_path = }")
                                     if not thumb_path:
                                         self._updater.thumbnail = None
-                                        _log_error("SMTC-WINRT: thumbnail is None")
+                                        _log_error("OS-MEDIA: SMTC: thumbnail is None")
                                     else:
                                         ref = self._load_thumb_stream_ref(thumb_path)
-                                        _log_error(f"SMTC-WINRT: thumbnail {ref = }")
+                                        _log_error(f"OS-MEDIA: SMTC: thumbnail {ref = }")
                                         if ref is not None:
                                             self._updater.thumbnail = ref
-                                            _log_error(f"SMTC-WINRT: thumbnail updated")
+                                            _log_error(f"OS-MEDIA: SMTC: thumbnail updated")
                             except Exception:
-                                _log_error("SMTC-WINRT: set thumbnail failed")
+                                _log_error("OS-MEDIA: SMTC: set thumbnail failed")
                             self._updater.update()
-                            logger.debug('SMTC-WINRT: update sent\n\n')
+                            logger.debug('OS-MEDIA: SMTC: update sent\n\n')
                     except Exception:
-                        _log_error("SMTC-WINRT: DisplayUpdater update failed")
+                        _log_error("OS-MEDIA: SMTC: DisplayUpdater update failed")
                 else:
-                    logger.debug('SMTC-WINRT: no update sent\n\n')
+                    logger.debug('OS-MEDIA: SMTC: no update sent\n\n')
             # Volume is ignored on purpose.
 
         except Exception:
-            _log_error("SMTC-WINRT: _apply_changed failed")
+            _log_error("OS-MEDIA: SMTC: _apply_changed failed")
 
     def _cleanup(self):
         # Deterministic shutdown best-effort.
@@ -573,7 +554,7 @@ class _SMTCWinRTThread(object):
                     self._smtc.is_next_enabled = False
                     self._smtc.is_previous_enabled = False
             except Exception:
-                _log_error("SMTC-WINRT: disable SMTC failed")
+                _log_error("OS-MEDIA: SMTC: disable SMTC failed")
 
             # Unsubscribe from ButtonPressed if we have a token
             try:
@@ -581,9 +562,9 @@ class _SMTCWinRTThread(object):
                     try:
                         self._smtc.remove_button_pressed(self._button_token)
                     except Exception:
-                        _log_error("SMTC-WINRT: remove_button_pressed failed")
+                        _log_error("OS-MEDIA: SMTC: remove_button_pressed failed")
             except Exception:
-                _log_error("SMTC-WINRT: button cleanup failed")
+                _log_error("OS-MEDIA: SMTC: button cleanup failed")
 
             self._button_token = None
 
@@ -607,11 +588,11 @@ class _SMTCWinRTThread(object):
                     except Exception:
                         pass
             except Exception:
-                _log_error("SMTC-WINRT: asyncio loop cleanup failed")
+                _log_error("OS-MEDIA: SMTC: asyncio loop cleanup failed")
             self._loop = None
 
         except Exception:
-            _log_error("SMTC-WINRT: cleanup failed")
+            _log_error("OS-MEDIA: SMTC: cleanup failed")
 # --------------------------
 # Public controller (owned by main thread)
 # --------------------------
@@ -621,15 +602,15 @@ class WindowsSMTCController(MediaControls):
     Main-thread owner, mirroring MprisController semantics.
     """
 
-    def __init__(self, identity="PyRadio", instance_name=None):
-        super().__init__(identity, instance_name)
+    def __init__(self, identity="PyRadio", instance_name=None, default_icon=None):
+        super().__init__(identity, instance_name, default_icon)
         self._thread = _SMTCWinRTThread(self._cmdq, self._stateq)
 
     def start(self):
         try:
             ok = self._thread.start()
             if not ok:
-                logger.error("SMTC-WINRT: start failed")
+                logger.error("OS-MEDIA: SMTC: start failed")
                 return False
 
             # Ignore OS commands while we publish the first snapshot
@@ -642,13 +623,13 @@ class WindowsSMTCController(MediaControls):
                 # Provide an empty Metadata block so updater is initialized
                 self._stateq.put({"Metadata": {"xesam:title": "", "xesam:artist": []}})
             except Exception:
-                _log_error("SMTC-WINRT: initial snapshot failed")
+                _log_error("OS-MEDIA: SMTC: initial snapshot failed")
 
             self._thread.set_ignore_commands(False)
             return True
 
         except Exception:
-            _log_error("SMTC-WINRT: controller start failed")
+            _log_error("OS-MEDIA: SMTC: controller start failed")
             return False
 
     def stop(self):
@@ -656,7 +637,7 @@ class WindowsSMTCController(MediaControls):
             self._thread.set_ignore_commands(True)
             self._thread.stop()
         except Exception:
-            _log_error("SMTC-WINRT: controller stop failed")
+            _log_error("OS-MEDIA: SMTC: controller stop failed")
 
     # ------------- main-loop servicing -------------
 
@@ -721,16 +702,16 @@ class WindowsSMTCController(MediaControls):
         """
         Keep the same metadata shape as MPRIS, but only title/artist are used by SMTC.
         """
-        logger.error('SMTC-WINRT: Received')
-        logger.error(f'SMTC-WINRT: {trackid = }')
-        logger.error(f'SMTC-WINRT: {title = }')
-        logger.error(f'SMTC-WINRT: {station_name = }')
-        logger.error(f'SMTC-WINRT: {playlist_name = }')
-        logger.error(f'SMTC-WINRT: {url = }')
-        logger.error(f'SMTC-WINRT: {art_url = }')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'OS_MEDIA: SMTC: {trackid = }')
+            logger.debug(f'OS-MEDIA: SMTC: {title = }')
+            logger.debug(f'OS-MEDIA: SMTC: {station_name = }')
+            logger.debug(f'OS-MEDIA: SMTC: {playlist_name = }')
+            logger.debug(f'OS-MEDIA: SMTC: {url = }')
+            logger.debug(f'OS-MEDIA: SMTC: {art_url = }')
         if art_url is not None:
             art_url = art_url[7:].lstrip("/").replace("/", os.sep)
-            logger.error(f'SMTC-WINRT: fixed {art_url = }')
+            logger.error(f'OS-MEDIA: SMTC: fixed {art_url = }')
         try:
             md = {}
             md["mpris:trackid"] = trackid
@@ -744,6 +725,6 @@ class WindowsSMTCController(MediaControls):
 
             self._stateq.put({"Metadata": md})
         except Exception:
-            _log_error("SMTC-WINRT: update_metadata failed")
+            _log_error("OS-MEDIA: SMTC: update_metadata failed")
 
 

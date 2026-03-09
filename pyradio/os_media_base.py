@@ -1,4 +1,4 @@
-#os_media_base.py
+# -*- coding: utf-8 -*-
 #
 # Base class for OS Media Controls
 #
@@ -21,20 +21,16 @@ class MediaControls:
       - call update_* when your player state changes
     """
 
-    def __init__(self, identity="PyRadio", instance_name=None):
+    def __init__(self, identity="PyRadio", instance_name=None, default_icon=None):
         # instance_name becomes part of bus name; keep it stable-ish
         if instance_name is None:
             instance_name = "pyradio." + str(os.getpid())
 
-        # Standard MPRIS name: org.mpris.MediaPlayer2.<name>
-        # self.bus_name = "org.mpris.MediaPlayer2." + instance_name
-        # self.bus_name = "org.mpris.MediaPlayer2.pyradio"
         self.identity = identity
+        self.default_icon = default_icon
 
         self._cmdq = queue.Queue()
         self._stateq = queue.Queue()
-
-        # self._thread = _MprisThread(self.bus_name, self.identity, self._cmdq, self._stateq)
 
         # callbacks (set via set_callbacks)
         self.cb_play = None
@@ -63,10 +59,10 @@ class MediaControls:
 
     def stop(self):
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('MPRIS MprisController stop called')
+            logger.debug('OS-MEDIA: MediaControls stop called')
         self._thread.stop()
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('MPRIS MprisController stop ended')
+            logger.debug('OS-MEDIA: MediaControls stop ended')
 
     # ------------- main-loop servicing -------------
 
@@ -90,7 +86,6 @@ class MediaControls:
         target = self._vol_pending
         self._vol_pending = None
 
-        # Apply (blocking is OK here; you're in main thread)
         actual = self.cb_set_volume(target)
         if actual is None:
             actual = target
@@ -105,8 +100,6 @@ class MediaControls:
 
         # Push Volume update to DBus thread (0..1)
         self.update_volume_percent(actual)
-
-    # ------------- state updates (main -> DBus thread) -------------
 
     def update_playback(self, is_playing):
         status = "Playing" if is_playing else "Stopped"

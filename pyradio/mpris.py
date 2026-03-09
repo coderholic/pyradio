@@ -1,6 +1,6 @@
-# pyradio_mpris.py
+# -*- coding: utf-8 -*-
 #
-# MPRIS2 support for PyRadio using dbus-next (asyncio in a dedicated thread).
+# MPRIS2 support using dbus-next (asyncio in a dedicated thread).
 #
 # Design:
 # - DBus thread: exports org.mpris.MediaPlayer2 + org.mpris.MediaPlayer2.Player
@@ -228,7 +228,7 @@ class _MprisPlayer(ServiceInterface):
           Metadata: dict with python-native values
         """
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f'MPRIS received: {changed}')
+            logger.debug(f'OS-MEDIA: MPRIS received: {changed}')
         out = {}
 
         if "PlaybackStatus" in changed:
@@ -285,11 +285,11 @@ class _MprisPlayer(ServiceInterface):
         if out:
             # org.freedesktop.DBus.Properties.PropertiesChanged for this interface
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug(f'MPRIS emit_properties_changed: {out}')
+                logger.debug(f'OS-MEDIA: MPRIS emit_properties_changed: {out}')
             self.emit_properties_changed(out, [])
         else:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MPRIS emit_properties_changed: None')
+                logger.debug('OS-MEDIA: MPRIS emit_properties_changed: None')
 
 
 # -----------------------------------
@@ -321,7 +321,7 @@ class _MprisThread:
 
     def stop(self):
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('MPRIS Thread stoping')
+            logger.debug('OS-MEDIA: MPRIS Thread stoping')
         self._stop.set()
         if self._loop:
             try:
@@ -332,11 +332,11 @@ class _MprisThread:
             # self._thread.join(timeout=1.0)
             self._thread.join()
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('MPRIS Thread stopped')
+            logger.debug('OS-MEDIA: MPRIS Thread stopped')
 
     def _run(self):
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('MPRIS Thread starting')
+            logger.debug('OS-MEDIA: MPRIS Thread starting')
         self._loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self._loop)
 
@@ -345,13 +345,13 @@ class _MprisThread:
 
         self._loop.run_forever()
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('MPRIS Thread exited loop')
+            logger.debug('OS-MEDIA: MPRIS Thread exited loop')
 
         try:
             self._loop.run_until_complete(asyncio.gather(main_task, return_exceptions=True))
         except Exception as e:
             if logger.isEnabledFor(logging.ERROR):
-                logger.error(f'MPRIS Thread loop run_until_complete exception 1: {e}')
+                logger.error(f'OS-MEDIA: MPRIS Thread loop run_until_complete exception 1: {e}')
 
         try:
             pending = {t for t in asyncio.all_tasks(self._loop) if t is not main_task}
@@ -364,11 +364,11 @@ class _MprisThread:
             self._loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
         except Exception as e:
             if logger.isEnabledFor(logging.ERROR):
-                logger.error(f'MPRIS Thread loop run_until_complete exception 2: {e}')
+                logger.error(f'OS-MEDIA: MPRIS Thread loop run_until_complete exception 2: {e}')
 
         self._loop.close()
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('MPRIS Thread exited')
+            logger.debug('OS-MEDIA: MPRIS Thread exited')
 
     async def _main(self):
         bus = await MessageBus().connect()
@@ -389,7 +389,7 @@ class _MprisThread:
                 await bus.request_name(self.bus_name, flags=_NAMEFLAG_DO_NOT_QUEUE)
         except Exception as e:
             if logger.isEnabledFor(logging.ERROR):
-                logger.error(f'MPRIS: request_name failed for {self.bus_name}: {repr(e)}')
+                logger.error(f'OS-MEDIA: MPRIS: request_name failed for {self.bus_name}: {repr(e)}')
             # If name is taken, clean up exports and disconnect to avoid ghosting
             try:
                 bus.unexport(OBJ_PATH)
@@ -443,9 +443,9 @@ class _MprisThread:
 
             try:
                 bus.disconnect()
-                loggerlerror('MPRIS bus disconnected')
+                loggerlerror('OS-MEDIA: MPRIS bus disconnected')
             except Exception as e:
-                loggerlerror(f'MPRIS bus disconnect exception {e}')
+                loggerlerror(f'OS-MEDIA: MPRIS bus disconnect exception {e}')
 
 # -----------------------------------
 # Public controller (owned by main thread)
@@ -460,8 +460,8 @@ class MprisController(MediaControls):
       - call update_* when your player state changes
     """
 
-    def __init__(self, identity="PyRadio", instance_name=None):
-        super().__init__(identity, instance_name)
+    def __init__(self, identity="PyRadio", instance_name=None, default_icon=None):
+        super().__init__(identity, instance_name, default_icon)
 
         # Standard MPRIS name: org.mpris.MediaPlayer2.<name>
         # self.bus_name = "org.mpris.MediaPlayer2." + instance_name
@@ -487,7 +487,7 @@ class MprisController(MediaControls):
                 except queue.Empty:
                     break
             if had_cmd and logger.isEnabledFor(logging.INFO):
-                logger.info('**** MPRIS actions are allowed in NORMAL MODE only')
+                logger.info('**** OS-MEDIA: MPRIS actions are allowed in NORMAL MODE only')
             super().poll(False)
             return
 
@@ -534,12 +534,12 @@ class MprisController(MediaControls):
 
     def update_metadata(self, trackid, title, station_name, playlist_name, url=None, art_url=None):
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f'{trackid = }')
-            logger.debug(f'{title = }')
-            logger.debug(f'{station_name = }')
-            logger.debug(f'{playlist_name = }')
-            logger.debug(f'{url = }')
-            logger.debug(f'{art_url = }')
+            logger.debug(f'OS_MEDIA: MPRIS: {trackid = }')
+            logger.debug(f'OS-MEDIA: MPRIS: {title = }')
+            logger.debug(f'OS-MEDIA: MPRIS: {station_name = }')
+            logger.debug(f'OS-MEDIA: MPRIS: {playlist_name = }')
+            logger.debug(f'OS-MEDIA: MPRIS: {url = }')
+            logger.debug(f'OS-MEDIA: MPRIS: {art_url = }')
         md = {}
         md["mpris:trackid"] = trackid
         md["xesam:title"] = title

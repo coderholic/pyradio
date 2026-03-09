@@ -24,17 +24,18 @@ from .tts import Priority
 
 locale.setlocale(locale.LC_ALL, "")
 
-HAS_WIN10TOAST = True
-try:
-    from win10toast import ToastNotifier
-    toaster = ToastNotifier()
-    # from winotify import Notification
-except:
-    HAS_WIN10TOAST = False
-
 warnings.simplefilter("ignore")
 
 logger = logging.getLogger(__name__)
+
+HAS_WIN10TOAST = True
+try:
+    # from win10toast import ToastNotifier
+    # toaster = ToastNotifier()
+    from winotify import Notification
+except Exception as e:
+    # logger.error(f'win10toast import failed: {e}')
+    HAS_WIN10TOAST = False
 
 if platform.lower().startswith('win'):
     import ctypes
@@ -911,22 +912,19 @@ class Log():
                     d_title, d_msg = self._get_desktop_notification_data(msg)
                     if d_msg:
                         if self._cnf._current_notification_message != d_msg:
-                            # toast = Notification(app_id="PyRadio",
-                            #                      title=d_title,
-                            #                      msg=d_msg,
-                            #                      icon="C:\\Users\\spiros\\AppData\\Roaming\\pyradio\\help\\pyradio.ico")
-
-                            # toast.show()
                             if logger.isEnabledFor(logging.DEBUG):
                                 logger.debug(f'Sending Desktop Notification: [{d_title}, {d_msg}, {self.icon_path}]')
                             self._desktop_notification_message = d_msg
                             self._desktop_notification_title = d_title
                             try:
                                 with self._desktop_notification_lock:
-                                    toaster.show_toast(
-                                        d_title, d_msg, threaded=True,
-                                        icon_path=self.icon_path
+                                    toast = Notification(
+                                        app_id="PyRadio Notification",
+                                        title=d_title,
+                                        msg=d_msg,
+                                        icon=self.icon_path
                                     )
+                                    toast.show()
                             except:
                                 if logger.isEnabledFor(logging.DEBUG):
                                     logger.debug('Failure sending Desktop Notification!')
@@ -1309,10 +1307,13 @@ class RepeatDesktopNotification():
                     logger.debug(f'Sending repetative Desktop Notification: [{d_title}, {d_msg}, {self.icon_path}]')
                 try:
                     with a_lock:
-                        toaster.show_toast(
-                            d_title, d_msg, threaded=True,
-                            icon_path=self.icon_path
+                        toast = Notification(
+                            app_id="PyRadio Notification",
+                            title=d_title,
+                            msg=d_msg,
+                            icon=self.icon_path
                         )
+                        toast.show()
                         end_time = self._start_time + datetime.timedelta(seconds=my_time_out)
                 except:
                     if logger.isEnabledFor(logging.DEBUG):

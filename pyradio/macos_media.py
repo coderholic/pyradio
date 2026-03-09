@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import sys
 import json
@@ -18,8 +19,8 @@ SOCKET_PATH = "/tmp/pyradio-nowplaying-helper.sock"
 
 class MacOSMediaController(MediaControls):
 
-    def __init__(self, identity="PyRadio", instance_name=None):
-        MediaControls.__init__(self, identity, instance_name)
+    def __init__(self, identity="PyRadio", instance_name=None, default_icon=None):
+        MediaControls.__init__(self, identity, instance_name, default_icon)
 
         self._proc = None
         self._cmdq = queue.Queue()
@@ -68,7 +69,7 @@ class MacOSMediaController(MediaControls):
             self._running = True
 
         except Exception as e:
-            logger.error("MEDIA: Failed starting macOS helper: %s", e)
+            logger.error("OS-MEDIA: MAC: Failed starting macOS helper: %s", e)
 
     def stop(self):
         try:
@@ -83,12 +84,12 @@ class MacOSMediaController(MediaControls):
                 try:
                     self._proc.terminate()
                 except Exception as e:
-                    logger.error("MEDIA: Failed terminating helper: %s", e)
+                    logger.error("OS-MEDIA: MAC: Failed terminating helper: %s", e)
 
             self._running = False
 
         except Exception as e:
-            logger.error("MEDIA: Failed stopping macOS helper: %s", e)
+            logger.error("OS-MEDIA: MAC: Failed stopping macOS helper: %s", e)
 
     # ----------------------------------------------------------
     # poll bridge
@@ -125,7 +126,7 @@ class MacOSMediaController(MediaControls):
         except queue.Empty:
             pass
         except Exception as e:
-            logger.error("MEDIA: poll dispatch failed: %s", e)
+            logger.error("OS-MEDIA: MAC: poll dispatch failed: %s", e)
 
     # ----------------------------------------------------------
     # updates from PyRadio
@@ -138,7 +139,7 @@ class MacOSMediaController(MediaControls):
 
         while time.time() < end_time:
             if self._proc is not None and self._proc.poll() is not None:
-                logger.error("MEDIA: macOS helper exited during startup")
+                logger.error("OS-MEDIA: MAC: macOS helper exited during startup")
                 return False
 
             if os.path.exists(self._socket_path):
@@ -152,7 +153,7 @@ class MacOSMediaController(MediaControls):
 
             time.sleep(0.05)
 
-        logger.error("MEDIA: timed out waiting for helper socket readiness")
+        logger.error("OS-MEDIA: MAC: timed out waiting for helper socket readiness")
         return False
 
     def update_playback(self, playing):
@@ -177,6 +178,13 @@ class MacOSMediaController(MediaControls):
         url=None,
         art_url=None
     ):
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'OS_MEDIA: MAC: {trackid = }')
+            logger.debug(f'OS-MEDIA: MAC: MAC: {title = }')
+            logger.debug(f'OS-MEDIA: MAC: MAC: {station_name = }')
+            logger.debug(f'OS-MEDIA: MAC: MAC: {playlist_name = }')
+            logger.debug(f'OS-MEDIA: MAC: MAC: {url = }')
+            logger.debug(f'OS-MEDIA: MAC: MAC: {art_url = }')
         self._send_command({
             "type": "metadata",
             "trackid": trackid,
@@ -207,7 +215,7 @@ class MacOSMediaController(MediaControls):
             return "pyradio:track:" + "|".join(out)
 
         except Exception as e:
-            logger.error("MEDIA: Failed creating track id: %s", e)
+            logger.error("OS-MEDIA: MAC: MAC: Failed creating track id: %s", e)
             return "pyradio:track:unknown"
 
     # ----------------------------------------------------------
@@ -226,7 +234,7 @@ class MacOSMediaController(MediaControls):
         for _ in range(10):
             try:
                 if self._proc is not None and self._proc.poll() is not None:
-                    logger.error("MEDIA: helper process is not running")
+                    logger.error("OS-MEDIA: MAC: helper process is not running")
                     return
 
                 sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -244,15 +252,15 @@ class MacOSMediaController(MediaControls):
                     time.sleep(0.05)
                     continue
 
-                logger.error("MEDIA: IPC send failed: %s", e)
+                logger.error("OS-MEDIA: MAC: IPC send failed: %s", e)
                 return
 
             except Exception as e:
-                logger.error("MEDIA: IPC send failed: %s", e)
+                logger.error("OS-MEDIA: MAC: IPC send failed: %s", e)
                 return
 
         if last_error is not None:
-            logger.error("MEDIA: IPC send failed after retries: %s", last_error)
+            logger.error("OS-MEDIA: MAC: IPC send failed after retries: %s", last_error)
 
     # ----------------------------------------------------------
     # reader
@@ -279,7 +287,7 @@ class MacOSMediaController(MediaControls):
                 self._cmdq.put(msg)
 
         except Exception as e:
-            logger.error("MEDIA: Helper reader loop failed: %s", e)
+            logger.error("OS-MEDIA: MAC: Helper reader loop failed: %s", e)
 
     # ----------------------------------------------------------
 
@@ -288,5 +296,5 @@ class MacOSMediaController(MediaControls):
             base = os.path.dirname(os.path.abspath(__file__))
             return os.path.join(base, "icons", "pyradio.png")
         except Exception as e:
-            logger.error("MEDIA: Failed resolving default icon: %s", e)
+            logger.error("OS-MEDIA: MAC: Failed resolving default icon: %s", e)
             return ""

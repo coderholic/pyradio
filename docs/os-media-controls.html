@@ -36,7 +36,7 @@ a:visited{color: SaddleBrown;}
 <body>
 <header id="title-block-header">
 </header>
-<h1 style="color: SaddleBrown" id="os-media-controls">OS Media Controls</h1>
+<h1 style="color: SaddleBrown" id="pyradio-os-media-controls">PyRadio OS Media Controls</h1>
 <p><strong>PyRadio</strong> can integrate with the operating system’s media control system.</p>
 <p>When enabled, <strong>PyRadio</strong> appears as a media player in your desktop environment and can be controlled using system media controls and hardware media keys.</p>
 <p>This allows you to:</p>
@@ -201,15 +201,15 @@ a:visited{color: SaddleBrown;}
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> This section also applies to BSD systems and Raspberry Pi, as long as <em>dbus</em> is already installed.</p>
 <h3 id="integration">Integration</h3>
 <p>PyRadio integrates with Linux desktop environments using the <strong>MPRIS (Media Player Remote Interfacing Specification)</strong> interface.</p>
-<p>When OS Media Controls are enabled, PyRadio appears as an MPRIS media player and can interact with desktop media widgets, media keys, and compatible media control tools.</p>
+<p>When OS Media Controls are enabled, <strong>PyRadio</strong> appears as an MPRIS media player and can interact with desktop media widgets, media keys, and compatible media control tools.</p>
 <h3 id="what-you-will-see">What You Will See</h3>
 <p>PyRadio may appear in your desktop environment’s media controls or media widget.</p>
 <p>You may also be able to control playback using hardware media keys.</p>
 <p><a href="https://members.hellug.gr/sng/pyradio/mpris.jpg" target="_blank"><img style="width: 368px" src="https://members.hellug.gr/sng/pyradio/mpris.jpg" alt="PyRadio media controls on Linux, KDE, custom plasmoid" /></a></p>
 
-<p><strong>Image:</strong> PyRadio media controls on Linux, on KDE with a custom plasmoid</p>
+<p><strong>Image:</strong> <strong>PyRadio</strong> media controls on Linux, on KDE with a custom plasmoid</p>
 <h3 id="using-playerctl">Using playerctl</h3>
-<p>On Linux systems supporting MPRIS, PyRadio can also be controlled using the <strong>playerctl</strong> command-line tool.</p>
+<p>On Linux systems supporting MPRIS, <strong>PyRadio</strong> can also be controlled using the <strong>playerctl</strong> command-line tool.</p>
 <p>You can list all MPRIS players currently registered on the system using:</p>
 <pre># playerctl -l
 firefox
@@ -230,7 +230,7 @@ playerctl -p pyradio metadata</pre>
 <p>Most modern Linux distributions already include the required components such as DBus and MPRIS support.</p>
 <p>PyRadio depends on the <em>dbus-next</em> Python package, which may not always be installed automatically.</p>
 <h3 id="installation-notes">Installation Notes</h3>
-<p>If PyRadio is installed from your Linux distribution’s package manager, the <em>dbus-next</em> Python package may or may not be installed automatically.</p>
+<p>If <strong>PyRadio</strong> is installed from your Linux distribution’s package manager, the <em>dbus-next</em> Python package may or may not be installed automatically.</p>
 <p>If it is not installed, use your distro package manager to install it.</p>
 <p>Example:</p>
 <pre>sudo apt install python3-dbus-next
@@ -238,30 +238,30 @@ playerctl -p pyradio metadata</pre>
 sudo pacman -S python-dbus-next
 
 etc.</pre>
-<p>If PyRadio is installed using <strong>pipx with an isolated environment</strong>, the required MPRIS dependencies will not be available automatically.</p>
-<p>After installing PyRadio with pipx in an isolated environment, you can install the required packages by running:</p>
+<p>If <strong>PyRadio</strong> is installed using <strong>pipx with an isolated environment</strong>, the required MPRIS dependencies will not be available automatically.</p>
+<p>After installing <strong>PyRadio</strong> with pipx in an isolated environment, you can install the required packages by running:</p>
 <pre>pyradio --mpris</pre>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Media key behavior may depend on the desktop environment and its media control configuration.</p>
 <h2 id="platform-support-windows">Platform Support: Windows <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <h3 id="integration-1">Integration</h3>
-<p>On Windows, PyRadio integrates with <strong>System Media Transport Controls (SMTC)</strong>.</p>
+<p>On Windows, <strong>PyRadio</strong> integrates with <strong>System Media Transport Controls (SMTC)</strong>.</p>
 <h3 id="what-you-will-see-1">What You Will See</h3>
-<p>When OS Media Controls are enabled, PyRadio may appear in the Windows media overlay and system media controls.</p>
+<p>When OS Media Controls are enabled, <strong>PyRadio</strong> may appear in the Windows media overlay and system media controls.</p>
 <p>Playback can typically be controlled using media keys.</p>
 <p><a href="https://members.hellug.gr/sng/pyradio/smtc.jpg" target="_blank"><img style="width: 466px" src="https://members.hellug.gr/sng/pyradio/smtc.jpg" alt="PyRadio media controls on Windows, Rainmeter with the MediaPlayer plugin" /></a></p>
 
-<p><strong>Image:</strong> PyRadio media controls on Windows, Rainmeter with the MediaPlayer plugin</p>
+<p><strong>Image:</strong> <strong>PyRadio</strong> media controls on Windows, Rainmeter with the MediaPlayer plugin</p>
 <h3 id="dependencies-1">Dependencies</h3>
 <p>No additional setup is normally required.</p>
 <h2 id="platform-support-macos">Platform Support: macOS <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <h3 id="integration-2">Integration</h3>
-<p>On macOS, PyRadio integrates with the system <strong>Now Playing</strong> interface.</p>
+<p>On macOS, <strong>PyRadio</strong> integrates with the system <strong>Now Playing</strong> interface.</p>
 <h3 id="what-you-will-see-2">What You Will See</h3>
-<p>When OS Media Controls are enabled, PyRadio may appear in the macOS Control Center media widget and the system Now Playing panel.</p>
+<p>When OS Media Controls are enabled, <strong>PyRadio</strong> may appear in the macOS Control Center media widget and the system Now Playing panel.</p>
 <p>Media keys and system media controls can be used to control playback.</p>
 <p><a href="https://members.hellug.gr/sng/pyradio/now-playing.jpg" target="_blank"><img style="width: 700px" src="https://members.hellug.gr/sng/pyradio/now-playing.jpg" alt="PyRadio media controls on macOS" /></a></p>
 
-<p><strong>Image:</strong> PyRadio media controls on macOS - <strong>Now Playing</strong> and <strong>Control Center</strong></p>
+<p><strong>Image:</strong> <strong>PyRadio</strong> media controls on macOS - <strong>Now Playing</strong> and <strong>Control Center</strong></p>
 <h3 id="dependencies-2">Dependencies</h3>
 <p>No additional setup is normally required.</p>
 <h2 id="notes-and-limitations">Notes and Limitations <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
@@ -275,7 +275,7 @@ etc.</pre>
 <h3 id="why-does-pause-behave-like-stop">Why does Pause behave like Stop?</h3>
 <p>Radio streams are continuous live streams and typically cannot be paused. For this reason, the Pause action usually stops playback.</p>
 <h3 id="why-dont-i-see-artwork">Why don’t I see artwork?</h3>
-<p>Not all radio stations provide artwork. If no station artwork is available, PyRadio will display its default icon.</p>
+<p>Not all radio stations provide artwork. If no station artwork is available, <strong>PyRadio</strong> will display its default icon.</p>
 <h3 id="why-dont-my-media-keys-work-on-linux">Why don’t my media keys work on Linux?</h3>
 <p>Media key behavior depends on the desktop environment and whether it supports MPRIS media players.</p>
 </body>

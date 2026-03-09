@@ -119,7 +119,7 @@ a:visited{color: SaddleBrown;}
 <p>Depending on the Python version used by your distro, you may also have to add <strong>importlib_resources</strong> to your dependencies.</p>
 <p>Experience says Python 3.8 and 3.10 will probably need this package installed.</p>
 <h3 id="pyradio__pycache__">pyradio/__pycache__</h3>
-<p>This is a directory that is needed for some build systems to succesfully build <strong>PyRadio</strong>.</p>
+<p>This is a directory that is needed for some build systems to successfully build <strong>PyRadio</strong>.</p>
 <p>Depending on the build system:</p>
 <ol type="1">
 <li><p>It may be needed (in the case of Gentoo, MacOS and Windows).<br />
@@ -138,7 +138,7 @@ In this case, just delete it before the build command.</p></li>
 <li><p>Pro existing recordings and titles logs will end up in <em>~/pyradio-recordings</em>.</p></li>
 <li><p>New recordings and titles logs will be saved in the new default location you have provided.</p></li>
 </ol>
-<p>This means that your users will eventaually have to <strong>manually</strong> move the files from <em>~/pyradio-recordings</em> to the new location.</p>
+<p>This means that your users will eventually have to <strong>manually</strong> move the files from <em>~/pyradio-recordings</em> to the new location.</p>
 <p>If this is acceptable for you, and you have a way to inform your users about it, go no and</p>
 <pre>sed -i &#39;s|recording_dir = default|recording_dir = ~/whatever|&#39; pyradio/config</pre>
 <p>In any other case, I would suggest you leave this parameter as is and let the user select customize their setup.</p>
@@ -150,15 +150,15 @@ In this case, just delete it before the build command.</p></li>
 <p>A <a target="_blank" href="https://wiki.archlinux.org/title/default_applications#Resource_openers">resource opener</a> is a utility to open directories, html pages, etc.</p>
 <p><strong>PyRadio</strong> running on Linux will look for <em>xdg-open</em>, <em>gio</em>, <em>mimeopen</em>, <em>mimeo</em> or <em>handlr</em>, in that order of detection.</p>
 <p>If none of the above if found, the requested file will simply not open.</p>
-<p>Most Linux distros will probably have <em>xdg-open</em> (from <em>xdg-utils</em> package) installed or available (or any of the ones in the list above), so no action will be nesesary.</p>
+<p>Most Linux distros will probably have <em>xdg-open</em> (from <em>xdg-utils</em> package) installed or available (or any of the ones in the list above), so no action will be necessary.</p>
 <p>In case a different <em>resource opener</em> is to be used, one can declare it like so:</p>
 <pre>sed -i &#39;s/resource_opener = auto/resource_opener = MY_RESOURCE_OPENER/&#39; pyradio/config</pre>
 <p>This will instruct <strong>PyRadio</strong> to use the file <strong>MY_RESOURCE_OPENER</strong> as a <em>resource opener</em>.</p>
 <p><strong>MY_RESOURCE_OPENER</strong> can be just the name of the file (if it is in the <em>PATH</em>), or an absolute path to a file, it it’s not.</p>
 <h2 id="mpris-support">MPRIS support <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>In order to have <strong>PyRadio</strong> publish information aout the station it’s playing etc.and accept commands from the keyboard’s media keys you have to:</p>
+<p>In order to have <strong>PyRadio</strong> publish information about the station it’s playing etc. and accept commands from the keyboard’s media keys you have to:</p>
 <ol type="1">
-<li><p>Install “<em>dbus-next</em><br />
+<li><p>Install “<em>dbus-next</em>”<br />
 Add this one to your dependencies list; the package name will probably be <strong>python-dbus-next</strong> or <strong>python3-dbus-next</strong> depending on the distro.</p></li>
 <li><p>Enable <strong>MPRIS</strong> in the config<br />
 Execute:</p></li>
