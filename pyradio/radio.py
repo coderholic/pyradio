@@ -479,6 +479,8 @@ class PyRadio():
 
     _enable_tts = False
 
+    _needs_dbus_next = False
+
     try:
         handled_signals = {
             'SIGHUP': signal.SIGHUP,
@@ -1236,6 +1238,10 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 )
 
     def _enable_os_media_controls_if_possible(self, start=None):
+        # check MPRIS operational
+        if (not HAVE_NATIVE_MEDIA) and self._cnf.use_os_media_controls:
+            self._needs_dbus_next = True
+            return
         use_mpris = not self._cnf.headless and HAVE_NATIVE_MEDIA and self._cnf.use_os_media_controls and not self._cnf.locked and self.player
         if use_mpris:
             if self._mpris is None:
@@ -1366,6 +1372,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         # logger.error(f'setting Log {self.program_restart = }')
         self.program_restart = False
 
+        if (not HAVE_NATIVE_MEDIA) and self._cnf.use_os_media_controls:
+            self._needs_dbus_next = True
         ''' For the time being, supported players are mpv, mplayer and vlc. '''
         try:
             self.player = player.probePlayer(
@@ -1746,6 +1754,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self._print_netifaces_not_installed_error()
         # elif not self._cnf.use_themes:
         #     self._show_no_themes()
+        elif self._needs_dbus_next:
+            self._needs_dbus_next = False
+            if self._cnf.is_isolated_install():
+                self._open_simple_message_by_key('M_DBUS_NEXT_ISOLATED', self.ws.MESSAGING_MODE)
+            else:
+                self._open_simple_message_by_key('M_DBUS_NEXT', self.ws.MESSAGING_MODE)
         else:
             with self._update_stations_lock:
                 if self._need_to_update_stations_csv == 2:
@@ -8339,6 +8353,8 @@ _____"|f|" to see the |free| keys you can use.
                             self._theme.recalculate_theme(False)
                         if self._config_win.need_to_update_mpris:
                             self._enable_os_media_controls_if_possible()
+                            if self._needs_dbus_next:
+                                self.refreshBody()
                         if self._cnf.active_remote_control_server_ip != self._cnf.remote_control_server_ip or \
                                 self._cnf.active_remote_control_server_port != self._cnf.remote_control_server_port:
                             self._restart_remote_control_server()

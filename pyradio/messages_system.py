@@ -1452,6 +1452,32 @@ close this window.
 '''.replace('{Z}', chr(kbkey['extra_p_pamars']))
 , Priority.HIGH),
 
+    'M_DBUS_NEXT': ('Package Error',
+r'''You have enabled |OS Media Controls| but the required
+package (|dbus-next|) is not installed yet.
+
+Please terminate |PyRadio| and install it using your
+distro package manager. Example:
+
+____|sudo apt install python3-dbus-next|
+____|sudo pacman -S python-dbus-next|
+
+or whatever works on your distro.
+''', Priority.HIGH
+),
+
+    'M_DBUS_NEXT_ISOLATED': ('Package Error',
+r'''You have enabled |OS Media Controls| but the required
+package (|dbus-next|) is not installed yet.
+
+Please terminate |PyRadio| and install it using the
+following command:
+
+____|pyradio --mpris|
+
+''', Priority.HIGH
+),
+
     'X_PLAYER_CHANGED':('',
 r'''
 |PyRadio| default player has changed from

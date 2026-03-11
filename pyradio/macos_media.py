@@ -294,7 +294,7 @@ class MacOSMediaController(MediaControls):
     def _get_default_icon(self):
         try:
             base = os.path.dirname(os.path.abspath(__file__))
-            return os.path.join(base, "icons", "pyradio.png")
+            return os.path.join(base, "data", "pyradio.png")
         except Exception as e:
             logger.error("OS-MEDIA: MAC: Failed resolving default icon: %s", e)
             return ""

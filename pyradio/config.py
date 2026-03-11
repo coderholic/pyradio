@@ -2002,6 +2002,23 @@ class PyRadioConfig(PyRadioStations):
         except Exception:
             return tuple()
 
+    def is_isolated_install(self):
+        file_path = path.join(self.data_dir, "INSTALLATION_TYPE")
+
+        # If the file does not exist, return False immediately
+        if not path.exists(file_path):
+            return False
+
+        try:
+            # Open and read the file, stripping any surrounding whitespace
+            with open(file_path, 'r') as f:
+                content = f.read().strip()
+            # Return True only if the stripped content is exactly "2"
+            return content == "2"
+        except:
+            # In case of any error (e.g., permission, read error), return False
+            return False
+
     def is_project_theme(self, a_theme_name):
         ''' Check if a theme name is in auto_update_frameworks
             If it is, return
