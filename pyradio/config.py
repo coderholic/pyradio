@@ -2141,10 +2141,19 @@ class PyRadioConfig(PyRadioStations):
         if not self._notification_command:
             # set default commands
             if sys.platform.lower().startswith('darwin'):
-                self._notification_command = [
-                    'osascript', '-e',
-                    'display notification "MSG" with title "TITLE"'
-                ]
+                notif = which('terminal-notifier')
+                if notif:
+                    self._notification_command = [
+                        notif, '-title', 'Now Playing',
+                        '-message', 'MSG',
+                        '-sender', 'org.pyradio.pyradio',
+                        '-contentImage', 'ICON'
+                    ]
+                else:
+                    self._notification_command = [
+                        'osascript', '-e',
+                        'display notification "MSG" with title "TITLE"'
+                    ]
             else:
                 self._notification_command = [
                     'notify-send', '-i',

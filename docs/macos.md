@@ -118,6 +118,8 @@ Finally, type:
 
 ### Performing the installation
 
+Yo may be asked to provide your password during the installation; **PyRadio** will be installed as a terminal system wide Application.
+
 Execute the following command:
 
     python3 install.py

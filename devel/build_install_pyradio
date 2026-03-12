@@ -155,6 +155,15 @@ function uninstall(){
         }
     fi
     rm "${DATA_DIR}"/INSTALLATION_TYPE 2>/dev/null
+    if [ $(uname -s) == "Darwin" ] || [ $(uname -s) == "darwin" ]
+    then
+        [ -d /Applications/PyRadio.app ] && {
+            echo
+            echo -n 'Please type your '
+            sudo rm -rf /Applications/PyRadio.app
+            echo
+}
+    fi
     echo "PyRadio successfully uninstalled"
 }
 
@@ -475,6 +484,9 @@ else
     if [ $(uname -s) == "Darwin" ] || [ $(uname -s) == "darwin" ]
     then
         PIPX_ISOLATE=1
+        echo -n 'Please type your '
+        sudo tar -xpzf devel/PyRadio_mac_app.tar.gz -C /Applications
+        echo
     fi
     # fix toml file for python 3.8
     PY_VERSION=$(python${TO_PYTHON} -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")

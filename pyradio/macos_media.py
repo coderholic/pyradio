@@ -181,8 +181,8 @@ class MacOSMediaController(MediaControls):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(f'OS_MEDIA: MAC: {trackid = }')
             logger.debug(f'OS-MEDIA: MAC: MAC: {title = }')
-            logger.debug(f'OS-MEDIA: MAC: MAC: {station_name = }')
-            logger.debug(f'OS-MEDIA: MAC: MAC: {playlist_name = }')
+            logger.debug(f'OS-MEDIA: MAC: MAC: {artist = }')
+            logger.debug(f'OS-MEDIA: MAC: MAC: {album = }')
             logger.debug(f'OS-MEDIA: MAC: MAC: {url = }')
             logger.debug(f'OS-MEDIA: MAC: MAC: {art_url = }')
         self._send_command({

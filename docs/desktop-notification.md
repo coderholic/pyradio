@@ -123,19 +123,7 @@ If that does not work for you, or you want to display the icon as well, just ins
 ```
 brew install terminal-notifier
 ```
-After it is installed, write the following in **~/.config/pyradio/notification**:
-
-```
-terminal-notifier
--message
-MSG
--title
-TITLE
--appIcon
-ICON
-```
-
-and you are done!
+**PyRadio** will detect it and use it instead of *osascript*.
 
 ## On Windows
 
