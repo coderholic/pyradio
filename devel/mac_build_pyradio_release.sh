@@ -2,7 +2,7 @@
 set -euo pipefail
 
 APP_NAME="PyRadio"
-PNG_ICON="pyradio-1024.png"
+PNG_ICON="pyradio-mac-1024.png"
 
 APP_DIR="${APP_NAME}.app"
 CONTENTS_DIR="${APP_DIR}/Contents"

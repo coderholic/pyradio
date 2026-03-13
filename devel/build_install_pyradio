@@ -159,10 +159,14 @@ function uninstall(){
     then
         [ -d /Applications/PyRadio.app ] && {
             echo
-            echo -n 'Please type your '
-            sudo rm -rf /Applications/PyRadio.app
-            echo
-}
+            rm -rf /Applications/PyRadio.app
+            if ! rm -rf /Applications/PyRadio.app 2>/dev/null; then
+                echo
+                echo -n "Please type your "
+                sudo rm -rf /Applications/PyRadio.app 2>/dev/null
+                echo
+            fi
+        }
     fi
     echo "PyRadio successfully uninstalled"
 }
@@ -484,9 +488,6 @@ else
     if [ $(uname -s) == "Darwin" ] || [ $(uname -s) == "darwin" ]
     then
         PIPX_ISOLATE=1
-        echo -n 'Please type your '
-        sudo tar -xpzf devel/PyRadio_mac_app.tar.gz -C /Applications
-        echo
     fi
     # fix toml file for python 3.8
     PY_VERSION=$(python${TO_PYTHON} -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
@@ -514,6 +515,17 @@ Please make sure patch is installed and try again
             if [ $(uname -s) == "Darwin" ] || [ $(uname -s) == "darwin" ]
             then
                 $PIPX_CMD inject pyradio pyobjc-core pyobjc-framework-Cocoa pyobjc-framework-MediaPlayer
+                rm -rf /Applications/PyRadio.app 2>/dev/null || true
+                if ! tar -xpzf devel/PyRadio_mac_app.tar.gz -C /Applications 2>/dev/null; then
+                    echo
+                    echo -n "Please type your "
+                    sudo rm -rf /Applications/PyRadio.app 2>/dev/null || true
+                    sudo tar -xpzf devel/PyRadio_mac_app.tar.gz -C /Applications || true
+                    echo
+                fi
+                mdimport -r /Applications/PyRadio.app 2>/dev/null || true
+                /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f /Applications/PyRadio.app 2>/dev/null || true
+                killall Finder >/dev/null 2>&1 || true
             else
                 [ -z  "$DBUS_NEXT" ] || $PIPX_CMD inject pyradio dbus-next
             fi

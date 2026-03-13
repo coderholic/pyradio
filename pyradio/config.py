@@ -2144,7 +2144,7 @@ class PyRadioConfig(PyRadioStations):
                 notif = which('terminal-notifier')
                 if notif:
                     self._notification_command = [
-                        notif, '-title', 'Now Playing',
+                        notif, '-title', 'TITLE',
                         '-message', 'MSG',
                         '-sender', 'org.pyradio.pyradio',
                         '-contentImage', 'ICON'
