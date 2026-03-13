@@ -6926,7 +6926,7 @@ and |remove the file manually|.
             self._speak_selection()
             return True
 
-        if self._limited_height_mode or self._limited_width_mode:
+        if (not self._limited_height_mode) and (not self._limited_width_mode):
             if self._cnf.is_register:
                 ''' go back to playlist history '''
                 self._open_playlist_from_history()
@@ -6945,7 +6945,9 @@ and |remove the file manually|.
         #    self.log.asked_to_stop = True
         self.log.asked_to_stop = True
         if self._cnf.dirty_playlist:
-            if self._cnf.auto_save_playlist:
+            if self._cnf.auto_save_playlist or \
+                    self._limited_height_mode or \
+                    self._limited_width_mode:
                 ''' save playlist and exit '''
                 ret = self.saveCurrentPlaylist()
                 #if ret == -1:

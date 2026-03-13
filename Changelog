@@ -1,3 +1,21 @@
+2026-03-13 s-n-g
+    * version 0.9.3.11.28 - 0.9.3.12-beta28
+    * adding 6 more System Themes by lee2sman
+    * adding OS media controls support
+      - MPRIS on Linux
+      - SMTC on Windows
+      - "Now Playing" on macOS
+    * adding the "Enable OS Media Controls" configuration option
+    * adding the --mpris command line parameter 
+      (for linux pipx isolated installations)
+    * adding the "Speak start too" TTS configuration parameter
+    * macOS enhancement: PyRadio will appear in both the Applications
+      panel and the Spotlight
+    * fixing a --show-dirs crash
+    * fixing a couple of minor bugs
+    * updating documentation
+    * updating Windows MPV download link
+
 2026-02-07 s-n-g
     * version 0.9.3.11.27 - 0.9.3.12-beta27
     * fixing #322 - pyradio dont start
