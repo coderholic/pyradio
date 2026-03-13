@@ -159,7 +159,7 @@ function uninstall(){
     then
         [ -d /Applications/PyRadio.app ] && {
             echo
-            rm -rf /Applications/PyRadio.app
+            rm -rf /Applications/PyRadio.app 2>/dev/null || true
             if ! rm -rf /Applications/PyRadio.app 2>/dev/null; then
                 echo
                 echo -n "Please type your "

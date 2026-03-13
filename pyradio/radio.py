@@ -6926,18 +6926,19 @@ and |remove the file manually|.
             self._speak_selection()
             return True
 
-        if self._cnf.is_register:
-            ''' go back to playlist history '''
-            self._open_playlist_from_history()
-            return True
-        if self._cnf.browsing_station_service:
-            ''' go back to playlist history '''
-            if self._cnf.online_browser.is_config_dirty():
-                self._ask_to_save_browser_config_to_exit()
-            else:
+        if self._limited_height_mode or self._limited_width_mode:
+            if self._cnf.is_register:
+                ''' go back to playlist history '''
                 self._open_playlist_from_history()
-                sleep(1.5)
-            return True
+                return True
+            if self._cnf.browsing_station_service:
+                ''' go back to playlist history '''
+                if self._cnf.online_browser.is_config_dirty():
+                    self._ask_to_save_browser_config_to_exit()
+                else:
+                    self._open_playlist_from_history()
+                    sleep(1.5)
+                return True
         ''' exit program '''
         ''' stop updating the status bar '''
         #with self.log.lock:
@@ -7058,16 +7059,35 @@ and |remove the file manually|.
                         self.player.playback_is_on and \
                         self.player.recording and \
                         self.player.recording_filename != '':
+                    logger.error()
                     self._pause_player()
                 else:
                     self._stop_player()
                 self.refreshBody()
+
+            elif char in (curses.KEY_EXIT, kbkey['q'], 27)  or \
+                    check_localized(char, (kbkey['q'], )) and \
+                    self.ws.operation_mode == self.ws.NORMAL_MODE:
+                ''' exit program '''
+                # check for ESCAPE
+                if not self._mpris:
+                    self.bodyWin.nodelay(-1)
+                char = self.bodyWin.getch()
+                if not self._mpris:
+                    self.bodyWin.nodelay(0)
+                if char == -1:
+                    ''' ESCAPE '''
+                    ret = self._exit_program_or_playlist_mode()
+                    if ret:
+                        return
+                    return -1
 
             elif char in self._global_functions or \
                     (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
                 if l_char is None:
                     l_char = char
                 self._global_functions[l_char]()
+            return
 
         if self.ws.operation_mode == self.ws.NO_THEMES_MODE:
             if char == kbkey['no_show'] or \
