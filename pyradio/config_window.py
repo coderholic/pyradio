@@ -157,6 +157,7 @@ class PyRadioConfigWindow():
     _help_text.append(['This options will open the configuration window for the Shortcuts Definitions.', '|', 'Please keep in mind that if you customize the keyboard shortcuts, the documentation may no longer align with your personalized settings. While the in-program runtime help will always reflect your current key configurations, the static documentation will continue to display the default shortcuts.', '|', 'To ensure you have the best experience, refer to the runtime help for the most accurate information regarding your customized key bindings!'])
     _help_text.append(['The "Localized Shortcuts" option allows you to define and customize keyboard shortcuts based on your preferred language. This feature enhances your experience by providing a seamless way to interact with the program in your chosen language.', '|', 'You can choose a language name from the list to load the corresponding character mapping file. This file contains the relationship between English letters (A-Z, a-z) and the letters used in your selected language.', '|', 'If the language does not exit, you will be able to create it.'])
     _help_text.append(None)
+    _help_text.append(['If enabled, PyRadio will automatically check online for updates to the stations.csv file and perform an update when a new version is available.', '|', 'If False, you will need to manually update with "pyradio -us"', '|', 'Default value: True'])
     _help_text.append(['This options will open the configuration window for the RadioBrowser Online Stations Directory.',])
 
     def __init__(
@@ -1404,6 +1405,7 @@ class PyRadioConfigWindow():
                 'enable_tts',
                 'tts_speak_volume_change_start',
                 'use_os_media_controls',
+                'auto_update_stations'
             ):
                 self._config_options[sel][1] = not self._config_options[sel][1]
                 # # if sel == 'open_last_playlist':

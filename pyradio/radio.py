@@ -2269,7 +2269,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                         self._update_notification_thread.start()
 
             ''' check if stations.csv is updated '''
-            if self._cnf.locked:
+            if not self._cnf.auto_update_stations:
+                self._update_stations_thread = None
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('(detectUpdateStationsThread): not starting; auto updates are disabled!!!')
+            elif self._cnf.locked:
                 self._update_stations_thread = None
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('(detectUpdateStationsThread): not starting; session is locked!!!')
