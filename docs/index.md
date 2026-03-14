@@ -533,6 +533,8 @@ When the package's "*stations.csv*" files is updated, the changes it has will no
 
 ![PyRadio stations update](https://members.hellug.gr/sng/pyradio/pyradio-stations-update.png)
 
+This update can be disabled permanently by setting the configuration option "_auto\_update\_stations_" to _False_ in the user's configuration file.
+
 Either way, the user can always manually update his **stations file**, by issuing the following command:
 
 ```

@@ -237,6 +237,14 @@ force_http = False
 # Default value = 0
 buffering = 0
 
+# Automatic stations.csv updates
+# If this option is True, PyRadio will automatically check for and
+# update the stations.csv file when a new version is available.
+# If False, you will need to manually update with "pyradio -us"
+#
+# Default value: True
+auto_update_stations = True
+
 # MPlayer auto update bitrate
 # This option is only relevant if MPlayer is installed.
 # In this case, if the station's bitrate is different to 128kbps,

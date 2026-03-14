@@ -1380,6 +1380,7 @@ class PyRadioConfig(PyRadioStations):
         self.opts['shortcuts_keys'] = ['Shortcuts', '-']
         self.opts['localized_keys'] = ['Localized Shortcuts', '-']
         self.opts['online_header'] = ['Online services', '']
+        self.opts['auto_update_stations'] = ['Auto update stations: ', True]
         self.opts['radiobrowser'] = ['RadioBrowser', '-']
         self.opts['requested_player'] = ['', '']
         self.opts['dirty_config'] = ['', False]
@@ -1579,6 +1580,17 @@ class PyRadioConfig(PyRadioStations):
         except ValueError:
             self.opts['buffering'][1] = '0'
         if old_val != self.opts['buffering'][1]:
+            self.dirty_config = True
+
+    @property
+    def auto_update_stations(self):
+        return self.opts['auto_update_stations'][1]
+
+    @auto_update_stations.setter
+    def auto_update_stations(self, val):
+        old_val = self.opts['auto_update_stations'][1]
+        self.opts['auto_update_stations'][1] = val
+        if old_val != val:
             self.dirty_config = True
 
     @property
@@ -2836,6 +2848,11 @@ class PyRadioConfig(PyRadioStations):
                 if not (b == 0 or 5 <= b <= 60):
                     b = 0
                 self.opts['buffering'][1] = str(b)
+            elif sp[0] == 'auto_update_stations':
+                if sp[1].lower() == 'false':
+                    self.opts['auto_update_stations'][1] = False
+                else:
+                    self.opts['auto_update_stations'][1] = True
 
             elif sp[0] == 'localized_keys':
                 # logger.error(f'{sp[1] = }')
