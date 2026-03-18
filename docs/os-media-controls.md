@@ -211,11 +211,11 @@ playerctl -p pyradio metadata
 
 Most modern Linux distributions already include the required components such as DBus and MPRIS support.
 
-PyRadio depends on the *dbus-next* Python package, which may not always be installed automatically.
+PyRadio depends on the *dbus-next* or the *dbus-fast* Python package, which may not always be installed automatically.
 
 ### Installation Notes
 
-If **PyRadio** is installed from your Linux distribution’s package manager, the *dbus-next* Python package may or may not be installed automatically.
+If **PyRadio** is installed from your Linux distribution’s package manager, the *dbus-next* or *dbus-fast* Python package may or may not be installed automatically.
 
 If it is not installed, use your distro package manager to install it.
 
@@ -229,12 +229,31 @@ sudo pacman -S python-dbus-next
 etc.
 ```
 
+or
+
+```
+sudo apt install python3-dbus-fast
+
+sudo pacman -S python-dbus-fast
+
+etc.
+```
+
+
 If **PyRadio** is installed using **pipx with an isolated environment**, the required MPRIS dependencies will not be available automatically.
 
 After installing **PyRadio** with `pipx` in an isolated environment, you can install the required packages by running:
 
 ```
-pyradio --mpris
+pyradio --mpris 
+```
+
+This will instruct **PyRadio** to install *dbus-next* in the isolated environment.
+
+If *dbus-fast* is to be used instead, execute the command
+
+```
+pyradio --mpris fast
 ```
 
 **Note:** Media key behavior may depend on the desktop environment and its media control configuration.

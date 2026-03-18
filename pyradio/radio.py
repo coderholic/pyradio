@@ -41,9 +41,12 @@ except ImportError:
 HAVE_NATIVE_MEDIA = True
 if platform.lower().startswith('lin'):
     try:
-        from dbus_next import Variant
+        from dbus_fast import Variant
     except ImportError:
-        HAVE_NATIVE_MEDIA = False
+        try:
+            from dbus_next import Variant
+        except ImportError:
+            HAVE_NATIVE_MEDIA = False
 elif platform.lower().startswith('win'):
     try:
         from winrt.windows.media.playback import MediaPlayer

@@ -164,6 +164,7 @@ a:visited{color: SaddleBrown;}
 <li>vi like keys in addition to arrows and special keys</li>
 <li><a href="radio-browser.html">RadioBrowser</a> support</li>
 <li>Remote Control Server</li>
+<li><a href="os-media-controls.html">OS media controls</a> (MPRIS, SMTC, Now Playing)</li>
 <li>Multiple playlist support</li>
 <li><a href="m3u.html">M3U playlist</a> support</li>
 <li>vi like station registers</li>
@@ -190,6 +191,7 @@ a:visited{color: SaddleBrown;}
 <li>python-dateutil</li>
 <li>netifaces</li>
 </ul></li>
+<li>dbus-next on linux, required to enable <a href="os-media-controls.html#platform-support-linux">MPRIS</a></li>
 <li>MPV, MPlayer or VLC installed and in your path</li>
 <li>MKVToolNix (cli files) to insert tags, chapters and cover to recordings (optional, if MPV or VLC is to be used, but mandatory in the case of MPlayer)</li>
 </ul>
@@ -1952,7 +1954,8 @@ If a profile is set for the station, a “<strong>[P]</strong>” will be displa
 <p>When the package’s “<em>stations.csv</em>” files is updated, the changes it has will not automatically appear in the user’s stations file.</p>
 <p><strong>PyRadio</strong> will display a message asking the user to either update the file, ignore the changes for this version or postpone his decision for the next time <strong>PyRadio</strong> will be executed.</p>
 <p><a href="https://members.hellug.gr/sng/pyradio/pyradio-stations-update.png" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio-stations-update.png" alt="PyRadio stations update" /></a></p>
-<p>This update can be disabled permanently by setting the configuration option "<em>auto_update_stations</em>" to <em>False</em> in the user's configuration file.</p>
+
+<p>This update can be disabled permanently by setting the configuration option “<em>auto_update_stations</em>” to <em>False</em> in the user’s configuration file.</p>
 <p>Either way, the user can always manually update his <strong>stations file</strong>, by issuing the following command:</p>
 <pre>pyradio -us</pre>
 <p>If changes have been applied, a message resembling the following will appear:</p>

@@ -31,27 +31,41 @@ locale.setlocale(locale.LC_ALL, "")
 logger = logging.getLogger(__name__)
 
 try:
-    from dbus_next.aio import MessageBus
-    from dbus_next.service import ServiceInterface, method, dbus_property
-    from dbus_next.constants import PropertyAccess
-    from dbus_next import Variant
+    from dbus_fast.aio import MessageBus
+    from dbus_fast.service import ServiceInterface, method, dbus_property
+    from dbus_fast.constants import PropertyAccess
+    from dbus_fast import Variant
 
-    # NameFlag / DO_NOT_QUEUE may not exist in older dbus-next versions
+    # NameFlag / DO_NOT_QUEUE may not exist in older dbus-fast versions
     try:
-        from dbus_next.constants import NameFlag  # newer
+        from dbus_fast.constants import NameFlag  # newer
         _NAMEFLAG_DO_NOT_QUEUE = getattr(NameFlag, "DO_NOT_QUEUE", None)
     except Exception:
         NameFlag = None
         _NAMEFLAG_DO_NOT_QUEUE = None
 except Exception:
-    MessageBus = None
-    ServiceInterface = None
-    method = None
-    dbus_property = None
-    PropertyAccess = None
-    Variant = None
-    NameFlag = None
-    _NAMEFLAG_DO_NOT_QUEUE = None
+    try:
+        from dbus_next.aio import MessageBus
+        from dbus_next.service import ServiceInterface, method, dbus_property
+        from dbus_next.constants import PropertyAccess
+        from dbus_next import Variant
+
+        # NameFlag / DO_NOT_QUEUE may not exist in older dbus-next versions
+        try:
+            from dbus_next.constants import NameFlag  # newer
+            _NAMEFLAG_DO_NOT_QUEUE = getattr(NameFlag, "DO_NOT_QUEUE", None)
+        except Exception:
+            NameFlag = None
+            _NAMEFLAG_DO_NOT_QUEUE = None
+    except Exception:
+        MessageBus = None
+        ServiceInterface = None
+        method = None
+        dbus_property = None
+        PropertyAccess = None
+        Variant = None
+        NameFlag = None
+        _NAMEFLAG_DO_NOT_QUEUE = None
 
 # -------------------------------
 # DBus interfaces (thread-owned)

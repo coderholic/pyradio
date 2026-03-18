@@ -743,7 +743,7 @@ and write in it
         #     print(n)
 
 
-def install_dbus_next(dbus_next_file):
+def install_dbus_next_or_fast(the_module, dbus_next_file):
     import subprocess
     def run(cmd):
         try:
@@ -757,25 +757,24 @@ def install_dbus_next(dbus_next_file):
         except Exception:
             return 1, ''
 
-    def check_dbus_next_file(dbus_next_file):
-        if not exists(dbus_next_file):
-            try:
-                with open(dbus_next_file, 'w') as f:
-                    pass
-            except OSError as e:
-                file_dir = basename(dbus_next_file)
-                if e.errno == errno.EACCES:
-                    print(f'[bold red]Error: [/bold red]Cannot write in {file_dir}.')
-                elif e.errno == errno.ENOENT:
-                    print(f'[bold red]Error: [/bold red]The directory does not exit: {file_dir}.')
-                elif e.errno == errno.ROFS:
-                    print('[bold red]Error: [/bold red]This filesystem is readonly.')
-                else:
-                    print(f'[bold red]Error: [/bold red]Cannot create file: {e.strerror}')
-                return 1
-            except Exception as e:
-                print(f'[bold red]Error: [/bold red]{e}')
-                return 1
+    def check_dbus_next_file(the_module, dbus_next_file):
+        try:
+            with open(dbus_next_file, 'w') as f:
+                f.write(the_module)
+        except OSError as e:
+            file_dir = basename(dbus_next_file)
+            if e.errno == errno.EACCES:
+                print(f'[bold red]Error: [/bold red]Cannot write in {file_dir}.')
+            elif e.errno == errno.ENOENT:
+                print(f'[bold red]Error: [/bold red]The directory does not exit: {file_dir}.')
+            elif e.errno == errno.ROFS:
+                print('[bold red]Error: [/bold red]This filesystem is readonly.')
+            else:
+                print(f'[bold red]Error: [/bold red]Cannot create file: {e.strerror}')
+            return 1
+        except Exception as e:
+            print(f'[bold red]Error: [/bold red]{e}')
+            return 1
         return 0
 
     # find pipx
@@ -810,15 +809,15 @@ def install_dbus_next(dbus_next_file):
         return 1
 
     # if already injected
-    if 'dbus-next' in output:
-        print('dbus-next injected successfully')
-        return check_dbus_next_file(dbus_next_file)
+    if f'dbus-{the_module}' in output:
+        print(f'dbus-{the_module} injected successfully')
+        return check_dbus_next_file(the_module, dbus_next_file)
 
     # perform injection
-    rc, _ = run(pipx_base + ['inject', 'pyradio', 'dbus-next'])
+    rc, _ = run(pipx_base + ['inject', 'pyradio', f'dbus-{the_module}'])
     if rc == 0:
-        print('dbus-next injected successfully')
-        return check_dbus_next_file(dbus_next_file)
+        print(f'dbus-{the_module} injected successfully')
+        return check_dbus_next_file(the_module, dbus_next_file)
     else:
         print('[bold magenta]PyRadio[/bold magenta] is not in an isolated environment')
         return 1

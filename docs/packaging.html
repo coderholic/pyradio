@@ -46,6 +46,7 @@ a:visited{color: SaddleBrown;}
 <ul>
 <li><a href="#distro-name-(must-do)">distro name (must do)</a></li>
 <li><a href="#xdg-base-directory-specification-compliance">XDG Base Directory Specification Compliance</a></li>
+<li><a href="#stations.csv-auto-update">stations.csv auto update</a></li>
 <li><a href="#desktop-notifications-(optional)">Desktop Notifications (optional)</a>
 <ul>
 <li><a href="#desktop-notification-icons-(optional)">Desktop Notification Icons (optional)</a></li>
@@ -53,11 +54,11 @@ a:visited{color: SaddleBrown;}
 <li><a href="#desktop-file-location">Desktop File location</a></li>
 <li><a href="#importlib_resources">importlib_resources</a></li>
 <li><a href="#pyradio/__pycache__">pyradio/__pycache__</a></li>
+<li><a href="#mpris-support">MPRIS support</a></li>
 </ul></li>
 <li><a href="#recordings-directory">Recordings Directory</a></li>
 <li><a href="#mkvtoolnix-cli-installation">MKVToolNix cli installation</a></li>
 <li><a href="#resource-opener-(linux-only)">Resource opener (Linux only)</a></li>
-<li><a href="#mpris-support">MPRIS support</a></li>
 </ul>
 <!-- vim-markdown-toc -->
 <p class="indented">[ <a href="index.html#packaging-pyradio">Back to main doc</a> ]</p>
@@ -101,6 +102,10 @@ a:visited{color: SaddleBrown;}
 <p><a target="_blank" href="https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html">XDG Base Directory Specification</a> proposes a different arrangement, though. More info (and examples) can also be found at Arch’s <a target="_blank" href="https://wiki.archlinux.org/title/XDG_Base_Directory">XDG Base Directory</a>.</p>
 <p>If you want to comply to this specification, just execute the following command from the sources top level directory (typically “<em>pyradio</em>”):</p>
 <pre>sed -i &#39;s/xdg_compliant = False/xdg_compliant = True/&#39; pyradio/config</pre>
+<h3 id="stations.csv-auto-update">stations.csv auto update</h3>
+<p><strong>PyRadio</strong> will check (and update if needed) its default playlist every time the program launches.</p>
+<p>If for any reason you do not want your distro “<em>stations.csv</em>” to be externally updated, you can disable this behavior:</p>
+<pre>sed -i &#39;s/auto_update_stations = True/auto_update_stations = False/&#39; pyradio/config</pre>
 <h3 id="desktop-notifications-optional">Desktop Notifications (optional)</h3>
 <p>If you want to enable <a href="index.html#desktop-notifications">Desktop Notifications</a>, do a</p>
 <pre>sed -i &#39;s/enable_notifications = -1/enable_notifications = 0/&#39; pyradio/config</pre>
@@ -129,6 +134,15 @@ Please keep in mind that there is a REDME file in the directory; in case this fi
 <li><p>It may not be needed (for example on Arch Linux).<br />
 In this case, just delete it before the build command.</p></li>
 </ol>
+<h3 id="mpris-support">MPRIS support</h3>
+<p>In order to have <strong>PyRadio</strong> publish information about the station it’s playing etc. and accept commands from the keyboard’s media keys you have to:</p>
+<ol type="1">
+<li><p>Install “<em>dbus-next</em>” or “<em>dbus-fast</em>” (either will work)<br />
+Add this one to your dependencies list; the package name will probably be <strong>python-dbus-next</strong> or <strong>python3-dbus-next</strong> (or <strong>python-dbus-fast</strong> or <strong>python3-dbus-fast</strong>) depending on the distro.</p></li>
+<li><p>Enable <strong>MPRIS</strong> in the config<br />
+Execute:</p></li>
+</ol>
+<pre>sed -i &#39;s/use_os_media_controls = False/use_os_media_controls = True/&#39; pyradio/config</pre>
 <h2 id="recordings-directory">Recordings Directory <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>Parameter <strong>recording_dir</strong> in the config will point to the directory to save recorded files.</p>
 <p>It may seem like a good idea to change it to something meaningful but there is a catch.</p>
@@ -155,14 +169,5 @@ In this case, just delete it before the build command.</p></li>
 <pre>sed -i &#39;s/resource_opener = auto/resource_opener = MY_RESOURCE_OPENER/&#39; pyradio/config</pre>
 <p>This will instruct <strong>PyRadio</strong> to use the file <strong>MY_RESOURCE_OPENER</strong> as a <em>resource opener</em>.</p>
 <p><strong>MY_RESOURCE_OPENER</strong> can be just the name of the file (if it is in the <em>PATH</em>), or an absolute path to a file, it it’s not.</p>
-<h2 id="mpris-support">MPRIS support <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>In order to have <strong>PyRadio</strong> publish information about the station it’s playing etc. and accept commands from the keyboard’s media keys you have to:</p>
-<ol type="1">
-<li><p>Install “<em>dbus-next</em>”<br />
-Add this one to your dependencies list; the package name will probably be <strong>python-dbus-next</strong> or <strong>python3-dbus-next</strong> depending on the distro.</p></li>
-<li><p>Enable <strong>MPRIS</strong> in the config<br />
-Execute:</p></li>
-</ol>
-<pre>sed -i &#39;s/use_os_media_controls = False/use_os_media_controls = True/&#39; pyradio/config</pre>
 </body>
 </html>

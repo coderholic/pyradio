@@ -228,9 +228,9 @@ playerctl -p pyradio previous</pre>
 playerctl -p pyradio metadata</pre>
 <h3 id="dependencies">Dependencies</h3>
 <p>Most modern Linux distributions already include the required components such as DBus and MPRIS support.</p>
-<p>PyRadio depends on the <em>dbus-next</em> Python package, which may not always be installed automatically.</p>
+<p>PyRadio depends on the <em>dbus-next</em> or the <em>dbus-fast</em> Python package, which may not always be installed automatically.</p>
 <h3 id="installation-notes">Installation Notes</h3>
-<p>If <strong>PyRadio</strong> is installed from your Linux distribution’s package manager, the <em>dbus-next</em> Python package may or may not be installed automatically.</p>
+<p>If <strong>PyRadio</strong> is installed from your Linux distribution’s package manager, the <em>dbus-next</em> or <em>dbus-fast</em> Python package may or may not be installed automatically.</p>
 <p>If it is not installed, use your distro package manager to install it.</p>
 <p>Example:</p>
 <pre>sudo apt install python3-dbus-next
@@ -238,9 +238,18 @@ playerctl -p pyradio metadata</pre>
 sudo pacman -S python-dbus-next
 
 etc.</pre>
+<p>or</p>
+<pre>sudo apt install python3-dbus-fast
+
+sudo pacman -S python-dbus-fast
+
+etc.</pre>
 <p>If <strong>PyRadio</strong> is installed using <strong>pipx with an isolated environment</strong>, the required MPRIS dependencies will not be available automatically.</p>
 <p>After installing <strong>PyRadio</strong> with pipx in an isolated environment, you can install the required packages by running:</p>
-<pre>pyradio --mpris</pre>
+<pre>pyradio --mpris </pre>
+<p>This will instruct <strong>PyRadio</strong> to install <em>dbus-next</em> in the isolated environment.</p>
+<p>If <em>dbus-fast</em> is to be used instead, execute the command</p>
+<pre>pyradio --mpris fast</pre>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Media key behavior may depend on the desktop environment and its media control configuration.</p>
 <h2 id="platform-support-windows">Platform Support: Windows <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <h3 id="integration-1">Integration</h3>

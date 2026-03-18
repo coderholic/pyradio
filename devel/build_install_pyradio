@@ -459,8 +459,22 @@ then
                 # pipx installation with isolation
                 check_installation_type
                 PIPX_ISOLATE=1
-                [ -e "${DATA_DIR}"/DBUS-NEXT ] && DBUS_NEXT=1
-                [ -e ~/.local/share/pyradio/DBUS-NEXT ] && DBUS_NEXT=1
+                [ -e "${DATA_DIR}"/DBUS-NEXT ] && {
+                    echo -n "next" > "${DATA_DIR}"/DBUS
+                    rm -f "${DATA_DIR}"/DBUS-NEXT
+                }
+                [ -e ~/.local/share/pyradio/DBUS-NEXT ] && {
+                    echo -n "next" >~/.local/share/pyradio/DBUS
+                    rm -f ~/.local/share/pyradio/DBUS-NEXT
+                }
+                [ -e "${DATA_DIR}"/DBUS ] && read -r DBUS < "${DATA_DIR}"/DBUS
+                [ -e ~/.local/share/pyradio/DBUS ] && DBUS < ~/.local/share/pyradio/DBUS
+                [ -z "$DBUS" ] || {
+                    if [ "$DBUS" != "next" ] && [ "$DBUS" != "fast" ]
+                    then
+                        DBUS="fast"
+                    fi
+                }
             else
                 # normal pip installation
                 if [ ! -z "$PIPX" ]
@@ -527,7 +541,7 @@ Please make sure patch is installed and try again
                 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f /Applications/PyRadio.app 2>/dev/null || true
                 killall Finder >/dev/null 2>&1 || true
             else
-                [ -z  "$DBUS_NEXT" ] || $PIPX_CMD inject pyradio dbus-next
+                [ -z "$DBUS" ] || $PIPX_CMD inject pyradio dbus-"${DBUS}"
             fi
         }
         inst_type=2

@@ -29,6 +29,7 @@ Command line internet radio player.
  - vi like keys in addition to arrows and special keys
  - [RadioBrowser](docs/radio-browser.md) support
  - Remote Control Server
+ - [OS media controls](os-media-controls.md) (MPRIS, SMTC, Now Playing)
  - Multiple playlist support
  - [M3U playlist](docs/m3u.md) support
  - vi like station registers
@@ -55,6 +56,7 @@ and much more...
     - netifaces
     - charset-normalizer
 
+* dbus-next on linux, required to enable MPRIS
 * MPV, MPlayer or VLC installed and in your path
 * MKVToolNix (cli files) to insert tags, chapters and cover to recordings (optional, if MPV or VLC is to be used, but mandatory in the case of MPlayer)
 

@@ -8,15 +8,16 @@
 * [Files to change](#files-to-change)
     * [distro name (must do)](#distro-name-(must-do))
     * [XDG Base Directory Specification Compliance](#xdg-base-directory-specification-compliance)
+    * [stations.csv auto update](#stations.csv-auto-update)
     * [Desktop Notifications (optional)](#desktop-notifications-(optional))
         * [Desktop Notification Icons (optional)](#desktop-notification-icons-(optional))
     * [Desktop File location](#desktop-file-location)
     * [importlib_resources](#importlib_resources)
     * [pyradio/\_\_pycache\_\_](#pyradio/\_\_pycache\_\_)
+    * [MPRIS support](#mpris-support)
 * [Recordings Directory](#recordings-directory)
 * [MKVToolNix cli installation](#mkvtoolnix-cli-installation)
 * [Resource opener (Linux only)](#resource-opener-(linux-only))
-* [MPRIS support](#mpris-support)
 
 <!-- vim-markdown-toc -->
 
@@ -94,6 +95,16 @@ If you want to comply to this specification, just execute the following command 
 sed -i 's/xdg_compliant = False/xdg_compliant = True/' pyradio/config
 ```
 
+### stations.csv auto update
+
+**PyRadio** will check (and update if needed) its default playlist every time the program launches.
+
+If for any reason you do not want your distro "*stations.csv* " to be externally updated, you can disable this behavior:
+
+```
+sed -i 's/auto_update_stations = True/auto_update_stations = False/' pyradio/config
+```
+
 ### Desktop Notifications (optional)
 
 If you want to enable [Desktop Notifications](index.md#desktop-notifications), do a
@@ -149,6 +160,19 @@ Please keep in mind that there is a REDME file in the directory; in case this fi
 2. It may not be needed (for example on Arch Linux). \
 In this case, just delete it before the build command.
 
+### MPRIS support
+
+In order to have **PyRadio** publish information about the station it's playing etc. and accept commands from the keyboard's media keys you have to:
+
+1. Install "*dbus-next*" or "*dbus-fast*" (either will work) \
+Add this one to your dependencies list; the package name will probably be **python-dbus-next** or **python3-dbus-next** (or **python-dbus-fast** or **python3-dbus-fast**) depending on the distro.
+
+2. Enable **MPRIS** in the config \
+Execute:
+
+```
+sed -i 's/use_os_media_controls = False/use_os_media_controls = True/' pyradio/config
+```
 ## Recordings Directory
 
 Parameter **recording_dir** in the config will point to the directory to save recorded files.
@@ -201,16 +225,3 @@ This will instruct **PyRadio** to use the file **MY_RESOURCE_OPENER** as a *reso
 
 **MY_RESOURCE_OPENER** can be just the name of the file (if it is in the *PATH*), or an absolute path to a file, it it's not.
 
-## MPRIS support
-
-In order to have **PyRadio** publish information about the station it's playing etc. and accept commands from the keyboard's media keys you have to:
-
-1. Install "*dbus-next*" \
-Add this one to your dependencies list; the package name will probably be **python-dbus-next** or **python3-dbus-next** depending on the distro.
-
-2. Enable **MPRIS** in the config \
-Execute:
-
-```
-sed -i 's/use_os_media_controls = False/use_os_media_controls = True/' pyradio/config
-```
