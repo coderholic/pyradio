@@ -88,7 +88,7 @@ class PyRadioSimpleScheduleWindow():
         self._stop = False
         self._thread_date = None
         self._error_num = 0
-        self._max_repeat_len = max(len(x) for x in _repeat)
+        self._max_repeat_len = max(len(x) for x in self._repeat)
         self._repeat_index = 0
         self.lock = threading.Lock()
         self._entry = None
@@ -1055,6 +1055,7 @@ class PyRadioSimpleScheduleWindow():
             return 8
 
         self._entry = tmp_item
+        logger.error(f'{str(self._entry) = }')
         return 0
 
     def _fix_recording_from_player_selection(self):

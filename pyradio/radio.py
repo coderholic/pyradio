@@ -529,6 +529,8 @@ class PyRadio():
                     do not display any message
         '''
 
+        self._no_refresh_if_not_in_normal_mode = False
+        self._no_refresh_if_not_in_normal_mode_lock = threading.RLock()
         self.tts = TTSManagerDummy()
         self._mpris = None
         self._playlist_open_count = 0
@@ -871,7 +873,7 @@ class PyRadio():
             kbkey['s_vol']: self._volume_save,
             kbkey['t_calc_col']: self._toggle_claculated_colors,
             kbkey['repaint']: self._resize_with_number_sign,
-            # ord('b'): self._show_schedule_editor,
+            ord('b'): self._show_schedule_editor,
         }
 
         self._local_functions_template = {
@@ -1271,10 +1273,10 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
     def _set_mpris_callbacks(self):
         if self.player and self._mpris and self._cnf.use_os_media_controls:
             self._mpris.set_callbacks(
-                play=self.playSelection,
-                stop=self.stopPlayer,
-                next_=self._play_next_station,
-                prev=self._play_previous_station,
+                play=self._mpris_play_selection,
+                stop=self._mpris_stop_player,
+                next_=self._mpris_play_next_station,
+                prev=self._mpris_play_previous_station,
                 set_volume=self.player.set_volume
             )
 
@@ -1696,6 +1698,10 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self._redisplay_list = [0, 0]
 
     def refreshBody_after_Message(self):
+        with self._no_refresh_if_not_in_normal_mode_lock:
+            if self.ws.operation_mode != self.ws.NORMAL_MODE and \
+                    self._no_refresh_if_not_in_normal_mode:
+                return
         self._messaging_win.erase()
         self.refreshBody()
 
@@ -1703,6 +1709,10 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         # if self.ws.operation_mode == self.ws.INSERT_RECORDINGS_DIR_MODE:
         #     logger.error(f'{self.ws.previous_operation_mode = }')
         #     self._messaging_win.erase()
+        with self._no_refresh_if_not_in_normal_mode_lock:
+            if self.ws.operation_mode != self.ws.NORMAL_MODE and \
+                    self._no_refresh_if_not_in_normal_mode:
+                return
         if not display_terminal_icon:
             self.bodyWin.erase()
         if self.player.ctrl_c_pressed:
@@ -2372,6 +2382,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                         # serve MPRIS here!
                         if self._mpris:
                             mpris_poll_enabled = self.ws.operation_mode == self.ws.NORMAL_MODE
+                            mpris_poll_enabled = True
                             self._mpris.poll(mpris_poll_enabled)
                         continue
 
@@ -2711,6 +2722,13 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             logger.info(f'Selected player for station: {station_player}')
         return station_player
 
+    def _mpris_play_selection(self):
+        with self._no_refresh_if_not_in_normal_mode_lock:
+            self._no_refresh_if_not_in_normal_mode = True
+        self.playSelection()
+        with self._no_refresh_if_not_in_normal_mode_lock:
+            self._no_refresh_if_not_in_normal_mode = False
+
     def playSelection(self, restart=False):
         ''' start playback using current selection
             if restart = True, start the station that has
@@ -2927,6 +2945,13 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 self._random_requested = am_i_playing_random
                 self.play_random()
                 return
+
+    def _mpris_stop_player(self):
+        with self._no_refresh_if_not_in_normal_mode_lock:
+            self._no_refresh_if_not_in_normal_mode = True
+        self.stopPlayer()
+        with self._no_refresh_if_not_in_normal_mode_lock:
+            self._no_refresh_if_not_in_normal_mode = False
 
     def stopPlayer(self,
                    show_message=True,
@@ -6087,6 +6112,10 @@ and |remove the file manually|.
         self.refreshBody()
 
     def _select_line(self, a_line):
+        with self._no_refresh_if_not_in_normal_mode_lock:
+            if self.ws.operation_mode != self.ws.NORMAL_MODE and \
+                    self._no_refresh_if_not_in_normal_mode:
+                return
         # if a_line - self.startPos < 0:
         #     logger.error('DE *** _unselect_line: a_line:{0} -  start pos:{1} = {2}'.format(a_line, self.startPos, a_line-self.startPos))
         #     return
@@ -6108,6 +6137,10 @@ and |remove the file manually|.
                 pass
 
     def _unselect_line(self, a_line):
+        with self._no_refresh_if_not_in_normal_mode_lock:
+            if self.ws.operation_mode != self.ws.NORMAL_MODE and \
+                    self._no_refresh_if_not_in_normal_mode:
+                return
         # if a_line - self.startPos < 0:
         #     if logger.isEnabledFor(logging.ERROR):
         #         logger.error('*** _unselect_line: a_line:{0} -  start pos:{1} = {2}'.format(a_line, self.startPos, a_line-self.startPos))
@@ -6161,6 +6194,13 @@ and |remove the file manually|.
         self.refreshBody()
         return f'<div class="alert alert-success">Playing <b>{self.stations[self.selection][0]}</b>!</div>'
 
+    def _mpris_play_next_station(self):
+        with self._no_refresh_if_not_in_normal_mode_lock:
+            self._no_refresh_if_not_in_normal_mode = True
+        self._play_next_station()
+        with self._no_refresh_if_not_in_normal_mode_lock:
+            self._no_refresh_if_not_in_normal_mode = False
+
     def _play_next_station(self):
         self._reset_status_bar_right()
         if self.ws.window_mode == self.ws.PLAYLIST_MODE:
@@ -6190,6 +6230,13 @@ and |remove the file manually|.
         self.playSelection()
         self.refreshBody()
         return f'<div class="alert alert-success">Playing <b>{self.stations[self.selection][0]}</b>!</div>'
+
+    def _mpris_play_previous_station(self):
+        with self._no_refresh_if_not_in_normal_mode_lock:
+            self._no_refresh_if_not_in_normal_mode = True
+        self._play_previous_station()
+        with self._no_refresh_if_not_in_normal_mode_lock:
+            self._no_refresh_if_not_in_normal_mode = False
 
     def _play_previous_station(self):
         self._reset_status_bar_right()

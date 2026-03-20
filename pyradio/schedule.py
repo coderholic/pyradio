@@ -188,9 +188,7 @@ class PyRadioScheduleList():
         rep = self.get_repeating_dates(self._schedule_list[0].get_active_item(), count=count)
         return [(datetime_to_my_time(x[1]), datetime_to_my_time(x[2])) for x in rep]
 
-
-
-    def get_repeating_dates(self, in_date, count=-1):
+    def get_repeating_dates(self, in_date, count=None):
         days = {
             'Sunday': SU,
             'Monday': MO,
@@ -201,50 +199,89 @@ class PyRadioScheduleList():
             'Saturday': SA
         }
 
-        start_date = in_date[1]
+        rule = in_date[-4]
+        start_dt = in_date[1]
+        end_dt = in_date[2]
         now = dt.datetime.now()
-        if start_date < now:
-            start_date = start_date.replace(year=now.year, month=now.month, day=now.day)
-        now_with_correct_time = now.replace(hour=in_date[1].hour, minute=in_date[1].minute, second=in_date[1].minute)
+        now_with_correct_time = now.replace(
+            hour=start_dt.hour,
+            minute=start_dt.minute,
+            second=start_dt.second,
+            microsecond=0
+        )
         now_plus_seven_days = now_with_correct_time + dt.timedelta(days=7)
-        if count == -1:
-            if in_date[-4] == 'day':
-                ll = list(rrule(DAILY, count=12, dtstart=start_date))
-            elif in_date[-4] == 'week':
-                ll = list(rrule(WEEKLY, dtstart=in_date[0], until=now + dt.timedelta(days=14)))[-2:]
-            elif in_date[-4] == 'month':
-                ll = list(rrule(MONTHLY, dtstart=in_date[0], until=now + dt.timedelta(days=65)))[-3:]
-                for n in range(len(ll)-1, -1,-1):
-                    if ll[n] <= now_with_correct_time:
-                        ll.pop(n)
-            elif in_date[-4] in days:
-                ll = list(rrule(WEEKLY, count=3, wkst=SU, byweekday=(days[in_date[-4]],), dtstart=start_date))
-            for n in range(len(ll)-1, -1,-1):
-                if ll[n] > now_plus_seven_days:
-                    ll.pop(n)
-        else:
-            if in_date[-4] == 'day':
-                ll = list(rrule(DAILY, count=count, dtstart=start_date))
-            elif in_date[-4] == 'week':
-                ll = list(rrule(WEEKLY, dtstart=in_date[1], count=count))
-            elif in_date[-4] == 'month':
-                ll = list(rrule(MONTHLY, dtstart=in_date[1], count=count))
-            elif in_date[-4] in days:
-                ll = list(rrule(WEEKLY, count=count, wkst=SU, byweekday=(days[in_date[-4]],), dtstart=start_date))
 
-        # print('\n\nll\n{}'.format(ll))
+        ll = []
+
+        if count is None:
+            if rule == 'day':
+                # Keep a few close daily occurrences
+                ll = list(rrule(DAILY, count=12, dtstart=start_dt))
+                ll = [x for x in ll if now < x <= now_plus_seven_days]
+
+            elif rule == 'week':
+                # See a bit into the future and keep the closer ones
+                ll = list(rrule(WEEKLY, dtstart=start_dt, until=now + dt.timedelta(days=14)))
+                ll = [x for x in ll if now < x <= now_plus_seven_days]
+
+            elif rule == 'month':
+                # See about 2 months forward and keep anything within the 7 day preview window
+                ll = list(rrule(MONTHLY, dtstart=start_dt, until=now + dt.timedelta(days=65)))
+                ll = [x for x in ll if now < x <= now_plus_seven_days]
+
+            elif rule in days:
+                # For a specifies weekday keep a few future occurrences
+                ll = list(
+                    rrule(
+                        WEEKLY,
+                        count=3,
+                        wkst=SU,
+                        byweekday=(days[rule],),
+                        dtstart=start_dt
+                    )
+                )
+                ll = [x for x in ll if now < x <= now_plus_seven_days]
+
+            else:
+                return []
+
+        else:
+            if rule == 'day':
+                ll = list(rrule(DAILY, count=count, dtstart=start_dt))
+
+            elif rule == 'week':
+                ll = list(rrule(WEEKLY, count=count, dtstart=start_dt))
+
+            elif rule == 'month':
+                ll = list(rrule(MONTHLY, count=count, dtstart=start_dt))
+
+            elif rule in days:
+                ll = list(
+                    rrule(
+                        WEEKLY,
+                        count=count,
+                        wkst=SU,
+                        byweekday=(days[rule],),
+                        dtstart=start_dt
+                    )
+                )
+
+            else:
+                return []
 
         out = []
         if ll:
-            d = in_date[2] - in_date[1]
-            for i, _ in enumerate(ll):
-                out.append(list(in_date))
-                out[-1][1] = ll[i]
-                out[-1][2] = out[-1][1] + d
+            duration = end_dt - start_dt
+            for x in ll:
+                item = list(in_date)
+                item[1] = x
+                item[2] = x + duration
+                out.append(item)
+
         return out
 
     def get_info_of_tasks(self, to_dict=False):
-        ''' Returns a list of tasks comming from self._sorted
+        ''' Returns a list of tasks coming from self._sorted
             to be presented to the user
         '''
         self.get_list_of_tasks()
@@ -1113,13 +1150,13 @@ if __name__ == '__main__':
 
     my_list = [{
         'name': 'A test',
-        'type': 1,
+        'type': 0,
         'start_type': 0,
-        'start_date': [2024, 11, 19],
+        'start_date': [2026, 11, 19],
         'start_time': (18, 23, 0, 0),
         'start_duration': (1, 32, 15, 0),
         'end_type': 0,
-        'end_date': [2024, 11, 19],
+        'end_date': [2026, 11, 19],
         'end_time': (20, 1, 2, 0),
         'end_duration': (3, 15, 2, 0),
         'player': 'mpv',
@@ -1134,7 +1171,9 @@ if __name__ == '__main__':
     # x = PyRadioScheduleList(a_file='/home/spiros/.config/pyradio/data/schedule.json')
     out = x.get_list_of_active_items()
     print(type(out))
-    print(out)
+    print(f'{out = }')
+
+
     print('\n\nper item')
     for n in out:
         print(n)
