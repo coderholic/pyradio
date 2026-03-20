@@ -1195,6 +1195,10 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('currently not in playback, aborting!')
 
+    def _send_mpris_nav_caps(self, cap):
+        if self._mpris:
+            self._mpris.update_nav_caps(cap, cap)
+
     def _send_mpris_stop_data(self):
         if self._mpris:
             self._mpris.update_playback(False)
@@ -1370,6 +1374,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             lambda: self._remote_control_server,
             lambda: self.tts,
             self._send_mpris_title,
+            self._send_mpris_nav_caps,
             lambda: self.ws.operation_mode,
             self._can_display_help_msg,
             self.program_restart

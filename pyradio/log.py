@@ -251,6 +251,7 @@ class Log():
                  get_web_song_title,
                  tts,
                  mpris_title_function,
+                 mpris_nav_caps,
                  mode,
                  can_display_help_msg,
                  program_restart
@@ -324,6 +325,7 @@ class Log():
         self._started_station_name = None
         self.tts = tts
         self.mpris_title_function = mpris_title_function
+        self.mpris_nav_caps = mpris_nav_caps
 
     def __del__(self):
         self._stop_desktop_notification_thread = True
@@ -713,6 +715,7 @@ class Log():
                         self.cursesScreen.refresh()
                         self._active_width -= len(d_msg)
                         self.display_help_message = False
+                        self.mpris_nav_caps(True)
                 if self._show_status_updates:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug(f'Counter: {self.counter}')
