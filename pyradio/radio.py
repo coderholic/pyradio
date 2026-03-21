@@ -2728,8 +2728,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         return station_player
 
     def _mpris_play_selection(self):
-        with self._no_refresh_if_not_in_normal_mode_lock:
-            self._no_refresh_if_not_in_normal_mode = True
+        if not self._can_receive_remote_command():
+            return
+        if self.ws.operation_mode != self.ws.NORMAL_MODE:
+            with self._no_refresh_if_not_in_normal_mode_lock:
+                self._no_refresh_if_not_in_normal_mode = True
         self.playSelection()
         with self._no_refresh_if_not_in_normal_mode_lock:
             self._no_refresh_if_not_in_normal_mode = False
@@ -2739,6 +2742,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             if restart = True, start the station that has
             been played last
         '''
+        logger.error(f'\n\n\n{self.stations = }\n\n\n')
+        if len(self.stations) == 0:
+            return
         if self.stations[self.selection][1] == '-':
             ''' this is a group '''
             return
@@ -2952,8 +2958,9 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 return
 
     def _mpris_stop_player(self):
-        with self._no_refresh_if_not_in_normal_mode_lock:
-            self._no_refresh_if_not_in_normal_mode = True
+        if self.ws.operation_mode != self.ws.NORMAL_MODE:
+            with self._no_refresh_if_not_in_normal_mode_lock:
+                self._no_refresh_if_not_in_normal_mode = True
         self.stopPlayer()
         with self._no_refresh_if_not_in_normal_mode_lock:
             self._no_refresh_if_not_in_normal_mode = False
@@ -6180,28 +6187,35 @@ and |remove the file manually|.
             self._handle_cursor_move_down()
 
     def _html_check_op_mode(self):
-        if self.ws.window_mode == self.ws.NORMAL_MODE:
+        if self.ws.window_mode != self.ws.PLAYLIST_MODE and \
+                self.ws.previous_operation_mode != self.ws.PLAYLIST_MODE:
             return None
         return '<div class="alert alert-danger">Operation not permitted (not in <b>Main Mode</b>)</div>'
 
     def _html_play_next_station(self):
         self._reset_status_bar_right()
         ret = self._html_check_op_mode()
-
         if ret is not None:
             return ret
 
         if self.player.connecting:
             return '<div class="alert alert-success">Please wait for the player to settle...</div>'
-
+        if self.ws.operation_mode != self.ws.NORMAL_MODE:
+            with self._no_refresh_if_not_in_normal_mode_lock:
+                self._no_refresh_if_not_in_normal_mode = True
         self._move_cursor_one_down()
         self.playSelection()
         self.refreshBody()
+        with self._no_refresh_if_not_in_normal_mode_lock:
+            self._no_refresh_if_not_in_normal_mode = False
         return f'<div class="alert alert-success">Playing <b>{self.stations[self.selection][0]}</b>!</div>'
 
     def _mpris_play_next_station(self):
-        with self._no_refresh_if_not_in_normal_mode_lock:
-            self._no_refresh_if_not_in_normal_mode = True
+        if not self._can_receive_remote_command():
+            return
+        if self.ws.operation_mode != self.ws.NORMAL_MODE:
+            with self._no_refresh_if_not_in_normal_mode_lock:
+                self._no_refresh_if_not_in_normal_mode = True
         self._play_next_station()
         with self._no_refresh_if_not_in_normal_mode_lock:
             self._no_refresh_if_not_in_normal_mode = False
@@ -6217,9 +6231,14 @@ and |remove the file manually|.
         else:
             # if self.playing > -1:
             #     self.selection = self.playing
+            if self.ws.operation_mode != self.ws.NORMAL_MODE:
+                with self._no_refresh_if_not_in_normal_mode_lock:
+                    self._no_refresh_if_not_in_normal_mode = True
             self._move_cursor_one_down()
             self.playSelection()
             self.refreshBody()
+            with self._no_refresh_if_not_in_normal_mode_lock:
+                self._no_refresh_if_not_in_normal_mode = False
 
     def _html_play_previous_station(self):
         self._reset_status_bar_right()
@@ -6230,15 +6249,22 @@ and |remove the file manually|.
 
         if self.player.connecting:
             return '<div class="alert alert-success">Please wait for the player to settle...</div>'
-
+        if self.ws.operation_mode != self.ws.NORMAL_MODE:
+            with self._no_refresh_if_not_in_normal_mode_lock:
+                self._no_refresh_if_not_in_normal_mode = True
         self._move_cursor_one_up()
         self.playSelection()
         self.refreshBody()
+        with self._no_refresh_if_not_in_normal_mode_lock:
+            self._no_refresh_if_not_in_normal_mode = False
         return f'<div class="alert alert-success">Playing <b>{self.stations[self.selection][0]}</b>!</div>'
 
     def _mpris_play_previous_station(self):
-        with self._no_refresh_if_not_in_normal_mode_lock:
-            self._no_refresh_if_not_in_normal_mode = True
+        if not self._can_receive_remote_command():
+            return
+        if self.ws.operation_mode != self.ws.NORMAL_MODE:
+            with self._no_refresh_if_not_in_normal_mode_lock:
+                self._no_refresh_if_not_in_normal_mode = True
         self._play_previous_station()
         with self._no_refresh_if_not_in_normal_mode_lock:
             self._no_refresh_if_not_in_normal_mode = False
@@ -6254,9 +6280,14 @@ and |remove the file manually|.
         else:
             # if self.playing > -1:
             #     self.selection = self.playing
+            if self.ws.operation_mode != self.ws.NORMAL_MODE:
+                with self._no_refresh_if_not_in_normal_mode_lock:
+                    self._no_refresh_if_not_in_normal_mode = True
             self._move_cursor_one_up()
             self.playSelection()
             self.refreshBody()
+            with self._no_refresh_if_not_in_normal_mode_lock:
+                self._no_refresh_if_not_in_normal_mode = False
 
     def _show_schedule_editor(self):
         if self.player.isPlaying():
@@ -6669,9 +6700,13 @@ and |remove the file manually|.
 
         if self._cnf.stations_history.item == 0:
             return '<div class="alert alert-danger">Already at <b>first</b> item!</div>'
-
+        if self.ws.operation_mode != self.ws.NORMAL_MODE:
+            with self._no_refresh_if_not_in_normal_mode_lock:
+                self._no_refresh_if_not_in_normal_mode = True
         self._cnf.play_from_history = True
         self._cnf.stations_history.play_previous()
+        with self._no_refresh_if_not_in_normal_mode_lock:
+            self._no_refresh_if_not_in_normal_mode = False
         return f'<div class="alert alert-success">Playing <b>{self.stations[self.selection][0]}</b>!</div>'
 
     def _stations_history_previous(self):
@@ -6685,8 +6720,13 @@ and |remove the file manually|.
             if self.player.connecting:
                 self._show_stations_history_notification(1)
             else:
+                if self.ws.operation_mode != self.ws.NORMAL_MODE:
+                    with self._no_refresh_if_not_in_normal_mode_lock:
+                        self._no_refresh_if_not_in_normal_mode = True
                 self._cnf.play_from_history = True
                 self._cnf.stations_history.play_previous()
+                with self._no_refresh_if_not_in_normal_mode_lock:
+                    self._no_refresh_if_not_in_normal_mode = False
         self._set_playing = True
 
     def _html_is_player_stopped(self):
@@ -6716,8 +6756,13 @@ and |remove the file manually|.
         if self._cnf.stations_history.item == len(self._cnf.stations_history.items) - 1:
             return '<div class="alert alert-danger">Already at <b>last</b> item!</div>'
 
+        if self.ws.operation_mode != self.ws.NORMAL_MODE:
+            with self._no_refresh_if_not_in_normal_mode_lock:
+                self._no_refresh_if_not_in_normal_mode = True
         self._cnf.play_from_history = True
         self._cnf.stations_history.play_next()
+        with self._no_refresh_if_not_in_normal_mode_lock:
+            self._no_refresh_if_not_in_normal_mode = False
         return f'<div class="alert alert-success">Playing <b>{self.stations[self.selection][0]}</b>!</div>'
 
     def _stations_history_next(self):
@@ -6731,8 +6776,13 @@ and |remove the file manually|.
             if self.player.connecting:
                 self._show_stations_history_notification(1)
             else:
+                if self.ws.operation_mode != self.ws.NORMAL_MODE:
+                    with self._no_refresh_if_not_in_normal_mode_lock:
+                        self._no_refresh_if_not_in_normal_mode = True
                 self._cnf.play_from_history = True
                 self._cnf.stations_history.play_next()
+                with self._no_refresh_if_not_in_normal_mode_lock:
+                    self._no_refresh_if_not_in_normal_mode = False
         self._set_playing = True
 
     def _show_remote_control_server_active(self):
@@ -10906,10 +10956,15 @@ _____"|f|" to see the |free| keys you can use.
 
     def _jump_and_play_selection(self, jumpnr=None):
         logger.error(f'\n\n 1 _jump = {jumpnr}\n\n')
+        if self.ws.operation_mode != self.ws.NORMAL_MODE:
+            with self._no_refresh_if_not_in_normal_mode_lock:
+                self._no_refresh_if_not_in_normal_mode = True
         self._jump_to_jumpnr('', jumpnr)
         self.playSelection()
         self.refreshBody()
         self._reset_status_bar_right()
+        with self._no_refresh_if_not_in_normal_mode_lock:
+            self._no_refresh_if_not_in_normal_mode = False
 
     def _jump_to_jumpnr(self, char='', jumpnr=None):
         logger.error(f'\n\n 2 _jump = {jumpnr}\n\n')
@@ -10959,7 +11014,12 @@ _____"|f|" to see the |free| keys you can use.
         if self._return_server_response_for_start_player(mode='text'):
             return ret
         if self.number_of_items > 0:
+            if self.ws.operation_mode != self.ws.NORMAL_MODE:
+                with self._no_refresh_if_not_in_normal_mode_lock:
+                    self._no_refresh_if_not_in_normal_mode = True
             self._start_player(mode='text')
+            with self._no_refresh_if_not_in_normal_mode_lock:
+                self._no_refresh_if_not_in_normal_mode = False
             return f'Playing "{self.stations[self.selection][0]}"!'
         return 'No stations in Playlist!!'
 
@@ -10971,7 +11031,12 @@ _____"|f|" to see the |free| keys you can use.
         if self._return_server_response_for_start_player(mode='text'):
             return ret
         if self.number_of_items > 0:
+            if self.ws.operation_mode != self.ws.NORMAL_MODE:
+                with self._no_refresh_if_not_in_normal_mode_lock:
+                    self._no_refresh_if_not_in_normal_mode = True
             self._start_player(mode='html')
+            with self._no_refresh_if_not_in_normal_mode_lock:
+                self._no_refresh_if_not_in_normal_mode = False
             return f'<div class="alert alert-success">Playing <b>{self.stations[self.selection][0]}</b>!</div>'
         return '<div class="alert alert-danger"><b>No stations in Playlist!</b>!</div>'
 
@@ -11011,7 +11076,12 @@ _____"|f|" to see the |free| keys you can use.
 
     def _pause_player(self):
         self._reset_status_bar_right()
+        if self.ws.operation_mode != self.ws.NORMAL_MODE:
+            with self._no_refresh_if_not_in_normal_mode_lock:
+                self._no_refresh_if_not_in_normal_mode = True
         self.player.togglePause()
+        with self._no_refresh_if_not_in_normal_mode_lock:
+                self._no_refresh_if_not_in_normal_mode = False
 
     def _stop_player(self, http_error=False):
         self.player.buffering = False
@@ -11021,12 +11091,17 @@ _____"|f|" to see the |free| keys you can use.
         self.log.counter = None
         self._update_status_bar_right()
         if self.number_of_items > 0:
+            if self.ws.operation_mode != self.ws.NORMAL_MODE:
+                with self._no_refresh_if_not_in_normal_mode_lock:
+                    self._no_refresh_if_not_in_normal_mode = True
             if self.player.isPlaying():
                 self.stopPlayer(show_message=True)
             else:
                 self.detect_if_player_exited = True
                 self.playSelection()
             self.refreshBody()
+            with self._no_refresh_if_not_in_normal_mode_lock:
+                self._no_refresh_if_not_in_normal_mode = False
         self.player.recording_filename = ''
         self.player.muted = self.player.paused = False
 
@@ -12325,12 +12400,13 @@ _____"|f|" to see the |free| keys you can use.
         if self.ws.operation_mode == self.ws.RECORD_WINDOW_MODE:
             self.ws.close_window()
             self.refreshBody()
-        # if self.ws.window_mode in (
         if self.ws.operation_mode in (
-            self.ws.NORMAL_MODE,
+            self.ws.PLAYLIST_MODE,
+        ) or self.ws.previous_operation_mode in (
+            self.ws.PLAYLIST_MODE,
         ):
-            return True
-        return False
+            return False
+        return True
 
     def _start_remote_control_server(self):
         self._remote_control_server = PyRadioServer(
@@ -12392,6 +12468,9 @@ _____"|f|" to see the |free| keys you can use.
         logger.error('\n\nstationFile = {}\nh_items = {}\n h_item[-1] = {}\nh_item[1] = {}\n\n'.format(
                      stationFile, h_item, h_item[-1], h_item[1]
                      ))
+        if self.ws.operation_mode != self.ws.NORMAL_MODE:
+            with self._no_refresh_if_not_in_normal_mode_lock:
+                self._no_refresh_if_not_in_normal_mode = True
         num = self._open_and_check_station_in_playlist(stationFile, h_item[-1], h_item[1])
         if num == -1:
             return
@@ -12430,6 +12509,8 @@ _____"|f|" to see the |free| keys you can use.
         #     #    logger.error('\n\n1 not refreshing\n\n')
         #     self.refreshBody()
         self.refreshBody()
+        with self._no_refresh_if_not_in_normal_mode_lock:
+            self._no_refresh_if_not_in_normal_mode = False
         return num
 
     ############################################################################
