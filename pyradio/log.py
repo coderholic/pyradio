@@ -645,8 +645,10 @@ class Log():
                                 self._song_title = ''
                                 if msg.startswith(M_STRINGS['playing_']):
                                     self._station_that_is_playing_now = msg[9:]
+                                    self._song_title = msg
                                 elif msg.startswith(M_STRINGS['buffering_']):
                                     self._station_that_is_playing_now = msg[11:]
+                                    self._song_title = msg
 
                     if self._add_chapter_function is not None and msg:
                         if msg.startswith(M_STRINGS['title_']):

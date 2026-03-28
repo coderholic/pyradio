@@ -400,7 +400,7 @@ div[id^='a_']:hover { underline: none;}
     let eventSource = new EventSource("/html/title");
 
     eventSource.addEventListener("/html/title", (event) => {
-        // console.log("event.data:", event.data);
+        // console.log("event.data: ", event.data);
         js_set_title("#song_title", event.data);
         error_count = 0;
         if ( event.data.includes("Player is stopped!") || event.data.includes("Connecting to: ") || event.data.includes(" (error ") ){
@@ -480,7 +480,9 @@ div[id^='a_']:hover { underline: none;}
         //     js_get_selection();
         // }
         $.get(the_command, function(result){
-            // console.log(the_command, result, typeof result);
+            // console.log("the_command =", the_command);
+            // console.log("result = ", result);
+            // console.log("type is: ", typeof result);
             //
             //  Check for html to display
             //
@@ -590,6 +592,8 @@ div[id^='a_']:hover { underline: none;}
     }
 
     function js_set_title(a_tag, a_title, the_command=''){
+        if ( a_title == "<b></b>" )
+            return;
         var b_title = a_title.replaceAll(String.fromCharCode(92), "");
         // console.log("b_title = ", b_title)
         // console.log("    ", last_title);
@@ -808,7 +812,6 @@ div[id^='a_']:hover { underline: none;}
         const getRadioBrowser = async () => {
             const response = await fetch("/html/is_radio_browser");
             const data = await response.text();
-
             // console.log("js_fix_radio_browser async:", data);
             var element = document.getElementById("rb");
             var pl = document.getElementById("pl");
@@ -952,6 +955,7 @@ Restricted Commands (Main mode only)
         self.song_title = None
         self.sel = 0
         self._selected = -1
+        self._empty_song_title_count = 0
 
         self._path = ''
         self.has_netifaces = HAS_NETIFACES
@@ -1805,8 +1809,11 @@ Restricted Commands (Main mode only)
         return True
 
     def send_song_title(self, msg=None):
-        if not msg:
-            return
+        # logger.error(f'\n\n\n{msg = }\n\n\n')
+        # if not msg:
+        #     self._empty_song_title_count += 1
+        #     if self._empty_song_title_count > 3:
+        #         return
         if msg.startswith('mpv: ') or \
                 msg.startswith('mplayer: ') or \
                 msg.startswith('vlc: '):

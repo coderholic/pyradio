@@ -2,11 +2,9 @@
 import locale
 from collections import deque
 import logging
+from threading import RLock
 locale.setlocale(locale.LC_ALL, "")
 logger = logging.getLogger(__name__)
-
-locale.setlocale(locale.LC_ALL, "")
-
 
 class Window_Stack_Constants():
     ''' Modes of Operation '''
@@ -246,6 +244,12 @@ class Window_Stack_Constants():
         WIN_VLC_NO_RECORD_MODE,
     )
 
+    NO_REMOTE_MODES = (
+        PLAYLIST_MODE,
+        CONFIG_MODE,
+        RADIO_BROWSER_CONFIG_MODE,
+    )
+
     def __init__(self):
         pass
 
@@ -258,14 +262,17 @@ class Window_Stack(Window_Stack_Constants):
         self._dq = deque()
         super(Window_Stack_Constants, self).__init__()
         self._dq.append([self.NORMAL_MODE, self.NORMAL_MODE])
+        self.lock = RLock()
 
     def __del__(self):
-        self._dq.clear()
-        self._dq = None
+        with self.lock:
+            self._dq.clear()
+            self._dq = None
 
     @property
     def operation_mode(self):
-        return self._dq[-1][0]
+        with self.lock:
+            return self._dq[-1][0]
 
     @operation_mode.setter
     def operation_mode(self, a_mode):
@@ -275,40 +282,44 @@ class Window_Stack(Window_Stack_Constants):
             '''
             self.window_mode = a_mode
         else:
-            tmp = [a_mode, self._dq[-1][1]]
+            with self.lock:
+                tmp = [a_mode, self._dq[-1][1]]
+                if self._dq[-1] != tmp:
+                    self._dq.append([a_mode, self._dq[-1][1]])
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('MODE: {0} -> {1} - {2}'.format(
+                            self.mode_name(self._dq[-2][0]),
+                            self.mode_name(self._dq[-1][0]),
+                            list(self._dq)))
+                else:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug(f'MODE: Refusing to add duplicate {tmp} Remaining at {list(self._dq)}')
+
+    @property
+    def window_mode(self):
+        with self.lock:
+            return self._dq[-1][1]
+
+    @window_mode.setter
+    def window_mode(self, a_mode):
+        tmp = [a_mode, a_mode]
+        with self.lock:
             if self._dq[-1] != tmp:
-                self._dq.append([a_mode, self._dq[-1][1]])
+                self._dq.append([a_mode, a_mode])
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('MODE: {0} -> {1} - {2}'.format(
+                    logger.debug('WIN MODE: {0} -> {1} - {2}'.format(
                         self.mode_name(self._dq[-2][0]),
                         self.mode_name(self._dq[-1][0]),
                         list(self._dq)))
             else:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug(f'MODE: Refusing to add duplicate {tmp} Remaining at {list(self._dq)}')
-
-    @property
-    def window_mode(self):
-        return self._dq[-1][1]
-
-    @window_mode.setter
-    def window_mode(self, a_mode):
-        tmp = [a_mode, a_mode]
-        if self._dq[-1] != tmp:
-            self._dq.append([a_mode, a_mode])
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('WIN MODE: {0} -> {1} - {2}'.format(
-                    self.mode_name(self._dq[-2][0]),
-                    self.mode_name(self._dq[-1][0]),
-                    list(self._dq)))
-        else:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug(f'WIN MODE: Refusing to add duplicate {tmp} Remaining at {list(self._dq)}')
+                    logger.debug(f'WIN MODE: Refusing to add duplicate {tmp} Remaining at {list(self._dq)}')
 
     @property
     def previous_operation_mode(self):
         try:
-            return self._dq[-2][0]
+            with self.lock:
+                return self._dq[-2][0]
         except:
             return -2
 
@@ -318,7 +329,8 @@ class Window_Stack(Window_Stack_Constants):
 
     @property
     def previous_window_mode(self):
-        return self._dq[-2][1]
+        with self.lock:
+            return self._dq[-2][1]
 
     @previous_window_mode.setter
     def previous_window_mode(self, a_mode):
@@ -350,22 +362,34 @@ class Window_Stack(Window_Stack_Constants):
             self.stop_dialog_speech()
             self.stop_dialog_speech = None
         last = -2
-        logger.error('\n\n')
-        logger.error(f'{self._dq = }')
-        logger.error('\n\n')
-        if len(self._dq) == 1 and self._dq[0] != [self.NORMAL_MODE, self.NORMAL_MODE]:
-            self._dq[0] = [self.NORMAL_MODE, self.NORMAL_MODE]
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('CLOSE MODE: Resetting...')
+        with self.lock:
+            # logger.error('\n\n')
+            # logger.error(f'{self._dq = }')
+            # logger.error('\n\n')
+            if len(self._dq) == 1 and self._dq[0] != [self.NORMAL_MODE, self.NORMAL_MODE]:
+                self._dq[0] = [self.NORMAL_MODE, self.NORMAL_MODE]
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('CLOSE MODE: Resetting...')
 
-        if len(self._dq) > 1:
-            tmp = self._dq.pop()
-            if tmp[0] != self._dq[-1][0]:
-                logger.error('\n\nspeak!\n\n')
-                if not no_tts:
-                    self._speak_selection()
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug(f'CLOSE MODE: {self.mode_name(tmp[0])} -> {self.mode_name(self._dq[-1][0])} - {list(self._dq)}')
-        else:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('CLOSE MODE: Refusing to clear que...')
+            if len(self._dq) > 1:
+                tmp = self._dq.pop()
+                if tmp[0] != self._dq[-1][0]:
+                    logger.error('\n\nspeak!\n\n')
+                    if not no_tts:
+                        self._speak_selection()
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f'CLOSE MODE: {self.mode_name(tmp[0])} -> {self.mode_name(self._dq[-1][0])} - {list(self._dq)}')
+            else:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('CLOSE MODE: Refusing to clear que...')
+
+    def already_opened(self, a_mode):
+        if isinstance(a_mode, int):
+            a_mode = (a_mode,)
+        with self.lock:
+            existing = {x[0] for x in self._dq}
+        return any(value in existing for value in a_mode)
+
+    def can_accept_remote_commands(self):
+        # return not self.already_opened(self.NO_REMOTE_MODES)
+        return self.operation_mode == self.NORMAL_MODE

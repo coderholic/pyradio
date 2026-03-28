@@ -55,6 +55,8 @@ def log_it(msg):
     with open('/home/spiros/log_it.log', 'a', encoding='utf-8') as f:
         f.write(msg + '\n')
 
+SCHEDULE_DISABLED_VISIBLE = True
+SCHEDULE_DISABLED_VISIBLE = False
 
 class DisabledWidget():
     '''A dummy class that only returns enabled = False
@@ -633,7 +635,10 @@ class SimpleCursesDate(SimpleCursesWidget):
             else:
                 self._win.addstr(self._Y, self._X, str(self), self._color)
         else:
-            self._win.addstr(self._Y, self._X, '====-==-==', self._color)
+            if SCHEDULE_DISABLED_VISIBLE:
+                self._win.addstr(self._Y, self._X, '====-==-==', self._color)
+            else:
+                self._win.addstr(self._Y, self._X, '          ', self._color)
         self._win.refresh()
         self._showed = True
 
@@ -982,7 +987,10 @@ class SimpleCursesTime(SimpleCursesWidget):
                     self.color
                 )
         else:
-            self._win.addstr(self._Y, self._X, '==:==:==', self.color)
+            if SCHEDULE_DISABLED_VISIBLE:
+                self._win.addstr(self._Y, self._X, '==:==:==', self.color)
+            else:
+                self._win.addstr(self._Y, self._X, '        ', self.color)
 
         if self._show_am_pm:
             if self._enabled:
@@ -1002,7 +1010,10 @@ class SimpleCursesTime(SimpleCursesWidget):
                 self._win.addstr(tok, col)
                 self._win.addstr(']PM', self.color)
             else:
-                self._win.addstr(' [ ]== [ ]==', self.color)
+                if SCHEDULE_DISABLED_VISIBLE:
+                    self._win.addstr(' [ ]== [ ]==', self.color)
+                else:
+                    self._win.addstr('            ', self.color)
         self._win.refresh()
         self._showed = True
 

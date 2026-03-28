@@ -1227,6 +1227,7 @@ that window to complete the update process.''')
                 pyradio.play = 'False'
                 pyradio.stopPlayer()
                 pyradio_config.USE_EXTERNAL_PLAYER = False
+                pyradio_config.EXTERNAL_PLAYER_OPTS = None
             else:
                 break
 

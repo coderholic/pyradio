@@ -169,6 +169,22 @@ def calc_can_change_colors(config):
             logger.info(f'Terminal can change colors: {ret}')
     return ret
 
+
+class PlaybackState:
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._status = None
+
+    def set(self, status):
+        with self._lock:
+            self._status = status
+
+    def get(self):
+        with self._lock:
+            return self._status
+
+
 class SelectPlayer():
 
     def __init__(self, active_player, all_players, parent, recording, vlc_no_recording):
@@ -529,6 +545,8 @@ class PyRadio():
                     do not display any message
         '''
 
+        self._stop_main_loop = False
+        self.plb_state = PlaybackState()
         self._no_refresh_if_not_in_normal_mode = False
         self._no_refresh_if_not_in_normal_mode_lock = threading.RLock()
         self.tts = TTSManagerDummy()
@@ -873,7 +891,7 @@ class PyRadio():
             kbkey['s_vol']: self._volume_save,
             kbkey['t_calc_col']: self._toggle_claculated_colors,
             kbkey['repaint']: self._resize_with_number_sign,
-            ord('b'): self._show_schedule_editor,
+            # ord('b'): self._show_schedule_editor,
         }
 
         self._local_functions_template = {
@@ -1285,6 +1303,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             )
 
     def setup(self, stdscr):
+        self._stop_main_loop = False
         self.stdscr = stdscr
         if logger.isEnabledFor(logging.INFO):
             if self.program_restart:
@@ -2374,6 +2393,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             if self._mpris:
                 self.bodyWin.timeout(100)
             while True:
+                if self._stop_main_loop:
+                    # fixing #325
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('main loop stopping...')
+                    break
                 try:
                     if self._do_launch_external_palyer:
                         self.keypress(kbkey['ext_player'])
@@ -2538,8 +2562,15 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self._remove_icons()
 
     def _wait_for_threads(self):
-        if hasattr(self, 'tts') and self.tts:
-            logger.debug("Stopping TTS threads...")
+        self._stop_main_loop = True
+        if self._mpris:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("Stopping OS-MEDIA threads...")
+            self._mpris.stop()
+            self._mpris = None
+        if self.tts:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("Stopping TTS threads...")
             # Phase 1: Immediate interruption (non-blocking)
             self.tts.shutdown()
         self.log._stop_desktop_notification_thread = True
@@ -2831,6 +2862,16 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.playing = -1
             self._send_mpris_stop_data()
             return
+        self.plb_state.set(
+            (
+                self._cnf.station_title,
+                self._cnf.station_path,
+                self.stations[self.playing][0],
+                self.playing,
+                self.player.PLAYER_NAME
+            )
+        )
+        logger.error(f'\n\n\nPlayback state: ("{self._cnf.station_title}", "{self.stations[self.playing][0]}", {self.playing}, "{self.player.PLAYER_NAME}")\n\n\n')
         self._set_active_stations()
         self.selections[0][2] = self.playing
         self._do_display_notify()
@@ -2985,6 +3026,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.player.close(player_disappeared)
         except:
             pass
+        self.plb_state.set(None)
+        logger.error(f'\n\n\n**** plb_state is None ****\n\n\n')
         self._send_mpris_stop_data()
         self.player.connecting = False
         if self.ws.window_mode == self.ws.PLAYLIST_MODE:
@@ -3023,6 +3066,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
     def _show_player_is_stopped(self, from_update_thread=False, http_error=False):
         logger.error(f'{from_update_thread = }')
         logger.error(f'{http_error = }')
+        self.plb_state.set(None)
+        logger.error(f'\n\n\n**** plb_state is None ****\n\n\n')
         if from_update_thread:
             msg_key = http_error if http_error else 1000
             state = STATES.CONNECT_ERROR
@@ -4220,7 +4265,20 @@ ____Using |fallback| theme.''', Priority.HIGH)
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug(f'Setting selection station at {self.selection}')
                     self.setStation(self.selection)
+                    self.plb_state.set(None)
 
+        logger.error('\n\n\n============== after ==============\n\n\n')
+        if self.playing > -1:
+            self._add_station_to_stations_history()
+            self.plb_state.set(
+                (
+                    self._cnf.station_title,
+                    self.stations[self.playing][0],
+                    self.playing,
+                    self.player.PLAYER_NAME
+                )
+            )
+            logger.error(f'\n\n\nPlayback state: ("{self._cnf.station_title}", "{self.stations[self.playing][0]}", {self.playing}, "{self.player.PLAYER_NAME}")\n\n\n')
         if self.selection < 0:
             ''' make sure we have a valid selection '''
             self.selection = 0
@@ -12400,13 +12458,17 @@ _____"|f|" to see the |free| keys you can use.
         if self.ws.operation_mode == self.ws.RECORD_WINDOW_MODE:
             self.ws.close_window()
             self.refreshBody()
-        if self.ws.operation_mode in (
-            self.ws.PLAYLIST_MODE,
-        ) or self.ws.previous_operation_mode in (
-            self.ws.PLAYLIST_MODE,
-        ):
-            return False
-        return True
+        # if self.ws.operation_mode in (
+        #     self.ws.PLAYLIST_MODE,
+        #     self.ws.CONFIG_MODE,
+        #     self.ws.RADIO_BROWSER_CONFIG_MODE,
+        # ) or self.ws.previous_operation_mode in (
+        #     self.ws.PLAYLIST_MODE,
+        #     self.ws.CONFIG_MODE,
+        # ):
+        #     return False
+        # return True
+        return self.ws.can_accept_remote_commands()
 
     def _start_remote_control_server(self):
         self._remote_control_server = PyRadioServer(
