@@ -1454,26 +1454,32 @@ close this window.
 
     'M_DBUS_NEXT': ('Package Error',
 r'''You have enabled |OS Media Controls| but the required
-package (|dbus-next|) is not installed yet.
+package (|dbus-next| or |dbus-fast|) is not installed yet.
 
 Please terminate |PyRadio| and install it using your
 distro package manager. Example:
 
 ____|sudo apt install python3-dbus-next|
 ____|sudo pacman -S python-dbus-next|
-
+or
+____|sudo apt install python3-dbus-fast|
+____|sudo pacman -S python-dbus-fast|
 or whatever works on your distro.
 ''', Priority.HIGH
 ),
 
     'M_DBUS_NEXT_ISOLATED': ('Package Error',
 r'''You have enabled |OS Media Controls| but the required
-package (|dbus-next|) is not installed yet.
+package (|dbus-next| or |dbus-fast|) is not installed yet.
 
 Please terminate |PyRadio| and install it using the
 following command:
 
 ____|pyradio --mpris|
+to install |dbus-next|
+or
+____|pyradio --mpris fast|
+to install |dbus-fast|
 
 ''', Priority.HIGH
 ),
@@ -1844,6 +1850,7 @@ unintentionally disrupt functionality.
                 )
         '''
         logger.error(f'{args = }')
+        logger.error(f'{len(args) = }')
         # try:
         #     cap, out = self._txt[self.active_message_key]
         # except ValueError:

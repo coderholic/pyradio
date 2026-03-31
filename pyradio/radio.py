@@ -3689,26 +3689,30 @@ ____Using |fallback| theme.''', Priority.HIGH)
             self._open_message_win_by_key('H_EXTERNAL_LINE_EDITOR')
 
     def _show_config_player_help(self):
+        logger.error('\n\n\n+++++++++++\n\n\n')
 
         if self._player_select_win.editing > 0:
+            logger.error('0')
             self._show_line_editor_help()
             return None
 
         if self._player_select_win.focus:
+            logger.error('1')
             txt = r'''TAB                           <*> Move selection to |Extra Parameters| column.
-                     Up|, |j|, |Down|, |k           <*> Change player selection.
-                     Enter|, |Space                 <*>
-                     Right|, |l                     <*> Enable / disable player.
+                     Up|, |{j}|, |Down|, |{k}       <*> Change player selection.
+                     Enter|, |{pause}|              <*>
+                     Right|, |{l}                   <*> Enable / disable player.
                      ^U| / |^D                      <*> Move player |u|p or |d|own.
-                     r                              <*> Revert to saved values.
-                     s                              <*> Save players (selection and parameters).
-                     Esc|, |q|, |Left|, |h          <*> Cancel.
+                     {revert_saved}                 <*> Revert to saved values.
+                     {s}                            <*> Save players (selection and parameters).
+                     Esc|, |{q}|, |Left|, |{h}      <*> Cancel.
                      %Global functions (with \ on Line editor)
-                     -|/|+| or |,|/|.               <*> Change volume.
-                     m| / |v                        <*> |M|ute player / Save |v|olume.
-                     W| / |w                        <*> Toggle title log / like a station.'''
+                     {v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*>  Change volume.
+                     {mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
+                     {t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
         else:
             if self._player_select_win.from_config:
+                logger.error('2')
                 txt = r''' TAB                      <*> Move selection to |Player Selection| column.
                          Up|, |j|, |Down|, |k       <*>
                          PgUp|, |PgDn               <*> Change selection.
@@ -3724,6 +3728,7 @@ ____Using |fallback| theme.''', Priority.HIGH)
                          m| / |v                    <*> |M|ute player / Save |v|olume.
                          W| / |w                    <*> Toggle title log / like a station.'''
             else:
+                logger.error('3')
                 txt = r'''Up|, |j|, |Down|, |k      <*>
                          PgUp|, |PgDn               <*> Change selection.
                          g| / |G                    <*> Move to first / last item.
@@ -3734,6 +3739,7 @@ ____Using |fallback| theme.''', Priority.HIGH)
                          -|/|+| or |,|/|.           <*> Change volume.
                          m| / |v                    <*> |M|ute player / Save |v|olume.
                          W| / |w                    <*> Toggle title log / like a station.'''
+        logger.error('\n\n+++++++++++\n\n\n')
         return 'Player Extra Parameters Help', txt
 
     def _show_unnamed_register(self):

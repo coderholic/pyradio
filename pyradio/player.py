@@ -2668,12 +2668,44 @@ class MpvPlayer(Player):
         # logger.error('\n\nMPV recording = {}\n\n'.format(self._recording))
         self._request_mpv_info_data_counter = 0
 
+        self._capabilities_checked = False
+        self._cap_newer_mpv = False
+        self._cap_mpris_mpv = False
+
     def save_volume(self):
         ''' Saving Volume in Windows does not work;
             Profiles not supported... '''
         if int(self.volume) > 999:
             self.volume = -2
         return self._do_save_volume(self.profile_token + '\nvolume={}\n')
+
+    def _get_capabilities(self):
+        if not self._capabilities_checked:
+            ''' Test for newer MPV versions as it supports different IPC flags. '''
+            p = subprocess.Popen(
+                [
+                    self.PLAYER_CMD,
+                    '--no-video',
+                    '--input-ipc-server=' + self.mpvsocket
+                ], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=False
+            )
+            out = p.communicate()
+            if 'not found' not in str(out[0]):
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('--input-ipc-server is supported.')
+                self._cap_newer_mpv = True
+            else:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('--input-ipc-server is not supported.')
+                self._cap_newer_mpv = False
+            # mpv 0.38+ has SMTC / MPRIS support by default
+            try:
+                cur_v = out[0].decode('utf-8').split(' ')[1].lstrip('v').split('.')[:2]
+                cur_v = tuple([int(x) for x in cur_v])
+                self._cap_mpris_mpv = cur_v >= (0, 38)
+            except:
+                pass
+        self._capabilities_checked = True
 
     def _buildStartOpts(self, a_station, playList=False):
         profiles = self._cnf.profile_manager.profiles(self.PLAYER_NAME)
@@ -2683,20 +2715,9 @@ class MpvPlayer(Player):
         ''' Builds the options to pass to mpv subprocess.'''
         # logger.error('\n\nself._recording = {}'.format(self._recording))
         # logger.error('self.profile_name = "{}"'.format(self.profile_name))
-
-        ''' Test for newer MPV versions as it supports different IPC flags. '''
-        p = subprocess.Popen([self.PLAYER_CMD, '--no-video',  '--input-ipc-server=' + self.mpvsocket], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=False)
+        self._get_capabilities()
         if self._cnf.USE_EXTERNAL_PLAYER:
             self.recording = self.NO_RECORDING
-        out = p.communicate()
-        if 'not found' not in str(out[0]):
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('--input-ipc-server is supported.')
-            newerMpv = True
-        else:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('--input-ipc-server is not supported.')
-            newerMpv = False
         logger.error(f'{self._cnf.user_agent_string = }')
         if self._cnf.USE_EXTERNAL_PLAYER:
             opts = [self.PLAYER_CMD, '--no-video']
@@ -2705,16 +2726,8 @@ class MpvPlayer(Player):
         # logger.error('\n\n\n')
         # logger.error(f'mvp {out = }')
         # logger.error('\n\n\n')
-        # mpv 0.38+ has SMTC / MPRIS support by default
-        try:
-            cur_v = out[0].decode('utf-8').split(' ')[1].lstrip('v').split('.')[:2]
-            cur_v = tuple([int(x) for x in cur_v])
-            # logger.error(f'\n\n\n{cur_v = }\n\n\n')
-            if cur_v >= (0, 38):
-                opts += ['--input-media-keys=no', '--media-controls=no']
-        except:
-            pass
-            #logger.error('\n\n\ncur_v exception\n\n\n')
+        if self._cap_mpris_mpv:
+            opts += ['--input-media-keys=no', '--media-controls=no']
         if self.buffering_data:
             if self._cnf.buffering_enabled:
                 opts.extend(self.buffering_data)
@@ -2783,7 +2796,7 @@ class MpvPlayer(Player):
             opts.append(r'--http-header-fields="User-Agent: ' + self._cnf.user_agent_string + r',Referer:' + referer + '"')
 
         if playList:
-            if newerMpv:
+            if self._cap_newer_mpv:
                 if not self._cnf.USE_EXTERNAL_PLAYER:
                     opts.append('--input-ipc-server=' + self.mpvsocket)
                 opts.append('--playlist=' + self._url_to_use(a_station[Station.url], a_station[Station.http]))
@@ -2792,7 +2805,7 @@ class MpvPlayer(Player):
                     opts.append('--input-unix-socket=' + self.mpvsocket)
                 opts.append('--playlist=' + self._url_to_use(a_station[Station.url], a_station[Station.http]))
         else:
-            if newerMpv:
+            if self._cap_newer_mpv:
                 if not self._cnf.USE_EXTERNAL_PLAYER:
                     opts.append('--input-ipc-server=' + self.mpvsocket)
                 opts.append(self._url_to_use(a_station[Station.url], a_station[Station.http]))
