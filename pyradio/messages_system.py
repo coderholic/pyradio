@@ -1849,15 +1849,10 @@ unintentionally disrupt functionality.
                     priority
                 )
         '''
-        logger.error(f'{args = }')
-        logger.error(f'{len(args) = }')
-        # try:
-        #     cap, out = self._txt[self.active_message_key]
-        # except ValueError:
-        #     cap, out, priority = self._txt[self.active_message_key]
-
-        logger.error(f'{self.active_message_key =  }')
-        logger.error('\n\nself._txt[self.active_message_key] = {}\n\n'.format(self._txt[self.active_message_key]))
+        if len(args) > 1:
+            if callable(args[1]):
+                logger.error(f'\n{args =}\n\n')
+                self._txt[self.active_message_key] = args[1]()
 
         try:
             cap, out, priority = self._txt[self.active_message_key]

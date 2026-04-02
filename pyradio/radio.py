@@ -82,7 +82,7 @@ from .schedule_win import PyRadioSimpleScheduleWindow
 from .simple_curses_widgets import SimpleCursesMenu
 from .messages_system import PyRadioMessagesSystem
 from .server import PyRadioServer, HAS_NETIFACES
-from .keyboard import kbkey, get_lkbkey, get_unicode_and_cjk_char, dequeue_input, input_queue, set_kb_letter, check_localized, add_l10n_to_functions_dict, set_kb_cjk
+from .keyboard import kbkey, kb2str, get_lkbkey, get_unicode_and_cjk_char, dequeue_input, input_queue, set_kb_letter, check_localized, add_l10n_to_functions_dict, set_kb_cjk
 from .tts import TTSManager, TTSManagerDummy, Priority, Context
 from .tts_text import tts_transform_to_string
 HAVE_CHARSET_NORMALIZER = True
@@ -3689,16 +3689,14 @@ ____Using |fallback| theme.''', Priority.HIGH)
             self._open_message_win_by_key('H_EXTERNAL_LINE_EDITOR')
 
     def _show_config_player_help(self):
-        logger.error('\n\n\n+++++++++++\n\n\n')
 
         if self._player_select_win.editing > 0:
-            logger.error('0')
             self._show_line_editor_help()
             return None
 
         if self._player_select_win.focus:
-            logger.error('1')
-            txt = r'''TAB                           <*> Move selection to |Extra Parameters| column.
+            txt = kb2str(
+                r'''TAB                           <*> Move selection to |Extra Parameters| column.
                      Up|, |{j}|, |Down|, |{k}       <*> Change player selection.
                      Enter|, |{pause}|              <*>
                      Right|, |{l}                   <*> Enable / disable player.
@@ -3710,37 +3708,39 @@ ____Using |fallback| theme.''', Priority.HIGH)
                      {v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*>  Change volume.
                      {mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
                      {t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
+            )
         else:
             if self._player_select_win.from_config:
-                logger.error('2')
-                txt = r''' TAB                      <*> Move selection to |Player Selection| column.
-                         Up|, |j|, |Down|, |k       <*>
-                         PgUp|, |PgDn               <*> Change selection.
-                         g| / |G                    <*> Move to first / last item.
-                         Enter|, |Space             <*>
-                         Right|, |l                 <*> Activate current selection.
-                         a| / |e| / |x|, |DEL       <*> |A|dd / |e|dit / |d|elete item.
-                         r                          <*> Revert to saved values.
-                         s                          <*> Save players (selection and parameters).
-                         Esc|, |q|, |Left|, |h      <*> Cancel.
+                txt = kb2str(
+                    r''' TAB                                   <*> Move selection to |Player Selection| column.
+                         Up|, |{j}|, |Down|, |{k}                <*>
+                         PgUp|, |PgDn                            <*> Change selection.
+                         {g}| / |{G}                             <*> Move to first / last item.
+                         Enter|, |{pause}                        <*>
+                         Right|, |{l}                            <*> Activate current selection.
+                         {add}| / |{edit}| / |{del}|, |DEL       <*> |A|dd / |e|dit / |d|elete item.
+                         {revert_saved}                          <*> Revert to saved values.
+                         {s}                                     <*> Save players (selection and parameters).
+                         Esc|, |{q}|, |Left|, |{h}  <*> Cancel.
                          %Global functions (with \ on Line editor)
-                         -|/|+| or |,|/|.           <*> Change volume.
-                         m| / |v                    <*> |M|ute player / Save |v|olume.
-                         W| / |w                    <*> Toggle title log / like a station.'''
+                         {v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*>  Change volume.
+                         {mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
+                         {t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
+                )
             else:
-                logger.error('3')
-                txt = r'''Up|, |j|, |Down|, |k      <*>
+                txt = kb2str(
+                    r'''Up|, |{j}|, |Down|, |{k}  <*>
                          PgUp|, |PgDn               <*> Change selection.
-                         g| / |G                    <*> Move to first / last item.
-                         Enter|,|Space              <*>
-                         Right|,|l                  <*> Activate current selection.
-                         Esc|, |q|, |Left|, |h      <*> Cancel.
+                         {g}| / |{G}                <*> Move to first / last item.
+                         Enter|, |{pause}            <*>
+                         Right|, |{l}                <*> Activate current selection.
+                         Esc|, |{q}|, |Left|, |{h}  <*> Cancel.
                          %Global functions (with \ on Line editor)
-                         -|/|+| or |,|/|.           <*> Change volume.
-                         m| / |v                    <*> |M|ute player / Save |v|olume.
-                         W| / |w                    <*> Toggle title log / like a station.'''
-        logger.error('\n\n+++++++++++\n\n\n')
-        return 'Player Extra Parameters Help', txt
+                         {v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*>  Change volume.
+                         {mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
+                         {t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
+                )
+        return 'Player Extra Parameters Help', txt, Priority.HELP
 
     def _show_unnamed_register(self):
         if self._unnamed_register:
