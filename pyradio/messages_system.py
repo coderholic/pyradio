@@ -86,10 +86,11 @@ class PyRadioMessagesSystem():
         'UNIVERSAL': ('', '', Priority.HIGH),
 
         'H_MAIN': ('PyRadio Help',
-kb2str(r'''__Welcome to |PyRadio Main Help
+kb2str(r'''__Welcome to |PyRadio Main Help.
 __You can use the following keys to navigate: |{j}| or |Up|, |{k}| or |Down|,
 |PgUp| or |^B|, |PgDn| or |^F| to scroll up/down.
-__You can also use |Home| or |{g}| and |End| or |{G}| to scroll to the top / bottom.
+__You can also use |Home| or |{g}| and |End| or |{G}| to scroll to the first
+or last item in a list.
 
 __You will have noticed an |upward arrow| at the top right corner of
 this window; it indicates that the text is |scrollable| and the keys
@@ -1851,7 +1852,6 @@ unintentionally disrupt functionality.
         '''
         if len(args) > 1:
             if callable(args[1]):
-                logger.error(f'\n{args =}\n\n')
                 self._txt[self.active_message_key] = args[1]()
 
         try:
@@ -1961,10 +1961,6 @@ unintentionally disrupt functionality.
             self._max_lens.pop(self.active_message_key, None)
         # logger.error('self._max_lens\n{}'.format(self._max_lens))
         mmax = max(mmax, len(cap) + 6)
-        ''' replaced by pylint prompt
-        if mmax < len(cap) + 6:
-            mmax = len(cap) + 6
-        '''
         # logger.error('\n\n===> mmax = {}\n\n'.format(mmax))
         logger.error('cap = {}'.format(cap))
         logger.error('mmax = {}'.format(mmax))

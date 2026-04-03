@@ -1104,9 +1104,6 @@ class TTSManager:
                 logger.debug("Cleaned all queues completely")
 
     def queue_speech(self, text, priority=Priority.NORMAL, context=Context.LIMITED, mode=0):
-        if priority == Priority.HELP:
-            return
-
         logger.error(f'{text = }')
         logger.error(f'{mode = }')
         if not self.enabled or not self.available or not self.engine:

@@ -3403,6 +3403,7 @@ class PyRadioConfig(PyRadioStations):
 
                 ''' blacklisted terminals '''
                 terminals = [
+                    'yakuake',
                     'konsole',
                     'qterminal',
                     'terminology',

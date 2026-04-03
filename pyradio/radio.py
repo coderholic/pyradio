@@ -3588,7 +3588,9 @@ ____Using |fallback| theme.''', Priority.HIGH)
     def _tts_queue_speech(self, caption, text, priority, mode):
         if caption:
             text = ['Window: {}.'.format(caption.lower())] + text
-        logger.error(f'\n\n{text = }\n\n')
+        if priority == Priority.HELP:
+            for i, _ in enumerate(text):
+                text[i] = text[i].replace('<*>', '')
         if text[0].startswith('Window: Free Keys'):
             rep = {
                 'Punct': 'Punctuation',

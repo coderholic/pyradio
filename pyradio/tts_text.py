@@ -485,6 +485,8 @@ def tts_transform_final(text_lines, verbosity='default'):
         line = line.replace(' full stop full stop.', ' full stop.')
         line = line.replace('Page Up Arrow', 'Page Up')
         line = line.replace('Page Down Arrow', 'Page Down')
+        line = line.replace('Arrow Arrow', 'Arrow')
+        line = line.replace('percent Global', 'Global')
 
         # logger.error(f'7 *** {line = }')
         transformed_lines.append(line)
