@@ -1,10 +1,32 @@
 import re
 import locale
 import logging
+from .window_stack import Window_Stack_Constants
+from .keyboard import kb2str
 
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
+
+TTS_WINDOWS_TEXT = {
+    Window_Stack_Constants.PLAYER_PARAMS_MODE:
+        lambda: '''Window: Player Extra Parameters.
+           Changes made here will not be saved in the configuration file.
+        ''',
+    Window_Stack_Constants.CONNECTION_MODE:
+        lambda: kb2str('''Window: Connection Type.
+            {j}, {k}, {l}, {pause}", Right Up Down: Toggle parameter.
+            Enter, {s}: Accept parameter.
+            Escape, {q}, {h}, Left: Cancel operation.
+            Note: Changes made here will not be saved in the configuration file
+        '''),
+    Window_Stack_Constants.CHANGE_PLAYER_MODE:
+        lambda pl: kb2str('''Window: Switch Media Player.
+            Active Media Player: |PL|.
+            Please select a Media Player to activate and press {s},
+            Enter or {pause} to switch to it, or Escape to Cancel.
+        '''.replace('|PL|', pl)),
+}
 
 def describe_single_key(key_string):
     """
@@ -487,6 +509,7 @@ def tts_transform_final(text_lines, verbosity='default'):
         line = line.replace('Page Down Arrow', 'Page Down')
         line = line.replace('Arrow Arrow', 'Arrow')
         line = line.replace('percent Global', 'Global')
+        line = line.replace('Escape ape', 'Escape')
 
         # logger.error(f'7 *** {line = }')
         transformed_lines.append(line)

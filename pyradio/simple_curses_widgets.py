@@ -1947,7 +1947,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
         validate_delete_entry=None,
         entry_cannot_be_deleted_function=None,
         external_keypress_function=None,
-    items_changed_function=None
+        items_changed_function=None,
+        speak=None
     ):
         ''' Initialize the widget.
 
@@ -2167,6 +2168,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._color_captions = color_captions
         else:
             self._color_captions = self._color_active
+        self._speak = speak
+        self._first_time_spoken = False
 
         self.set_items(
             items=items,
@@ -2540,6 +2543,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
             # logger.error('Window is TOO SMALL')
             self._win.addstr(1, 1, ' Window is', self._color)
             self._win.addstr(2, 1, ' Too small', self._color)
+            if self._speak:
+                self._speak('Window is too small')
             self._win.refresh()
             return
 
@@ -2599,6 +2604,10 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._win.addstr(i+displace, displace, disp_item, col)
             except:
                 pass
+            if not self._first_time_spoken:
+                if self._speak and self._speak_string and item_id == self._selection:
+                    self._speak(msg=self._speak_string)
+                    self._first_time_spoken = True
         self._win.refresh()
         self._showed = True
 
@@ -2607,12 +2616,14 @@ class SimpleCursesMenu(SimpleCursesWidget):
         #print('i=',i)
         item_id = i + self._start_pos
         if item_id < len(self._items):
+            self._speak_string = self._items[item_id]
             if self._has_captions and not self._display_count:
                 if item_id in self._captions:
                     cap = True
             if cap:
                 disp_item = '─ ' + self._items[item_id][:active_item_length-2] + ' ─'
                 self._win.addstr(i + self._Y, self._X, disp_item, self._color_captions)
+                self._speak_string = None
                 return None
 
             if self._display_count:
@@ -2626,6 +2637,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 # disp_item_suf = self._items[item_id][:active_item_length-cjklen(disp_item_pref)]
                 disp_item_suf = cjkljust(self._items[item_id], self._body_maxX - len(disp_item_pref) - 2 * self._margin)
                 disp_item = ' ' * self._margin + disp_item_pref + disp_item_suf + ' ' * self._margin
+                # self._speak_string = disp_item_pref + disp_item_suf + self._speak_string
+                self._speak_string = disp_item_pref + self._speak_string
             else:
                 #print('item_id = {}'.format(item_id))
                 item = self._items[item_id][:active_item_length]
@@ -2639,6 +2652,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
         else:
             # create empty lines
             disp_item = ' ' * self._body_maxX
+            self._speak_string = None
         return disp_item
 
     def _get_item_color(self, item_id):
@@ -2816,6 +2830,14 @@ class SimpleCursesMenu(SimpleCursesWidget):
         # log_it('_toggle_active_item: setting new active: {0}, line: {1}'.format(active_id, self._Y + active_id))
         self._win.refresh()
 
+    def _speak_item(self, item_msg=None, normal=None):
+        if self._speak:
+            if item_msg is None:
+                logger.error(f'{self._selection = }')
+                self._format_line(self._selection + self.startPos, 20)
+                item_msg = self._speak_string
+            self._speak(msg=item_msg, normal=normal)
+
     def keypress(self, char):
         ''' SimpleCursesMenuEntries keypress
             Returns
@@ -2941,18 +2963,18 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 check_localized(char, (kbkey['g'], )):
             if len(self._items) == 0:
                 return 1
-            logger.error('-----')
             self._selection = 0
             self._verify_selection_not_on_caption()
             if self._start_pos == 0:
-                logger.error('*****')
                 self._toggle_selected_item()
             else:
-                logger.error('=====')
                 self._start_pos = 0
                 self._refresh()
             if self._on_up_callback_function is not None:
                 self._on_up_callback_function()
+            if self._speak:
+                self._speak_item(normal=True)
+                logger.error(f'g {self._speak_string = }')
 
         elif char in (kbkey['G'], curses.KEY_END) or \
                 check_localized(char, (kbkey['G'], )):
@@ -2973,6 +2995,9 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._refresh()
             if self._on_down_callback_function is not None:
                 self._on_down_callback_function()
+            if self._speak:
+                self._speak_item(normal=True)
+                logger.error(f'G {self._speak_string = }')
 
         elif char == kbkey['goto_playing'] or \
                 check_localized(char, (kbkey['goto_playing'], )):
@@ -2985,6 +3010,9 @@ class SimpleCursesMenu(SimpleCursesWidget):
             # self._toggle_selected_item()
             if self._on_down_callback_function is not None:
                 self._on_down_callback_function()
+            if self._speak:
+                self._speak_item(normal=True)
+                logger.error(f'P {self._speak_string = }')
 
         elif char == kbkey['h'] or \
                 check_localized(char, (kbkey['h'], )):
@@ -3003,6 +3031,9 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._toggle_selected_item()
             if self._on_down_callback_function is not None:
                 self._on_down_callback_function()
+            if self._speak:
+                self._speak_item(normal=True)
+                logger.error(f'M {self._speak_string = }')
 
         elif char == kbkey['l'] or \
                 check_localized(char, (kbkey['l'], )):
@@ -3011,6 +3042,9 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._selection = self._start_pos + self._body_maxY - 1
             self._verify_selection_not_on_caption()
             self._toggle_selected_item()
+            if self._speak:
+                self._speak_item(normal=True)
+                logger.error(f'l {self._speak_string = }')
 
         elif char in (curses.KEY_PPAGE, ):
             if len(self._items) == 0:
@@ -3033,6 +3067,9 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._refresh()
             if self._on_up_callback_function is not None:
                 self._on_up_callback_function()
+            if self._speak:
+                self._speak_item(normal=True)
+                logger.error(f'PgDown {self._speak_string = }')
 
         elif char in (curses.KEY_NPAGE, ):
             if len(self._items) == 0:
@@ -3060,6 +3097,9 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._refresh()
             if self._on_down_callback_function is not None:
                 self._on_down_callback_function()
+            if self._speak:
+                self._speak_item(normal=True)
+                logger.error(f'PgUP {self._speak_string = }')
 
         elif char in (kbkey['k'], curses.KEY_UP) or \
                 check_localized(char, (kbkey['k'], )):
@@ -3078,6 +3118,9 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     self._refresh()
                     if self._on_up_callback_function is not None:
                         self._on_up_callback_function()
+                    if self._speak:
+                        self._speak_item(normal=True)
+                        logger.error(f'k {self._speak_string = }')
                     return 1
             if self._scroll:
                 # log_it('*** scroll')
@@ -3089,6 +3132,9 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     self._refresh()
                     if self._on_up_callback_function is not None:
                         self._on_up_callback_function()
+                    if self._speak:
+                        self._speak_item(normal=True)
+                        logger.error(f'k {self._speak_string = }')
                     return 1
             # log_it('going from {0} to {1}, start at {2}'.format(self._old_selection, self._selection, self._start_pos))
             if not self._toggle_selected_item():
@@ -3096,6 +3142,9 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._refresh()
             if self._on_up_callback_function is not None:
                 self._on_up_callback_function()
+            if self._speak:
+                self._speak_item(normal=True)
+                logger.error(f'k {self._speak_string = }')
 
         elif char in (kbkey['j'], curses.KEY_DOWN) or \
                 check_localized(char, (kbkey['j'], )):
@@ -3113,6 +3162,9 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     self._refresh()
                     if self._on_down_callback_function is not None:
                         self._on_down_callback_function()
+                    if self._speak:
+                        self._speak_item(normal=True)
+                        logger.error(f'1j {self._speak_string = }')
                     return 1
             if self._scroll:
                 # we have scrolling items
@@ -3123,12 +3175,18 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     self._refresh()
                     if self._on_down_callback_function is not None:
                         self._on_down_callback_function()
+                    if self._speak:
+                        self._speak_item(normal=True)
+                        logger.error(f'2j {self._speak_string = }')
                     return 1
 
             if not self._toggle_selected_item():
                 self._refresh()
             if self._on_down_callback_function is not None:
                 self._on_down_callback_function()
+            if self._speak:
+                self._speak_item(normal=True)
+                logger.error(f'3j {self._speak_string = }')
 
         elif char in self._local_functions:
             # self._local_functions(char)

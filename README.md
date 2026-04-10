@@ -29,7 +29,7 @@ Command line internet radio player.
  - vi like keys in addition to arrows and special keys
  - [RadioBrowser](docs/radio-browser.md) support
  - Remote Control Server
- - [OS media controls](os-media-controls.md) (MPRIS, SMTC, Now Playing)
+ - [OS media controls](docs\os-media-controls.md) (MPRIS, SMTC, Now Playing)
  - Multiple playlist support
  - [M3U playlist](docs/m3u.md) support
  - vi like station registers

@@ -12,6 +12,7 @@ import curses
 from os.path import join, exists, dirname
 from collections import deque
 from threading import Lock
+import re
 try:
     from importlib.resources import files, as_file   # 3.9+
 except ImportError:
@@ -24,6 +25,8 @@ except ImportError:
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
+
+_KB2STR_PATTERN = re.compile(r'\{([^{}]+)\}')
 
 input_queue = deque()
 queue_lock = Lock()
@@ -463,10 +466,17 @@ def kb2str(msg):
         All keys in kbkey will be replaced with to_str result
         provided they are enclosed to {}
     '''
-    for n in kbkey.keys():
-        chk = '{' + n + '}'
-        if chk in msg:
-            msg = msg.replace(chk, to_str(n))
+    def repl(match):
+        key = match.group(1)
+        if key in kbkey:
+            return to_str(key)
+        return match.group(0)
+
+    if '{' not in msg:
+        return msg
+
+    msg = _KB2STR_PATTERN.sub(repl, msg)
+
     if msg == ' ':
         msg = 'Space'
 

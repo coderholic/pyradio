@@ -90,7 +90,7 @@ kb2str(r'''__Welcome to |PyRadio Main Help.
 __You can use the following keys to navigate: |{j}| or |Up|, |{k}| or |Down|,
 |PgUp| or |^B|, |PgDn| or |^F| to scroll up/down.
 __You can also use |Home| or |{g}| and |End| or |{G}| to scroll to the first
-or last item in a list.
+or last item of the list.
 
 __You will have noticed an |upward arrow| at the top right corner of
 this window; it indicates that the text is |scrollable| and the keys

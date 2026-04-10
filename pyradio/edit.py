@@ -2982,15 +2982,13 @@ class PyRadioConnectionType():
                 self._win.addstr(4, 2, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
             self._win.addstr(4, int((self.maxX - len(self._help_text))/2), self._help_text, curses.color_pair(3))
 
-
-
             self._win.addstr(5, 2, kb2str('{j} {k} {l} {pause}'), curses.color_pair(11))
             self._win.addstr(6, 2, 'Right Up Down', curses.color_pair(11))
-            self._win.addstr('    Toggle parameter', curses.color_pair(10))
+            self._win.addstr(6, 19, 'Toggle parameter', curses.color_pair(10))
             self._win.addstr(7, 2, 'Enter ' + kb2chr('s'), curses.color_pair(11))
-            self._win.addstr('          Accept parameter', curses.color_pair(10))
+            self._win.addstr(7,19, 'Accept parameter', curses.color_pair(10))
             self._win.addstr(8, 2, kb2str('Esc {q} {h} Left'), curses.color_pair(11))
-            self._win.addstr('    Cancel operation', curses.color_pair(10))
+            self._win.addstr(8, 19, 'Cancel operation', curses.color_pair(10))
 
             # show note
             try:

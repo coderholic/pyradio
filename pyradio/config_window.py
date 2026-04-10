@@ -1454,12 +1454,13 @@ class PyRadioExtraParams():
     def __init__(self,
                  config,
                  parent,
+                 speak=None,
                  global_functions=None):
         ''' setting editing to 0 so that help functions work '''
         self.editing = 0
         self._max_lines = 16
         self._note_text = ' Note '
-        self._note_line1 = 'Changes made here wil not be'
+        self._note_line1 = 'Changes made here will not be'
         self._note_line2 = 'saved in the configuration file'
         self._extra = None
         self._move_in_config_win_Y = 0
@@ -1473,6 +1474,7 @@ class PyRadioExtraParams():
         self._global_functions = global_functions
         ''' list is list of player profiles / parameters '''
         self._list = None
+        self._speak = speak
         self._redisplay()
 
     @property
@@ -1522,6 +1524,7 @@ class PyRadioExtraParams():
                 self._win,
                 lambda: True,
                 from_config=False,
+                speak=self._speak,
                 global_functions=self._global_functions
             )
             self._extra.enabled = self._extra.focused = True
@@ -1567,6 +1570,7 @@ class ExtraParametersEditor():
                  parent,
                  config,
                  string='',
+                 speak=None,
                  global_functions=None):
         self._count = 0
         self._parent = parent
@@ -1574,6 +1578,7 @@ class ExtraParametersEditor():
         self.edit_string = string
         self._caption = ' Parameter value '
         self._string = self._orig_string = string
+        self._speak = speak
 
         self._global_functions = remove_l10n_from_global_functions(global_functions, ('t', ))
         self.Y, self.X = self._parent.getbegyx()
@@ -1837,17 +1842,6 @@ class ExtraParametersEditor():
             return 0
         return 1
 
-    def _update_focus(self):
-        ''' use _focused here to avoid triggering
-            widgets' refresh
-        '''
-        for i, x in enumerate(self._widgets):
-            if x:
-                if self._focus == i:
-                    x._focused = True
-                else:
-                    x._focused = False
-
 class ExtraParameters():
     ''' display player's extra parameters
         in a foreign curses window ('Z')
@@ -1868,6 +1862,7 @@ class ExtraParameters():
                  entry_cannot_be_added_function=None,
                  entry_cannot_be_edited_function=None,
                  entry_cannot_be_deleted_function=None,
+                 speak=None,
                  global_functions=None):
         self.enabled = True
         self._offsetY = 0
@@ -1875,6 +1870,7 @@ class ExtraParameters():
         self._global_functions = None
         self._too_small = True
         self._error_win = None
+        self._speak = speak
 
         self._list = None
         self._cnf = config
@@ -2255,6 +2251,7 @@ class ExtraParameters():
                     entry_cannot_be_deleted_function=self._entry_cannot_be_deleted_function,
                     on_select_callback_function=self._on_default_parameter_change,
                     items_changed_function=self._update_items_dict,
+                    speak=self._speak,
                     )
             self._list.focused = not self.from_config
         self._win.refresh()

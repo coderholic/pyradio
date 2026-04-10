@@ -84,7 +84,7 @@ from .messages_system import PyRadioMessagesSystem
 from .server import PyRadioServer, HAS_NETIFACES
 from .keyboard import kbkey, kb2str, get_lkbkey, get_unicode_and_cjk_char, dequeue_input, input_queue, set_kb_letter, check_localized, add_l10n_to_functions_dict, set_kb_cjk
 from .tts import TTSManager, TTSManagerDummy, Priority, Context
-from .tts_text import tts_transform_to_string
+from .tts_text import tts_transform_to_string, TTS_WINDOWS_TEXT
 HAVE_CHARSET_NORMALIZER = True
 try:
     from .m3u import parse_m3u
@@ -187,7 +187,15 @@ class PlaybackState:
 
 class SelectPlayer():
 
-    def __init__(self, active_player, all_players, parent, recording, vlc_no_recording):
+    def __init__(
+        self,
+        active_player,
+        all_players,
+        parent,
+        recording,
+        vlc_no_recording,
+        speak=None
+    ):
         self._players = {
             'mpv': '  MPV Media Player',
             'mplayer': '  MPlayer Media Player',
@@ -200,6 +208,8 @@ class SelectPlayer():
         self._recording = recording
         self._vlc_no_recording = vlc_no_recording
         self._no_vlc = False
+        self._speak = speak
+        self._first_item_spoken = False
         if recording > 0 and \
                 platform.startswith('win'):
             self._players['vlc'] += ' (Not Supported)'
@@ -243,6 +253,9 @@ class SelectPlayer():
             y = 6 + n
             if self._selected == n:
                 self._win.addstr(4+n, 4, self._players[self._available_players[n]].ljust(self.hline), curses.color_pair(6))
+                if not self._first_item_spoken and self._speak:
+                    self._speak('Selected player: ' + self._players[self._available_players[n]])
+                    self._first_item_spoken = True
             else:
                 self._win.addstr(4+n, 4, self._players[self._available_players[n]].ljust(self.hline), curses.color_pair(10))
         self._win.addstr(y, 2, 'and press ', curses.color_pair(10))
@@ -262,6 +275,8 @@ class SelectPlayer():
         if len(self._available_players) > 1:
             for n in range(0, len(self._available_players)):
                 col = 6 if self._selected == n else 10
+                if self._speak and self._selected == n:
+                    self._speak(msg=self._players[self._available_players[n]], normal=True)
                 self._win.chgat(4 + n, 4, self.hline, curses.color_pair(col))
             self._win.refresh()
 
@@ -283,6 +298,9 @@ class SelectPlayer():
                 check_localized(char, (kbkey['s'], kbkey['l'], kbkey['pause'],)):
             if not (self._no_vlc and \
                     self._available_players[self._selected] == 'vlc'):
+                # enable this to confirm player selection
+                # if self._speak:
+                #     self._speak(msg=self._available_players[self._selected] + ' selected')
                 return self._available_players[self._selected]
             self._vlc_no_recording()
         elif char in (kbkey['h'], curses.KEY_LEFT,
@@ -2248,7 +2266,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     out[n] = ctrl_code_to_string(kbkey[n])
                 else:
                     out[n] = to_str(n)
-            logger.info(f'Keyboard Shortcuts resolved:\n{out}')
+            logger.info(f'Keyboard Shortcuts resolved:\n{out} - {len(out)}')
             logger.info(f'Localized Keyboard Shortcuts: "{self._cnf.localize}"\n{get_lkbkey()}')
         # self._watch_theme()
         self._register_signals_handlers()
@@ -3590,7 +3608,11 @@ ____Using |fallback| theme.''', Priority.HIGH)
             text = ['Window: {}.'.format(caption.lower())] + text
         if priority == Priority.HELP:
             for i, _ in enumerate(text):
-                text[i] = text[i].replace('<*>', '')
+                char_to_use = ','
+                if self._cnf.tts_verbosity == 'punctuation' and \
+                    not text[i].strip().endswith('<*>'):
+                        char_to_use = ':'
+                text[i] = text[i].replace('<*>', char_to_use)
         if text[0].startswith('Window: Free Keys'):
             rep = {
                 'Punct': 'Punctuation',
@@ -7146,10 +7168,31 @@ and |remove the file manually|.
         return False
 
     def _speak_high(self, msg):
-        self.tts.queue_speech(msg, Priority.HIGH, mode=self.ws.operation_mode)
+        if self._enable_tts:
+            self.tts.queue_speech(msg, Priority.HIGH, mode=self.ws.operation_mode)
 
     def _speak_normal(self, msg):
-        self.tts.queue_speech(msg, Priority.NORMAL, mode=self.ws.operation_mode)
+        if self._enable_tts:
+            self.tts.queue_speech(msg, Priority.NORMAL, mode=self.ws.operation_mode)
+
+    def _speak_window(self, msg=None, normal=None):
+        ''' Speak a Priority DIALOG message
+            msg:    text (oprional)
+            normal: use Priority.NORMAL instead of Priority.DIALOG
+                    (to be used for dialog navigation messages)
+        '''
+        if self._enable_tts and \
+                self._cnf.tts_context != 'limited':
+            if msg is None:
+                msg = TTS_WINDOWS_TEXT[self.ws.operation_mode]()
+            priority = Priority.DIALOG if normal is None else Priority.NORMAL
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'speaking Priority.DIALOG with Priority.{priority.name}')
+            self.tts.queue_speech(
+                msg,
+                priority,
+                mode=self.ws.operation_mode
+            )
 
     def _speak_selection(self):
         if self._enable_tts and \
@@ -7737,8 +7780,13 @@ _____"|f|" to see the |free| keys you can use.
                         all_players=self._cnf.AVAILABLE_PLAYERS,
                         parent=self.bodyWin,
                         recording=self.player.recording,
-                        vlc_no_recording=self._show_win_no_record
+                        vlc_no_recording=self._show_win_no_record,
+                        speak=self._speak_window if self._enable_tts and self._cnf.tts_context != 'limited' else None,
                     )
+                    if self._enable_tts and \
+                            self._cnf.tts_context != 'limited':
+                        msg = TTS_WINDOWS_TEXT[self.ws.operation_mode](self.player.PLAYER_NAME)
+                        self._speak_window(msg=msg)
                     self._change_player.show()
 
             elif ( char == kbkey['open_remote_control'] or \
@@ -10769,6 +10817,7 @@ _____"|f|" to see the |free| keys you can use.
                         connection_type=self.player.force_http,
                         global_functions=self._global_functions
                     )
+                    self._speak_window()
                     self._connection_type_edit.show()
                     return
 
@@ -10781,8 +10830,10 @@ _____"|f|" to see the |free| keys you can use.
                     self._player_select_win = PyRadioExtraParams(
                         self._cnf,
                         self.bodyWin,
+                        self._speak_window if self._enable_tts else None,
                         global_functions=self._global_functions
                     )
+                    self._speak_window()
                     self._player_select_win.show()
                     return
 
