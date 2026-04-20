@@ -37,7 +37,7 @@ class PyRadioMessagesSystem():
             )
 
     _one_arg_list = (
-            'D_RC_ACTIVE',
+            'M_RC_ACTIVE',
             'M_RC_START_ERROR',
             'D_RB_ASK_TO_SAVE_CONFIG',
             'D_RB_ASK_TO_SAVE_CONFIG_FROM_CONFIG',
@@ -1075,9 +1075,9 @@ It will re-create it the next time it is lounched.
 ''', Priority.HIGH
 ),
 
-    'D_RC_ACTIVE': ('Remote Control Enabled',
+    'M_RC_ACTIVE': ('Remote Control Server',
 r'''
-|PyRadio Remote Control Server| is active!
+The server| is active!
 
 Text Address: |http://{0}
 _Web Address: |http://{0}/html____

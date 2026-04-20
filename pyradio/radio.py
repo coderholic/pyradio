@@ -253,9 +253,6 @@ class SelectPlayer():
             y = 6 + n
             if self._selected == n:
                 self._win.addstr(4+n, 4, self._players[self._available_players[n]].ljust(self.hline), curses.color_pair(6))
-                if not self._first_item_spoken and self._speak:
-                    self._speak('Selected player: ' + self._players[self._available_players[n]])
-                    self._first_item_spoken = True
             else:
                 self._win.addstr(4+n, 4, self._players[self._available_players[n]].ljust(self.hline), curses.color_pair(10))
         self._win.addstr(y, 2, 'and press ', curses.color_pair(10))
@@ -269,6 +266,12 @@ class SelectPlayer():
         self._win.addstr('Escape', curses.color_pair(11))
         self._win.addstr(' to Cancel.', curses.color_pair(10))
 
+        if not self._first_item_spoken and self._speak:
+            self._speak(args=(
+                self._active_player,
+                self._players[self._available_players[self._selected]])
+                        )
+            self._first_item_spoken = True
         self._win.refresh()
 
     def _update_selection(self):
@@ -276,14 +279,17 @@ class SelectPlayer():
             for n in range(0, len(self._available_players)):
                 col = 6 if self._selected == n else 10
                 if self._speak and self._selected == n:
-                    self._speak(msg=self._players[self._available_players[n]], normal=True)
+                    self._speak(msg=self._players[self._available_players[n]], navigation=True)
                 self._win.chgat(4 + n, 4, self.hline, curses.color_pair(col))
             self._win.refresh()
 
     def keypress(self, char):
         ''' SelectPlayer keypress '''
         l_char = None
-        if char in (
+        if char == kbkey['?'] or \
+                check_localized(char, (kbkey['?'], )):
+            return '?'
+        elif char in (
             kbkey['j'], curses.KEY_DOWN,
             kbkey['k'], curses.KEY_UP
         ) or \
@@ -522,7 +528,7 @@ class PyRadio():
         handled_signals = {
             'SIGHUP': signal.SIGHUP,
             'SIGTERM': signal.SIGTERM,
-            'SIGKIL': signal.SIGKILL,
+            'SIGKILL': signal.SIGKILL,
         }
     except AttributeError:
         pass
@@ -3604,6 +3610,11 @@ ____Using |fallback| theme.''', Priority.HIGH)
         self._messaging_win.show()
 
     def _tts_queue_speech(self, caption, text, priority, mode):
+        logger.error(f'{priority = }')
+        logger.error(f'{priority.name = }')
+        logger.error(f'Priority.HELP = {priority == Priority.HELP}')
+        if priority == Priority.HELP:
+            logger.error(f'\n\n\n{text = }\n\n\n')
         if caption:
             text = ['Window: {}.'.format(caption.lower())] + text
         if priority == Priority.HELP:
@@ -6876,7 +6887,7 @@ and |remove the file manually|.
     def _show_remote_control_server_active(self):
         self._open_simple_message_by_key_and_mode(
             self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE,
-            'D_RC_ACTIVE',
+            'M_RC_ACTIVE',
             self._remote_control_server.ip + \
             '|:|' + str(
                 self._cnf.active_remote_control_server_port
@@ -6887,13 +6898,14 @@ and |remove the file manually|.
         if self._cnf.locked:
             self._open_simple_message_by_key('M_RC_LOCKED', self.ws.MESSAGING_MODE)
         else:
+            self.ws.operation_mode = self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE
             if self._remote_control_window is None:
                 self._remote_control_window = PyRadioServerWindow(
                     config=self._cnf,
                     parent=self.outerBodyWin,
-                    port_number_error_message=self._show_port_number_invalid
+                    port_number_error_message=self._show_port_number_invalid,
+                    speak=self._speak_window if self._enable_tts and self._cnf.tts_context != 'limited' else None
                 )
-                self.ws.operation_mode = self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE
             self._remote_control_window.show(self.outerBodyWin)
 
     def _reload_playlist_after_confirmation(self, char):
@@ -7175,19 +7187,25 @@ and |remove the file manually|.
         if self._enable_tts:
             self.tts.queue_speech(msg, Priority.NORMAL, mode=self.ws.operation_mode)
 
-    def _speak_window(self, msg=None, normal=None):
+    def _speak_window(self, msg=None, navigation=None, args=None):
         ''' Speak a Priority DIALOG message
-            msg:    text (oprional)
+            msg:    text (optional)
             normal: use Priority.NORMAL instead of Priority.DIALOG
                     (to be used for dialog navigation messages)
+            args:   arguments to TTS_WINDOWS_TEXT lambda
         '''
+        logger.error(f'{msg = }')
+        logger.error(f'{navigation = }')
+        logger.error(f'{args = }')
         if self._enable_tts and \
                 self._cnf.tts_context != 'limited':
-            if msg is None:
-                msg = TTS_WINDOWS_TEXT[self.ws.operation_mode]()
-            priority = Priority.DIALOG if normal is None else Priority.NORMAL
+            if msg is None or args is not None:
+                func = TTS_WINDOWS_TEXT[self.ws.operation_mode]
+                msg = func(*args) if args else func()
+            priority = Priority.DIALOG if navigation is None else Priority.NAVIGATION
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f'speaking Priority.DIALOG with Priority.{priority.name}')
+            self.ws.stop_dialog_speech = self.tts.stop_dialog_speech
             self.tts.queue_speech(
                 msg,
                 priority,
@@ -7726,7 +7744,7 @@ _____"|f|" to see the |free| keys you can use.
                 self._enable_tts = not self._enable_tts
                 if not self._enable_tts:
                     self.tts.stop_after_high = True
-                    self.tts.queue_speech('T T S disabled', Priority.HIGH)
+                    self.tts.queue_speech('TTS disabled', Priority.HIGH)
                     self.tts = None
                     self.tts = TTSManagerDummy()
                     return
@@ -7745,7 +7763,7 @@ _____"|f|" to see the |free| keys you can use.
                     tts_in_config=lambda: self._tts_in_config,
                 )
                 if self._enable_tts:
-                    self.tts.queue_speech('T T S enabled', Priority.HIGH)
+                    self.tts.queue_speech('TTS enabled', Priority.HIGH)
 
             elif char == kbkey['toggle_time'] or \
                     check_localized(char, (kbkey['toggle_time'],)):
@@ -7783,10 +7801,6 @@ _____"|f|" to see the |free| keys you can use.
                         vlc_no_recording=self._show_win_no_record,
                         speak=self._speak_window if self._enable_tts and self._cnf.tts_context != 'limited' else None,
                     )
-                    if self._enable_tts and \
-                            self._cnf.tts_context != 'limited':
-                        msg = TTS_WINDOWS_TEXT[self.ws.operation_mode](self.player.PLAYER_NAME)
-                        self._speak_window(msg=msg)
                     self._change_player.show()
 
             elif ( char == kbkey['open_remote_control'] or \
@@ -8158,17 +8172,26 @@ _____"|f|" to see the |free| keys you can use.
                 self.ws.close_window()
                 self.refreshBody()
             elif ret != '':
-                # set player
-                self.ws.close_window()
-                playing = self.player.isPlaying()
-                self._default_player_name = ret
-                if logger.isEnabledFor(logging.INFO):
-                    logger.info(f'setting {self._default_player_name = }')
-                self._activate_player(ret)
-                if playing:
-                    self.playSelection()
-                self.refreshBody()
-                self._change_player = None
+                if ret == '?' and self.tts:
+                    msg = TTS_WINDOWS_TEXT[self.ws.CHANGE_PLAYER_HELP_MODE]()
+                    self._tts_queue_speech(
+                        caption=None,
+                        text=[msg],
+                        priority=Priority.HELP,
+                        mode=self.ws.CHANGE_PLAYER_HELP_MODE
+                    )
+                else:
+                    # set player
+                    self.ws.close_window()
+                    playing = self.player.isPlaying()
+                    self._default_player_name = ret
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info(f'setting {self._default_player_name = }')
+                    self._activate_player(ret)
+                    if playing:
+                        self.playSelection()
+                    self.refreshBody()
+                    self._change_player = None
         elif self.ws.operation_mode == self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE:
             if char == kbkey['s'] or \
                     check_localized(char, (kbkey['s'],)):
@@ -8192,6 +8215,15 @@ _____"|f|" to see the |free| keys you can use.
                 self._remote_control_window = None
                 self.ws.close_window()
                 self.refreshBody()
+            elif ret == 2 and self.tts:
+                ''' TTS help '''
+                msg = TTS_WINDOWS_TEXT[self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_HELP_MODE]()
+                self._tts_queue_speech(
+                    caption=None,
+                    text=[msg],
+                    priority=Priority.HELP,
+                    mode=self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_HELP_MODE
+                )
 
         elif ( char == kbkey['screen_top']  or \
                   check_localized(char, (kbkey['screen_top'],))) and \
@@ -10199,7 +10231,16 @@ _____"|f|" to see the |free| keys you can use.
         elif self.ws.operation_mode == self.ws.CONNECTION_MODE:
             # keypress ok
             ret = self._connection_type_edit.keypress(char)
-            if ret == -1:
+            if ret == 2 and self.tts:
+                ''' TTS help '''
+                msg = TTS_WINDOWS_TEXT[self.ws.CONNECTION_HELP_MODE]()
+                self._tts_queue_speech(
+                    caption=None,
+                    text=[msg],
+                    priority=Priority.HELP,
+                    mode=self.ws.CONNECTION_HELP_MODE
+                )
+            elif ret == -1:
                 ''' Cancel '''
                 self.ws.close_window()
                 self._connection_type_edit = None
@@ -10815,9 +10856,9 @@ _____"|f|" to see the |free| keys you can use.
                     self._connection_type_edit = PyRadioConnectionType(
                         parent=self.outerBodyWin,
                         connection_type=self.player.force_http,
+                        speak=self._speak_window if self._enable_tts and self._cnf.tts_context != 'limited' else None,
                         global_functions=self._global_functions
                     )
-                    self._speak_window()
                     self._connection_type_edit.show()
                     return
 
@@ -10830,10 +10871,9 @@ _____"|f|" to see the |free| keys you can use.
                     self._player_select_win = PyRadioExtraParams(
                         self._cnf,
                         self.bodyWin,
-                        self._speak_window if self._enable_tts else None,
+                        speak=self._speak_window if self._enable_tts and self._cnf.tts_context != 'limited' else None,
                         global_functions=self._global_functions
                     )
-                    self._speak_window()
                     self._player_select_win.show()
                     return
 
@@ -12171,9 +12211,9 @@ _____"|f|" to see the |free| keys you can use.
                         logger.debug('SetConsoleCtrlHandler: Failed to register!!!')
                     else:
                         logger.debug('SetConsoleCtrlHandler: Registered!!!')
-            except:
+            except Exception as e:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('SetConsoleCtrlHandler: Failed to register (with Exception)!!!')
+                    logger.debug(f'SetConsoleCtrlHandler: Failed to register: {e}')
 
             ''' Trying to catch Windows log-ogg, reboot, halt
                 No luck....
@@ -12200,9 +12240,9 @@ _____"|f|" to see the |free| keys you can use.
                     )
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug(f'SetConsoleCtrlHandler: Handler for signal {sig_name} registered')
-            except:
+            except Exception as e:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug(f'SetConsoleCtrlHandler: Failed to register handler for signal {sig_name}')
+                    logger.debug(f'SetConsoleCtrlHandler: Failed to register handler for signal {sig_name}: {e}')
 
     def _linux_signal_handler(self, a_signal, a_frame):
         logger.error('DE ----==== _linux_signal_handler  ====----')

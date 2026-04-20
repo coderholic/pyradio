@@ -2606,7 +2606,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 pass
             if not self._first_time_spoken:
                 if self._speak and self._speak_string and item_id == self._selection:
-                    self._speak(msg=self._speak_string)
+                    self._speak(args=(self._speak_string, ))
                     self._first_time_spoken = True
         self._win.refresh()
         self._showed = True
@@ -2830,13 +2830,13 @@ class SimpleCursesMenu(SimpleCursesWidget):
         # log_it('_toggle_active_item: setting new active: {0}, line: {1}'.format(active_id, self._Y + active_id))
         self._win.refresh()
 
-    def _speak_item(self, item_msg=None, normal=None):
+    def _speak_item(self, item_msg=None, navigation=None):
         if self._speak:
             if item_msg is None:
                 logger.error(f'{self._selection = }')
                 self._format_line(self._selection + self.startPos, 20)
                 item_msg = self._speak_string
-            self._speak(msg=item_msg, normal=normal)
+            self._speak(msg=item_msg, navigation=navigation)
 
     def keypress(self, char):
         ''' SimpleCursesMenuEntries keypress
@@ -2973,7 +2973,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             if self._on_up_callback_function is not None:
                 self._on_up_callback_function()
             if self._speak:
-                self._speak_item(normal=True)
+                self._speak_item(navigation=True)
                 logger.error(f'g {self._speak_string = }')
 
         elif char in (kbkey['G'], curses.KEY_END) or \
@@ -2996,7 +2996,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             if self._on_down_callback_function is not None:
                 self._on_down_callback_function()
             if self._speak:
-                self._speak_item(normal=True)
+                self._speak_item(navigation=True)
                 logger.error(f'G {self._speak_string = }')
 
         elif char == kbkey['goto_playing'] or \
@@ -3011,7 +3011,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             if self._on_down_callback_function is not None:
                 self._on_down_callback_function()
             if self._speak:
-                self._speak_item(normal=True)
+                self._speak_item(navigation=True)
                 logger.error(f'P {self._speak_string = }')
 
         elif char == kbkey['h'] or \
@@ -3032,7 +3032,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             if self._on_down_callback_function is not None:
                 self._on_down_callback_function()
             if self._speak:
-                self._speak_item(normal=True)
+                self._speak_item(navigation=True)
                 logger.error(f'M {self._speak_string = }')
 
         elif char == kbkey['l'] or \
@@ -3043,7 +3043,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._verify_selection_not_on_caption()
             self._toggle_selected_item()
             if self._speak:
-                self._speak_item(normal=True)
+                self._speak_item(navigation=True)
                 logger.error(f'l {self._speak_string = }')
 
         elif char in (curses.KEY_PPAGE, ):
@@ -3068,7 +3068,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             if self._on_up_callback_function is not None:
                 self._on_up_callback_function()
             if self._speak:
-                self._speak_item(normal=True)
+                self._speak_item(navigation=True)
                 logger.error(f'PgDown {self._speak_string = }')
 
         elif char in (curses.KEY_NPAGE, ):
@@ -3098,7 +3098,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             if self._on_down_callback_function is not None:
                 self._on_down_callback_function()
             if self._speak:
-                self._speak_item(normal=True)
+                self._speak_item(navigation=True)
                 logger.error(f'PgUP {self._speak_string = }')
 
         elif char in (kbkey['k'], curses.KEY_UP) or \
@@ -3119,7 +3119,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     if self._on_up_callback_function is not None:
                         self._on_up_callback_function()
                     if self._speak:
-                        self._speak_item(normal=True)
+                        self._speak_item(navigation=True)
                         logger.error(f'k {self._speak_string = }')
                     return 1
             if self._scroll:
@@ -3133,7 +3133,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     if self._on_up_callback_function is not None:
                         self._on_up_callback_function()
                     if self._speak:
-                        self._speak_item(normal=True)
+                        self._speak_item(navigation=True)
                         logger.error(f'k {self._speak_string = }')
                     return 1
             # log_it('going from {0} to {1}, start at {2}'.format(self._old_selection, self._selection, self._start_pos))
@@ -3143,7 +3143,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             if self._on_up_callback_function is not None:
                 self._on_up_callback_function()
             if self._speak:
-                self._speak_item(normal=True)
+                self._speak_item(navigation=True)
                 logger.error(f'k {self._speak_string = }')
 
         elif char in (kbkey['j'], curses.KEY_DOWN) or \
@@ -3163,7 +3163,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     if self._on_down_callback_function is not None:
                         self._on_down_callback_function()
                     if self._speak:
-                        self._speak_item(normal=True)
+                        self._speak_item(navigation=True)
                         logger.error(f'1j {self._speak_string = }')
                     return 1
             if self._scroll:
@@ -3176,7 +3176,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     if self._on_down_callback_function is not None:
                         self._on_down_callback_function()
                     if self._speak:
-                        self._speak_item(normal=True)
+                        self._speak_item(navigation=True)
                         logger.error(f'2j {self._speak_string = }')
                     return 1
 
@@ -3185,7 +3185,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             if self._on_down_callback_function is not None:
                 self._on_down_callback_function()
             if self._speak:
-                self._speak_item(normal=True)
+                self._speak_item(navigation=True)
                 logger.error(f'3j {self._speak_string = }')
 
         elif char in self._local_functions:
@@ -4207,7 +4207,7 @@ class SimpleCursesLineEdit():
 
     def _at_end_of_string(self):
         return (
-            self._at_end_of_displayed_string and
+            self._at_end_of_displayed_string() and
             self.string.endswith(self._displayed_string)
         )
 

@@ -2937,7 +2937,7 @@ class PyRadioConnectionType():
     _note_text = ' Note '
     _max_lines = 14
 
-    def __init__(self, parent, connection_type, global_functions=None):
+    def __init__(self, parent, connection_type, speak=None, global_functions=None):
         self._parent = parent
         self._global_functions = global_functions
         self.maxX = 0
@@ -2945,6 +2945,8 @@ class PyRadioConnectionType():
         if self._global_functions is None:
             self._global_functions = {}
         self.connection_type = connection_type
+        self._first_item_spoken = False
+        self._speak = speak
 
     def show(self, parent=None):
         if parent:
@@ -3000,6 +3002,10 @@ class PyRadioConnectionType():
             self._win.addstr(11, 4, 'Changes made here will not be', curses.color_pair(10))
             self._win.addstr(12, 3, 'saved in the configuration file', curses.color_pair(10))
 
+            if not self._first_item_spoken and self._speak:
+                self._speak(args=(f'{self.connection_type}', ))
+                self._first_item_spoken = True
+
         self._win.refresh()
 
     def keypress(self, char):
@@ -3024,10 +3030,15 @@ class PyRadioConnectionType():
                 check_localized(char, (kbkey['q'], kbkey['h'])):
             return -1
 
+        elif char == kbkey['?'] or check_localized(char, (kbkey['?'], )):
+            return 2
+
         elif char in (kbkey['j'], kbkey['k'], kbkey['l'], kbkey['pause'],
                       curses.KEY_RIGHT, curses.KEY_UP, curses.KEY_DOWN) or \
                     check_localized(char, (kbkey['j'], kbkey['k'], kbkey['l'], kbkey['pause'])):
             self.connection_type = not self.connection_type
+            if self._speak:
+                self._speak(msg=f'Set to {self.connection_type}', navigation=True)
             self._win.addstr(2, len(self._text) + 3, f'{self.connection_type}', curses.color_pair(3))
             self._win.refresh()
 
@@ -3041,6 +3052,7 @@ class PyRadioServerWindow():
             parent,
             config,
             port_number_error_message=None,
+            speak=None,
             global_functions=None
     ):
         self._editor = None
@@ -3058,6 +3070,8 @@ class PyRadioServerWindow():
         self._nips.set(self._the_ip)
         self._the_port = self._cnf.active_remote_control_server_port
         self._port_number_error_message = port_number_error_message
+        self._speak = speak
+        self._first_item_spoken = False
 
     def show(self, parent=None):
         if parent:
@@ -3083,6 +3097,7 @@ class PyRadioServerWindow():
                 unfocused_color=curses.color_pair(11),
                 key_up_function_handler=self._toggle_selection,
                 key_down_function_handler=self._toggle_selection,
+                string_changed_handler=self._string_changed
             )
             self._editor.visible = True
             self._editor.bracket = False
@@ -3092,7 +3107,9 @@ class PyRadioServerWindow():
             self._editor.chars_to_accept = [ str(x) for x in range(0, 10)]
             self._editor.string = self._the_port
 
-
+        if not self._first_item_spoken and self._speak:
+            self._first_item_spoken = True
+            self._speak(args=(self._the_ip, ))
         self._win.addstr(2, 2, 'The server is ', curses.color_pair(10))
         self._win.addstr('not active', curses.color_pair(11))
 
@@ -3139,6 +3156,10 @@ class PyRadioServerWindow():
         self._refresh()
         self._showed = True
 
+    def _string_changed(self):
+        if self._speak:
+            self._speak(self._editor.string, navigation=True)
+
     def _refresh(self):
         self._win.refresh()
         self._editor.keep_restore_data()
@@ -3157,7 +3178,7 @@ class PyRadioServerWindow():
             self._editor.move(self._win, self.Y + 5, self.X + self._field_x, update=False)
 
     def _show_title(self):
-        msg = ' PyRadio Remote Control '
+        msg = ' Remote Control Server '
         self._win.addstr(0, int((self.maxX - len(msg)) / 2), msg, curses.color_pair(11))
 
     def _toggle_selection(self):
@@ -3165,8 +3186,12 @@ class PyRadioServerWindow():
             self._selection = 1
             self._editor.focused = True
             self._win.chgat(4, self._field_x, self._field_width, curses.color_pair(10))
+            if self._speak:
+                self._speak(msg=f'Port: {self._editor.string}', navigation=True)
         else:
             if self._validate_port():
+                if self._speak:
+                    self._speak(msg=f'IP: {self._the_ip.replace('.', ' dot ')}', navigation=True)
                 self._selection = 0
                 self._editor.focused = False
                 self._win.chgat(4, self._field_x, self._field_width, curses.color_pair(6))
@@ -3188,19 +3213,26 @@ class PyRadioServerWindow():
                 -1: cancel
                  0: saved
                  1: go on
+                 2: help (for TTS)
         '''
         l_char = None
-        if self._selection == 0 and \
+        if char == kbkey['?'] or check_localized(cjar, (kbkey['?'], )):
+            return 2
+        elif self._selection == 0 and \
                 (char in (ord('\n'), ord('\r'), curses.KEY_ENTER,
                          kbkey['pause'], kbkey['l'], curses.KEY_RIGHT) or \
                     check_localized(char, (kbkey['l'], kbkey['pause']))):
             self._the_ip = self._nips.next()
+            if self._speak:
+                self._speak(msg=f'{self._the_ip.replace('.', ' dot ')}', navigation=True)
             self._win.addstr(4, self._field_x, self._the_ip.ljust(self._field_width), curses.color_pair(6))
             self._refresh()
         elif self._selection == 0 and \
                 (char in (kbkey['h'], curses.KEY_LEFT) or \
                 check_localized(char, (kbkey['h'], ))):
             self._the_ip = self._nips.previous()
+            if self._speak:
+                self._speak(msg=f'{self._the_ip.replace('.', ' dot ')}', navigation=True)
             self._win.addstr(4, self._field_x, self._the_ip.ljust(self._field_width), curses.color_pair(6))
             self._refresh()
 

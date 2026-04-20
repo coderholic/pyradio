@@ -10,22 +10,42 @@ logger = logging.getLogger(__name__)
 
 TTS_WINDOWS_TEXT = {
     Window_Stack_Constants.PLAYER_PARAMS_MODE:
-        lambda: '''Window: Player Extra Parameters.
-           Changes made here will not be saved in the configuration file.
-        ''',
+        lambda it: f'''Window: Player Extra Parameters.
+           Current item: {it}.
+        '''.replace('pyradio',' p y radio'),
     Window_Stack_Constants.CONNECTION_MODE:
-        lambda: kb2str('''Window: Connection Type.
+        lambda val: f'''Window: Connection Type.
+            Current value to force http connections: {val}
+        ''',
+    Window_Stack_Constants.CONNECTION_HELP_MODE:
+        lambda: kb2str('''Window: Connection Type Help.
             {j}, {k}, {l}, {pause}", Right Up Down: Toggle parameter.
             Enter, {s}: Accept parameter.
             Escape, {q}, {h}, Left: Cancel operation.
-            Note: Changes made here will not be saved in the configuration file
+            Note: Changes made here will not be saved in the configuration file.
         '''),
     Window_Stack_Constants.CHANGE_PLAYER_MODE:
-        lambda pl: kb2str('''Window: Switch Media Player.
-            Active Media Player: |PL|.
+        lambda pl, apl: f'''Window: Switch Media Player.
+            Active Media Player: {pl}.
+            Current item: {apl}.
+        ''',
+    Window_Stack_Constants.CHANGE_PLAYER_HELP_MODE:
+        lambda: kb2str('''
             Please select a Media Player to activate and press {s},
             Enter or {pause} to switch to it, or Escape to Cancel.
-        '''.replace('|PL|', pl)),
+        '''),
+    Window_Stack_Constants.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE:
+        lambda ip: f'''Window: Remote Control Server.
+            The server is not active.
+            IP: {ip.replace('.', ' dot ')}
+        ''',
+    Window_Stack_Constants.REMOTE_CONTROL_SERVER_NOT_ACTIVE_HELP_MODE:
+        lambda: kb2str('''Window: Remote Control Server Help
+            {j}, {k}, Up, Down, {h}, {l}, Left, Right: Change selection.
+            Enter, {pause}: Toggle IP.
+            {s}: Start the server.
+            Any other key will hide the window
+        '''),
 }
 
 def describe_single_key(key_string):
@@ -460,6 +480,40 @@ def test_tts_transformation():
             print(f"  '{tts_output}'")
         print()
 
+def normalize_text(text: str) -> str:
+    # Rule 1: remove "capital" before words (not single letter)
+    text = re.sub(
+        r'\bcapital\s+([A-Za-z]{2,})\b',
+        r'\1',
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    # Rule 2: add "capital" to single uppercase letters if not already present
+    def replace_single_upper(match: re.Match) -> str:
+        start = match.start()
+        prefix = text[:start]
+
+        if re.search(r'(?i)\bcapital\s+$', prefix):
+            return match.group(1)
+
+        return f'capital {match.group(1)}'
+
+    text = re.sub(r'\b([A-Z])\b', replace_single_upper, text)
+
+    # Rule 3: collapse comma chains
+    # "comma ... comma" (with any mix of spaces/commas in between) -> "comma"
+    text = re.sub(
+        r'(?i)\bcomma\b(?:\s*,\s*|\s+)+\bcomma\b',
+        'comma',
+        text,
+    )
+
+    # Cleanup spaces
+    text = re.sub(r'[ \t]+', ' ', text).strip()
+
+    return text
+
 def tts_transform_final(text_lines, verbosity='default'):
     """
     Transform a list of text lines for TTS output with simplified rules.
@@ -472,8 +526,11 @@ def tts_transform_final(text_lines, verbosity='default'):
         List of transformed text lines suitable for TTS
     """
     transformed_lines = []
+    logger.error(f'\n\n\n8-8-8-8-8-8-8-8-8-8-8-8-8\n{text_lines = }\n8-8-8-8-8-8-8-8-8-8-8-8-8\n\n\n')
     for line in text_lines:
         # Step 0: Handle formatting underscores
+        line = line.replace('!!!', '!')
+        line = line.replace(', ,', ', ')
         line = handle_formatting_underscores(line)
 
         # Step 1: Convert pipe content |...|
@@ -503,16 +560,19 @@ def tts_transform_final(text_lines, verbosity='default'):
         line = re.sub(r'\s+', ' ', line).strip()
 
         # step 8: Clean duplicates
-        line = line.replace(' comma comma,', ' comma,')
         line = line.replace(' full stop full stop.', ' full stop.')
         line = line.replace('Page Up Arrow', 'Page Up')
         line = line.replace('Page Down Arrow', 'Page Down')
         line = line.replace('Arrow Arrow', 'Arrow')
         line = line.replace('percent Global', 'Global')
+        line = line.replace('percent Note', 'Note')
         line = line.replace('Escape ape', 'Escape')
-
+        line = line.replace('Delete ete ete', 'Delete')
+        line = normalize_text(line)
         # logger.error(f'7 *** {line = }')
         transformed_lines.append(line)
+
+    logger.error(f'\n\n\n8-8-8-8-8-8-8-8-8-8-8-8-8\n{transformed_lines = }\n8-8-8-8-8-8-8-8-8-8-8-8-8\n\n\n')
 
     return transformed_lines
 
