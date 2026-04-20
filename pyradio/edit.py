@@ -49,7 +49,7 @@ def find_executable_basename(file_path):
 
 class PyRadioOpenDir(SimpleCursesMenu):
 
-    def __init__(self, config, parent, global_functions):
+    def __init__(self, config, parent, global_functions, speak=None):
         self.dir = None
         self._cnf = config
 
@@ -159,7 +159,8 @@ class PyRadioOpenDir(SimpleCursesMenu):
             window_type=SimpleCursesMenu.CENTERED,
             margin=1,
             max_height=11,
-            global_functions=global_functions
+            global_functions=global_functions,
+            speak=speak
         )
 
     def keypress(self, char):

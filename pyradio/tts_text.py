@@ -40,12 +40,16 @@ TTS_WINDOWS_TEXT = {
             IP: {ip.replace('.', ' dot ')}
         ''',
     Window_Stack_Constants.REMOTE_CONTROL_SERVER_NOT_ACTIVE_HELP_MODE:
-        lambda: kb2str('''Window: Remote Control Server Help
+        lambda: kb2str('''Window: Remote Control Server Help.
             {j}, {k}, Up, Down, {h}, {l}, Left, Right: Change selection.
             Enter, {pause}: Toggle IP.
             {s}: Start the server.
             Any other key will hide the window
         '''),
+    Window_Stack_Constants.OPEN_DIR_MODE:
+        lambda it: f'''Window: Open Directory.
+            Current item: {it}.
+        ''',
 }
 
 def describe_single_key(key_string):

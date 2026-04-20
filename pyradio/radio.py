@@ -11350,13 +11350,15 @@ _____"|f|" to see the |free| keys you can use.
             if prog is None:
                 self._show_dirs_list()
                 return
+        self.ws.operation_mode = self.ws.OPEN_DIR_MODE
+        self.ws.stop_dialog_speech = self.tts.stop_dialog_speech
         if self._open_dir_win is None:
             self._open_dir_win = PyRadioOpenDir(
                     self._cnf,
                     self.bodyWin,
-                    self._global_functions
+                    self._global_functions,
+                    speak=self._speak_window if self._enable_tts and self._cnf.tts_context != 'limited' else None,
             )
-        self.ws.operation_mode = self.ws.OPEN_DIR_MODE
         self._open_dir_win.show(parent=self.bodyWin)
 
     def _show_dirs_list(self):
