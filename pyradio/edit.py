@@ -3216,7 +3216,7 @@ class PyRadioServerWindow():
                  2: help (for TTS)
         '''
         l_char = None
-        if char == kbkey['?'] or check_localized(cjar, (kbkey['?'], )):
+        if char == kbkey['?'] or check_localized(char, (kbkey['?'], )):
             return 2
         elif self._selection == 0 and \
                 (char in (ord('\n'), ord('\r'), curses.KEY_ENTER,
