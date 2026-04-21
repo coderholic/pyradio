@@ -1313,7 +1313,7 @@ if __name__ == '__main__':
             missing.append(n)
             # print(f'  missing: "{n}"')
 
-    print('\n\n===> missing')
+    print('\n\n===> unused shortcuts')
     print(missing)
     global_functions = {
         'tag',
@@ -1336,7 +1336,7 @@ if __name__ == '__main__':
         if n not in global_functions:
             missing_after_global_functions.append(n)
 
-    print('\n\n===> missing after removing global_functions')
+    print('\n\n===> unused shortcuts after removing global_functions')
     print(missing_after_global_functions)
 
 
@@ -1361,5 +1361,5 @@ if __name__ == '__main__':
         if n not in extra:
             miss.append(n)
 
-    print('\n\n===> missing after removing h_extra section')
+    print('\n\n===> unused shortcuts after removing h_extra section')
     print(miss)

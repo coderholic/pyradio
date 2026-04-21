@@ -598,7 +598,7 @@ Files created:
   - keys.json
 Execute
   - python keyboard.py
-to check for missing shortcuts
+to check for unused shortcuts
 ''')
 
     ask_and_execute()

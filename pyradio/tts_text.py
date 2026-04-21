@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 TTS_WINDOWS_TEXT = {
     Window_Stack_Constants.PLAYER_PARAMS_MODE:
         lambda it: f'''Window: Player Extra Parameters.
-           Current item: {it}.
+            Note: Changes made here will not be saved in the configuration file.
+            Current item: {it}.
         '''.replace('pyradio',' p y radio'),
     Window_Stack_Constants.CONNECTION_MODE:
         lambda val: f'''Window: Connection Type.

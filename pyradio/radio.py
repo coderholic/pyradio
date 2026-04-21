@@ -214,10 +214,11 @@ class SelectPlayer():
                 platform.startswith('win'):
             self._players['vlc'] += ' (Not Supported)'
             self._no_vlc = True
+        logger.error(f'{all_players = }')
         self._available_players = [x.PLAYER_NAME for x in all_players if x.PLAYER_NAME != self._active_player]
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(f'available players = {all_players}')
-            logger.debug(f'players: active = {self._active_player}, available = {self._available_players}')
+            logger.debug(f'players: active = \'{self._active_player}\', available = {self._available_players}')
         self.maxX = 45
         self.hline = 36
         self.maxY = 8 + len(self._available_players)
@@ -294,8 +295,9 @@ class SelectPlayer():
             kbkey['k'], curses.KEY_UP
         ) or \
                 check_localized(char, (kbkey['j'], kbkey['k'])):
-            self._selected = 1 if self._selected == 0 else 0
-            self._update_selection()
+            if len(self._available_players) > 1:
+                self._selected = 1 if self._selected == 0 else 0
+                self._update_selection()
         elif char in (
             curses.KEY_ENTER, ord('\n'), ord('\r'),
             kbkey['s'], kbkey['pause'],

@@ -3192,7 +3192,8 @@ class PyRadioServerWindow():
         else:
             if self._validate_port():
                 if self._speak:
-                    self._speak(msg=f'IP: {self._the_ip.replace('.', ' dot ')}', navigation=True)
+                    msg = 'IP: {self._the_ip}'.replace('.', ' dot ')
+                    self._speak(msg=msg, navigation=True)
                 self._selection = 0
                 self._editor.focused = False
                 self._win.chgat(4, self._field_x, self._field_width, curses.color_pair(6))
@@ -3225,7 +3226,8 @@ class PyRadioServerWindow():
                     check_localized(char, (kbkey['l'], kbkey['pause']))):
             self._the_ip = self._nips.next()
             if self._speak:
-                self._speak(msg=f'{self._the_ip.replace('.', ' dot ')}', navigation=True)
+                msg = 'IP: {self._the_ip}'.replace('.', ' dot ')
+                self._speak(msg=msg, navigation=True)
             self._win.addstr(4, self._field_x, self._the_ip.ljust(self._field_width), curses.color_pair(6))
             self._refresh()
         elif self._selection == 0 and \
@@ -3233,7 +3235,8 @@ class PyRadioServerWindow():
                 check_localized(char, (kbkey['h'], ))):
             self._the_ip = self._nips.previous()
             if self._speak:
-                self._speak(msg=f'{self._the_ip.replace('.', ' dot ')}', navigation=True)
+                msg = 'IP: {self._the_ip}'.replace('.', ' dot ')
+                self._speak(msg=msg, navigation=True)
             self._win.addstr(4, self._field_x, self._the_ip.ljust(self._field_width), curses.color_pair(6))
             self._refresh()
 
