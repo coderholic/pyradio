@@ -214,7 +214,6 @@ class SelectPlayer():
                 platform.startswith('win'):
             self._players['vlc'] += ' (Not Supported)'
             self._no_vlc = True
-        logger.error(f'{all_players = }')
         self._available_players = [x.PLAYER_NAME for x in all_players if x.PLAYER_NAME != self._active_player]
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(f'available players = {all_players}')
@@ -3612,11 +3611,11 @@ ____Using |fallback| theme.''', Priority.HIGH)
         self._messaging_win.show()
 
     def _tts_queue_speech(self, caption, text, priority, mode):
-        logger.error(f'{priority = }')
-        logger.error(f'{priority.name = }')
-        logger.error(f'Priority.HELP = {priority == Priority.HELP}')
-        if priority == Priority.HELP:
-            logger.error(f'\n\n\n{text = }\n\n\n')
+        # logger.error(f'{priority = }')
+        # logger.error(f'{priority.name = }')
+        # logger.error(f'Priority.HELP = {priority == Priority.HELP}')
+        # if priority == Priority.HELP:
+        #     logger.error(f'\n\n\n{text = }\n\n\n')
         if caption:
             text = ['Window: {}.'.format(caption.lower())] + text
         if priority == Priority.HELP:
@@ -7196,9 +7195,9 @@ and |remove the file manually|.
                     (to be used for dialog navigation messages)
             args:   arguments to TTS_WINDOWS_TEXT lambda
         '''
-        logger.error(f'{msg = }')
-        logger.error(f'{navigation = }')
-        logger.error(f'{args = }')
+        # logger.error(f'{msg = }')
+        # logger.error(f'{navigation = }')
+        # logger.error(f'{args = }')
         if self._enable_tts and \
                 self._cnf.tts_context != 'limited':
             if msg is None or args is not None:

@@ -525,10 +525,16 @@ Please make sure patch is installed and try again
     else
         $PIPX_CMD install $PIPX_EDITABLE --force . || pipx_error
         [ -z "$PIPX_EDITABLE" ] && {
-            cat requirements_pipx.txt | sed -e 's/#.*//' | xargs $PIPX_CMD inject pyradio
+            # fix pipx issue: Do not check if the package is a path in the current working directory #1778
+            cd devel
+            cat ../requirements_pipx.txt | sed -e 's/#.*//' | xargs $PIPX_CMD inject pyradio
+            cd ..
             if [ $(uname -s) == "Darwin" ] || [ $(uname -s) == "darwin" ]
             then
+                # fix pipx issue: Do not check if the package is a path in the current working directory #1778
+                cd devel
                 $PIPX_CMD inject pyradio pyobjc-core pyobjc-framework-Cocoa pyobjc-framework-MediaPlayer
+                cd ..
                 rm -rf /Applications/PyRadio.app 2>/dev/null || true
                 if ! tar -xpzf devel/PyRadio_mac_app.tar.gz -C /Applications 2>/dev/null; then
                     echo
@@ -541,7 +547,10 @@ Please make sure patch is installed and try again
                 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f /Applications/PyRadio.app 2>/dev/null || true
                 killall Finder >/dev/null 2>&1 || true
             else
+                # fix pipx issue: Do not check if the package is a path in the current working directory #1778
+                cd devel
                 [ -z "$DBUS" ] || $PIPX_CMD inject pyradio dbus-"${DBUS}"
+                cd ..
             fi
         }
         inst_type=2

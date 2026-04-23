@@ -2833,7 +2833,6 @@ class SimpleCursesMenu(SimpleCursesWidget):
     def _speak_item(self, item_msg=None, navigation=None):
         if self._speak:
             if item_msg is None:
-                logger.error(f'{self._selection = }')
                 self._format_line(self._selection + self.startPos, 20)
                 item_msg = self._speak_string
             self._speak(msg=item_msg, navigation=navigation)

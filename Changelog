@@ -1,3 +1,19 @@
+2026-04-23 s-n-g
+    * version 0.9.3.11.30 - 0.9.3.12-beta30
+    * implementing a workaround for: Do not check if the package 
+      is a path in the current working directory - 
+        https://github.com/pypa/pipx/issues/1778
+    * enabling TTS help messages
+    * implementing dialog TTS messages for
+      - the Remote Control Server window
+      - the Connection Type window
+      - the Player Extra Parameters window
+      - the Switch Media Player window
+      - the Open Directory window
+    * fixing a couple of minor bugs and crashes
+    * updating documentation
+    * updating Windows MPV download link
+
 2026-03-28 s-n-g
     * version 0.9.3.11.29 - 0.9.3.12-beta29
     * PyRadio will properly terminate when terminal closed (#325)
