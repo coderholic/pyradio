@@ -56,13 +56,13 @@ Please install at least one of them beforehand:
 
 ```
 # on Debian
-sudo apt-get install [ mpv / mplayer / vlc ]
+sudo apt-get install -y [ mpv / mplayer / vlc ]
 
 # on Fedora
-sudo dnf install [ mpv / mplayer / vlc ]
+sudo dnf install -y [ mpv / mplayer / vlc ]
 
 # on openSUSE
-sudo zypper install [ mpv / mplayer / vlc ]
+sudo zypper install -y [ mpv / mplayer / vlc ]
 ```
 
 ## Get the installation script
@@ -86,7 +86,7 @@ Please follow the instructions that match/suit your distribution.
 
 ## Debian and derivatives
 
-**Note:** The following instructions were tested on a freshly installed **Debian Testing**.
+**Note:** The following instructions were tested on a freshly installed **Debian 13**.
 
 Install the requirements for the installation script:
 
@@ -103,7 +103,7 @@ sudo apt-get install \
 Then install `pipx`:
 
 ```
-sudo apt-get install pipx
+sudo apt-get install -y pipx
 ```
 
 If that fails, execute:
@@ -133,7 +133,7 @@ python3 install.py -i
 
 Install dependencies:
 ```
-sudo apt-get install \
+sudo apt-get install -y \
     python3-dnspython \
     python3-psutil \
     python3-netifaces \
@@ -150,16 +150,15 @@ python3 install.py
 
 ## Fedora and derivatives
 
-**Note:** The following instructions were tested on a freshly installed **Fedora 38 Workstation**.
+**Note:** The following instructions were tested on a freshly installed **Fedora 43 Workstation**.
 
 Execute:
 ```
-sudo dnf install \
+sudo dnf install -y \
     python3-pip \
     python3-wheel \
     python3-rich \
     python3-requests \
-    python3-netifaces \
     pipx
 ```
 
@@ -173,7 +172,7 @@ and exit the terminal.
 
 Open a terminal and execute:
 ```
-sudo dnf install gcc python3-devel
+sudo dnf install -y gcc python3-devel
 ```
 
 And finally:
@@ -187,7 +186,7 @@ python install.py -i
 
 Open a terminal and execute:
 ```
-sudo dnf install \
+sudo dnf install -y \
     python3-netifaces \
     python3-psutil \
     python3-dns \
@@ -203,18 +202,15 @@ python install.py
 
 ## openSUSE and derivatives
 
-**Note:** The following instructions were tested on a freshly installed **openSUSE Tumbleweed 20230427**.
+**Note:** The following instructions were tested on a freshly installed **openSUSE Tumbleweed 20260420**.
 
 Execute:
 
 ```
-sudo zypper install \
-    python310-requests \
-    python310-rich
-# install pipx through pip to get the latest version (1.1.0+)
-# at the time of writing this, a very old pipx version (0.14.0.0)
-# was available on the openSUSE Tumbleweed repositories
-python3 -m pip install --user pipx
+sudo zypper install -y \
+    python3-requests \
+    python3-rich \
+    python3-pipx
 python3 -m pipx ensurepath
 ```
 
@@ -225,9 +221,9 @@ and close the terminal.
 Open a terminal and execute:
 
 ```
-sudo zypper install \
+sudo zypper install -y \
     gcc \
-    python310-dev
+    python3-devel
 ```
 
 Install **PyRadio**:
@@ -242,7 +238,7 @@ python3 install.py -i
 Open a terminal and install **PyRadio** dependencies:
 
 ```
-sudo zypper install \
+sudo zypper install -y \
     python3-psutil \
     python3-dnspython \
     python3-dateutil \

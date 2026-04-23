@@ -88,13 +88,13 @@ This type of installation requires that all <strong>PyRadio</strong> dependencie
 <p><strong>PyRadio</strong> relies on the existence of at least one of the following media players: <strong>mpv</strong>, <strong>mplayer</strong> or <strong>vlc</strong>.</p>
 <p>Please install at least one of them beforehand:</p>
 <pre># on Debian
-sudo apt-get install [ mpv / mplayer / vlc ]
+sudo apt-get install -y [ mpv / mplayer / vlc ]
 
 # on Fedora
-sudo dnf install [ mpv / mplayer / vlc ]
+sudo dnf install -y [ mpv / mplayer / vlc ]
 
 # on openSUSE
-sudo zypper install [ mpv / mplayer / vlc ]</pre>
+sudo zypper install -y [ mpv / mplayer / vlc ]</pre>
 <h2 id="get-the-installation-script">Get the installation script <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>Open a terminal and execute:</p>
 <pre>cd
@@ -106,7 +106,7 @@ curl -L \
     -o install.py</pre>
 <p>Please follow the instructions that match/suit your distribution.</p>
 <h2 id="debian-and-derivatives">Debian and derivatives <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The following instructions were tested on a freshly installed <strong>Debian Testing</strong>.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The following instructions were tested on a freshly installed <strong>Debian 13</strong>.</p>
 <p>Install the requirements for the installation script:</p>
 <pre>sudo apt-get install \
     python3-full \
@@ -116,7 +116,7 @@ curl -L \
     python3-netifaces \
     libpython3-all-dev</pre>
 <p>Then install pipx:</p>
-<pre>sudo apt-get install pipx</pre>
+<pre>sudo apt-get install -y pipx</pre>
 <p>If that fails, execute:</p>
 <pre>python3 -m pip install pipx</pre>
 <p>Finally, execute:</p>
@@ -128,7 +128,7 @@ curl -L \
 python3 install.py -i</pre>
 <h3 id="system-dependent-installation---debian">System dependent installation - Debian</h3>
 <p>Install dependencies:</p>
-<pre>sudo apt-get install \
+<pre>sudo apt-get install -y \
     python3-dnspython \
     python3-psutil \
     python3-netifaces \
@@ -138,27 +138,26 @@ python3 install.py -i</pre>
 <pre>cd
 python3 install.py</pre>
 <h2 id="fedora-and-derivatives">Fedora and derivatives <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The following instructions were tested on a freshly installed <strong>Fedora 38 Workstation</strong>.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The following instructions were tested on a freshly installed <strong>Fedora 43 Workstation</strong>.</p>
 <p>Execute:</p>
-<pre>sudo dnf install \
+<pre>sudo dnf install -y \
     python3-pip \
     python3-wheel \
     python3-rich \
     python3-requests \
-    python3-netifaces \
     pipx</pre>
 <p>And</p>
 <pre>python3 -m pipx ensurepath</pre>
 <p>and exit the terminal.</p>
 <h3 id="fully-isolated-installation---fedora">Fully isolated installation - fedora</h3>
 <p>Open a terminal and execute:</p>
-<pre>sudo dnf install gcc python3-devel</pre>
+<pre>sudo dnf install -y gcc python3-devel</pre>
 <p>And finally:</p>
 <pre>cd
 python install.py -i</pre>
 <h3 id="system-dependent-installation---fedora">System dependent installation - fedora</h3>
 <p>Open a terminal and execute:</p>
-<pre>sudo dnf install \
+<pre>sudo dnf install -y \
     python3-netifaces \
     python3-psutil \
     python3-dns \
@@ -168,28 +167,25 @@ python install.py -i</pre>
 <pre>cd
 python install.py</pre>
 <h2 id="opensuse-and-derivatives">openSUSE and derivatives <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The following instructions were tested on a freshly installed <strong>openSUSE Tumbleweed 20230427</strong>.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The following instructions were tested on a freshly installed <strong>openSUSE Tumbleweed 20260420</strong>.</p>
 <p>Execute:</p>
-<pre>sudo zypper install \
-    python310-requests \
-    python310-rich
-# install pipx through pip to get the latest version (1.1.0+)
-# at the time of writing this, a very old pipx version (0.14.0.0)
-# was available on the openSUSE Tumbleweed repositories
-python3 -m pip install --user pipx
+<pre>sudo zypper install -y \
+    python3-requests \
+    python3-rich \
+    python3-pipx
 python3 -m pipx ensurepath</pre>
 <p>and close the terminal.</p>
 <h3 id="fully-isolated-installation---opensuse">Fully isolated installation - openSUSE</h3>
 <p>Open a terminal and execute:</p>
-<pre>sudo zypper install \
+<pre>sudo zypper install -y \
     gcc \
-    python310-dev</pre>
+    python3-devel</pre>
 <p>Install <strong>PyRadio</strong>:</p>
 <pre>cd
 python3 install.py -i</pre>
 <h3 id="system-dependent-installation---opensuse">System dependent installation - openSUSE</h3>
 <p>Open a terminal and install <strong>PyRadio</strong> dependencies:</p>
-<pre>sudo zypper install \
+<pre>sudo zypper install -y \
     python3-psutil \
     python3-dnspython \
     python3-dateutil \
