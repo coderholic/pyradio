@@ -133,6 +133,7 @@ Esc|, |{q}                                              <*>  Quit.
 
 !Searching
 {search} |/ |{search_next}| / |{search_prev}    <*>  Search, go to next / previous result.
+{fuzzy_search}                                   <*>  Open Fuzzy Search.
 
 !Stations' history
 {hist_prev} |/| {hist_next}                     <*>  Move to previous / next station.
@@ -995,6 +996,7 @@ Backspace|, |^H                     <*> Backspace (delete previous character).
 Up|, |^P| / |Down|, |^N             <*> Get previous / next history item.
 \?| / |\\                           <*> Insert a "|?|" or a "|\|", respectively.
 Enter| / |Esc                       <*> Perform / cancel search.
+~term                               <*> Fuzzy search stations on station lists.
 
 Global functions work when preceded with a "|\|".
 '''
@@ -1012,6 +1014,19 @@ Up|, |^P| / |Down|, |^N             <*> Get previous / next history item.
 Enter| / |Esc                       <*> Perform / cancel search.
 
 Global functions work when preceded with a "|\|".
+'''
+), Priority.HELP),
+
+    'H_FUZZY_SEARCH': ('Fuzzy Search Help',
+kb2str(r'''Type to live-filter station names using fuzzy matching.
+Enter                               <*> Select highlighted station.
+Esc                                 <*> Cancel.
+Up| / |Down                         <*> Move selection.
+PgUp| / |PgDn                       <*> Move by page.
+Home| / |End                        <*> Jump to first / last result.
+Left| / |Right                      <*> Move cursor in query.
+Backspace                           <*> Delete previous character.
+?                                   <*> Show this help.
 '''
 ), Priority.HELP),
 
@@ -2273,4 +2288,3 @@ unintentionally disrupt functionality.
         else:
             return True
         return False
-

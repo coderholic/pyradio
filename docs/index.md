@@ -355,6 +355,7 @@ The following list shows a **default** key bindings list used within the program
        line or
        pipe symbol)
     / n N             Search, go to next / previous result             [Valid]                            [Valid]
+    f                 Open Fuzzy Search                                [Valid]                            [Valid]
     J                 Create a jump tag
     <n>^U <n>^D       Move station up / down.                          -                                  -
     ' \ y             Get into Registers, Extra Commands               y (yank) is not applicable         -
@@ -700,6 +701,8 @@ The *Search Window* supports normal and extend editing and in session history.
 One can always get help by pressing the "**?**" key.
 
 After a search term has been successfully found (search is case insensitive), next occurrence can be obtained using the "**n**" key and previous occurrence can be obtained using the "**N**" key.
+
+On station lists, pressing the key assigned to **Fuzzy Search** opens **Fuzzy Search**. By default this key is "**f**". It displays a live-updating list of stations and narrows the results down as you type.
 
 All search widgets provide a "*search history*" function; pressing the **Up** or **Down** arrow will cycle through previously used search terms (maximum number remembered is 20). Pressing **^X** will remove an item from the history.
 
@@ -1367,4 +1370,3 @@ Finally, include the file produced in your report.
 ## Packaging PyRadio
 
 If you are a packager and would like to produce a package for your distribution please do follow [this mini guide](packaging.md).
-

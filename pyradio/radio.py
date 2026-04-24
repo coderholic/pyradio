@@ -68,7 +68,7 @@ from .config_window import PyRadioConfigWindow, PyRadioExtraParams, \
     PyRadioKeyboardConfig, PyRadioLocalized, PyRadioSelectEncodings, \
     PyRadioSelectPlayer, PyRadioSelectPlaylist, PyRadioSelectStation
 from .log import Log, fix_chars
-from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, \
+from .edit import PyRadioSearch, PyRadioFuzzyStationFinder, PyRadioEditor, PyRadioRenameFile, \
     PyRadioConnectionType, PyRadioServerWindow, PyRadioBuffering, \
     PyRadioRecordingDir, PyRadioResourceOpener, PyRadioOpenDir, \
     GetLocalizedLang
@@ -733,6 +733,7 @@ class PyRadio():
             self.ws.GROUP_SEARCH_MODE: self._redisplay_search_show,
             self.ws.CONFIG_SEARCH_MODE: self._redisplay_search_show,
             self.ws.KEYBOARD_CONFIG_SEARCH_MODE: self._redisplay_search_show,
+            self.ws.FUZZY_STATION_SEARCH_MODE: self._show_fuzzy_station_search,
             self.ws.THEME_MODE: self._redisplay_theme_mode,
             self.ws.ASK_TO_CREATE_NEW_THEME_MODE: self._redisplay_ask_to_create_new_theme,
             self.ws.ADD_STATION_MODE: self._show_station_editor,
@@ -799,6 +800,7 @@ class PyRadio():
             self.ws.SEARCH_PLAYLIST_MODE: 'H_SEARCH',
             self.ws.CONFIG_SEARCH_MODE: 'H_SEARCH',
             self.ws.KEYBOARD_CONFIG_SEARCH_MODE: 'H_SEARCH',
+            self.ws.FUZZY_STATION_SEARCH_MODE: 'H_FUZZY_SEARCH',
             self.ws.SELECT_STATION_ENCODING_MODE: 'H_CONFIG_ENCODING',
             self.ws.SELECT_ENCODING_MODE: 'H_CONFIG_ENCODING',
             self.ws.EDIT_STATION_ENCODING_MODE: 'H_CONFIG_ENCODING',
@@ -830,6 +832,7 @@ class PyRadio():
 
         ''' points to list in which the search will be performed '''
         self._search_list = []
+        self._fuzzy_station_search = None
 
         ''' points to _search_classes for each supported mode '''
         self._mode_to_search = {
@@ -2543,6 +2546,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         for n, item in enumerate(search_cls):
             item.save_search_history()
             search_cls[n] = None
+        if self._fuzzy_station_search is not None:
+            self._fuzzy_station_search.save_search_history()
         self.player.stop_update_notification_thread = True
         self.player.stop_win_vlc_status_update_thread = True
         if self.player:
@@ -7290,6 +7295,29 @@ and |remove the file manually|.
                 self.refreshBody()
             return
 
+        if self.ws.operation_mode == self.ws.FUZZY_STATION_SEARCH_MODE:
+            ret = self._fuzzy_station_search.keypress(char)
+            if ret == 0:
+                selected = self._fuzzy_station_search.get_selected_index()
+                previous_mode = self.ws.previous_operation_mode
+                self.ws.close_window()
+                if selected is not None:
+                    if previous_mode == self.ws.NORMAL_MODE:
+                        self.setStation(selected)
+                        self.playSelection()
+                        self._put_selection_in_the_middle(force=True)
+                    elif previous_mode == self.ws.SELECT_STATION_MODE:
+                        self._station_select_win.setPlaylistById(selected, adjust=True)
+                    elif previous_mode == self.ws.SCHEDULE_STATION_SELECT_MODE:
+                        self._schedule_station_select_win.setPlaylistById(selected, adjust=True)
+                self.refreshBody()
+            elif ret == -1:
+                self.ws.close_window()
+                self.refreshBody()
+            elif ret == 2:
+                self._open_message_win_by_key('H_FUZZY_SEARCH')
+            return
+
         ''' if small exit '''
         if self._limited_height_mode or self._limited_width_mode:
             if char == kbkey['pause'] or \
@@ -9775,6 +9803,15 @@ _____"|f|" to see the |free| keys you can use.
             self.ctrl_c_handler(0, 0)
             return -1
 
+        elif (char in (kbkey['fuzzy_search'], ) or \
+                check_localized(char, (kbkey['fuzzy_search'],))) and \
+                self.ws.operation_mode in (
+                    self.ws.NORMAL_MODE,
+                    self.ws.SELECT_STATION_MODE,
+                    self.ws.SCHEDULE_STATION_SELECT_MODE):
+            self._open_fuzzy_station_search()
+            return
+
         # elif char in (kbkey['n'], ) and \
         #         self.ws.operation_mode in self._search_modes.keys():
         elif (char in (kbkey['search_next'], ) or \
@@ -12067,6 +12104,32 @@ _____"|f|" to see the |free| keys you can use.
 
     def _redisplay_search_show(self):
         self.search.show(self.outerBodyWin, repaint=True)
+
+    def _open_fuzzy_station_search(self):
+        if self._fuzzy_station_search is None:
+            self._fuzzy_station_search = PyRadioFuzzyStationFinder(
+                self.outerBodyWin,
+                path.join(self._cnf.state_dir, 'search-fuzzy-station.txt'),
+                is_locked=self._cnf.locked,
+            )
+        if self.ws.operation_mode == self.ws.NORMAL_MODE:
+            items = self.stations
+            selected = self.selection
+        elif self.ws.operation_mode == self.ws.SELECT_STATION_MODE:
+            items = self._station_select_win._items
+            selected = self._station_select_win._selected_playlist_id
+        elif self.ws.operation_mode == self.ws.SCHEDULE_STATION_SELECT_MODE:
+            items = self._schedule_station_select_win._items
+            selected = self._schedule_station_select_win.selection
+        else:
+            return
+        self._fuzzy_station_search.set_items(items, selected)
+        self.ws.operation_mode = self.ws.FUZZY_STATION_SEARCH_MODE
+        self._fuzzy_station_search.show(self.outerBodyWin)
+
+    def _show_fuzzy_station_search(self):
+        if self._fuzzy_station_search is not None:
+            self._fuzzy_station_search.show(self.outerBodyWin)
 
     def _redisplay_theme_mode(self):
         if self.ws.window_mode == self.ws.CONFIG_MODE and \
