@@ -8,6 +8,7 @@ from sys import platform, modules
 from os import path, remove, sep, access, X_OK, environ, makedirs
 from string import punctuation as string_punctuation
 from pathlib import Path
+from rapidfuzz import fuzz, process
 try:
     # python 3
     from urllib.parse import urlparse
@@ -320,6 +321,207 @@ class PyRadioSearch(SimpleCursesLineEdit):
         if isinstance(item, str):
             return item.lower()
         return item[0].lower()
+
+
+class PyRadioFuzzyStationFinder:
+
+    _title = ' Fuzzy Search '
+    _footer = 'Enter: select  Esc: cancel  Up/Down: move'
+    _score_cutoff = 60
+
+    def __init__(self, parent, history_file, is_locked=False):
+        self._parent = parent
+        self._history_file = history_file
+        self._is_locked = is_locked
+        self._items = []
+        self._matches = []
+        self._selection = 0
+        self._start_pos = 0
+        self._current_index = 0
+        self._query = ''
+        self._win = None
+        self._editor = None
+
+    def save_search_history(self):
+        if self._editor is not None:
+            self._editor.save_search_history()
+
+    def set_items(self, items, selected=0):
+        self._items = []
+        for i, item in enumerate(items):
+            if isinstance(item, str):
+                title = item
+            else:
+                title = item[0]
+            self._items.append((i, title))
+        self._current_index = selected if 0 <= selected < len(self._items) else 0
+        self._query = ''
+        self._selection = 0
+        self._start_pos = 0
+        self._rebuild_matches()
+
+    def get_selected_index(self):
+        if not self._matches:
+            return None
+        return self._matches[self._selection][0]
+
+    def show(self, parent=None):
+        if parent is not None:
+            self._parent = parent
+        if self._editor is None:
+            self._editor = SimpleCursesLineEdit(
+                self._parent,
+                width=40,
+                begin_y=0,
+                begin_x=0,
+                boxed=False,
+                caption='Find',
+                has_history=True,
+                box_color=curses.color_pair(3),
+                caption_color=curses.color_pair(11),
+                edit_color=curses.color_pair(10),
+                cursor_color=curses.color_pair(8),
+                search_history_file=self._history_file,
+                is_locked=self._is_locked,
+            )
+
+        max_y, max_x = self._parent.getmaxyx()
+        off_y, off_x = self._parent.getbegyx()
+        width = min(max_x - 2, 72)
+        width = max(width, 20)
+        height = min(max_y - 2, 18)
+        height = max(height, 8)
+        y = off_y + max(1, int((max_y - height) / 2))
+        x = off_x + max(1, int((max_x - width) / 2))
+
+        self._win = curses.newwin(height, width, y, x)
+        self._win.bkgdset(' ', curses.color_pair(3))
+        self._win.erase()
+        self._win.box()
+        self._win.addstr(0, 2, self._title, curses.color_pair(11))
+        self._win.addstr(height - 2, 2, self._footer[:width - 4], curses.color_pair(10))
+        count_txt = f'{len(self._matches)}/{len(self._items)}'
+        self._win.addstr(0, max(2, width - len(count_txt) - 2), count_txt, curses.color_pair(11))
+        self._win.refresh()
+
+        self._editor.width = width - 4
+        self._editor.show(
+            self._parent,
+            new_y=y + 1,
+            new_x=x + 2,
+            opening=False
+        )
+        self._editor.string = self._query
+        self._editor.refreshEditWindow()
+        self._draw_matches()
+
+    def keypress(self, char):
+        if char == curses.KEY_UP:
+            self._move_selection(-1)
+            self.show()
+            return 1
+        if char == curses.KEY_DOWN:
+            self._move_selection(1)
+            self.show()
+            return 1
+        if char == curses.KEY_PPAGE:
+            self._move_selection(-self._results_height())
+            self.show()
+            return 1
+        if char == curses.KEY_NPAGE:
+            self._move_selection(self._results_height())
+            self.show()
+            return 1
+        if char == curses.KEY_HOME:
+            self._selection = 0
+            self._make_selection_visible()
+            self.show()
+            return 1
+        if char == curses.KEY_END:
+            if self._matches:
+                self._selection = len(self._matches) - 1
+                self._make_selection_visible()
+            self.show()
+            return 1
+
+        ret = self._editor.keypress(self._editor._edit_win, char)
+        self._query = self._editor.string
+        if ret == 2:
+            return 2
+        if ret == -1:
+            return -1
+        if ret == 0:
+            return 0 if self._matches else 1
+
+        self._rebuild_matches()
+        self.show()
+        return 1
+
+    def _results_height(self):
+        if self._win is None:
+            return 1
+        return max(1, self._win.getmaxyx()[0] - 5)
+
+    def _move_selection(self, delta):
+        if not self._matches:
+            return
+        self._selection = max(0, min(len(self._matches) - 1, self._selection + delta))
+        self._make_selection_visible()
+
+    def _make_selection_visible(self):
+        visible = self._results_height()
+        if self._selection < self._start_pos:
+            self._start_pos = self._selection
+        elif self._selection >= self._start_pos + visible:
+            self._start_pos = self._selection - visible + 1
+        max_start = max(0, len(self._matches) - visible)
+        self._start_pos = max(0, min(self._start_pos, max_start))
+
+    def _rebuild_matches(self):
+        query = self._query.strip()
+        if not query:
+            self._matches = [(idx, title, None) for idx, title in self._items]
+            self._selection = self._current_index if self._matches else 0
+            self._start_pos = max(0, self._selection - 2)
+            self._make_selection_visible()
+            return
+
+        normalized_query = query.casefold()
+        choices = {idx: title.casefold() for idx, title in self._items}
+        display_titles = {idx: title for idx, title in self._items}
+        results = process.extract(
+            normalized_query,
+            choices,
+            scorer=fuzz.WRatio,
+            score_cutoff=self._score_cutoff,
+            limit=len(choices)
+        )
+        self._matches = [(item[2], display_titles[item[2]], item[1]) for item in results]
+        self._selection = 0
+        self._start_pos = 0
+        self._make_selection_visible()
+
+    def _draw_matches(self):
+        if self._win is None:
+            return
+        height, width = self._win.getmaxyx()
+        visible = self._results_height()
+        for row in range(visible):
+            win_row = row + 3
+            self._win.move(win_row, 1)
+            self._win.clrtoeol()
+            self._win.addch(win_row, 0, curses.ACS_VLINE, curses.color_pair(3))
+            self._win.addch(win_row, width - 1, curses.ACS_VLINE, curses.color_pair(3))
+            item_id = self._start_pos + row
+            if item_id >= len(self._matches):
+                continue
+            line = self._matches[item_id][1]
+            line = line[:width - 4]
+            color = curses.color_pair(6) if item_id == self._selection else curses.color_pair(10)
+            self._win.addstr(win_row, 2, line.ljust(width - 4), color)
+        if not self._matches:
+            self._win.addstr(3, 2, 'No matches', curses.color_pair(10))
+        self._win.refresh()
 
 
 class PyRadioEditor():
@@ -3449,4 +3651,3 @@ class GetLocalizedLang():
             if char in (ord('\n'), ord('\r'), ord(' ')):
                 return -1
         return 1
-
