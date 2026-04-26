@@ -7430,10 +7430,13 @@ and |remove the file manually|.
                     elif previous_mode == self.ws.SELECT_STATION_MODE:
                         self._station_select_win.setPlaylistById(selected, adjust=True)
                     elif previous_mode == self.ws.SCHEDULE_STATION_SELECT_MODE:
-                        self._schedule_station_select_win.setPlaylistById(selected, adjust=True)
+                        self._schedule_station_select_win.setPlaylistById(selected, adjust=True, redraw=False)
                         curses.ungetch('\n')
                     elif previous_mode == self.ws.SCHEDULE_PLAYLIST_SELECT_MODE:
-                        self._schedule_playlist_select_win.setPlaylistById(selected, adjust=True)
+                        self._schedule_playlist_select_win.setPlaylistById(selected, adjust=True, redraw=False)
+                        curses.ungetch('\n')
+                    elif previous_mode == self.ws.PASTE_MODE:
+                        self._playlist_select_win.setPlaylistById(selected, adjust=True, redraw=False)
                         curses.ungetch('\n')
                 self.refreshBody()
             elif ret == -1:
@@ -9527,6 +9530,7 @@ _____"|f|" to see the |free| keys you can use.
             ''' In Config window; select playlist '''
             # keypress not tested
             ret, ret_playlist = self._schedule_playlist_select_win.keypress(char)
+            # logger.error(f'the result: {ret}, {ret_playlist}')
             if ret >= 0:
                 if ret == 0:
                     station = self._read_first_station(ret_playlist)
@@ -9661,7 +9665,9 @@ _____"|f|" to see the |free| keys you can use.
             else:
                 # kyepress ok
                 ret, a_playlist = self._playlist_select_win.keypress(char)
-                if ret == 1:
+                if ret == 2:
+                    self._open_fuzzy_search()
+                elif ret == 1:
                     self._playlist_select_win = None
                     self.ws.close_window()
                     self.refreshBody()
@@ -12150,7 +12156,8 @@ _____"|f|" to see the |free| keys you can use.
         if self.ws.operation_mode in(
                 self.ws.PLAYLIST_MODE,
                 self.ws.SELECT_PLAYLIST_MODE,
-                self.ws.SCHEDULE_PLAYLIST_SELECT_MODE
+                self.ws.SCHEDULE_PLAYLIST_SELECT_MODE,
+                self.ws.PASTE_MODE
         ):
             history_file = path.join(self._cnf.state_dir, 'search-fuzzy-playlist.txt')
         if self._fuzzy_search.history_file != history_file:
@@ -12170,6 +12177,9 @@ _____"|f|" to see the |free| keys you can use.
         elif self.ws.operation_mode == self.ws.SCHEDULE_PLAYLIST_SELECT_MODE:
             items = self._schedule_playlist_select_win._items
             selected = self._schedule_playlist_select_win.selection
+        elif self.ws.operation_mode == self.ws.PASTE_MODE:
+            items = self._playlist_select_win._items
+            selected = self._playlist_select_win._selected_playlist_id
         else:
             return
         self._fuzzy_search.set_items(items, selected)

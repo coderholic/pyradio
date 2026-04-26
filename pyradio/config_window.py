@@ -3389,7 +3389,7 @@ class PyRadioSelectPlaylist():
             self._fix_startPos()
         self.refresh_selection()
 
-    def setPlaylistById(self, an_id, adjust=True):
+    def setPlaylistById(self, an_id, adjust=True, redraw=None):
         self._selected_playlist_id = an_id
         if self._selected_playlist_id == self._num_of_items:
             self._selected_playlist_id = 0
@@ -3399,7 +3399,14 @@ class PyRadioSelectPlaylist():
         if adjust:
             self._fix_startPos()
         self._selected_playlist = self._items[self._selected_playlist_id]
-        self.refresh_selection()
+        if redraw is None:
+            self.refresh_selection()
+
+    def get_result(self):
+        if type(self) is PyRadioSelectStation:
+            if self._selected_playlist_id in self._groups_ids:
+                return -1, ''
+        return self._get_result()
 
     def _get_result(self):
         if self._include_registers:
@@ -3534,10 +3541,8 @@ class PyRadioSelectPlaylist():
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
                       kbkey['pause'], kbkey['l'], curses.KEY_RIGHT) or \
                     check_localized(char, (kbkey['l'], kbkey['pause'])):
-            if type(self) is PyRadioSelectStation:
-                if self._selected_playlist_id in self._groups_ids:
-                    return -1, ''
-            return self._get_result()
+            # logger.error('==== get_result')
+            return self.get_result()
 
         elif char in (curses.KEY_DOWN, kbkey['j']) or \
                 check_localized(char, (kbkey['j'], )):
