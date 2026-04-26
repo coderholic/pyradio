@@ -3492,6 +3492,7 @@ class PyRadioSelectPlaylist():
          0, station title   - selected station title (for config window)
          0, station path    - selected station path (for paste window)
          1, ''              - Cancel
+         2, ''              - Fuzzy search
         '''
         l_char = None
         if char in self._global_functions or \
@@ -3505,6 +3506,10 @@ class PyRadioSelectPlaylist():
             self._select_playlist_error = -2
             self.refresh_selection()
 
+        elif char == kbkey['fuzzy_search'] or \
+                check_localized(char, (kbkey['fuzzy_search'], )):
+            if self._num_of_items > 0:
+                return 2, ''
         elif char == kbkey['screen_middle'] or \
                 check_localized(char, (kbkey['screen_middle'], )):
             if self._num_of_items > 0:

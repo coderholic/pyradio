@@ -443,12 +443,12 @@ class SimpleCursesString(SimpleCursesWidget):
             if self._enabled:
                 self._win.addstr(self._Y, self._X, self._caption, self._color)
                 if self._focused:
-                    self._win.addstr(disp_string.ljust(self._max_string), self._color_focused)
+                    self._win.addstr(cjkljust(disp_string, self._max_string), self._color_focused)
                 else:
-                    self._win.addstr(disp_string.ljust(self._max_string), self._color_not_focused)
+                    self._win.addstr(cjkljust(disp_string, self._max_string), self._color_not_focused)
             else:
                 self._win.addstr(self._Y, self._X, self._caption, self._color_disabled)
-                self._win.addstr(disp_string.ljust(self._max_string), self._color_disabled)
+                self._win.addstr(cjkljust(disp_string, self._max_string), self._color_disabled)
 
 
 class SimpleCursesDate(SimpleCursesWidget):
