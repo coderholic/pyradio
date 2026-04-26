@@ -22,7 +22,7 @@ from .xdg import CheckDir
 from .html_help import HtmlHelp
 from .keyboard import kbkey, kb2str, kb2chr, check_localized
 from .common import M_STRINGS, Station
-from .cjkwrap import cjklen
+from .cjkwrap import cjklen, cjkljust
 
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
@@ -342,6 +342,16 @@ class PyRadioFuzzyStationFinder:
         self._win = None
         self._editor = None
 
+    @property
+    def history_file(self):
+        return self._history_file
+
+    @history_file.setter
+    def history_file(self, value):
+        if self._history_file != value:
+            self.save_search_history()
+        self._history_file = value
+
     def save_search_history(self):
         if self._editor is not None:
             self._editor.save_search_history()
@@ -399,7 +409,11 @@ class PyRadioFuzzyStationFinder:
         self._win.erase()
         self._win.box()
         self._win.addstr(0, 2, self._title, curses.color_pair(11))
-        self._win.addstr(height - 2, 2, self._footer[:width - 4], curses.color_pair(10))
+        if len(self._footer) > width-2:
+            footer = self._footer[:width-2]
+        else:
+            footer = self._footer.center(width-2)
+        self._win.addstr(height - 2, 1, footer, curses.color_pair(7))
         count_txt = f'{len(self._matches)}/{len(self._items)}'
         self._win.addstr(0, max(2, width - len(count_txt) - 2), count_txt, curses.color_pair(11))
         self._win.refresh()
@@ -443,8 +457,11 @@ class PyRadioFuzzyStationFinder:
                 self._make_selection_visible()
             self.show()
             return 1
+        if char == curses.KEY_RIGHT:
+            return 0 if self._matches else 1
 
         ret = self._editor.keypress(self._editor._edit_win, char)
+        logger.error(f'**** {ret = }')
         self._query = self._editor.string
         if ret == 2:
             return 2
@@ -518,7 +535,7 @@ class PyRadioFuzzyStationFinder:
             line = self._matches[item_id][1]
             line = line[:width - 4]
             color = curses.color_pair(6) if item_id == self._selection else curses.color_pair(10)
-            self._win.addstr(win_row, 2, line.ljust(width - 4), color)
+            self._win.addstr(win_row, 2, cjkljust(line, width - 4), color)
         if not self._matches:
             self._win.addstr(3, 2, 'No matches', curses.color_pair(10))
         self._win.refresh()

@@ -133,7 +133,7 @@ Esc|, |{q}                                              <*>  Quit.
 
 !Searching
 {search} |/ |{search_next}| / |{search_prev}    <*>  Search, go to next / previous result.
-{fuzzy_search}                                   <*>  Open Fuzzy Search.
+{fuzzy_search}                                  <*>  Open Fuzzy Search.
 
 !Stations' history
 {hist_prev} |/| {hist_next}                     <*>  Move to previous / next station.
@@ -300,7 +300,8 @@ Enter|, |Right|, |{l}                           <*>Open selected playlist.
 {del}                                           <*>Delete current playlist.
 {reload}                                        <*>Re-read playlists from disk.
 {open_regs}                                     <*>Toggle between playlists / registers.
-{search} |/ |{search_next}| / |{search_prev}    <*>  Search, go to next / previous result.
+{search} |/ |{search_next}| / |{search_prev}    <*> Search, go to next / previous result.
+{fuzzy_search}                                  <*> Open Fuzzy Search.
 {open_extra}                                    <*>Enter |Extra Commands| mode.
 Esc|, |{q}|, |Left|, |{h}                       <*>Cancel.
 %Global functions (with \ on Line editor)
@@ -907,6 +908,7 @@ Down|, |{k}|, |PgDown                            <*> Change station selection.
 Enter|, |{pause}|,                               <*>
 Right|, |{l}                                     <*> Select default station.
 {search} |/ |{search_next}| / |{search_prev}     <*>  Search, go to next / previous result.
+{fuzzy_search}                                   <*> Open Fuzzy Search.
 {revert_saved}                                   <*> Revert to saved value.
 Esc|, |{q}|, |Left|, |{h}                        <*> Canel.
 %Global functions (with \ on Line editor)
@@ -938,7 +940,8 @@ Down|, |{k}|, |PgDown                           <*> Change playlist selection.
 {g}| / |<n>[G}                                  <*> Jump to first or n-th / last playlist.
 Enter|, |{pause}|,                              <*>
 Right|, |{l}                                    <*> Select default playlist.
-{search} |/ |{search_next}| / |{search_prev}    <*>  Search, go to next / previous result.
+{search} |/ |{search_next}| / |{search_prev}    <*> Search, go to next / previous result.
+{fuzzy_search}                                  <*> Open Fuzzy Search.
 {revert_saved}                                  <*> Revert to saved value.
 Esc|, |{q}|, |Left|, |{h}                       <*> Canel.
 %Global functions (with \ on Line editor)

@@ -733,7 +733,7 @@ class PyRadio():
             self.ws.GROUP_SEARCH_MODE: self._redisplay_search_show,
             self.ws.CONFIG_SEARCH_MODE: self._redisplay_search_show,
             self.ws.KEYBOARD_CONFIG_SEARCH_MODE: self._redisplay_search_show,
-            self.ws.FUZZY_STATION_SEARCH_MODE: self._show_fuzzy_station_search,
+            self.ws.FUZZY_SEARCH_MODE: self._show_fuzzy_search,
             self.ws.THEME_MODE: self._redisplay_theme_mode,
             self.ws.ASK_TO_CREATE_NEW_THEME_MODE: self._redisplay_ask_to_create_new_theme,
             self.ws.ADD_STATION_MODE: self._show_station_editor,
@@ -800,7 +800,7 @@ class PyRadio():
             self.ws.SEARCH_PLAYLIST_MODE: 'H_SEARCH',
             self.ws.CONFIG_SEARCH_MODE: 'H_SEARCH',
             self.ws.KEYBOARD_CONFIG_SEARCH_MODE: 'H_SEARCH',
-            self.ws.FUZZY_STATION_SEARCH_MODE: 'H_FUZZY_SEARCH',
+            self.ws.FUZZY_SEARCH_MODE: 'H_FUZZY_SEARCH',
             self.ws.SELECT_STATION_ENCODING_MODE: 'H_CONFIG_ENCODING',
             self.ws.SELECT_ENCODING_MODE: 'H_CONFIG_ENCODING',
             self.ws.EDIT_STATION_ENCODING_MODE: 'H_CONFIG_ENCODING',
@@ -832,7 +832,7 @@ class PyRadio():
 
         ''' points to list in which the search will be performed '''
         self._search_list = []
-        self._fuzzy_station_search = None
+        self._fuzzy_search = None
 
         ''' points to _search_classes for each supported mode '''
         self._mode_to_search = {
@@ -919,7 +919,7 @@ class PyRadio():
             kbkey['s_vol']: self._volume_save,
             kbkey['t_calc_col']: self._toggle_claculated_colors,
             kbkey['repaint']: self._resize_with_number_sign,
-            # ord('b'): self._show_schedule_editor,
+            ord('b'): self._show_schedule_editor,
         }
 
         self._local_functions_template = {
@@ -2546,8 +2546,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         for n, item in enumerate(search_cls):
             item.save_search_history()
             search_cls[n] = None
-        if self._fuzzy_station_search is not None:
-            self._fuzzy_station_search.save_search_history()
+        if self._fuzzy_search is not None:
+            self._fuzzy_search.save_search_history()
         self.player.stop_update_notification_thread = True
         self.player.stop_win_vlc_status_update_thread = True
         if self.player:
@@ -7229,6 +7229,121 @@ and |remove the file manually|.
         # else:
         #     logger.error('not speaking')
 
+    def _open_selected_playlist_or_register(self):
+        if self._cnf.open_register_list:
+            self.playlist_selections[self.ws.REGISTER_MODE] = [self.selection, self.startPos, self.playing]
+            self.selections[self.ws.REGISTER_MODE] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
+        else:
+            self.playlist_selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing]
+            self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
+        # self.ll('oooopen')
+        if self.number_of_items > 0:
+            ''' return to stations view '''
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'Loading playlist: "{self.stations[self.selection][-1]}"')
+            playlist_to_try_to_open = self.stations[self.selection][-1]
+            if playlist_to_try_to_open.lower().endswith('.m3u'):
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('****** Need to convert M3U to CSV ******')
+                # TODO: display message
+                self._show_notification_with_delay(
+                        txt='___Converting M3U playlist___',
+                        mode_to_set=self.ws.operation_mode,
+                        callback_function=self.refreshBody)
+                stations, error = parse_m3u(playlist_to_try_to_open)
+                # logger.error(f'{stations = }')
+                if error:
+                    # TODO: display m3u conversion error
+                    self._messaging_win.set_a_message(
+                        'UNIVERSAL',
+                        ('', f'___{error}___', Priority.HIGH)
+                    )
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug(f'm3u_to_csv: Error converting file: "{playlist_to_try_to_open}" : "{error}')
+                    self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
+                    return
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f'm3u_to_csv: File converted: "{playlist_to_try_to_open}"')
+                csv_file_to_save = playlist_to_try_to_open[:-3] + 'csv'
+                out_csv = CsvReadWrite(csv_file_to_save)
+                ret = out_csv.write(items=stations)
+                out_csv = None
+                # logger.error(f'{ret = }')
+                if ret == 0:
+                    self.stations = stations[:]
+                    playlist_to_try_to_open = csv_file_to_save
+                    self.ws.close_window()
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug(f'm3u_to_csv: File saved: "{csv_file_to_save}"')
+                else:
+                    self._messaging_win.set_a_message(
+                        'UNIVERSAL',
+                        ('', '___Cannot write CSV file___', Priority.HIGH)
+                    )
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug(f'm3u_to_csv: Error saving file: "{csv_file_to_save}"')
+                    self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
+                    # TODO: display
+                    if not os.path.exists(csv_file_to_save):
+                        try:
+                            os.unlink(csv_file_to_save)
+                        except (FileNotFoundError, PermissionError, IsADirectoryError, OSError) as e:
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug(f'm3u_to_csv: Failed to remove file: "{csv_file_to_save}": "{e}')
+                    return
+
+            # logger.error('\n\n')
+            # logger.error(f'{self.selections = }')
+            # logger.error(f'{self.playlist_selections = }')
+            # logger.error('\n\n')
+            ret = self._cnf.read_playlist_file(stationFile=playlist_to_try_to_open)
+
+            if ret == -1:
+                self.stations = self._cnf.playlists
+                self._print_playlist_load_error()
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f'Error loading playlist: "{self.stations[self.selection][-1]}"')
+            elif ret == -2:
+                self.stations = self._cnf.playlists
+                self._print_playlist_not_found_error()
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f'Playlist not found: "{self.stations[self.selection][-1]}"')
+            elif ret == -7:
+                self._print_playlist_recovery_error()
+            else:
+                self._playlist_in_editor = playlist_to_try_to_open
+                self._playlist_error_message = ''
+                self.number_of_items = ret
+                logger.error(f'self._playlist_in_editor = {self._playlist_in_editor}\nself.number_of_items = {self.number_of_items}')
+                # logger.error('self.selcctions\n{0}\nself.playlist_selections\n{1}'.format(self.selections, self.playlist_selections))
+                self.ll('selecctions')
+                if self._cnf.open_register_list:
+                    self.selections[self.ws.REGISTER_MODE] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
+                    self.playlist_selections[self.ws.REGISTER_MODE] = self.selections[self.ws.REGISTER_MODE][:-1][:]
+                else:
+                    self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
+                    self.playlist_selections[self.ws.operation_mode] = self.selections[self.ws.operation_mode][:-1][:]
+                # self.ll('ENTER')
+                self.ws.close_window()
+                self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
+                if self.saved_active_stations != [['', 0], ['', -1]]:
+                    self.active_stations = self.saved_active_stations[:]
+                    self.saved_active_stations = [['', 0], ['', -1]]
+                logger.error(f'self.saved_active_stations = {self.saved_active_stations}')
+                self._align_stations_and_refresh(self.ws.PLAYLIST_MODE)
+                self._set_active_stations()
+                self._give_me_a_search_class(self.ws.operation_mode)
+                if self.playing < 0:
+                    self._put_selection_in_the_middle(force=True)
+                    self.refreshBody()
+                self._do_display_notify()
+                logger.error('\n\n')
+                # logger.error('self.selcctions\n{0}\nself.playlist_selections\n{1}'.format(self.selections, self.playlist_selections))
+                self.ll('after')
+
+                # if self._cnf.open_last_playlist:
+                #     self._cnf.save_last_playlist()
+
     def keypress(self, char):
         ''' PyRadio keypress '''
         # # logger.error('\n\nparams\n{}\n\n'.format(self._cnf.params))
@@ -7295,10 +7410,10 @@ and |remove the file manually|.
                 self.refreshBody()
             return
 
-        if self.ws.operation_mode == self.ws.FUZZY_STATION_SEARCH_MODE:
-            ret = self._fuzzy_station_search.keypress(char)
+        if self.ws.operation_mode == self.ws.FUZZY_SEARCH_MODE:
+            ret = self._fuzzy_search.keypress(char)
             if ret == 0:
-                selected = self._fuzzy_station_search.get_selected_index()
+                selected = self._fuzzy_search.get_selected_index()
                 previous_mode = self.ws.previous_operation_mode
                 self.ws.close_window()
                 if selected is not None:
@@ -7306,10 +7421,20 @@ and |remove the file manually|.
                         self.setStation(selected)
                         self.playSelection()
                         self._put_selection_in_the_middle(force=True)
+                    elif previous_mode == self.ws.PLAYLIST_MODE:
+                        self.setStation(selected)
+                        self._open_selected_playlist_or_register()
+                        self._put_selection_in_the_middle(force=True)
+                    elif previous_mode == self.ws.SELECT_PLAYLIST_MODE:
+                        self._playlist_select_win.setPlaylistById(selected, adjust=True)
                     elif previous_mode == self.ws.SELECT_STATION_MODE:
                         self._station_select_win.setPlaylistById(selected, adjust=True)
                     elif previous_mode == self.ws.SCHEDULE_STATION_SELECT_MODE:
                         self._schedule_station_select_win.setPlaylistById(selected, adjust=True)
+                        curses.ungetch('\n')
+                    elif previous_mode == self.ws.SCHEDULE_PLAYLIST_SELECT_MODE:
+                        self._schedule_playlist_select_win.setPlaylistById(selected, adjust=True)
+                        curses.ungetch('\n')
                 self.refreshBody()
             elif ret == -1:
                 self.ws.close_window()
@@ -9426,6 +9551,9 @@ _____"|f|" to see the |free| keys you can use.
                     self._schedule_playlist_select_win = None
                     self.ws.close_window()
                     self.refreshBody()
+                elif ret == 2:
+                    logger.error('FUZZY SCHEDULE_PLAYLIST_SELECT_MODE!')
+                    self._open_fuzzy_search()
             # return
 
         elif self.ws.operation_mode == self.ws.SCHEDULE_STATION_SELECT_MODE and \
@@ -9446,6 +9574,9 @@ _____"|f|" to see the |free| keys you can use.
                     self._schedule_station_select_win = None
                     self.ws.close_window()
                     self.refreshBody()
+                elif ret == 2:
+                    logger.error('FUZZY SCHEDULE_STATION_SELECT_MODE!')
+                    self._open_fuzzy_search()
             return
 
         elif self.ws.operation_mode == self.ws.SELECT_PLAYLIST_MODE and \
@@ -9455,6 +9586,10 @@ _____"|f|" to see the |free| keys you can use.
             # keypress ok
             ret, ret_playlist = self._playlist_select_win.keypress(char)
             if ret >= 0:
+                if ret == 2:
+                    ''' fuzzy search '''
+                    self._open_fuzzy_search()
+                    return
                 if ret == 0:
                     self._config_win._config_options['default_playlist'][1] = ret_playlist
                     if ret_playlist == self._config_win._saved_config_options['default_playlist'][1]:
@@ -9473,8 +9608,12 @@ _____"|f|" to see the |free| keys you can use.
             ''' In Config window; select station '''
             # keypress ok
             ret, ret_station = self._station_select_win.keypress(char)
+            logger.error(f'{ret = }, {ret_station = }')
             if ret >= 0:
-                if ret == 0:
+                if ret == 2:
+                    self._open_fuzzy_search()
+                    return
+                elif ret == 0:
                     if logger.isEnabledFor(logging.INFO):
                         logger.info(f'New default station = "{ret_station}"')
                     self._config_win._config_options['default_station'][1] = ret_station
@@ -9809,7 +9948,7 @@ _____"|f|" to see the |free| keys you can use.
                     self.ws.NORMAL_MODE,
                     self.ws.SELECT_STATION_MODE,
                     self.ws.SCHEDULE_STATION_SELECT_MODE):
-            self._open_fuzzy_station_search()
+            self._open_fuzzy_search()
             return
 
         # elif char in (kbkey['n'], ) and \
@@ -10948,6 +11087,11 @@ _____"|f|" to see the |free| keys you can use.
                 self._random_requested = False
 
                 # logger.error('DE pl 1 active_stations = \n\n{}\n\n'.format(self.active_stations))
+                if (char in (kbkey['fuzzy_search'], ) or \
+                        check_localized(char, (kbkey['fuzzy_search'],))):
+                    self._open_fuzzy_search()
+                    return
+
                 if char == kbkey['pause'] or \
                         check_localized(char, (kbkey['pause'], )):
                     self.stopPlayer()
@@ -10979,119 +11123,8 @@ _____"|f|" to see the |free| keys you can use.
                               curses.KEY_RIGHT, kbkey['l']) or \
                               check_localized(char, (kbkey['l'], )):
                     self._update_status_bar_right(status_suffix='')
-                    if self._cnf.open_register_list:
-                        self.playlist_selections[self.ws.REGISTER_MODE] = [self.selection, self.startPos, self.playing]
-                        self.selections[self.ws.REGISTER_MODE] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
-                    else:
-                        self.playlist_selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing]
-                        self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
-                    # self.ll('oooopen')
-                    if self.number_of_items > 0:
-                        ''' return to stations view '''
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug(f'Loading playlist: "{self.stations[self.selection][-1]}"')
-                        playlist_to_try_to_open = self.stations[self.selection][-1]
-                        if playlist_to_try_to_open.lower().endswith('.m3u'):
-                            if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug('****** Need to convert M3U to CSV ******')
-                            # TODO: display message
-                            self._show_notification_with_delay(
-                                    txt='___Converting M3U playlist___',
-                                    mode_to_set=self.ws.operation_mode,
-                                    callback_function=self.refreshBody)
-                            stations, error = parse_m3u(playlist_to_try_to_open)
-                            # logger.error(f'{stations = }')
-                            if error:
-                                # TODO: display m3u conversion error
-                                self._messaging_win.set_a_message(
-                                    'UNIVERSAL',
-                                    ('', f'___{error}___', Priority.HIGH)
-                                )
-                                if logger.isEnabledFor(logging.DEBUG):
-                                    logger.debug(f'm3u_to_csv: Error converting file: "{playlist_to_try_to_open}" : "{error}')
-                                self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
-                                return
-                            if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug(f'm3u_to_csv: File converted: "{playlist_to_try_to_open}"')
-                            csv_file_to_save = playlist_to_try_to_open[:-3] + 'csv'
-                            out_csv = CsvReadWrite(csv_file_to_save)
-                            ret = out_csv.write(items=stations)
-                            out_csv = None
-                            # logger.error(f'{ret = }')
-                            if ret == 0:
-                                self.stations = stations[:]
-                                playlist_to_try_to_open = csv_file_to_save
-                                self.ws.close_window()
-                                if logger.isEnabledFor(logging.DEBUG):
-                                    logger.debug(f'm3u_to_csv: File saved: "{csv_file_to_save}"')
-                            else:
-                                self._messaging_win.set_a_message(
-                                    'UNIVERSAL',
-                                    ('', '___Cannot write CSV file___', Priority.HIGH)
-                                )
-                                if logger.isEnabledFor(logging.DEBUG):
-                                    logger.debug(f'm3u_to_csv: Error saving file: "{csv_file_to_save}"')
-                                self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
-                                # TODO: display
-                                if not os.path.exists(csv_file_to_save):
-                                    try:
-                                        os.unlink(csv_file_to_save)
-                                    except (FileNotFoundError, PermissionError, IsADirectoryError, OSError) as e:
-                                        if logger.isEnabledFor(logging.DEBUG):
-                                            logger.debug(f'm3u_to_csv: Failed to remove file: "{csv_file_to_save}": "{e}')
-                                return
-
-                        # logger.error('\n\n')
-                        # logger.error(f'{self.selections = }')
-                        # logger.error(f'{self.playlist_selections = }')
-                        # logger.error('\n\n')
-                        ret = self._cnf.read_playlist_file(stationFile=playlist_to_try_to_open)
-
-                        if ret == -1:
-                            self.stations = self._cnf.playlists
-                            self._print_playlist_load_error()
-                            if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug(f'Error loading playlist: "{self.stations[self.selection][-1]}"')
-                        elif ret == -2:
-                            self.stations = self._cnf.playlists
-                            self._print_playlist_not_found_error()
-                            if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug(f'Playlist not found: "{self.stations[self.selection][-1]}"')
-                        elif ret == -7:
-                            self._print_playlist_recovery_error()
-                        else:
-                            self._playlist_in_editor = playlist_to_try_to_open
-                            self._playlist_error_message = ''
-                            self.number_of_items = ret
-                            logger.error(f'self._playlist_in_editor = {self._playlist_in_editor}\nself.number_of_items = {self.number_of_items}')
-                            # logger.error('self.selcctions\n{0}\nself.playlist_selections\n{1}'.format(self.selections, self.playlist_selections))
-                            self.ll('selecctions')
-                            if self._cnf.open_register_list:
-                                self.selections[self.ws.REGISTER_MODE] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
-                                self.playlist_selections[self.ws.REGISTER_MODE] = self.selections[self.ws.REGISTER_MODE][:-1][:]
-                            else:
-                                self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
-                                self.playlist_selections[self.ws.operation_mode] = self.selections[self.ws.operation_mode][:-1][:]
-                            # self.ll('ENTER')
-                            self.ws.close_window()
-                            self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
-                            if self.saved_active_stations != [['', 0], ['', -1]]:
-                                self.active_stations = self.saved_active_stations[:]
-                                self.saved_active_stations = [['', 0], ['', -1]]
-                            logger.error(f'self.saved_active_stations = {self.saved_active_stations}')
-                            self._align_stations_and_refresh(self.ws.PLAYLIST_MODE)
-                            self._set_active_stations()
-                            self._give_me_a_search_class(self.ws.operation_mode)
-                            if self.playing < 0:
-                                self._put_selection_in_the_middle(force=True)
-                                self.refreshBody()
-                            self._do_display_notify()
-                            logger.error('\n\n')
-                            # logger.error('self.selcctions\n{0}\nself.playlist_selections\n{1}'.format(self.selections, self.playlist_selections))
-                            self.ll('after')
-
-                            # if self._cnf.open_last_playlist:
-                            #     self._cnf.save_last_playlist()
+                    logger.error('\n\n\nOPEN PLAYLIST\n\n\n')
+                    self._open_selected_playlist_or_register()
 
                 elif char == kbkey['reload'] or \
                         check_localized(char, (kbkey['reload'], )):
@@ -12105,31 +12138,47 @@ _____"|f|" to see the |free| keys you can use.
     def _redisplay_search_show(self):
         self.search.show(self.outerBodyWin, repaint=True)
 
-    def _open_fuzzy_station_search(self):
-        if self._fuzzy_station_search is None:
-            self._fuzzy_station_search = PyRadioFuzzyStationFinder(
+    def _open_fuzzy_search(self):
+        save_history_file = True
+        history_file = path.join(self._cnf.state_dir, 'search-fuzzy-station.txt')
+        if self._fuzzy_search is None:
+            self._fuzzy_search = PyRadioFuzzyStationFinder(
                 self.outerBodyWin,
-                path.join(self._cnf.state_dir, 'search-fuzzy-station.txt'),
+                history_file=history_file,
                 is_locked=self._cnf.locked,
             )
-        if self.ws.operation_mode == self.ws.NORMAL_MODE:
+        if self.ws.operation_mode in(
+                self.ws.PLAYLIST_MODE,
+                self.ws.SELECT_PLAYLIST_MODE,
+                self.ws.SCHEDULE_PLAYLIST_SELECT_MODE
+        ):
+            history_file = path.join(self._cnf.state_dir, 'search-fuzzy-playlist.txt')
+        if self._fuzzy_search.history_file != history_file:
+            self._fuzzy_search.history_file = history_file
+        if self.ws.operation_mode in (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
             items = self.stations
             selected = self.selection
+        elif self.ws.operation_mode == self.ws.SELECT_PLAYLIST_MODE:
+            items = self._playlist_select_win._items
+            selected = self._playlist_select_win._selected_playlist_id
         elif self.ws.operation_mode == self.ws.SELECT_STATION_MODE:
             items = self._station_select_win._items
             selected = self._station_select_win._selected_playlist_id
         elif self.ws.operation_mode == self.ws.SCHEDULE_STATION_SELECT_MODE:
             items = self._schedule_station_select_win._items
             selected = self._schedule_station_select_win.selection
+        elif self.ws.operation_mode == self.ws.SCHEDULE_PLAYLIST_SELECT_MODE:
+            items = self._schedule_playlist_select_win._items
+            selected = self._schedule_playlist_select_win.selection
         else:
             return
-        self._fuzzy_station_search.set_items(items, selected)
-        self.ws.operation_mode = self.ws.FUZZY_STATION_SEARCH_MODE
-        self._fuzzy_station_search.show(self.outerBodyWin)
+        self._fuzzy_search.set_items(items, selected)
+        self.ws.operation_mode = self.ws.FUZZY_SEARCH_MODE
+        self._fuzzy_search.show(self.outerBodyWin)
 
-    def _show_fuzzy_station_search(self):
-        if self._fuzzy_station_search is not None:
-            self._fuzzy_station_search.show(self.outerBodyWin)
+    def _show_fuzzy_search(self):
+        if self._fuzzy_search is not None:
+            self._fuzzy_search.show(self.outerBodyWin)
 
     def _redisplay_theme_mode(self):
         if self.ws.window_mode == self.ws.CONFIG_MODE and \
