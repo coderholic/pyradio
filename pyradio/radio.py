@@ -571,6 +571,7 @@ class PyRadio():
         '''
 
         self._stop_main_loop = False
+        self._cnf = pyradio_config
         self.plb_state = PlaybackState()
         self._no_refresh_if_not_in_normal_mode = False
         self._no_refresh_if_not_in_normal_mode_lock = threading.RLock()
@@ -608,7 +609,6 @@ class PyRadio():
         self._current_selection = 0
         self._force_print_all_lines = False
         self._system_asked_to_terminate = False
-        self._cnf = pyradio_config
         self._cnf.update_calculated_colors = self._update_calculated_colors
         self._theme = PyRadioTheme(self._cnf)
         self._force_update = force_update
@@ -6031,7 +6031,6 @@ and |remove the file manually|.
     def _localized_init_config(self, parent=None):
         if parent is None:
             parent = self.outerBodyWin
-        logger.error(f'self._keyboard_localized_win is None: {self._keyboard_localized_win is None}')
         if self._keyboard_localized_win is None:
             self._keyboard_localized_win = PyRadioLocalized(
                     config=self._cnf,

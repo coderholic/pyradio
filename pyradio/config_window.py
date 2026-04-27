@@ -8,6 +8,7 @@ from textwrap import wrap
 import glob
 import csv
 import string
+import bisect
 from os import path, sep, rename, listdir
 from sys import platform
 from collections import OrderedDict
@@ -192,6 +193,7 @@ class PyRadioConfigWindow():
 
         self._win = None
         self.__selection = 1
+        self.__old_selection = 1
         ''' Keep a copy of saved values for theme and transparency
             Work-around for 'T' auto save (trasnsparency), and
             's'/Space them saving
@@ -203,7 +205,6 @@ class PyRadioConfigWindow():
         self._config_options = None
         self.load_default_or_saved_parameters = False
         self.cancel_confirmed = False
-
 
         self._show_confirm_cancel_config_changes = show_confirm_cancel_config_changes
         self._is_recording = recording_function
@@ -286,9 +287,12 @@ class PyRadioConfigWindow():
             else:
                 logger.info('Altered options loaded')
         self.number_of_items = len(self._config_options) - 3
-        for i, n in enumerate(list(self._config_options.values())):
-            if n[1] == '':
-                self._headers.append(i)
+        self._headers = [y for y, x in enumerate(self._config_options.keys()) if self._config_options[x][-1] == '']
+        self._it_list = list(self._config_options.values())
+        self._it_key = tuple(self._config_options)
+        # logger.error(f'{self._it_list = }')
+        # logger.error(f'{self._it_key = }')
+        self._current_header = None
         # logger.error('{}'.format(self._config_options))
         # logger.error('self._headers = {}'.format(self._headers))
         self._port_line_editor.string = self._config_options['remote_control_server_port'][1]
@@ -312,6 +316,48 @@ class PyRadioConfigWindow():
 
     def __del__(self):
         self._toggle_transparency_function = None
+
+    def _speak_item(self):
+        tts = self.tts()
+        if tts is None:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('TTS is OFF')
+            return
+        if hasattr(tts, 'enabled'):
+            if not tts.enabled:
+                if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('TTS is disabled')
+                return
+        cur_key = self._it_key[self.__selection]
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'current key: {cur_key}')
+        if self._current_header is None:
+            this_header = 0
+        else:
+            idx = bisect.bisect_left(self._headers, self.__selection)
+            this_header = self._headers[idx - 1]
+
+        if cur_key in ('shortcuts_keys', 'localized_keys', 'radiobrowser'):
+            if this_header == self._current_header:
+                msg = f'{self._it_list[self.__selection][0]}'
+            else:
+                msg = f'{self._it_list[this_header][0]} , curent item is {self._it_list[self.__selection][0]}'
+        else:
+            if this_header == self._current_header:
+                if self.__selection == self.__old_selection:
+                    msg = f'set to {self._it_list[self.__selection][1]}'
+                else:
+                    msg = f'{self._it_list[self.__selection][0][:-2]} , value is {self._it_list[self.__selection][1]}'
+            else:
+                msg = f'{self._it_list[this_header][0]} , curent item is {self._it_list[self.__selection][0][:-2]} , value is {self._it_list[self.__selection][1]}'
+        self._current_header = this_header
+        self.__old_selection = self.__selection
+
+
+        if cur_key == 'remote_control_server_ip':
+            msg = msg.replace('.', ' dot ')
+        # logger.error(f'{msg = }')
+        tts.queue_speech(msg, Priority.NAVIGATION, Context.LIMITED, self.op_mode())
 
     def calculate_transparency(self):
         transp = False
@@ -489,21 +535,20 @@ class PyRadioConfigWindow():
         if not self.too_small:
             # logger.error('\n\n================\nself._start = {}'.format(self._start))
             # logger.error(self._config_options)
-            it_list = list(self._config_options.values())
-            for i in range(len(it_list)-1, 0, -1):
-                if it_list[i][0] == '':
-                    it_list.pop()
-            # logger.error(it_list)
+            for i in range(len(self._it_list)-1, 0, -1):
+                if self._it_list[i][0] == '':
+                    self._it_list.pop()
+            # logger.error(self._it_list)
             # if self.__selection < self.maxY -2:
             #     self._start = 0
             # else:
             #     self._start += 1
             # logger.error('self._start = {}'.format(self._start))
-            # for i in range(self._start, len(it_list)):
+            # for i in range(self._start, len(self._it_list)):
             self._port_line_editor.visible = False
             for i in range(self._start, self._start + self.maxY - 2):
                 try:
-                    it = it_list[i]
+                    it = self._it_list[i]
                 except IndexError:
                     break
                 # logger.error('selection = {0}, i = {1}, max = {2}'.format(self.selection, i, self.maxY))
@@ -551,6 +596,7 @@ class PyRadioConfigWindow():
         if self._port_line_editor.visible:
             self._port_line_editor.keep_restore_data()
             self._port_line_editor.show(self._win)
+        self._speak_item()
 
     def _get_col_line(self, ind):
         if ind < self._headers:
@@ -667,6 +713,7 @@ class PyRadioConfigWindow():
         #     else:
         #         logger.error('{}: {}'.format(n , self._config_options[n]))
         self.load_default_or_saved_parameters = False
+        self._speak_item()
 
     def _check_if_config_is_dirty(self):
         if self._config_options == self._saved_config_options:
@@ -778,6 +825,7 @@ class PyRadioConfigWindow():
             if logger.isEnabledFor(logging.INFO):
                 logger.info('No themes saved options loaded')
         self.load_default_or_saved_parameters = False
+        self._speak_item()
 
     def go_exit(self):
         self.cancel_confirmed = True
@@ -961,6 +1009,7 @@ class PyRadioConfigWindow():
                         Y, 3 + len(val[1][0]),
                         str(t) + ' ', curses.color_pair(6))
                     self._print_title()
+                    self._speak_item()
                     self._win.refresh()
                 return -1, []
 
@@ -976,6 +1025,7 @@ class PyRadioConfigWindow():
                     Y, 3 + len(val[1][0]),
                     str(t) + ' ', curses.color_pair(6))
                 self._print_title()
+                self._speak_item()
                 self._win.refresh()
                 return -1, []
 
@@ -1018,6 +1068,7 @@ class PyRadioConfigWindow():
                     Y, 3 + len(val[1][0]),
                     val[1][1] + '     ', curses.color_pair(6))
                 self._print_title()
+                self._speak_item()
                 self._win.refresh()
                 return -1, []
 
@@ -1035,6 +1086,7 @@ class PyRadioConfigWindow():
                     Y, 3 + len(val[1][0]),
                     val[1][1] + '     ', curses.color_pair(6))
                 self._print_title()
+                self._speak_item()
                 self._win.refresh()
                 return -1, []
 
@@ -1055,6 +1107,7 @@ class PyRadioConfigWindow():
                             Y, 3 + len(val[1][0]),
                             s_t + '     ', curses.color_pair(6))
                         self._print_title()
+                        self._speak_item()
                         self._win.refresh()
                         # att = PyRadioThemeReadWrite(self._cnf)
                         # att._calculate_fifteenth_color()
@@ -1078,6 +1131,7 @@ class PyRadioConfigWindow():
                             Y, 3 + len(val[1][0]),
                             s_t + '     ', curses.color_pair(6))
                         self._print_title()
+                        self._speak_item()
                         self._win.refresh()
                         # att = PyRadioThemeReadWrite(self._cnf)
                         # att._calculate_fifteenth_color()
@@ -1102,6 +1156,7 @@ class PyRadioConfigWindow():
                     disp, curses.color_pair(6)
                 )
                 self._print_title()
+                self._speak_item()
                 self._win.refresh()
                 return -1, []
 
@@ -1118,6 +1173,7 @@ class PyRadioConfigWindow():
                     disp, curses.color_pair(6)
                 )
                 self._print_title()
+                self._speak_item()
                 self._win.refresh()
                 return -1, []
 
@@ -1144,6 +1200,7 @@ class PyRadioConfigWindow():
                     Y, 3 + len(val[1][0]),
                     str(t) + ' ', curses.color_pair(6))
                 self._print_title()
+                self._speak_item()
                 self._win.refresh()
                 return -1, []
 
@@ -1157,6 +1214,7 @@ class PyRadioConfigWindow():
                     Y, 3 + len(val[1][0]),
                     str(t) + ' ', curses.color_pair(6))
                 self._print_title()
+                self._speak_item()
                 self._win.refresh()
                 return -1, []
 
@@ -1172,6 +1230,7 @@ class PyRadioConfigWindow():
                     Y, 3 + len(val[1][0]),
                     str(t) + ' ', curses.color_pair(6))
                 self._print_title()
+                self._speak_item()
                 self._win.refresh()
                 return -1, []
 
@@ -1188,7 +1247,8 @@ class PyRadioConfigWindow():
                         Y, 3 + len(val[1][0]),
                         str(t) + ' ', curses.color_pair(6))
                     self._print_title()
-                    self._win.refresh()
+                self._speak_item()
+                self._win.refresh()
                 return -1, []
 
             if char in (curses.KEY_LEFT, kbkey['h']) or \
@@ -1203,6 +1263,7 @@ class PyRadioConfigWindow():
                     Y, 3 + len(val[1][0]),
                     str(t) + ' ', curses.color_pair(6))
                 self._print_title()
+                self._speak_item()
                 self._win.refresh()
                 return -1, []
 
@@ -1218,6 +1279,7 @@ class PyRadioConfigWindow():
                         Y, 3 + len(val[1][0]),
                         str(t) + '    ', curses.color_pair(6))
                     self._print_title()
+                    self._speak_item()
                     self._win.refresh()
                 return -1, []
 
@@ -1232,6 +1294,7 @@ class PyRadioConfigWindow():
                     Y, 3 + len(val[1][0]),
                     str(t) + '    ', curses.color_pair(6))
                 self._print_title()
+                self._speak_item()
                 self._win.refresh()
                 return -1, []
 
@@ -1247,6 +1310,7 @@ class PyRadioConfigWindow():
                     Y, 3 + len(val[1][0]),
                     str(t) + '    ', curses.color_pair(6))
                 self._print_title()
+                self._speak_item()
                 self._win.refresh()
                 return -1, []
 
@@ -1266,6 +1330,7 @@ class PyRadioConfigWindow():
                     Y, 3 + len(val[1][0]),
                     str(t) + '    ', curses.color_pair(6))
                 self._print_title()
+                self._speak_item()
                 self._win.refresh()
                 return -1, []
 
@@ -1281,6 +1346,7 @@ class PyRadioConfigWindow():
                         Y, 3 + len(val[1][0]),
                         str(t) + '    ', curses.color_pair(6))
                     self._print_title()
+                    self._speak_item()
                     self._win.refresh()
                 return -1, []
 
@@ -1300,6 +1366,7 @@ class PyRadioConfigWindow():
                     Y, 3 + len(val[1][0]),
                     str(t) + '    ', curses.color_pair(6))
                 self._print_title()
+                self._speak_item()
                 self._win.refresh()
                 return -1, []
 
@@ -1318,6 +1385,7 @@ class PyRadioConfigWindow():
                         Y, 3 + len(val[1][0]),
                         str(t) + '    ', curses.color_pair(6))
                     self._print_title()
+                    self._speak_item()
                     self._win.refresh()
                 return -1, []
 
@@ -1333,6 +1401,7 @@ class PyRadioConfigWindow():
                         Y, 3 + len(val[1][0]),
                         str(t) + '    ', curses.color_pair(6))
                     self._print_title()
+                    self._speak_item()
                     self._win.refresh()
                 return -1, []
 
@@ -1346,6 +1415,7 @@ class PyRadioConfigWindow():
                 Y, 3 + len(val[1][0]),
                 self._config_options[val[0]][1] + '    ', curses.color_pair(6))
             self._print_title()
+            self._speak_item()
             self._win.refresh()
             return -1, []
 
@@ -1361,6 +1431,7 @@ class PyRadioConfigWindow():
                 Y, 3 + len(val[1][0]),
                 disp, curses.color_pair(6))
             self._print_title()
+            self._speak_item()
             self._win.refresh()
             return -1, []
 
