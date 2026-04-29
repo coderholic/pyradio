@@ -900,6 +900,7 @@ and be asked next time you execute |PyRadio|.
 kb2str(r'''Up|, |{j}|, |PgUp|,                  <*>
 Down|, |{k}|, |PgDown                           <*> Change option selection.
 {g}|, |Home| / |{G}|, |End                      <*> Jump to first / last option.
+{gr}                                            <*> Open the Group Selection window.
 Enter|, |{pause}|, |Right|, |{l}                <*> Change option value.
 {revert_saved}                                  <*> Revert to saved values.
 {search} |/ |{search_next}| / |{search_prev}    <*> Search, go to next / previous result.

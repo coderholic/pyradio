@@ -456,9 +456,9 @@ class PyRadioConfigWindow():
             sel -= 1
         return sel
 
-    def set_selection(self, sel):
-        self.selection = sel
-        self._put_cursor(0)
+    def set_selection(self, sel, adjust=None):
+        self.__selection = sel
+        self._put_cursor(0, adjust=adjust)
 
     def init_config_win(self):
         self._win = None
@@ -666,7 +666,15 @@ class PyRadioConfigWindow():
                 '''
                 self._start -= 1
             else:
-                pass
+                group_header = self.__selection - 1
+
+                if group_header in self._headers:
+                    window_size = visible_items + 1
+
+                    wanted_start = group_header
+                    max_start = max(0, self.number_of_items - window_size)
+
+                    self._start = min(wanted_start, max_start)
 
     def _populate_help_lines(self):
         self._help_lines = []
