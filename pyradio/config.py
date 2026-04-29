@@ -1338,6 +1338,7 @@ class PyRadioConfig(PyRadioStations):
         self.opts['resource_opener'] = ['Resource Opener: ', 'auto']
         self.opts['log_titles'] = ['Log titles: ', False]
         self.opts['use_os_media_controls'] = ['Enable OS Media Controls: ', False]
+        self.opts['update_window_title'] = ['Update Window Title: ', True]
         self.opts['playlist_manngement_title'] = ['Playlist Management Options', '']
         self.opts['confirm_station_deletion'] = ['Confirm station deletion: ', True]
         self.opts['confirm_playlist_reload'] = ['Confirm playlist reload: ', True]
@@ -1535,6 +1536,15 @@ class PyRadioConfig(PyRadioStations):
 
         self._read_notification_command()
         self.profile_manager = ProfileManager()
+
+    @property
+    def update_window_title(self):
+        return self.opts['update_window_title'][1]
+
+    @update_window_title.setter
+    def update_window_title(self, val):
+        self.opts['update_window_title'][1] = val
+        self.opts['dirty_config'][1] = True
 
     @property
     def use_os_media_controls(self):
@@ -2630,6 +2640,11 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['console_theme'][1] = tmp
             elif sp[0] == 'default_playlist':
                 self.opts['default_playlist'][1] = sp[1].strip()
+            elif sp[0] == 'update_window_title':
+                if sp[1].lower() == 'false':
+                    self.opts['update_window_title'][1] = False
+                else:
+                    self.opts['update_window_title'][1] = True
             elif sp[0] == 'default_station':
                 st = sp[1].strip()
                 if st == '-1' or st.lower() == 'false':

@@ -82,6 +82,7 @@ class PyRadioConfigWindow():
         _help_text.append(['Enables integration with Windows system media controls.', '|', 'When enabled, PyRadio can be controlled from media keys and system media overlay.', '|', 'Default value: False'])
     else:
         _help_text.append(['Enables integration with macOS system media controls.', '|', 'When enabled, PyRadio can be controlled from keyboard media keys and system interfaces.', '|', 'Default value: False'])
+    _help_text.append(['When enabled, PyRadio updates the window (terminal) title with playback information.', '|', 'Disable this by setting the parameter to False.', '|', 'Default value: True'])
     _help_text.append(None)
     _help_text.append(['Specify whether you will be asked to confirm every station deletion action.', '|', 'Default value: True'])
     _help_text.append(['Specify whether you will be asked to confirm playlist reloading, when the playlist has not been modified within PyRadio.', '|', 'Default value: True'])
@@ -287,7 +288,7 @@ class PyRadioConfigWindow():
             else:
                 logger.info('Altered options loaded')
         self.number_of_items = len(self._config_options) - 3
-        self._headers = [y for y, x in enumerate(self._config_options.keys()) if self._config_options[x][-1] == '']
+        self._headers = [y for y, x in enumerate(self._config_options.keys()) if self._config_options[x][-1] == '' and not self._config_options[x][0] == '']
         self._it_list = list(self._config_options.values())
         self._it_key = tuple(self._config_options)
         # logger.error(f'{self._it_list = }')
@@ -317,6 +318,22 @@ class PyRadioConfigWindow():
     def __del__(self):
         self._toggle_transparency_function = None
 
+    def get_current_header(self, an_item_index=None):
+        ''' return the header index of the an item '''
+        the_id = self.__selection if an_item_index == None else an_item_index
+        idx = bisect.bisect_left(self._headers, the_id)
+        return self._headers[idx - 1]
+
+    def get_current_header_title(self, an_item_index=None):
+        idx = self.get_current_header(an_item_index)
+        return self._it_list[idx][0]
+
+    def get_header_by_title(self, a_title):
+        for n in self._headers:
+            if self._it_list[n][0] == a_title:
+                return n
+        return -1
+
     def _speak_item(self):
         tts = self.tts()
         if tts is None:
@@ -326,16 +343,13 @@ class PyRadioConfigWindow():
         if hasattr(tts, 'enabled'):
             if not tts.enabled:
                 if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('TTS is disabled')
+                    logger.debug('TTS is disabled')
                 return
         cur_key = self._it_key[self.__selection]
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(f'current key: {cur_key}')
         if self._current_header is None:
-            this_header = 0
-        else:
-            idx = bisect.bisect_left(self._headers, self.__selection)
-            this_header = self._headers[idx - 1]
+            this_header = 0 if self._current_header is None else self.get_current_header()
 
         if cur_key in ('shortcuts_keys', 'localized_keys', 'radiobrowser'):
             if this_header == self._current_header:
@@ -606,7 +620,7 @@ class PyRadioConfigWindow():
             self._column = self._second_column + 2
             self._line = ind - self._headers + 2
 
-    def _put_cursor(self, jump):
+    def _put_cursor(self, jump, adjust=None):
         if self.__selection == self.number_of_items - 1 and jump > 0:
             self.__selection = 1
             self._start = 0
@@ -643,6 +657,16 @@ class PyRadioConfigWindow():
             else:
                 self._start = min(self._start, self.__selection)
         self._start = min(self._start, self.__selection)
+
+        if adjust is not None:
+            if self._start == self.__selection and \
+                    self._start - 1 in self._headers:
+                ''' if the item is at window top and first in a group
+                    display the group title also
+                '''
+                self._start -= 1
+            else:
+                pass
 
     def _populate_help_lines(self):
         self._help_lines = []
@@ -908,7 +932,11 @@ class PyRadioConfigWindow():
         # logger.error(f'{val = }')
         Y = self.selection - self._start + 1
 
-        if char == ord('T'):
+        if char == ord('T') or \
+                check_localized(char, (ord('T'), )):
+            this_header = self.get_current_header()
+            if self._it_key[this_header] != 'tts_title':
+                return -1, []
             if self.tmp_tts is None:
                 self.tmp_tts = TTSManager(
                     enabled=True,
@@ -926,6 +954,14 @@ class PyRadioConfigWindow():
             if self.tmp_tts.available:
                 self.tmp_tts.queue_speech('This is a sample text (spoken to check your settings)', Priority.NORMAL)
             return -1, []
+
+        if char == ord('t') or \
+                check_localized(char, (ord('t'), )):
+            return -1, []
+
+        if char == kbkey['gr'] or \
+                check_localized(char, (kbkey['gr'], )):
+            return Window_Stack_Constants.CONFIG_GROUP_MODE, [self._it_list[x][0] for x in self._headers]
 
         if char in self._local_functions:
             if not (val[0] in (
@@ -1476,7 +1512,8 @@ class PyRadioConfigWindow():
                 'enable_tts',
                 'tts_speak_volume_change_start',
                 'use_os_media_controls',
-                'auto_update_stations'
+                'auto_update_stations',
+                'update_window_title'
             ):
                 self._config_options[sel][1] = not self._config_options[sel][1]
                 # # if sel == 'open_last_playlist':

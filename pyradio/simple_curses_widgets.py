@@ -1948,6 +1948,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
         entry_cannot_be_deleted_function=None,
         external_keypress_function=None,
         items_changed_function=None,
+        from_config=None,
         speak=None
     ):
         ''' Initialize the widget.
@@ -2157,6 +2158,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
         self._entry_cannot_be_deleted_function = entry_cannot_be_deleted_function
         self._items_changed_function = items_changed_function
         self._selection = selection
+        self._from_config = from_config
         if global_functions is not None:
             self._global_functions = global_functions
         if local_functions is not None:

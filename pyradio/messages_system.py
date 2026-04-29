@@ -538,6 +538,19 @@ Esc|, |{q}                                          <*> Cancel.
 {t_tag}| / |{tag}                                   <*> Toggle title log / like a station.'''
 ), Priority.HELP),
 
+        'H_CONFIG_GROUP': ('Group Selection Help',
+kb2str(r'''Up|, |{j}|, |PgUp|,                      <*>
+Down|, |{k}|, |PgDown                               <*> Change Group Header selection.
+{g} {G}                                             <*> Go to first / last Group Header.
+{screen_top} {screen_middle} {screen_bottom}        <*> Go to top / middle / bottom of screen.
+{pause}|, |Left|, |Enter                            <*> Select a Group Header.
+Esc|, |{q}                                          <*> Cancel.
+%Global functions
+{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}             <*> Change volume.
+{mute}| / |{s_vol}                                  <*> |M|ute player / Save |v|olume.
+{t_tag}| / |{tag}                                   <*> Toggle title log / like a station.'''
+), Priority.HELP),
+
     'D_GROUP_DELETE_ASK': ('Group Deletion',
 kb2strL(r'''
 Are you sure you want to delete this group header:
@@ -890,14 +903,14 @@ Down|, |{k}|, |PgDown                           <*> Change option selection.
 Enter|, |{pause}|, |Right|, |{l}                <*> Change option value.
 {revert_saved}                                  <*> Revert to saved values.
 {search} |/ |{search_next}| / |{search_prev}    <*> Search, go to next / previous result.
-t                                               <*> TTS test.
+T                                               <*> TTS test (in TTS group only).
 {revert_def}                                    <*> Load default values.
 {s}                                             <*> Save config.
 Esc|, |{q}|, |Left|, |{h}                       <*> Cancel.
 %Global functions (with \ on Line editor)
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*>  Change volume.
-{mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
-{t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
+{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*> Change volume.
+{mute}| / |{s_vol}                              <*> |M|ute player / Save |v|olume.
+{t_tag}| / |{tag}                               <*> Toggle title log / like a station.'''
 ), Priority.HELP),
 
     'H_CONFIG_STATION': ('Station Selection Help',

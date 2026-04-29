@@ -51,6 +51,10 @@ TTS_WINDOWS_TEXT = {
         lambda it: f'''Window: Open Directory.
             Current item: {it}.
         ''',
+    Window_Stack_Constants.GROUP_SELECTION_MODE:
+        lambda it: f'''Window: Available groups.
+            Current item: {it}.
+        ''',
 }
 
 def describe_single_key(key_string):

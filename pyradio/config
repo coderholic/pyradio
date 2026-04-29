@@ -211,6 +211,13 @@ log_titles = False
 # Default value: False
 use_os_media_controls = False
 
+# Update Window Title
+# When enabled, PyRadio updates the window (terminal) title with playback
+# information. Disable this by setting the parameter to False.
+#
+# Default value:True
+update_window_title = True
+
 # Connection timeout
 # PyRadio will wait for this number of seconds to get a station/server message
 # indicating that playback has actually started. If this does not happen
