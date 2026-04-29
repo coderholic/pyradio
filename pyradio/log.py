@@ -656,9 +656,9 @@ class Log():
                     if msg:
                         msg = fix_chars(msg)
                     if msg_id in (STATES.PLAY, STATES.TITLE):
-                        self.set_win_title(d_msg if d_msg else msg)
+                        self.set_win_title(d_msg if d_msg else msg, update_title=self._cnf.update_window_title)
                     elif msg_id not in (STATES.ANY, STATES.VOLUME, STATES.BUFF_MSG):
-                        self.set_win_title()
+                        self.set_win_title(update_title=self._cnf.update_window_title)
                     self._write_title_to_log(msg if msg else 'No')
                     self._show_notification(msg)
                     self._update_mpris_title(msg)
@@ -1166,7 +1166,7 @@ class Log():
             stdout.flush()
 
     @staticmethod
-    def set_win_title(msg=None):
+    def set_win_title(msg=None, update_title=True):
         default = M_STRINGS['win-title']
         # just_return = (
         #     'Config saved',
@@ -1201,6 +1201,8 @@ class Log():
             token_id = 0
         else:
             if msg.startswith('['):
+                return
+            if not update_title:
                 return
             d_msg = msg
             if d_msg.endswith(M_STRINGS['session-locked']):

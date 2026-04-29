@@ -194,13 +194,13 @@ The TTS support in PyRadio is continuously evolving. Currently, TTS is available
 
 ### Configuration Window Behavior
 
-To assist users in configuring the program, **special rules apply when using the Configuration windows**:
+To assist users in configuring the program, **special rules apply when using the Configuration windows**, provided the TTS system is already enabled:
 
 1. **Full TTS Access**: When navigating through the Configuration menus and windows (including all sub-windows), the TTS system operates at its fullest capacity, temporarily overriding the `tts_context` setting to provide complete auditory feedback about all interface elements.
 
-2. **Voice Sample**: While in the main TTS configuration screen, pressing **T** (uppercase) will speak a voice sample using the current TTS settings, allowing you to preview how your configuration sounds.
+2. **Voice Sample**: While in the TTS configuration group, pressing "**T**" (uppercase) will speak a voice sample using the current TTS settings, allowing you to preview how your configuration sounds.
 
-3. **Detailed Help**: In all configuration windows (currently implemented in the "Keyboard Shortcuts" window), pressing **t** (lowercase) provides additional spoken information about the current setting being configured.
+3. **Detailed Help**: In all configuration windows (currently implemented in the "Keyboard Shortcuts" window), pressing "**t**" (lowercase) provides additional spoken information about the current setting being configured.
 
 *This special behavior ensures that all users can effectively configure the program to their preferences, regardless of their current TTS context settings.*
 

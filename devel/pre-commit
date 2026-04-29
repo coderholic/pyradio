@@ -337,6 +337,10 @@ do
     if [ "$out" = "os-media-controls.html" ];then
         sed -i  -e '/mpris.jpg/s/src=/style="width: 368px" src=/'  -e '/smtc.jpg/s/src=/style="width: 466px" src=/'  -e '/now-playing.jpg/s/src=/style="width: 700px" src=/'  -e 's/support:-/support-/' "$out"
     fi
+    
+    if [ "$out" = "tts.html" ];then
+        sed -i 's/href="#current-status.*roadmap"/href="#current-status-roadmap"/' "$out"
+    fi
 
     sed -i '/^<[Aa]/s|.*|<p>&</p>|' "$out"
     git add ${out}
