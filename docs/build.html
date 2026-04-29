@@ -40,24 +40,56 @@ a:visited{color: SaddleBrown;}
 <h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <!-- vim-markdown-toc Marked -->
 <ul>
+<li><a href="#installation-guides">Installation guides</a></li>
 <li><a href="#current-state-of-the-project">Current state of the project</a>
 <ul>
+<li><a href="#the-long-story">The long story</a></li>
 <li><a href="#what-does-it-all-mean-and-why-should-you-care">What does it all mean and why should you care</a></li>
 <li><a href="#when-do-i-need-to-install-pipx?">When do I need to install pipx?</a>
 <ul>
 <li><a href="#more-info">More info</a></li>
 </ul></li>
-<li><a href="#installation-on-the-bsds">Installation on the BSDs</a></li>
-<li><a href="#rasberry-pi-installation">Rasberry Pi installation</a></li>
 </ul></li>
-<li><a href="#installation-guides">Installation guides</a></li>
 </ul>
 <!-- vim-markdown-toc -->
 <p class="indented">[ <a href="index.html#installation">Return to main doc</a> ]</p>
+<h2 id="installation-guides">Installation guides <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>Please follow the installation guides for your OS.</p>
+<ol type="1">
+<li><strong>Linux</strong>
+<ul>
+<li><a href="linux-pipx.html">pipx installation</a> (the new way)<br />
+If you are using a relatively recent distribution, this is the way to go.</li>
+<li><a href="linux.html">pip installation</a> (the old way)<br />
+Valid for older installations, before <strong>Ubuntu 23.04</strong> etc.</li>
+</ul></li>
+<li><strong>MacOS</strong><br />
+Follow the instructions on <a href="macos.html">this page</a>.</li>
+<li><strong>Windows</strong><br />
+Follow the instructions on <a href="windows.html">this page</a>.</li>
+<li><strong>BSD</strong><br />
+Please do install <strong>bash</strong> beforehand and try to follow the <a href="linux.html">pip installation guide</a>.<br />
+<br />
+Be aware that <strong>PyRadio</strong> is provided as a <strong>port</strong> on <a target="_blank" href="https://www.freshports.org/audio/py-pyradio/">FreeBSB</a>.</li>
+<li><strong>Rasberry Pi</strong><br />
+You should probably follow the <a href="linux-pipx.html">pipx installation</a> guide.<br />
+<br />
+There are a couple of things you should be aware of:<br />
+<br />
+</li>
+</ol>
+<ol type="a">
+<li>The default player will be <strong>MPlayer</strong>.<br />
+<br />
+</li>
+<li>If you still want to use <strong>MPV</strong>, please make sure you increase the <em>Connection timeout</em> value to at least 20 (sometimes even 30 for some machines). Even then, your machine may eventually crash, if it’s on the lower end of things and <strong>PyRadio</strong> is left running for hours.</li>
+</ol>
 <h2 id="current-state-of-the-project">Current state of the project <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>In case you want to know why and how you should use <strong>pipx</strong> instead of <strong>pip</strong> to install the program, just read on.</p>
+<h3 id="the-long-story">The long story</h3>
 <p>Starting with version <strong>0.9.2.6</strong>, <strong>PyRadio</strong> has changed (yet again) its installation method, forced by the emergance of Ubuntu 23.04.</p>
 <p>After abandoning invoking <em>setup.py</em> directly, now it’s time to start using <strong>virtual environments</strong> (through a program called pipx) along with the pure pip method.</p>
-<p>This is not a <strong>PyRadio</strong> thing; distributions are starting to embrace this behaviour.</p>
+<p>This is not a <strong>PyRadio</strong> thing; distributions are starting to embrace this behavior.</p>
 <p>The rationale behind this move it this: since pip can be used to install packages <strong>system wide</strong>, it can easily “destroy” the whole python installation. This would be the equivalent of forcing the installation of an Ubuntu package in a Debian system or a Debian 11 package on a Debian 8 system.</p>
 <p>At the same time, python scripts and packages are already used by distributions to provide system tools and breaking a system’s python installation may lead to breaking the whole system.</p>
 <p>The solution is forcing the use of <strong>virtual environments</strong> for any python script or program or package that is <strong>not provided</strong> by the distribution itself, effectively isolating the program’s installation from the rest of the system. Any program, package or module installed within the <strong>virtual environment</strong> exists and lives within that environment only, it does not interfere with the distribution’s Python installation and cannot “destroy” it.</p>
@@ -99,29 +131,5 @@ a:visited{color: SaddleBrown;}
 <li><p><a target="_blank" href="https://packaging.python.org/en/latest/specifications/externally-managed-environments/">Externally Managed Environments @ PyPA</a></p></li>
 <li><p><a target="_blank" href="https://peps.python.org/pep-0668/">PEP 668 – Marking Python base environments as “externally managed”</a></p></li>
 </ul>
-<h3 id="installation-on-the-bsds">Installation on the BSDs</h3>
-<p>If you are on any of the BSDs, please do install <strong>bash</strong> beforehand and try to follow the <a href="linux.html">pip installation guide</a>.</p>
-<p>Please be aware that <strong>PyRadio</strong> is provided as a <strong>port</strong> on <a target="_blank" href="https://www.freshports.org/audio/py-pyradio/">FreeBSB</a>.</p>
-<h3 id="rasberry-pi-installation">Rasberry Pi installation</h3>
-<p>If installing on a Rasberry Pi, there are a couple of things you should be aware of:</p>
-<ol type="1">
-<li>The default player will be <strong>MPlayer</strong></li>
-<li>If you still want to use <strong>MPV</strong>, please make sure you increase the <em>Connection timeout</em> value to at least 20 (sometimes even 30 for some machines). Even then, your machine may eventually crash, if it’s on the lower end of things and <strong>PyRadio</strong> is left running for hours.</li>
-</ol>
-<h2 id="installation-guides">Installation guides <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>Please follow the installation guides for your OS.</p>
-<ol type="1">
-<li>Linux
-<ul>
-<li><a href="linux.html">pip installation</a> (the old way)<br />
-Not valid for <strong>Debian</strong> and <strong>Ubuntu 23.04</strong></li>
-<li><a href="linux-pipx.html">pipx installation</a> (the new way)<br />
-Valid for <strong>Debian</strong> and <strong>Ubuntu 23.04</strong> and newer</li>
-</ul></li>
-<li>MacOS<br />
-Follow the instructions on <a href="macos.html">this page</a>.</li>
-<li>Windows<br />
-Follow the instructions on <a href="windows.html">this page</a>.</li>
-</ol>
 </body>
 </html>

@@ -3,25 +3,54 @@
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->
 
+* [Installation guides](#installation-guides)
 * [Current state of the project](#current-state-of-the-project)
+    * [The long story](#the-long-story)
     * [What does it all mean and why should you care](#what-does-it-all-mean-and-why-should-you-care)
     * [When do I need to install pipx?](#when-do-i-need-to-install-pipx?)
         * [More info](#more-info)
-    * [Installation on the BSDs](#installation-on-the-bsds)
-    * [Rasberry Pi installation](#rasberry-pi-installation)
-* [Installation guides](#installation-guides)
 
 <!-- vim-markdown-toc -->
 
 [ [Return to main doc](index.md#installation) ]
 
+## Installation guides
+
+Please follow the installation guides for your OS.
+
+1. **Linux**
+    - [pipx installation](linux-pipx.md) (the new way) \
+If you are using a relatively recent distribution, this is the way to go.
+    - [pip installation](linux.md) (the old way) \
+Valid for older installations, before **Ubuntu 23.04** etc.
+2. **MacOS** \
+Follow the instructions on [this page](macos.md).
+3. **Windows** \
+Follow the instructions on [this page](windows.md).
+4. **BSD** \
+Please do install **bash** beforehand and try to follow the [pip installation guide](linux.md). \
+\
+Be aware that **PyRadio** is provided as a **port** on [FreeBSB](https://www.freshports.org/audio/py-pyradio/).
+5. **Rasberry Pi** \
+You should probably follow the [pipx installation](linux-pipx.md) guide. \
+\
+There are a couple of things you should be aware of: \
+\
+a. The default player will be **MPlayer**. \
+\
+b. If you still want to use **MPV**, please make sure you increase the *Connection timeout* value to at least 20 (sometimes even 30 for some machines). Even then, your machine may eventually crash, if it's on the lower end of things and **PyRadio** is left running for hours.
+
 ## Current state of the project
+
+In case you want to know why and how you should use **pipx** instead of **pip** to install the program, just read on.
+
+### The long story
 
 Starting with version **0.9.2.6**, **PyRadio** has changed (yet again) its installation method, forced by the emergance of Ubuntu 23.04.
 
 After abandoning invoking *setup.py* directly, now it's time to start using **virtual environments** (through a program called `pipx`) along with the pure `pip` method.
 
-This is not a **PyRadio** thing; distributions are starting to embrace this behaviour.
+This is not a **PyRadio** thing; distributions are starting to embrace this behavior.
 
 The rationale behind this move it this: since `pip` can be used to install packages **system wide**, it can easily "destroy" the whole python installation. This would be the equivalent of forcing the installation of an Ubuntu package in a Debian system or a Debian 11 package on a Debian 8 system.
 
@@ -80,34 +109,4 @@ If you get that message, or a similar one, it is time to install `pipx`.
 - [Externally Managed Environments @ PyPA](https://packaging.python.org/en/latest/specifications/externally-managed-environments/)
 
 - [PEP 668 – Marking Python base environments as “externally managed”](https://peps.python.org/pep-0668/)
-
-
-### Installation on the BSDs
-
-If you are on any of the BSDs, please do install **bash** beforehand and try to follow the [pip installation guide](linux.md).
-
-Please be aware that **PyRadio** is provided as a **port** on [FreeBSB](https://www.freshports.org/audio/py-pyradio/).
-
-
-### Rasberry Pi installation
-
-If installing on a Rasberry Pi, there are a couple of things you should be aware of:
-
-1. The default player will be **MPlayer**
-3. If you still want to use **MPV**, please make sure you increase the *Connection timeout* value to at least 20 (sometimes even 30 for some machines). Even then, your machine may eventually crash, if it's on the lower end of things and **PyRadio** is left running for hours.
-
-## Installation guides
-
-Please follow the installation guides for your OS.
-
-1. Linux
-    - [pip installation](linux.md) (the old way) \
-Not valid for **Debian** and **Ubuntu 23.04**
-    - [pipx installation](linux-pipx.md) (the new way) \
-Valid for **Debian** and **Ubuntu 23.04** and newer
-2. MacOS \
-Follow the instructions on [this page](macos.md).
-3. Windows \
-Follow the instructions on [this page](windows.md).
-
 
