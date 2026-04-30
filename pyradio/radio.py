@@ -711,7 +711,6 @@ class PyRadio():
             self.ws.MESSAGING_MODE: self._redisplay_message_win,
             self.ws.UPDATE_NOTIFICATION_MODE: self._print_update_notification,
             self.ws.UPDATE_NOTIFICATION_OK_MODE: self._print_update_ok_notification,
-            self.ws.SELECT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
             self.ws.EDIT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
             self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE: self._print_playlist_not_found_error,
             self.ws.PLAYLIST_LOAD_ERROR_MODE: self._print_playlist_load_error,
@@ -8430,7 +8429,10 @@ _____"|f|" to see the |free| keys you can use.
                   check_localized(char, (kbkey['t'],))) and \
                 self.ws.operation_mode not in (self.ws.EDIT_STATION_MODE,
                     self.ws.ADD_STATION_MODE, self.ws.THEME_MODE,
-                    self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE,) and \
+                    self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE,
+                    self.ws.SELECT_STATION_ENCODING_MODE,
+                    self.ws.SELECT_ENCODING_MODE,
+                    self.ws.EDIT_STATION_ENCODING_MODE) and \
                 self.ws.operation_mode not in self.ws.PASSIVE_WINDOWS and \
                 not self.is_search_mode(self.ws.operation_mode) and \
                 self.ws.window_mode not in (self.ws.CONFIG_MODE, ) and \
@@ -8623,7 +8625,9 @@ _____"|f|" to see the |free| keys you can use.
                             self.outerBodyMaxY,
                             self.outerBodyMaxX,
                             self._cnf.default_encoding,
-                            self._cnf.default_encoding)
+                            self._cnf.default_encoding,
+                            speak=self._speak_window if self._enable_tts else None,
+                            global_functions=self._global_functions)
                     self._encoding_select_win.set_reduced_global_functions(self._global_functions)
                 else:
                     self._encoding_select_win._parent_maxY, self._encoding_select_win._parent_maxX = self.outerBodyWin.getmaxyx()
@@ -9145,7 +9149,9 @@ _____"|f|" to see the |free| keys you can use.
                         self.outerBodyMaxX,
                     self._station_editor._encoding,
                     self._cnf.default_encoding,
-                    show_default=True
+                    show_default=True,
+                    speak=self._speak_window if self._enable_tts and self._cnf.tts_context != 'limited' else None,
+                    global_functions=self._global_functions,
                 )
                 logger.error(f'{self._station_editor._encoding}')
                 self._encoding_select_win.set_reduced_global_functions(self._global_functions)
@@ -10951,7 +10957,9 @@ _____"|f|" to see the |free| keys you can use.
                         self.outerBodyMaxY,
                         self.outerBodyMaxX,
                         self._old_station_encoding,
-                        self._cnf.default_encoding
+                        self._cnf.default_encoding,
+                        speak=self._speak_window if self._enable_tts and self._cnf.tts_context != 'limited' else None,
+                        global_functions=self._global_functions,
                     )
                     self._encoding_select_win.set_reduced_global_functions(self._global_functions)
                     self._encoding_select_win.init_window()
@@ -12181,9 +12189,12 @@ _____"|f|" to see the |free| keys you can use.
             self._schedule_station_select_win.refresh_and_resize(self.bodyWin.getmaxyx())
 
     def _redisplay_encoding_select_win_refresh_and_resize(self):
-        if self._config_win and \
-                not self._config_win.too_small:
+        if self.ws.window_mode == self.ws.NORMAL_MODE:
             self._encoding_select_win.refresh_and_resize(self.outerBodyMaxY, self.outerBodyMaxX)
+        else:
+            if self._config_win and \
+                    not self._config_win.too_small:
+                self._encoding_select_win.refresh_and_resize(self.outerBodyMaxY, self.outerBodyMaxX)
 
     def _redisplay_station_select_win_refresh_and_resize(self):
         if not self._config_win.too_small:

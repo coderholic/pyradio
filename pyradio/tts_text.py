@@ -55,6 +55,22 @@ TTS_WINDOWS_TEXT = {
         lambda it: f'''Window: Available groups.
             Current item: {it}.
         ''',
+    Window_Stack_Constants.CONFIG_GROUP_MODE:
+        lambda it: f'''Window: Available groups.
+            Current item: {it}.
+        ''',
+    Window_Stack_Constants.SELECT_STATION_ENCODING_MODE:
+        lambda it: f'''Window: Encoding selection.
+            Current item: {it}
+        ''',
+    Window_Stack_Constants.SELECT_ENCODING_MODE:
+        lambda it: f'''Window: Encoding selection.
+            Current item: {it}
+        ''',    Window_Stack_Constants.EDIT_STATION_ENCODING_MODE:
+        lambda it: f'''Window: Encoding selection.
+            Current item: {it}
+        ''',
+
 }
 
 def describe_single_key(key_string):
@@ -140,7 +156,7 @@ def describe_single_key(key_string):
         if char in special_controls:
             return f"Control {special_controls[char]}"
         if char.isalpha():
-            return f"Control {char.upper()}"
+            return f"Control {char.lower()}"
         if char.isdigit():
             return f"Control {char}"
         return f"Control {char}"
