@@ -82,7 +82,6 @@ class PyRadioConfigWindow():
         _help_text.append(['Enables integration with Windows system media controls.', '|', 'When enabled, PyRadio can be controlled from media keys and system media overlay.', '|', 'Default value: False'])
     else:
         _help_text.append(['Enables integration with macOS system media controls.', '|', 'When enabled, PyRadio can be controlled from keyboard media keys and system interfaces.', '|', 'Default value: False'])
-    _help_text.append(['When enabled, PyRadio updates the window (terminal) title with playback information.', '|', 'Disable this by setting the parameter to False.', '|', 'Default value: True'])
     _help_text.append(None)
     _help_text.append(['Specify whether you will be asked to confirm every station deletion action.', '|', 'Default value: True'])
     _help_text.append(['Specify whether you will be asked to confirm playlist reloading, when the playlist has not been modified within PyRadio.', '|', 'Default value: True'])
@@ -99,6 +98,7 @@ class PyRadioConfigWindow():
     _help_text.append(['If this options is enabled, a Desktop Notification will be displayed using the notification daemon / service.', '|', 'If enabled but no notification is displayed, please refer to', 'https://github.com/coderholic/pyradio/desktop-notification.md', '|', 'Valid values are:', '   -1: disabled ', '    0: enabled (no repetition) ', '    x: repeat every x seconds ', '|', 'Default value: -1'])
     _help_text.append(['Notice: Not applicable on Windows!', '|',  'Online Radio Directory Services (like RadioBrowser) will usually provide an icon for the stations they advertise.', '|', 'PyRadio can use this icon (provided that one exists and is of JPG or PNG format) while displaying Desktop Notifications.', '|', 'Setting this option to True, will enable the behavior above.', '|', 'If this option is False, the default icon will be used.', '|', 'Default value: True'])
     _help_text.append(['Notice: Not applicable on Windows!', '|', 'If the previous option is enabled, Stations Icons will be cached.', '|', 'If this option is set to True, all icons will be deleted at program exit.', '|', 'If set to False, the icons will be available for future use.', '|', 'Default value: True'])
+    _help_text.append(['When enabled, PyRadio updates the window (terminal) title with playback information.', '|', 'Disable this by setting the parameter to False.', '|', 'Default value: True'])
     _help_text.append(None)
     _help_text.append(['PyRadio now features comprehensive Text-to-Speech (TTS) support, providing auditory feedback for an enhanced radio streaming experience.', '|', 'This system delivers contextual information about station navigation, playback status, and system events.', '|', 'The TTS function cal also be termporarily toggled by pressing ' + to_str('open_extra') + to_str('toggle_tts') + '.', '|', 'Default value: False'])
     # TTS Volume
@@ -190,6 +190,14 @@ class PyRadioConfigWindow():
         self._move_in_config_win_Y = 0
         self._move_in_config_win_Y = 0
         self.tts = tts
+        self._can_speak = False
+        if tts is not None:
+            if hasattr(tts, 'enabled'):
+                if not tts.enabled:
+                    self._can_speak = False
+            self._can_speak = True
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'Can i speak? : {self._can_speak}')
         self.op_mode = op_mode
 
         self._win = None
@@ -335,21 +343,12 @@ class PyRadioConfigWindow():
         return -1
 
     def _speak_item(self):
-        tts = self.tts()
-        if tts is None:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('TTS is OFF')
+        if not self._can_speak:
             return
-        if hasattr(tts, 'enabled'):
-            if not tts.enabled:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('TTS is disabled')
-                return
         cur_key = self._it_key[self.__selection]
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(f'current key: {cur_key}')
-        if self._current_header is None:
-            this_header = 0 if self._current_header is None else self.get_current_header()
+        this_header = 0 if self._current_header is None else self.get_current_header()
 
         if cur_key in ('shortcuts_keys', 'localized_keys', 'radiobrowser'):
             if this_header == self._current_header:
@@ -371,7 +370,7 @@ class PyRadioConfigWindow():
         if cur_key == 'remote_control_server_ip':
             msg = msg.replace('.', ' dot ')
         # logger.error(f'{msg = }')
-        tts.queue_speech(msg, Priority.NAVIGATION, Context.LIMITED, self.op_mode())
+        self.tts().queue_speech(msg, Priority.NAVIGATION, Context.LIMITED, self.op_mode())
 
     def calculate_transparency(self):
         transp = False
@@ -965,6 +964,14 @@ class PyRadioConfigWindow():
 
         if char == ord('t') or \
                 check_localized(char, (ord('t'), )):
+            if not self._can_speak:
+                return -1, []
+            msg = ' '.join(
+                (n + '.' if n and n[-1] not in string.punctuation else n)
+                for n in self._help_text[self.__selection]
+                if n != '|'
+            )
+            self.tts().queue_speech(msg, Priority.NAVIGATION, Context.LIMITED, self.op_mode())
             return -1, []
 
         if char == kbkey['gr'] or \
