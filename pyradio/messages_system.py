@@ -904,7 +904,7 @@ Down|, |{k}|, |PgDown                           <*> Change option selection.
 Enter|, |{pause}|, |Right|, |{l}                <*> Change option value.
 {revert_saved}                                  <*> Revert to saved values.
 {search} |/ |{search_next}| / |{search_prev}    <*> Search, go to next / previous result.
-T                                               <*> TTS test (in TTS group only).
+{tts_test}                                      <*> TTS test (in TTS group only).
 {revert_def}                                    <*> Load default values.
 {s}                                             <*> Save config.
 Esc|, |{q}|, |Left|, |{h}                       <*> Cancel.

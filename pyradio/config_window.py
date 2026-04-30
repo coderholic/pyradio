@@ -939,8 +939,8 @@ class PyRadioConfigWindow():
         # logger.error(f'{val = }')
         Y = self.selection - self._start + 1
 
-        if char == ord('T') or \
-                check_localized(char, (ord('T'), )):
+        if char == kbkey['tts_test'] or \
+                check_localized(char, (kbkey['tts_test'], )):
             this_header = self.get_current_header()
             if self._it_key[this_header] != 'tts_title':
                 return -1, []
@@ -962,8 +962,8 @@ class PyRadioConfigWindow():
                 self.tmp_tts.queue_speech('This is a sample text (spoken to check your settings)', Priority.NORMAL)
             return -1, []
 
-        if char == ord('t') or \
-                check_localized(char, (ord('t'), )):
+        if char == kbkey['tts_help'] or \
+                check_localized(char, (kbkey['tts_help'], )):
             if not self._can_speak:
                 return -1, []
             msg = ' '.join(
@@ -2942,8 +2942,9 @@ class PyRadioSelectEncodings():
     max_enc_len = 15
 
     def __init__(self, maxY, maxX, encoding, config_encoding,
-                 global_functions=None, show_default=False):
-        self._global_functions = None
+                 global_functions=None, show_default=False, speak=None):
+        self._global_functions = global_functions
+        self._first_item_spoken = False
         self._too_small = False
         self._win = None
         self._encodings = []
@@ -2965,6 +2966,7 @@ class PyRadioSelectEncodings():
         self._orig_encoding = encoding
         self._encodings = get_encodings()
         self._show_default = show_default
+        self._speak = speak
         if show_default:
             self._encodings += [['Default', '', 'Use the encoding set in the config']]
         self._num_of_rows = int(len(self._encodings) / self._num_of_columns)
@@ -3091,7 +3093,11 @@ class PyRadioSelectEncodings():
                                      col)
                     if pos < len(self._encodings):
                         self._win.addstr(yy, xx, self._encodings[pos][0], col)
-
+        if not self._first_item_spoken and self._speak:
+            logger.error(f'{self._encodings[self.selection] =  }')
+            tts_enc = self._encodings[self.selection][0].replace('_', ' underscore ')
+            self._speak(args=(f'{tts_enc}', ))
+            self._first_item_spoken = True
         self._win.refresh()
 
     def refresh_and_resize(self, maxY, maxX):
@@ -3196,13 +3202,30 @@ class PyRadioSelectEncodings():
     def keypress(self, char):
         ''' PyRadioSelectEncodings keypress '''
         l_char = None
+        if char == kbkey['tts_help'] or check_localized(char, (kbkey['tts_help'], )):
+            if self._speak:
+                tts_enc = self._encodings[self.selection][0].replace('_', ' underscore ')
+                alias = self._encodings[self.selection][1]
+                if  alias:
+                    alias = alias.replace('_', ' underscore ')
+                    self._speak(msg=f'''Current item: {tts_enc}.
+                                 Alias: {alias}.
+                                 Language: {self._encodings[self.selection][2]}.
+                             ''', navigation=True)
+                else:
+                    self._speak(msg=f'''Current item: {tts_enc}.
+                                 Language: {self._encodings[self.selection][2]}.
+                             ''', navigation=True)
+                return -1, []
+
         if char in self._global_functions or \
                 (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
             if l_char is None:
                 l_char = char
             self._global_functions[l_char]()
+            return -1, ''
 
-        elif char in (kbkey['revert_def'], ) or \
+        if char in (kbkey['revert_def'], ) or \
                 check_localized(char, (kbkey['revert_def'], )):
             self.encoding = self._config_encoding
             self.setEncoding(self.encoding, init=True)
@@ -3304,6 +3327,10 @@ class PyRadioSelectEncodings():
                       kbkey['pause'], kbkey['s']) or \
                     check_localized(char, (kbkey['pause'], kbkey['s'])):
             return 0, self._encodings[self.selection][0]
+
+        if self._speak:
+            tts_enc = self._encodings[self.selection][0].replace('_', ' underscore ')
+            self._speak(msg=f'{tts_enc}', navigation = True)
 
         return -1, ''
 
@@ -4765,7 +4792,8 @@ class PyRadioKeyboardConfig():
 
             return ret
         else:
-            if char == ord('t'):
+            if char == kbkey['tts_help'] or \
+                    check_localized(char, (kbkey['tts_help'], )):
                 tts = self.tts()
                 if tts and tts.can_i_use_tts(Priority.HIGH):
                     if not self._speak_button():

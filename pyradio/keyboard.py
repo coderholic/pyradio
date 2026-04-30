@@ -194,6 +194,11 @@ kbkey_orig['F8']                       = ( curses.KEY_F8          , 'Media Playe
 kbkey_orig['F9']                       = ( curses.KEY_F9          , 'Show EXE location')
 kbkey_orig['F10']                      = ( curses.KEY_F10         , 'Uninstall PyRadio')
 
+# ! TTS Keys
+kbkey_orig['h_tts']                 = ( None                      , 'TTS Specific keys')
+kbkey_orig['tts_test']              = ( ord('T')                  , 'Test TTS settings (config window)')
+kbkey_orig['tts_help']              = ( ord('t')                  , 'Speak additional info')
+
 if platform.system().lower().startswith('win'):
     kbkey_orig['rb_p_first']           = ( curses.KEY_F1          , 'Go to first search results page')
     kbkey_orig['rb_p_next']            = ( curses.KEY_F3          , 'Go to next search results page')
