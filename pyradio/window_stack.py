@@ -94,6 +94,7 @@ class Window_Stack_Constants():
     REMOTE_CONTROL_SERVER_NOT_ACTIVE_HELP_MODE = 126
     FUZZY_SEARCH_MODE = 127
     CONFIG_GROUP_MODE = 128
+    KEYBOARD_GROUP_MODE = 129
     # TODO: return values from opening theme
     PLAYLIST_NOT_FOUND_ERROR_MODE = 201
     PLAYLIST_LOAD_ERROR_MODE = 202
@@ -214,6 +215,7 @@ class Window_Stack_Constants():
         ASK_TO_SAVE_CONFIG: 'ASK_TO_SAVE_CONFIG',
         FUZZY_SEARCH_MODE: 'FUZZY_SEARCH_MODE',
         CONFIG_GROUP_MODE: 'CONFIG_GROUP_MODE',
+        KEYBOARD_GROUP_MODE: 'KEYBOARD_GROUP_MODE',
 }
 
     ''' When PASSIVE_WINDOWS target is one of them,

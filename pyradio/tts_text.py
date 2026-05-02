@@ -59,6 +59,10 @@ TTS_WINDOWS_TEXT = {
         lambda it: f'''Window: Available groups.
             Current item: {it}.
         ''',
+    Window_Stack_Constants.KEYBOARD_GROUP_MODE:
+        lambda it: f'''Window: Available groups.
+            Current item: {it}.
+        ''',
     Window_Stack_Constants.SELECT_STATION_ENCODING_MODE:
         lambda it: f'''Window: Encoding selection.
             Current item: {it}
