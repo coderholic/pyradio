@@ -54,7 +54,7 @@ kb_letter = ''
 kb_cjk = False
 
 kbkey_orig = OrderedDict()
-# ! MovementKeys
+# ! Movement Keys
 kbkey_orig['h_movement']               = ( None                   , 'Movement Keys')
 kbkey_orig['j']                        = ( ord('j')               , 'Go down')
 kbkey_orig['k']                        = ( ord('k')               , 'Go up')
@@ -66,7 +66,7 @@ kbkey_orig['screen_top']               = ( ord('H')               , 'Go to top o
 kbkey_orig['screen_middle']            = ( ord('M')               , 'Go to middle of screen')
 kbkey_orig['screen_bottom']            = ( ord('L')               , 'Go to bottom of screen')
 
-# ! Volume Keys')
+# ! Volume Keys
 kbkey_orig['h_volume']                 = ( None                   , 'Volume Keys')
 kbkey_orig['v_up1']                    = ( ord('+')               , 'Volume up Key 1')                                # global
 kbkey_orig['v_up2']                    = ( ord('.')               , 'Volume up Key 2')                                # global
@@ -186,6 +186,15 @@ kbkey_orig['rb_h_del']                 = ( curses.ascii.CAN       , 'Delete item
 kbkey_orig['rb_h_def']                 = ( curses.ascii.STX       , 'Make item default')                   # default: ^B
 kbkey_orig['rb_h_0']                   = ( curses.ascii.ACK       , 'Go to template (item 0)')             # default: ^F
 kbkey_orig['rb_h_save']                = ( curses.ascii.ENQ       , 'Save items')                          # default: ^E
+
+# ! Keyboard Window Keys
+kbkey_orig['h_keyboard']               = ( None                   , 'Keyboard Shortcuts keys')
+kbkey_orig['gr_n']                     = ( ord(']')               , 'Go to to next group')
+kbkey_orig['gr_p']                     = ( ord('[')               , 'Go to to previous group')
+kbkey_orig['free_keys']                = ( ord('f')               , 'Show Free keys')
+kbkey_orig['undo_key']                 = ( ord('x')               , 'Revert item to saved value')
+kbkey_orig['conflict_switch']          = ( ord('0')               , 'Switch between cocnflicting items')
+
 
 # ! Window Keys:
 kbkey_orig['h_windows']                = ( None                   , 'Windows keys')

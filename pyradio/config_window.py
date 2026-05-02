@@ -4700,6 +4700,7 @@ class PyRadioKeyboardConfig():
     def keypress(self, char):
         ''' PyRadioKeyboardConfig keypress
             Returns:
+                -5: Display groups window
                 -4: Show free keys
                 -3: Conflict exists (in self.existing_conflict)
                 -2: Error saving file
@@ -4710,7 +4711,8 @@ class PyRadioKeyboardConfig():
         '''
         l_char = None
         self._needs_update = False
-        if char == ord('0'):
+        if char == kbkey['conflict_switch'] or \
+                         check_localized(char, (kbkey['conflict_switch'], )):
             logger.error(f'{self.existing_conflict = }')
             if self.existing_conflict:
                 self._still_editing = False
@@ -4736,6 +4738,7 @@ class PyRadioKeyboardConfig():
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('1 Key is INVALID')
                 return 2
+
             if not is_valid_char(char, self._win):
                 # tts = self.tts()
                 # if tts and tts.can_i_use_tts(Priority.HIGH):
@@ -4749,6 +4752,7 @@ class PyRadioKeyboardConfig():
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('2 Key is INVALID')
                 return 2
+
             if char in (curses.KEY_EXIT, 27):
                 self._still_editing = False
                 self._stop_editing()
@@ -4756,6 +4760,7 @@ class PyRadioKeyboardConfig():
                 if tts and tts.can_i_use_tts(Priority.HIGH):
                     tts.queue_speech('Editing mode disabled', Priority.DIALOG, Context.LIMITED, self.op_mode())
                 return
+
             the_key = self._list[self._selection][0]
             if the_key in conflicts['h_rb_s'] and not is_ctrl_key(char):
                 self.message ='M_NOT_CTRL_KEY_ERROR'
@@ -4792,6 +4797,22 @@ class PyRadioKeyboardConfig():
 
             return ret
         else:
+            if char == kbkey['?'] or \
+                    check_localized(char, (kbkey['?'], )):
+                self.message = 'M_KEYBOARD_HELP'
+                return 2
+
+            if char == kbkey['gr'] or \
+                    check_localized(char, (kbkey['gr'], )):
+                ''' display groups '''
+                return -5
+
+            if char == kbkey['free_keys'] or \
+                    check_localized(char, (kbkey['free_keys'], )):
+                msg = 'The following Keys are free to be used\nas Shortcut Keys:\n\n'
+                self.keys_string = msg + self._get_available_keys() + '\n\n'
+                return -4
+
             if char == kbkey['tts_help'] or \
                     check_localized(char, (kbkey['tts_help'], )):
                 tts = self.tts()
@@ -4815,16 +4836,6 @@ class PyRadioKeyboardConfig():
                         msg = f'Group is: {group}, item is: {caption}, ' + msg
                         tts.queue_speech(msg, Priority.DIALOG, Context.LIMITED, self.op_mode())
 
-            elif char == kbkey['?'] or \
-                    check_localized(char, (kbkey['?'], )):
-                self.message = 'M_KEYBOARD_HELP'
-                return 2
-
-            elif char == ord('f'):
-                msg = 'The following Keys are free to be used\nas Shortcut Keys:\n\n'
-                self.keys_string = msg + self._get_available_keys() + '\n\n'
-                return -4
-
             elif char == kbkey['revert_def'] or \
                     check_localized(char, (kbkey['revert_def'], )):
                 tts = self.tts()
@@ -4834,6 +4845,7 @@ class PyRadioKeyboardConfig():
                     self._list[i][3] = self._list[i][1]
                     self._list[i][6] = self._list[i][4]
                 self._needs_update = True
+
             elif char == kbkey['revert_saved'] or \
                     check_localized(char, (kbkey['revert_saved'], )):
                 tts = self.tts()
@@ -4843,7 +4855,9 @@ class PyRadioKeyboardConfig():
                     self._list[i][3] = self._list[i][2]
                     self._list[i][6] = self._list[i][5]
                 self._needs_update = True
-            elif char == ord('x'):
+
+            elif char == kbkey['undo_key'] or \
+                    check_localized(char, (kbkey['undo_key'], )):
                 logger.error(f' ***** {self._focus =} ')
                 tts = self.tts()
                 if tts and tts.can_i_use_tts(Priority.HIGH):
@@ -4859,30 +4873,39 @@ class PyRadioKeyboardConfig():
                         key = default if default == user else user
                         msg = 'Key reverted to {}'.format(describe_single_key(key))
                         tts.queue_speech(msg, Priority.DIALOG, Context.LIMITED, self.op_mode())
-            elif char == ord(']'):
+
+            elif char in (curses.KEY_HOME, kbkey['gr_n']) or \
+                    check_localized(char, (kbkey['gr_n'], )):
                 self._get_after_header()
                 self._make_selection_visible()
                 self._needs_update = True
                 self._speak_item(self.selection)
-            elif char == ord('['):
+
+            elif char in (curses.KEY_HOME, kbkey['gr_p']) or \
+                    check_localized(char, (kbkey['gr_p'], )):
                 self._get_after_header(next_header=False)
                 self._make_selection_visible()
                 self._needs_update = True
                 self._speak_item(self.selection)
+
             elif char in (curses.KEY_HOME, kbkey['g']) or \
                     check_localized(char, (kbkey['g'], )):
                 if self._focus == 0:
                     self._go_top()
+
             elif char in (curses.KEY_END, kbkey['G']) or \
                     check_localized(char, (kbkey['G'], )):
                 if self._focus == 0:
                     self._go_bottom()
+
             elif char == curses.KEY_NPAGE:
                 self._go_down(step=5)
+
             elif char == curses.KEY_PPAGE:
                 self._go_up(step=5)
             # elif char in (curses.KEY_EXIT, 27, kbkey['q']):
             #    return -1
+
             elif char in (curses.KEY_RIGHT, kbkey['l']) or \
                     check_localized(char, (kbkey['l'], )):
                 if self._focus > 0:
@@ -4890,6 +4913,7 @@ class PyRadioKeyboardConfig():
                 else:
                     self._start_editing()
                     self._still_editing = True
+
             elif char in (curses.KEY_LEFT, kbkey['h']) or \
                     check_localized(char, (kbkey['h'], )):
                 if self._focus > 0:
@@ -4897,25 +4921,30 @@ class PyRadioKeyboardConfig():
                 else:
                     self._start_editing()
                     self._still_editing = True
+
             elif char in (curses.KEY_DOWN, kbkey['j']) or \
                     check_localized(char, (kbkey['j'], )):
                 if self._focus == 0:
                     self._go_down()
                 else:
                     self._focus_next()
+
             elif char in (curses.KEY_UP, kbkey['k']) or \
                     check_localized(char, (kbkey['k'], )):
                 if self._focus == 0:
                     self._go_up()
                 else:
                     self._focus_previous()
+
             elif char in (ord('\t'), 9, kbkey['tab']) or \
                     check_localized(char, (kbkey['tab'], )):
                 # EDIT: fixed for H, L
                 self._focus_next()
+
             elif char in (curses.KEY_BTAB, kbkey['stab']) or \
                     check_localized(char, (kbkey['stab'], )):
                 self._focus_previous()
+
             elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'), kbkey['pause']) or \
                     check_localized(char, (kbkey['pause'], )):
                 if self._focus == 0:
@@ -4929,6 +4958,7 @@ class PyRadioKeyboardConfig():
                 else:
                     # cancel
                     return -1
+
             elif char in self._global_functions or \
                     (l_char := check_localized(char, self._global_functions.keys(), True)) is not None:
                 if l_char is None:

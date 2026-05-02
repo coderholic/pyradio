@@ -2350,7 +2350,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._maxY = Y
             self._maxX = X
         elif self._window_type == self.CENTERED:
-            self._maxY = items_max_Y = len(self._items)
+            items_max_Y = len(self._items)
+            self._maxY = min(Y-2, items_max_Y + 2)
             self._maxY = min(self._maxY, Y - 2 * self._outer_margin)
             # logger.error(f'1 {self._maxY = }')
 
@@ -2363,8 +2364,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._maxX = min(self._maxX, X - 2 * self._outer_margin)
 
             ''' make sure we have a big enough window '''
-            self._maxY = max(self._maxY, 10)
-            self._maxX = max(self._maxX, 30)
+            self._maxY = max(self._maxY, min(10, Y))
+            self._maxX = max(self._maxX, min(30, X))
             # logger.error(f'2 {self._maxY = }')
 
             aY, aX = self._parent.getbegyx()

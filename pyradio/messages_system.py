@@ -1578,16 +1578,16 @@ __|Arrow Keys|, |{j}|, |{k}|,            <*>
 __|PgUp|, |PgDown|                       <*> Move up, down, etc.
 __|Tab|, |{tab}| / |Sh-Tab|, |{stab}|    <*> Move to next / previous field.
 __|{g}| / |{G}|                          <*> Go to top / bottom of the list.
-__|[| / |]|                              <*> Move between sections.
-__{search} |/ |{search_next}| / |{search_prev}    <*>  Search, go to next / previous result.
+__|{gr_n}| / |{gr_p}|                    <*> Move between groups.
+__|{search} |/ |{search_next}| / |{search_prev}|    <*>  Search, go to next / previous result.
 __|{revert_def}| / |{revert_saved}|      <*> Revert to default / saved shortcuts.
-__|x|                                    <*> Revert current item to saved value.
-__|f|                                    <*> Show |free| keys.
-__|t|                                    <*> |T|alk the current item.
+__|{undo_key}|                           <*> Revert current item to saved value.
+__|{free_keys}|                          <*> Show |free| keys.
+__|{tts_help}|                           <*> |T|alk the current item.
 __|Enter|, |{pause}|,                    <*>
 __|Right|, |{l}|                         <*> Enter |editing mode| (insert new shortcut).
 __|Esc|                                  <*>Exit |editing mode|.
-__|0|                                    <*> Switch between |c|ocnflicting items.
+__|{conflict_switch}|                    <*> Switch between |c|ocnflicting items.
                                          <*>Available in |editing mode| as well.
 __|{?}|                                  <*>Display this help screen.
 ''')) + r'''

@@ -783,6 +783,7 @@ class PyRadio():
             self.ws.EDIT_PROFILE_MODE: self._redisplay_profile_editor,
             self.ws.ASK_TO_SAVE_CONFIG: self._show_confirm_cancel_config_changes,
             self.ws.CONFIG_GROUP_MODE: self._redisplay_config_groups,
+            self.ws.KEYBOARD_GROUP_MODE: self._redisplay_config_groups,
         }
 
         self._help_keys = {
@@ -791,6 +792,7 @@ class PyRadio():
             self.ws.THEME_MODE: 'H_THEME',
             self.ws.GROUP_SELECTION_MODE: 'H_GROUP',
             self.ws.CONFIG_GROUP_MODE: 'H_CONFIG_GROUP',
+            self.ws.KEYBOARD_GROUP_MODE: 'H_CONFIG_GROUP',
             self.ws.CONFIG_MODE: 'H_CONFIG',
             self.ws.SELECT_STATION_MODE: 'H_CONFIG_STATION',
             self.ws.SELECT_PLAYLIST_MODE: 'H_CONFIG_PLAYLIST',
@@ -2804,7 +2806,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             if restart = True, start the station that has
             been played last
         '''
-        logger.error(f'\n\n\n{self.stations = }\n\n\n')
+        # logger.error(f'\n\n\n{self.stations = }\n\n\n')
         if len(self.stations) == 0:
             return
         if self.stations[self.selection][1] == '-':
@@ -4745,14 +4747,28 @@ and |remove the file manually|.
         return 'RadioBrowser is not active'
 
     def _toggle_recording_text(self):
-        ret = self._toggle_recording()
+        ret = self._toggle_recording(can_speak=False)
         return ret
 
     def _toggle_recording_html(self):
-        ret = self._toggle_recording(True)
+        ret = self._toggle_recording(html=True, can_speak=False)
         return ret
 
-    def _toggle_recording(self, html=False):
+    def _set_recording(self, rec):
+        ''' Set recording to True or False
+            No TTS, no HTML
+        '''
+        self._toggle_recording(can_speak=False, rec=rec)
+
+    def _toggle_recording(self, html=False, can_speak=True, rec=None):
+        ''' Toggles recording
+            Parameters:
+                html      : return HTML code instead of plain text
+                can_speak : report status through TTS
+                            to be used onlt when toggled by keyboard
+                            if False, no message window is diaplayed
+                rec       : to be used by _set_recording
+        '''
         self._reset_status_bar_right()
         # if self.player.PLAYER_NAME != 'vlc':
 
@@ -4766,7 +4782,17 @@ and |remove the file manually|.
                 return '<div class="alert alert-danger">Recording <b>not</b> supported</div>'
             return 'Recording not supported'
 
-        self.player.recording = 1 if self.player.recording == 0 else 0
+        if rec is None:
+            self.player.recording = 1 if self.player.recording == 0 else 0
+        else:
+            self.player.recording = 1 if rec == 0 else 0
+
+        if can_speak:
+            if self.player.recording == 1:
+                if not self._cnf.show_recording_start_message:
+                    self._speak_high('Recording enabled')
+            else:
+                self._speak_high('Recording disabled')
         if self.player.recording > 0:
             if self.player.isPlaying():
                 self.player.already_playing = True
@@ -4776,7 +4802,7 @@ and |remove the file manually|.
             self.player.already_playing = False
         with self._buffering_lock:
             self._show_recording_status_in_header()
-        if self._cnf.show_recording_start_message:
+        if self._cnf.show_recording_start_message and can_speak:
             self._show_recording_toggle_window()
         else:
             self.refreshBody()
@@ -7649,6 +7675,9 @@ _____"|f|" to see the |free| keys you can use.
                 # if logger.isEnabledFor(logging.DEBUG):
                 #     logging.debug('Universal Message provided')
                 self._open_simple_message_by_key('UNIVERSAL', self.ws.MESSAGING_MODE)
+
+            elif ret == -5:
+                logger.error('Show groups window')
 
             return
 
