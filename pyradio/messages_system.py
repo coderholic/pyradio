@@ -900,7 +900,7 @@ and be asked next time you execute |PyRadio|.
 kb2str(r'''Up|, |{j}|, |PgUp|,                  <*>
 Down|, |{k}|, |PgDown                           <*> Change option selection.
 {g}|, |Home| / |{G}|, |End                      <*> Jump to first / last option.
-{gr}                                            <*> Open the Group Selection window.
+{gr}                                            <*> Open the |Group Selection| window.
 Enter|, |{pause}|, |Right|, |{l}                <*> Change option value.
 {revert_saved}                                  <*> Revert to saved values.
 {search} |/ |{search_next}| / |{search_prev}    <*> Search, go to next / previous result.
@@ -1579,6 +1579,7 @@ __|PgUp|, |PgDown|                       <*> Move up, down, etc.
 __|Tab|, |{tab}| / |Sh-Tab|, |{stab}|    <*> Move to next / previous field.
 __|{g}| / |{G}|                          <*> Go to top / bottom of the list.
 __|{gr_n}| / |{gr_p}|                    <*> Move between groups.
+__|{gr}|                                 <*> Open the |Group Selection| window.
 __|{search} |/ |{search_next}| / |{search_prev}|    <*>  Search, go to next / previous result.
 __|{revert_def}| / |{revert_saved}|      <*> Revert to default / saved shortcuts.
 __|{undo_key}|                           <*> Revert current item to saved value.

@@ -7678,6 +7678,28 @@ _____"|f|" to see the |free| keys you can use.
 
             elif ret == -5:
                 logger.error('Show groups window')
+                self.ws.operation_mode = self.ws.KEYBOARD_GROUP_MODE
+                logger.error(f'{self.ws.operation_mode = }')
+                cur_item, ret_list = self._keyboard_config_win.group_data
+                self._group_selection_window = SimpleCursesMenu(
+                    Y = -1, X = -1,
+                    items=ret_list,
+                    parent=self.bodyWin,
+                    title=' Available Groups ',
+                    display_count=True,
+                    active=cur_item, selection=cur_item,
+                    color=curses.color_pair(10),
+                    color_title=curses.color_pair(11),
+                    color_border=curses.color_pair(3),
+                    color_active=curses.color_pair(11),
+                    color_cursor_selection=curses.color_pair(6),
+                    color_cursor_active=curses.color_pair(9),
+                    window_type=SimpleCursesMenu.CENTERED,
+                    margin=1,
+                    speak=self._speak_window if self._enable_tts else None,
+                    global_functions=self._global_functions
+                )
+                self._group_selection_window.show(parent=self.bodyWin)
 
             return
 
@@ -10229,6 +10251,21 @@ _____"|f|" to see the |free| keys you can use.
                     # logger.error(f'{idx = }')
                     # logger.error(f'{self._config_win._it_list[idx] = }')
                     self._config_win.set_selection(idx, adjust=True)
+                self._group_selection_window = None
+                self._groups = None
+                self.ws.close_window()
+                self.refreshBody()
+            elif ret == 2:
+                ''' show help '''
+                self._open_message_win_by_key('H_CONFIG_GROUP')
+            return
+
+        elif self.ws.operation_mode == self.ws.KEYBOARD_GROUP_MODE:
+            # kyepress ok
+            ret = self._group_selection_window.keypress(char)
+            if ret <= 0:
+                if ret == 0:
+                    self._keyboard_config_win.set_group_by_name(self._group_selection_window.item)
                 self._group_selection_window = None
                 self._groups = None
                 self.ws.close_window()
