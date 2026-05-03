@@ -2081,7 +2081,7 @@ class RadioBrowserConfigWindow():
                 0,
                 int((self.maxX - len(title)) / 2) - 2,
                 token,
-                curses.color_pair(3))
+                curses.color_pair(12))
             self._win.addstr(
                 title,
                 curses.color_pair(4))

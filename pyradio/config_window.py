@@ -4108,6 +4108,17 @@ class PyRadioKeyboardConfig():
             self._titles = [x[-1] for x in self._list]
         return self._titles
 
+    def set_group_by_name(self, a_group_name):
+        idx = -1
+        for n in self._headers:
+            if self._list[n][-1] == a_group_name:
+                idx = n
+                break
+        if idx > -1:
+            idx += 1
+            self.set_selection(idx)
+            self._speak_item(self._selection)
+
     def _precompute_context_map(self, results):
         """
         Precompute a map of keys to the classes or contexts they belong to.
@@ -4212,14 +4223,14 @@ class PyRadioKeyboardConfig():
 
             if self._b_ok.focused:
                 tts.queue_speech(
-                    'Current item: Button - OK',
+                    'Button : OK',
                     priority, Context.LIMITED, self.op_mode()
                 )
                 return True
 
             if self._b_cancel.focused:
                 tts.queue_speech(
-                    'Current item: Button - Cancel',
+                    'Button : Cancel',
                     priority, Context.LIMITED, self.op_mode()
                 )
                 return True
@@ -4805,6 +4816,10 @@ class PyRadioKeyboardConfig():
             if char == kbkey['gr'] or \
                     check_localized(char, (kbkey['gr'], )):
                 ''' display groups '''
+                out = tuple(self._list[x][-1] for x in self._headers)
+                idx = bisect.bisect_left(self._headers, self._selection)
+                idx = self._headers.index(self._headers[idx-1])
+                self.group_data = (idx, out)
                 return -5
 
             if char == kbkey['free_keys'] or \
