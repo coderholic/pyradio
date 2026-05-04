@@ -258,6 +258,7 @@ class PyRadioConfigWindow():
             key_down_function_handler=self._go_down,
             key_pgup_function_handler=self._go_pgup,
             key_pgdown_function_handler=self._go_pgdown,
+            string_changed_handler=self._speak_port_changed
         )
         self._port_line_editor.visible = False
         self._port_line_editor.bracket = False
@@ -366,11 +367,15 @@ class PyRadioConfigWindow():
         self._current_header = this_header
         self.__old_selection = self.__selection
 
-
         if cur_key == 'remote_control_server_ip':
             msg = msg.replace('.', ' dot ')
         # logger.error(f'{msg = }')
         self.tts().queue_speech(msg, Priority.NAVIGATION, Context.LIMITED, self.op_mode())
+
+    def _speak_port_changed(self):
+        if not self._can_speak:
+            return
+        self.tts().queue_speech(self._port_line_editor.string, Priority.NAVIGATION, Context.LIMITED, self.op_mode())
 
     def calculate_transparency(self):
         transp = False
@@ -978,7 +983,12 @@ class PyRadioConfigWindow():
                 check_localized(char, (kbkey['gr'], )):
             return Window_Stack_Constants.CONFIG_GROUP_MODE, [self._it_list[x][0] for x in self._headers]
 
-        if char in self._local_functions:
+        if char in self._local_functions or \
+                (l_char := check_localized(char, self._local_functions.keys(), True)) is not None:
+            if l_char is None:
+                l_char = char
+            else:
+                char = l_char
             if not (val[0] in (
                 'remote_control_server_port',
                 'enable_notifications',
@@ -996,7 +1006,7 @@ class PyRadioConfigWindow():
                 curses.KEY_RIGHT,
                 kbkey['h'], kbkey['l'],
             )):
-                ret = self._local_functions[char]()
+                ret = self._local_functions[l_char]()
 
                 if self._local_functions[char] == self._go_exit:
                     if self.cancel_confirmed:

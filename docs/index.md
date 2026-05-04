@@ -32,6 +32,7 @@ Command line internet radio player.
     * [Playlist validation support](#playlist-validation-support)
 * [Stations history](#stations-history)
 * [Search function](#search-function)
+    * [Fuzzy Search](#fuzzy-search)
 * [Line editor](#line-editor)
     * [CJK characters support](#cjk-characters-support)
 * [Moving stations around](#moving-stations-around)
@@ -702,9 +703,11 @@ One can always get help by pressing the "**?**" key.
 
 After a search term has been successfully found (search is case insensitive), next occurrence can be obtained using the "**n**" key and previous occurrence can be obtained using the "**N**" key.
 
-On station lists, pressing the key assigned to **Fuzzy Search** opens **Fuzzy Search**. By default this key is "**f**". It displays a live-updating list of stations and narrows the results down as you type.
-
 All search widgets provide a "*search history*" function; pressing the **Up** or **Down** arrow will cycle through previously used search terms (maximum number remembered is 20). Pressing **^X** will remove an item from the history.
+
+### Fuzzy Search
+
+On any window presenting a list of stations or playlists pressing "**f**" (default key) will open the **Fuzzy Search** window. It displays a live-updating list of stations and narrows the results down as you type.
 
 ## Line editor
 

@@ -793,15 +793,16 @@ def add_l10n_to_functions_dict(functions):
 
     local_functions = functions.copy()
     new_keys = {}
-    # for key, value in local_functions.items():
-    #     logger.error(f'{key}: {value}')
-    #     for lkey, lvalue in local_keys.items():
-    #         if ord(lvalue) == key:
-    #             logger.error(f'    {lkey}: {lvalue}')
-    #             logger.error('      {} {}'.format(ord(lvalue), value))
-    #             new_keys[ord(lvalue)] = value
-    #             break
-    # logger.error('\n\n{}'.format(new_keys))
+    for key, value in local_functions.items():
+        # logger.error(f'{key}: {value}')
+        for lkey, lvalue in local_keys.items():
+            if ord(lvalue) == key:
+                # logger.error(f'    {lkey}: {lvalue}')
+                # logger.error('      {} {}'.format(ord(lvalue), value))
+                # logger.error('      {} {}'.format(ord(lkey), value))
+                new_keys[ord(lkey)] = value
+                break
+    # logger.error('\n\nnew_keys = {}'.format(new_keys))
     for key, value in new_keys.items():
         local_functions[key] = value
     return local_functions

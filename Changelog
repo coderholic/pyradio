@@ -1,3 +1,17 @@
+2026-05-04 s-n-g
+    * version 0.9.3.11.31 - 0.9.3.12-beta31
+    * adding Group Selection ability to the main and Keyboard
+      configuration windows
+    * adding a Fuzzy Finder for station ans playlist windows, based on
+        feat: add fuzzyfinding for station (hotkey f) #327
+    * implementing config window item help TTS messages
+    * adding TTS message for even more windows
+    * adding the update_window_title config parameter for
+      [FEAT] Option to disable terminal title modification #328
+    * fixing RadioBrowser config dirty token color
+    * fixing a couple of CJK rendering issues
+    * updating documentation
+
 2026-04-23 s-n-g
     * version 0.9.3.11.30 - 0.9.3.12-beta30
     * implementing a workaround for: Do not check if the package 
