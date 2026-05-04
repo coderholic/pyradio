@@ -76,7 +76,10 @@ a:visited{color: SaddleBrown;}
 <li><a href="#playlist-validation-support">Playlist validation support</a></li>
 </ul></li>
 <li><a href="#stations-history">Stations history</a></li>
-<li><a href="#search-function">Search function</a></li>
+<li><a href="#search-function">Search function</a>
+<ul>
+<li><a href="#fuzzy-search">Fuzzy Search</a></li>
+</ul></li>
 <li><a href="#line-editor">Line editor</a>
 <ul>
 <li><a href="#cjk-characters-support">CJK characters support</a></li>
@@ -199,6 +202,20 @@ a:visited{color: SaddleBrown;}
 <!-- Changelog -->
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
+
+2026-05-04 s-n-g
+    * version 0.9.3.11.31 - 0.9.3.12-beta31
+    * adding Group Selection ability to the main and Keyboard
+      configuration windows
+    * adding a Fuzzy Finder for station ans playlist windows, based on
+        feat: add fuzzyfinding for station (hotkey f) #327
+    * implementing config window item help TTS messages
+    * adding TTS message for even more windows
+    * adding the update_window_title config parameter for
+      [FEAT] Option to disable terminal title modification #328
+    * fixing RadioBrowser config dirty token color
+    * fixing a couple of CJK rendering issues
+    * updating documentation
 
 2026-04-23 s-n-g
     * version 0.9.3.11.30 - 0.9.3.12-beta30
@@ -2081,8 +2098,9 @@ $ pyradio -s 5</pre>
 <p>The <em>Search Window</em> supports normal and extend editing and in session history.</p>
 <p>One can always get help by pressing the “<strong>?</strong>” key.</p>
 <p>After a search term has been successfully found (search is case insensitive), next occurrence can be obtained using the “<strong>n</strong>” key and previous occurrence can be obtained using the “<strong>N</strong>” key.</p>
-<p>On station lists, pressing the key assigned to <strong>Fuzzy Search</strong> opens <strong>Fuzzy Search</strong>. By default this key is “<strong>f</strong>”. It displays a live-updating list of stations and narrows the results down as you type.</p>
 <p>All search widgets provide a “<em>search history</em>” function; pressing the <strong>Up</strong> or <strong>Down</strong> arrow will cycle through previously used search terms (maximum number remembered is 20). Pressing <strong>^X</strong> will remove an item from the history.</p>
+<h3 id="fuzzy-search">Fuzzy Search</h3>
+<p>On any window presenting a list of stations or playlists pressing “<strong>f</strong>” (default key) will open the <strong>Fuzzy Search</strong> window. It displays a live-updating list of stations and narrows the results down as you type.</p>
 <h2 id="line-editor">Line editor <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>PyRadio</strong> “<em>Search function</em>” and “<em>Station editor</em>” use a <em>Line editor</em> to permit typing and editing stations’ data.</p>
 <p>One can always display help by pressing “<strong>?</strong>”, but that pauses a drawback; one cannot actually have a “<strong>?</strong>” withing the string.</p>

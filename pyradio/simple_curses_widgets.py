@@ -3181,8 +3181,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             if self._speak:
                 self._speak_item(navigation=True)
 
-        elif char in self._local_functions:
-            # self._local_functions(char)
+        elif self._local_functions and char in self._local_functions:
             self._local_functions[char]()
 
         elif self._external_keypress_function:
