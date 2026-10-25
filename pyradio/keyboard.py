@@ -424,6 +424,20 @@ def read_localized_keyboard(localize, data_dir):
         set_lkbkey({})
         return
 
+    if not isinstance(data, dict):
+        set_lkbkey({})
+        return
+
+    ''' A layout may not define the uppercase letters (they are needed
+        for shortcuts such as Y, N, G, L, H); add them automatically,
+        so that a partial layout does not break these shortcuts.
+    '''
+    for key, value in list(data.items()):
+        if len(key) == 1 and key.islower() and key.upper() not in data:
+            if isinstance(value, str) and len(value) == 1 and \
+                    value.islower() and len(value.upper()) == 1:
+                data[key.upper()] = value.upper()
+
     # Reverse the keys and values
     if platform.system().lower().startswith('win'):
         reversed_dict = {ord(value): key for key, value in data.items()}
