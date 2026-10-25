@@ -10,6 +10,7 @@ from .window_stack import Window_Stack_Constants
 from .keyboard import kbkey, kb2str, kb2strL, check_localized
 from .common import M_STRINGS
 from .tts import Priority, Context
+from .messages_ru import RU_TEXTS, get_ui_language
 
 locale.setlocale(locale.LC_ALL, "")
 
@@ -1726,6 +1727,8 @@ unintentionally disrupt functionality.
 
         }
         # INSERT NEW ITEMS ABOVE
+        if get_ui_language() != 'english':
+            self._txt.update(RU_TEXTS)
         if self._db_info_message is not None:
             self._txt['M_DB_INFO'] = self._db_info_message
             self._db_info_message = None
