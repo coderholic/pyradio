@@ -358,6 +358,29 @@ remote_control_server_auto_start = False
 # Default value: None
 localized_keys = None
 
+# Enable the key hints bar: a line showing the most common shortcuts for the
+# current window
+#
+# The bar is drawn in the title line (between the version string and the
+# station URL) or at the bottom of the screen, depending on the
+# key_hints_bottom option below. It is not shown if the terminal is narrower
+# than 61 columns.
+#
+# Default value: True
+show_key_hints = True
+
+# Position of the key hints bar
+#
+# If set to True, hints are drawn at the bottom of the screen, to the right of
+# the status line; the remaining space on the left shows the status and a
+# scrolling song title (or a message).
+# If set to False, hints are drawn in the title line.
+#
+# The position can also be toggled at runtime using the "d" key.
+#
+# Default value: False
+key_hints_bottom = False
+
 # Enable "XDG Base Directory Specification" compliance. Enabling this options
 # will lead to operational data files being dispersed to XDG directories
 #
