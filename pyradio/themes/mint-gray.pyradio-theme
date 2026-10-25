@@ -1,0 +1,18 @@
+# OpenCode theme "Ayu" (dark) with gray bars, converted for PyRadio
+# Theme name: mint-gray
+# Palette source: opencode desktop-theme.json (id: ayu, mode: dark)
+# Palette license: MIT (https://github.com/sst/opencode)
+Stations         #d6dae0 #0f1419            
+Active Station   #78d05c                    
+Status Bar       #0f1419 #78d05c            
+Normal Cursor    #0f1419 #808080            
+Active Cursor    #0f1419 #808080            
+Edit Cursor      #0f1419 #ffb454            
+Extra Func       #3fb7e3                    
+PyRadio URL      #66c6f1                    
+Messages Border  #f2856f                    
+Border           #d6dae0                    
+
+Color Factor        0.06
+
+transparency        2

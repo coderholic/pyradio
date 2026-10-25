@@ -1,0 +1,16 @@
+# OmarCZ / Omarchy color scheme, converted for PyRadio
+# Palette: Omarchy (https://github.com/basecamp/omarchy), MIT License
+Stations         #f4d69e #05182e            
+Active Station   #028391                    
+Status Bar       #05182e #faa968            
+Normal Cursor    #f6dcac #134e5a            
+Active Cursor    #05182e #2a6b78            
+Edit Cursor      #05182e #e97b3c            
+Extra Func       #faa968                    
+PyRadio URL      #8cbfb8                    
+Messages Border  #faa968                    
+Border           #f6dcac                    
+
+Color Factor        0.06
+
+transparency        2
