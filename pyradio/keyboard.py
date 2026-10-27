@@ -799,6 +799,17 @@ def get_unicode_and_cjk_char(win, char):
     return out
 
 def add_l10n_to_functions_dict(functions):
+    ''' add localized keys to a functions dict
+
+        A localized key may produce a character that an English key
+        uses for another function; in the Russian layout the "?"
+        key produces ",", which is the English "volume down" key,
+        and "." is the English "volume up" key. Such a character
+        must follow the localized layout (open the help window and
+        the search window), so its English binding is removed first.
+        After that, the localized characters of the remaining
+        English keys are added.
+    '''
     # logger.error(local_functions)
     local_keys = get_lkbkey()
 
@@ -806,19 +817,19 @@ def add_l10n_to_functions_dict(functions):
         return functions
 
     local_functions = functions.copy()
-    new_keys = {}
-    for key, value in local_functions.items():
+
+    for lkey, lvalue in local_keys.items():
+        if lkey != lvalue and ord(lkey) in local_functions:
+            # logger.error(f'removing English binding of {lkey!r}')
+            del local_functions[ord(lkey)]
+
+    for key, value in functions.items():
         # logger.error(f'{key}: {value}')
         for lkey, lvalue in local_keys.items():
             if ord(lvalue) == key:
                 # logger.error(f'    {lkey}: {lvalue}')
-                # logger.error('      {} {}'.format(ord(lvalue), value))
-                # logger.error('      {} {}'.format(ord(lkey), value))
-                new_keys[ord(lkey)] = value
+                local_functions[ord(lkey)] = value
                 break
-    # logger.error('\n\nnew_keys = {}'.format(new_keys))
-    for key, value in new_keys.items():
-        local_functions[key] = value
     return local_functions
 
 def remove_l10n_from_global_functions(global_functions, shortcut_names):
