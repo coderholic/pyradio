@@ -459,7 +459,7 @@ def to_str(akey):
     elif kbkey[akey] == curses.KEY_F10:
         return "F10"
     adict = {
-    'rec':          'Verital Line',
+    'rec':          'Vertical Line',
     'pause':        'Space',
     'gr':           '^G',
     'gr_next':      '^E',

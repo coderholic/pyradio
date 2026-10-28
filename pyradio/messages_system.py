@@ -107,7 +107,7 @@ ____first item or field, and |$| can be used to go to the last one.
 ____field (and |Sh-Tab| to the previous one). In these cases, |{tab}| and |{stab}|
 ____can also be used, respectively.
 
-!Gerneral Help
+!General Help
 Up|, |{j}|, |PgUp|,                                     <*>
 Down|, |{k}|, |PgDown                                   <*>  Change station selection.
 <n>{g}| / |<n>{G}                                       <*>  Jump to first /last or |n|-th station.
@@ -204,7 +204,7 @@ Esc|, |{q}                                      <*>  Exit alternative mode.
 Enter                                           <*>  Copy station to unnamed register.
 a-z| / |0-9                                     <*>  Copy station to named register.
 
-!Registe mode ({open_regs})
+!Register mode ({open_regs})
 {open_regs}                                     <*>  Open registers list.
 a-z| / |0-9                                     <*>  Open named register.
 
