@@ -30,7 +30,7 @@ except ImportError:
     from importlib_resources.abc import Traversable
 from pyradio import version
 from .common import validate_resource_opener_path, is_rasberrypi, Station, describe_playlist, CsvReadWrite, ProfileManager
-from .keyboard import read_keyboard_shortcuts, read_localized_keyboard, set_lkbkey
+from .keyboard import read_keyboard_shortcuts, read_localized_keyboard
 from .browser import probeBrowsers
 from .player import pywhich
 from .server import IPsWithNumbers
@@ -2485,69 +2485,6 @@ class PyRadioConfig(PyRadioStations):
                     except:
                         pass
 
-    def _read_localized_shortcuts(self, name=None):
-        """
-        Read the localized keyboard shortcuts.
-
-        Parameters
-        ----------
-        name : str, optional
-            The name of the localization (e.g., 'greek'). Defaults to self.localize.
-
-        Behavior
-        --------
-        1. Tries to read from ~/.config/pyradio/{name}.json
-        2. If not found, tries to read from package resources (may be zip/wheel)
-        3. If from package, copies it to cache to make a real file
-        4. Reverses the dictionary (value -> key) and sets it via set_lkbkey()
-        """
-        if name is None:
-            name = self.localize
-        if not name or name == 'english':
-            set_lkbkey({})
-            return
-
-        # Paths
-        user_path = Path(self.data_dir) / f"{name}.json"
-        script_res = files('pyradio').joinpath('keyboard', f"{name}.json")
-
-        target_path = None
-
-        # 1. User path exists?
-        if user_path.exists():
-            target_path = str(user_path)
-        else:
-            # 2. Package resource
-            try:
-                if isinstance(script_res, Traversable) and script_res.is_file():
-                    # Copy to cache to have a real file
-                    cache_dir = Path(self._cnf.cache_dir) / "keyboard"
-                    cache_dir.mkdir(parents=True, exist_ok=True)
-                    real_path = cache_dir / f"{name}.json"
-                    with as_file(script_res) as tmp_path:
-                        copyfile(tmp_path, real_path)
-                    target_path = str(real_path)
-                else:
-                    # fallback: try as string path
-                    real_path = str(script_res)
-                    if Path(real_path).exists():
-                        target_path = real_path
-            except Exception:
-                target_path = None
-
-        # 3. Read JSON
-        reversed_dict = {}
-        if target_path:
-            try:
-                with open(target_path, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                reversed_dict = {v: k for k, v in data.items()}
-            except Exception:
-                reversed_dict = {}
-
-        # 4. Apply
-        set_lkbkey(reversed_dict)
-
     def read_config(self, distro_config=False):
         self._read_config(distro_config=True)
         self.config_opts = deepcopy(self.opts)
@@ -2941,9 +2878,6 @@ class PyRadioConfig(PyRadioStations):
         # do this here to get proper extra parameters config filepath if XDG is on
         self.player_params_file = path.join(self.data_dir, 'player-params.json')
         if not distro_config:
-            # read localized shortcuts
-            self._read_localized_shortcuts(name=None)
-
             if path.exists(self.player_params_file + '.restore'):
                 try:
                     copyfile(self.player_params_file + '.restore', self.player_params_file)
@@ -2962,8 +2896,9 @@ class PyRadioConfig(PyRadioStations):
             self.schedule_file = path.join(self.data_dir, 'schedule.json')
             self.keyboard_file = path.join(self.data_dir, 'keyboard.json')
             # logger.error(f'{self.keyboard_file = }')
-        if not self.headless and not distro_config:
-            read_keyboard_shortcuts(self.keyboard_file)
+        if not distro_config:
+            if not self.headless:
+                read_keyboard_shortcuts(self.keyboard_file)
             read_localized_keyboard(
                 self.localize,
                 self.data_dir

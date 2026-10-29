@@ -123,7 +123,7 @@ Enter|, |Right|, |{l}                                   <*>  Play selected stati
 Esc|, |{q}                                              <*>  Quit.
 
 !Volume management
-{v_dn2}| / |{v_up1} or |{v_dn1}| / |{v_up2}     <*>  Change volume.
+{v_dn2}| / |{v_up1}| / |{v_up3}     <*>  Change volume.
 {mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
 
 !Misc
@@ -305,7 +305,7 @@ Enter|, |Right|, |{l}                           <*>Open selected playlist.
 {open_extra}                                    <*>Enter |Extra Commands| mode.
 Esc|, |{q}|, |Left|, |{h}                       <*>Cancel.
 %Global functions (with \ on Line editor)
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*>  Change volume.
+{v_dn2}|/|{v_up1}|/|{v_up3}         <*>  Change volume.
 {mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
 ), Priority.HELP),
@@ -508,7 +508,7 @@ Enter|, |Right|, |{l}                           <*> Apply selected theme.
 {search} |/ |{search_next}| / |{search_prev}    <*> Search, go to next / previous result.
 Esc|, |{q}|, |Left|, |{h}                       <*> Close window.
 %Global functions (with \ on Line editor)
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*> Change volume.
+{v_dn2}|/|{v_up1}|/|{v_up3}         <*> Change volume.
 {mute}| / |{s_vol}                              <*> |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                               <*> Toggle title log / like a station.'''
 ), Priority.HELP),
@@ -533,7 +533,7 @@ Down|, |{k}|, |PgDown                               <*> Change Group Header sele
 {pause}|, |Left|, |Enter                            <*> Select a Group Header.
 Esc|, |{q}                                          <*> Cancel.
 %Global functions
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}             <*> Change volume.
+{v_dn2}|/|{v_up1}|/|{v_up3}             <*> Change volume.
 {mute}| / |{s_vol}                                  <*> |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                                   <*> Toggle title log / like a station.'''
 ), Priority.HELP),
@@ -546,7 +546,7 @@ Down|, |{k}|, |PgDown                               <*> Change Group Header sele
 {pause}|, |Left|, |Enter                            <*> Select a Group Header.
 Esc|, |{q}                                          <*> Cancel.
 %Global functions
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}             <*> Change volume.
+{v_dn2}|/|{v_up1}|/|{v_up3}             <*> Change volume.
 {mute}| / |{s_vol}                                  <*> |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                                   <*> Toggle title log / like a station.'''
 ), Priority.HELP),
@@ -728,7 +728,7 @@ _
 Search history navigation works with normal keys as well
 __(|^N| is the same as |n| when not in a line editor).
 %Global functions (with \ on Line editor)
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*>  Change volume.
+{v_dn2}|/|{v_up1}|/|{v_up3}         <*>  Change volume.
 {mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
 ), Priority.HELP),
@@ -746,7 +746,7 @@ PgUp|, |PgDn                               <*> Navigate through |Search Terms|.
 {s}                                        <*> Save config.
 Esc                                        <*> Exit without saving.
 %Global functions (with \ on Line editor)
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}    <*>  Change volume.
+{v_dn2}|/|{v_up1}|/|{v_up3}    <*>  Change volume.
 {mute}| / |{s_vol}                         <*>  |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                          <*>Toggle title log / like a station.'''
 ), Priority.HELP),
@@ -909,7 +909,7 @@ Enter|, |{pause}|, |Right|, |{l}                <*> Change option value.
 {s}                                             <*> Save config.
 Esc|, |{q}|, |Left|, |{h}                       <*> Cancel.
 %Global functions (with \ on Line editor)
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*> Change volume.
+{v_dn2}|/|{v_up1}|/|{v_up3}         <*> Change volume.
 {mute}| / |{s_vol}                              <*> |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                               <*> Toggle title log / like a station.'''
 ), Priority.HELP),
@@ -926,7 +926,7 @@ Right|, |{l}                                     <*> Select default station.
 {revert_saved}                                   <*> Revert to saved value.
 Esc|, |{q}|, |Left|, |{h}                        <*> Canel.
 %Global functions (with \ on Line editor)
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}          <*>  Change volume.
+{v_dn2}|/|{v_up1}|/|{v_up3}          <*>  Change volume.
 {mute}| / |{s_vol}                               <*>  |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                                <*>Toggle title log / like a station.'''
 ), Priority.HELP),
@@ -943,7 +943,7 @@ Right|, |{l}                                    <*> Enable / disable player.
 |                                               <*> ________"|{s}|" in the main |Configurationw Window|.
 Esc|, |{q}|, |Left|, |{h}                       <*> Canel.
 %Global functions (with \ on Line editor)
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*>  Change volume.
+{v_dn2}|/|{v_up1}|/|{v_up3}         <*>  Change volume.
 {mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
 ), Priority.HELP),
@@ -959,7 +959,7 @@ Right|, |{l}                                    <*> Select default playlist.
 {revert_saved}                                  <*> Revert to saved value.
 Esc|, |{q}|, |Left|, |{h}                       <*> Canel.
 %Global functions (with \ on Line editor)
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*>  Change volume.
+{v_dn2}|/|{v_up1}|/|{v_up3}         <*>  Change volume.
 {mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
 ), Priority.HELP),
@@ -972,7 +972,7 @@ Enter|, |{pause}|, |{s}                         <*> Save encoding.
 {revert_saved} {revert_def}                     <*> Revert to station / config value.
 Esc|, |{q}                                      <*> Cancel.
 %Global functions
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*>  Change volume.
+{v_dn2}|/|{v_up1}|/|{v_up3}         <*>  Change volume.
 {mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
 ), Priority.HELP),
@@ -995,7 +995,7 @@ Down|, |{k}|, |PgDown                           <*> Change Directory selection.
 1| - |{}                                        <*> Open corresponding Directory.
 Esc|, |{q}                                      <*> Cancel.
 %Global functions
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*>  Change volume.
+{v_dn2}|/|{v_up1}|/|{v_up3}         <*>  Change volume.
 {mute}| / |{s_vol}                              <*>  |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
 ), Priority.HELP),
@@ -1557,7 +1557,7 @@ s                                               <*>Perform search (not on Line e
 Esc                                             <*>Cancel operation.
 
 %Global functions
-{v_dn2}|/|{v_up1} or |{v_dn1}|/|{v_up2}         <*> Change volume.
+{v_dn2}|/|{v_up1}|/|{v_up3}         <*> Change volume.
 {mute}| / |{s_vol}                              <*> |M|ute player / Save |v|olume.
 {t_tag}| / |{tag}                               <*>Toggle title log / like a station.'''
 ), Priority.HELP),
