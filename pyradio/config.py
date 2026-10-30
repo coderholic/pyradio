@@ -1380,6 +1380,7 @@ class PyRadioConfig(PyRadioStations):
         self.opts['shortcuts'] = ['Keyboard Shortcuts', '']
         self.opts['shortcuts_keys'] = ['Shortcuts', '-']
         self.opts['localized_keys'] = ['Localized Shortcuts', '-']
+        self.opts['show_key_hints'] = ['Show key hints bar: ', True]
         self.opts['online_header'] = ['Online services', '']
         self.opts['auto_update_stations'] = ['Auto update stations: ', True]
         self.opts['radiobrowser'] = ['RadioBrowser', '-']
@@ -1652,6 +1653,17 @@ class PyRadioConfig(PyRadioStations):
     @property
     def wheel_adjusts_volume(self):
         return self.opts['wheel_adjusts_volume'][1]
+
+    @property
+    def show_key_hints(self):
+        return self.opts['show_key_hints'][1]
+
+    @show_key_hints.setter
+    def show_key_hints(self, val):
+        old_val = self.opts['show_key_hints'][1]
+        self.opts['show_key_hints'][1] = val
+        if old_val != val:
+            self.dirty_config = True
 
     @property
     def time_format(self):
@@ -2846,6 +2858,11 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['enable_clock'][1] = False
                 else:
                     self.opts['enable_clock'][1] = True
+            elif sp[0] == 'show_key_hints':
+                if sp[1].lower() == 'false':
+                    self.opts['show_key_hints'][1] = False
+                else:
+                    self.opts['show_key_hints'][1] = True
             elif sp[0] == 'time_format':
                 tmp = sp[1].split(' ')[0]
                 try:

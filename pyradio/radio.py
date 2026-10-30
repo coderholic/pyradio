@@ -82,7 +82,7 @@ from .schedule_win import PyRadioSimpleScheduleWindow
 from .simple_curses_widgets import SimpleCursesMenu
 from .messages_system import PyRadioMessagesSystem
 from .server import PyRadioServer, HAS_NETIFACES
-from .keyboard import kbkey, kb2str, get_lkbkey, get_unicode_and_cjk_char, dequeue_input, input_queue, set_kb_letter, check_localized, add_l10n_to_functions_dict, set_kb_cjk
+from .keyboard import kbkey, kb2str, to_str, get_lkbkey, get_unicode_and_cjk_char, dequeue_input, input_queue, set_kb_letter, check_localized, add_l10n_to_functions_dict, set_kb_cjk
 from .tts import TTSManager, TTSManagerDummy, Priority, Context
 from .tts_text import tts_transform_to_string, TTS_WINDOWS_TEXT
 HAVE_CHARSET_NORMALIZER = True
@@ -434,6 +434,9 @@ class PyRadio():
 
     _limited_height_mode = False
     _limited_width_mode = False
+
+    ''' the key hints bar, as currently displayed '''
+    _display_key_hints = False
 
     detect_if_player_exited = True
 
@@ -1515,9 +1518,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.run()
 
     def _redraw(self):
-        self.footerWin.noutrefresh()
-        self.outerBodyWin.noutrefresh()
-        self.bodyWin.noutrefresh()
+        if self.footerWin is not None:
+            self.footerWin.noutrefresh()
+        if self.outerBodyWin is not None:
+            self.outerBodyWin.noutrefresh()
+        if self.bodyWin is not None:
+            self.bodyWin.noutrefresh()
         # self.txtWin.noutrefresh()
 
     def setupAndDrawScreen(self, init_from_function_setup=False):
@@ -1528,7 +1534,14 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.bodyWin = None
         self.outerBodyWin = None
         self.footerWin = None
-        self.footerWin = curses.newwin(1, self.maxX, self.maxY - 1, 0)
+        ''' the key hints are displayed on the header line, between the
+            program info and the project URL; they will not be displayed
+            if the user has disabled them, or if the terminal is too
+            narrow for them
+        '''
+        self._display_key_hints = self._key_hints_enabled()
+        self.footerWin = curses.newwin(
+            1, self.maxX, self.maxY - 1, 0)
         self.headWin = curses.newwin(1, self.maxX, 0, 0)
 
         # logger.error('DE maxY = {0}, maxX = {1}'.format(self.maxY, self.maxX))
@@ -1536,7 +1549,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         if self.maxY < 8:
             self._print_limited_info()
         else:
-            self.outerBodyWin = curses.newwin(self.maxY - 2, self.maxX, 1, 0)
+            self.outerBodyWin = curses.newwin(
+                self.maxY - 2, self.maxX, 1, 0)
             #self.bodyWin = curses.newwin(self.maxY - 2, self.maxX, 1, 0)
             self.bodyWinStartY = 2 + self._cnf.internal_header_height
             self.bodyWinEndY = self.maxY - 1
@@ -1560,7 +1574,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             # txtWin used mainly for error reports
             self.txtWin = None
             try:
-                self.txtWin = curses.newwin(self.maxY - 4, self.maxX - 4, 2, 2)
+                self.txtWin = curses.newwin(
+                    self.maxY - 4, self.maxX - 4, 2, 2)
             except:
                 pass
             if not self._limited_height_mode:
@@ -1666,14 +1681,22 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         # if self.maxX - len() > len(rightStr)
         _, curX = self.headWin.getyx()
         rightStr = " https://github.com/coderholic/pyradio"
+        ''' the space left for the key hints: from the end of the program
+            info up to the start of the project URL (the URL is printed
+            with one space before it, plus one space of separation)
+        '''
+        self._head_hints_start = curX + 1
+        self._head_hints_end = self.maxX - 1
         if self.maxX - curX > len(rightStr) + 3:
             try:
                 self.headWin.addstr(
                     0, self.maxX - len(rightStr) -1,
                     rightStr, curses.color_pair(2)
                 )
+                self._head_hints_end = self.maxX - len(rightStr) - 2
             except:
                 pass
+        self._draw_key_hints()
         # self.headWin.bkgd(' ', curses.color_pair(5))
         self.headWin.noutrefresh()
 
@@ -1742,6 +1765,97 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.footerWin.bkgd(' ', curses.color_pair(7))
         self.footerWin.noutrefresh()
 
+    def _key_hints_enabled(self):
+        ''' Return True if the key hints can be displayed
+
+            The hints are not displayed if the user has disabled them,
+            or if the terminal is too narrow for them; they are drawn in
+            the title line, so they do not take up any screen lines.
+        '''
+        return self._cnf.show_key_hints and self.maxX > 60
+
+    def _key_hints(self):
+        ''' Return the key hints to be displayed for the current mode
+
+            Each hint is a tuple of (shortcut name, hint text); the
+            shortcut name is a key of the kbkey dict, so that the hints
+            follow the user's custom shortcuts. The character shown is
+            always the original (English) one.
+        '''
+        ''' Only the station list and the playlist list have a mode of
+            their own (main modes); other windows are modal and have
+            their own keys and messages, so no hints are displayed for
+            them.
+        '''
+        if self.ws.operation_mode == self.ws.PLAYLIST_MODE:
+            return (
+                ('?', 'help'),
+                ('n', 'new'),
+                ('s', 'save'),
+                ('q', 'exit'),
+            )
+        if self.ws.operation_mode != self.ws.NORMAL_MODE:
+            return ()
+        return (
+            ('?', 'help'),
+            ('search', 'search'),
+            ('pause', 'pause'),
+            ('mute', 'mute'),
+            ('t', 'themes'),
+            ('open_config', 'config'),
+            ('open_playlist', 'playlists'),
+            ('q', 'exit'),
+            ('info', 'info'),
+            ('tag', 'tag'),
+            ('fuzzy_search', 'fuzzy'),
+        )
+
+    def _draw_key_hints(self):
+        ''' Draw the key hints in the title line
+
+            The hints are placed between the program info (on the left)
+            and the project URL (on the right).
+        '''
+        if not self._display_key_hints or self.headWin is None:
+            return
+        start = getattr(self, '_head_hints_start', 0)
+        end = getattr(self, '_head_hints_end', self.maxX - 1)
+        max_hints_width = end - start
+        if max_hints_width < 20:
+            return
+        try:
+            items = []
+            width = 0
+            for shortcut, hint in self._key_hints():
+                a_key = to_str(shortcut) if shortcut in kbkey else ''
+                if not a_key:
+                    continue
+                item_width = cjklen(a_key) + 1 + cjklen(hint)
+                if width + item_width > max_hints_width:
+                    break
+                items.append((a_key, hint))
+                width += item_width + 2
+            if not items:
+                return
+            available = end - start + 1
+            self.headWin.addstr(0, start, ' ' * available,
+                                curses.color_pair(5))
+            x = start
+            for a_key, hint in items:
+                self.headWin.addstr(0, x, a_key,
+                                    curses.color_pair(4) | curses.A_BOLD)
+                x += cjklen(a_key)
+                self.headWin.addstr(0, x, ' ' + hint,
+                                    curses.color_pair(4))
+                x += 1 + cjklen(hint) + 2
+            ''' refresh (not noutrefresh) so that the hints are displayed
+                immediately; the body may be redrawn without a doupdate
+                after the mode has changed
+            '''
+            self.headWin.refresh()
+        except curses.error:
+            pass
+
     def _update_redisplay_list(self):
         def _get_redisplay_index():
             for n in range(-1, - len(self.ws._dq) - 1, -1):
@@ -1800,6 +1914,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 #     logger.debug('Displaying mode {}'.format(self.ws.MODE_NAMES[self._redisplay_list[n][0]]))
                 self._redisplay[self._redisplay_list[n][0]]()
 
+        ''' the body may have been redrawn without the main window (a
+            playlist or a register was closed), so make sure the hints
+            follow the mode the program has just returned to
+        '''
+        self._draw_key_hints()
+
         # logger.error('DE window mode = {}'.format(self.ws.window_mode))
         # logger.error('DE operation mode = {}'.format(self.ws.operation_mode))
         # logger.error('DE Browser search mode = {}'.format(self.ws.BROWSER_SEARCH_MODE))
@@ -1843,6 +1963,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                         self._ask_to_update_stations_csv()
 
         self._update_history_positions_in_list()
+        self._draw_key_hints()
 
     def refreshNoDepencency(self):
         col = curses.color_pair(13)
@@ -2435,6 +2556,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                         self._do_launch_external_palyer = False
                         return
 
+                    ''' make sure the key hints follow the current mode;
+                        a key press may have changed it (or closed a
+                        modal window) after the hints had been drawn
+                    '''
+                    self._draw_key_hints()
                     c = self.bodyWin.getch()
                     # logger.error(f'{c = }')
 
@@ -2450,6 +2576,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                         # Skip processing for replayed keys
                         remaining_keys -= 1
                         ret = self.keypress(c)  # Handle shortcut
+                        self._draw_key_hints()
                         if ret == -1:
                             return
                         continue
@@ -2470,6 +2597,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                         #     logger.debug('I have a letter!')
                         if len(input_queue) == 0:  # Single-byte input
                             ret = self.keypress(c)  # Handle shortcut
+                            self._draw_key_hints()
                             if ret == -1:
                                 return
                         else:
@@ -2480,6 +2608,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                         #     logger.debug('I do NOT have a letter!')
                         # Single-byte character or invalid input
                         ret = self.keypress(c)  # Handle shortcut
+                        self._draw_key_hints()
                         if ret == -1:
                             return
                     # if logger.isEnabledFor(logging.DEBUG):
@@ -8800,6 +8929,17 @@ _____"|f|" to see the |free| keys you can use.
                         self._global_functions = add_l10n_to_functions_dict(self._global_functions_template)
                         self._local_functions = add_l10n_to_functions_dict(self._local_functions_template)
 
+                        ''' update the key hints bar in the title line (the
+                            configuration option may have changed); the
+                            screen is not rebuilt, as the config window
+                            is still open
+                        '''
+                        hints_enabled = self._key_hints_enabled()
+                        if self._display_key_hints != hints_enabled:
+                            self._display_key_hints = hints_enabled
+                            self.initHead(self._cnf.info)
+                            self.headWin.refresh()
+
                         ''' check if time has to be shown / restarted / stopped'''
                         if self._cnf.active_enable_clock:
                             if self._config_win:
@@ -11513,6 +11653,9 @@ _____"|f|" to see the |free| keys you can use.
         self.refreshBody()
 
     def _can_display_help_msg(self, msg):
+        if self._display_key_hints:
+            ''' the key hints bar will always display the help hint '''
+            return False
         if msg:
             if ' (' + M_STRINGS['error-str'] + ' ' in msg:
                 logger.error('1 return False')
