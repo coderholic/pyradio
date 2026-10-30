@@ -437,13 +437,6 @@ class PyRadio():
 
     ''' the key hints bar, as currently displayed '''
     _display_key_hints = False
-    _key_hints_drawn = None
-    ''' the horizontal area (start, end) occupied by the key hints '''
-    _key_hints_area = None
-    ''' scrolling of the current status line (track title) '''
-    _track_scroll_thread = None
-    _track_scroll_stop = None
-    _track_scroll_offset = 0
 
     detect_if_player_exited = True
 
@@ -1441,8 +1434,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         )
         # logger.error(f'setting Log {self.program_restart = }')
         self.program_restart = False
-        ''' redraw the key hints after the status line has been updated '''
-        self.log.after_write_function = self._refresh_key_hints
 
         if (not HAVE_NATIVE_MEDIA) and self._cnf.use_os_media_controls:
             self._needs_dbus_next = True
@@ -1549,11 +1540,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             narrow for them
         '''
         self._display_key_hints = self._key_hints_enabled()
-        self._key_hints_drawn = None
-        self._key_hints_area = None
-        self._track_scroll_offset = 0
-        if self.log is not None:
-            self.log.status_right_limit = None
         self.footerWin = curses.newwin(
             1, self.maxX, self.maxY - 1, 0)
         self.headWin = curses.newwin(1, self.maxX, 0, 0)
@@ -1616,7 +1602,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.footerWin.refresh()
         # self._redraw()
         curses.doupdate()
-        self._restart_track_scroll()
 
     def _print_limited_info(self):
         self._limited_height_mode = True
@@ -1784,9 +1769,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         ''' Return True if the key hints can be displayed
 
             The hints are not displayed if the user has disabled them,
-            or if the terminal is too narrow for them; they are drawn on
-            the header or the status line, so they do not take up any
-            screen lines.
+            or if the terminal is too narrow for them; they are drawn in
+            the title line, so they do not take up any screen lines.
         '''
         return self._cnf.show_key_hints and self.maxX > 60
 
@@ -1819,7 +1803,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             ('mute', 'mute'),
             ('t', 'themes'),
             ('open_config', 'config'),
-            ('key_hints', 'layout'),
             ('open_playlist', 'playlists'),
             ('q', 'exit'),
             ('info', 'info'),
@@ -1827,69 +1810,18 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             ('fuzzy_search', 'fuzzy'),
         )
 
-    def _key_hints_bottom(self):
-        ''' Return True if the key hints are displayed at the bottom '''
-        return self._cnf.key_hints_bottom
-
-    def _hints_window(self):
-        ''' Return the window the key hints are drawn on '''
-        if self._key_hints_bottom():
-            return self.footerWin
-        return self.headWin
-
-    def _redraw_status_line(self):
-        ''' Redraw the current status message, honouring the right limit '''
-        if self.log is None or self.footerWin is None:
-            return
-        if not self.log.msg:
-            return
-        x_start = getattr(self.log, '_x_start', 1)
-        right = self.log._status_width()
-        if right is None:
-            return
-        width = right - x_start - 1
-        if width <= 0:
-            return
-        try:
-            dd_msg, _ = cjkslices(fix_chars(self.log.msg.strip()), width)
-            self.footerWin.addstr(0, x_start - 1, ' ')
-            self.footerWin.addstr(0, x_start, dd_msg)
-            used = x_start + cjklen(dd_msg)
-            if right > used:
-                self.footerWin.addstr(0, used, ' ' * (right - used))
-            self.footerWin.noutrefresh()
-        except curses.error:
-            pass
-
     def _draw_key_hints(self):
-        ''' Draw the key hints (if enabled)
+        ''' Draw the key hints in the title line
 
-            By default the hints are placed on the header line, between the
-            program info (on the left) and the project URL (on the right).
-            When the "key_hints_bottom" option is enabled, they are drawn on
-            the status (footer) line, right aligned, and the rest of that
-            line is used to scroll the current track title.
+            The hints are placed between the program info (on the left)
+            and the project URL (on the right).
         '''
-        if not self._display_key_hints:
+        if not self._display_key_hints or self.headWin is None:
             return
-        bottom = self._key_hints_bottom()
-        win = self._hints_window()
-        if win is None:
-            return
-        if bottom:
-            max_hints_width = self.maxX - 22
-            start = None
-            end = self.maxX - 2
-        else:
-            start = getattr(self, '_head_hints_start', 0)
-            end = getattr(self, '_head_hints_end', self.maxX - 1)
-            max_hints_width = end - start
+        start = getattr(self, '_head_hints_start', 0)
+        end = getattr(self, '_head_hints_end', self.maxX - 1)
+        max_hints_width = end - start
         if max_hints_width < 20:
-            if self.log is not None and self.log.status_right_limit is not None:
-                self.log.status_right_limit = None
-                self._redraw_status_line()
-            self._key_hints_drawn = None
-            self._key_hints_area = None
             return
         try:
             items = []
@@ -1903,185 +1835,24 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     break
                 items.append((a_key, hint))
                 width += item_width + 2
-            if bottom:
-                start = end - width if items else end
-                new_limit = start - 1 if items else None
-            else:
-                new_limit = None
-            ''' give the status line the space left of the hints '''
-            if self.log is not None and self.log.status_right_limit != new_limit:
-                self.log.status_right_limit = new_limit
-                if bottom and items:
-                    ''' the previous hints may have been wider; restore the
-                        status colors on the part not used by the hints
-                    '''
-                    if self._key_hints_area is not None and \
-                            self._key_hints_area[0] < start:
-                        try:
-                            win.addstr(0, self._key_hints_area[0],
-                                       ' ' * (start - self._key_hints_area[0]),
-                                       curses.color_pair(7))
-                        except curses.error:
-                            pass
-                elif bottom and not items and self._key_hints_area is not None:
-                    a_start, a_end = self._key_hints_area
-                    try:
-                        win.addstr(0, a_start,
-                                   ' ' * (a_end - a_start + 1),
-                                   curses.color_pair(7))
-                    except curses.error:
-                        pass
-                self._redraw_status_line()
-            if items == self._key_hints_drawn and \
-                    (self._key_hints_area is None) == (not items):
-                try:
-                    win.refresh()
-                except curses.error:
-                    pass
-                return
-            if bottom and not items:
-                ''' no hints in this mode: the status line now uses all
-                    the available width (handled above)
-                '''
-                self._key_hints_drawn = items
-                self._key_hints_area = None
-                try:
-                    win.refresh()
-                except curses.error:
-                    pass
+            if not items:
                 return
             available = end - start + 1
-            win.addstr(0, start, ' ' * available, curses.color_pair(5))
+            self.headWin.addstr(0, start, ' ' * available,
+                                curses.color_pair(5))
             x = start
             for a_key, hint in items:
-                win.addstr(0, x, a_key,
-                           curses.color_pair(4) | curses.A_BOLD)
+                self.headWin.addstr(0, x, a_key,
+                                    curses.color_pair(4) | curses.A_BOLD)
                 x += cjklen(a_key)
-                win.addstr(0, x, ' ' + hint, curses.color_pair(4))
+                self.headWin.addstr(0, x, ' ' + hint,
+                                    curses.color_pair(4))
                 x += 1 + cjklen(hint) + 2
             ''' refresh (not noutrefresh) so that the hints are displayed
-                immediately; a key press may already have refreshed the
-                screen, without waiting for the next doupdate
+                immediately; the body may be redrawn without a doupdate
+                after the mode has changed
             '''
-            win.refresh()
-            self._key_hints_drawn = items
-            self._key_hints_area = (start, end)
-        except curses.error:
-            pass
-
-    def _toggle_key_hints_position(self):
-        ''' Toggle the key hints between the top and the bottom line '''
-        self._cnf.key_hints_bottom = not self._cnf.key_hints_bottom
-        self._cnf.save_config()
-        self._track_scroll_offset = 0
-        if self.log is not None:
-            self.log.status_right_limit = None
-        self.initHead(self._cnf.info)
-        self.initFooter()
-        ''' repaint the footer (it may still hold the old hints), then draw
-            the message and the hints in their new place
-        '''
-        self.footerWin.erase()
-        self.footerWin.noutrefresh()
-        ''' invalidate the cache after the footer has been cleared, so that
-            the hints are painted again
-        '''
-        self._key_hints_drawn = None
-        self._key_hints_area = None
-        self._draw_key_hints()
-        self._redraw_status_line()
-        self._restart_track_scroll()
-        curses.doupdate()
-
-    def _refresh_key_hints(self):
-        ''' Redraw the key hints after the status line has been updated '''
-        self._draw_key_hints()
-
-    def _restart_track_scroll(self):
-        ''' (Re)start the thread scrolling the status line '''
-        self._stop_track_scroll()
-        if not self._display_key_hints or not self._cnf.key_hints_bottom:
-            return
-        self._track_scroll_offset = 0
-        self._track_scroll_stop = threading.Event()
-        self._track_scroll_thread = threading.Thread(
-            target=self._track_scroll_loop,
-            args=(self._track_scroll_stop, ),
-            daemon=True
-        )
-        self._track_scroll_thread.start()
-
-    def _stop_track_scroll(self):
-        ''' Stop the thread scrolling the status line '''
-        if self._track_scroll_stop is not None:
-            self._track_scroll_stop.set()
-        self._track_scroll_stop = None
-        self._track_scroll_thread = None
-
-    def _track_scroll_loop(self, stop):
-        while not stop.is_set():
-            try:
-                self._track_scroll_tick()
-            except Exception as e:
-                logger.error(f'track scroll error: {e}')
-            stop.wait(0.25)
-
-    def _track_scroll_text(self):
-        ''' Return the text to scroll on the status line '''
-        if self.log is None:
-            return ''
-        text = self.log.song_title
-        if not text:
-            text = self.log.msg or ''
-        return text.strip()
-
-    def _track_scroll_tick(self):
-        ''' Scroll the status line text (track title) once '''
-        if self._force_exit or self.log is None or self._cnf is None:
-            return
-        if not self._display_key_hints or not self._cnf.key_hints_bottom:
-            return
-        if self.ws.operation_mode != self.ws.NORMAL_MODE:
-            return
-        if self._key_hints_area is None or self.footerWin is None:
-            return
-        if self.log.cursesScreen is None:
-            return
-        text = self._track_scroll_text()
-        if not text:
-            return
-        x_start = getattr(self.log, '_x_start', 1)
-        x_end = self._key_hints_area[0] - 2
-        width = x_end - x_start + 1
-        if width < 8:
-            return
-        if cjklen(text) <= width:
-            self._track_scroll_offset = 0
-            return
-        cycle = text + '   '
-        cycle_width = cjklen(cycle)
-        if cycle_width <= 0:
-            return
-        self._track_scroll_offset = (self._track_scroll_offset + 1) % cycle_width
-        ''' build a line long enough to fill the available width,
-            starting from the current offset (in characters)
-        '''
-        line = cycle
-        while cjklen(line) < width + cycle_width:
-            line += cycle
-        line = line[self._track_scroll_offset:] + cycle
-        out, _ = cjkslices(line, width)
-        if cjklen(out) < width:
-            out += ' ' * (width - cjklen(out))
-        try:
-            ''' clear the whole track area (plus the separator column),
-                so that no leftovers remain when the text is shorter
-            '''
-            self.footerWin.addstr(
-                0, x_start, ' ' * (width + 1), curses.color_pair(7))
-            self.footerWin.addstr(0, x_start, out, curses.color_pair(7))
-            self.footerWin.noutrefresh()
-            curses.doupdate()
+            self.headWin.refresh()
         except curses.error:
             pass
 
@@ -2142,6 +1913,12 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 # if logger.isEnabledFor(logging.DEBUG):
                 #     logger.debug('Displaying mode {}'.format(self.ws.MODE_NAMES[self._redisplay_list[n][0]]))
                 self._redisplay[self._redisplay_list[n][0]]()
+
+        ''' the body may have been redrawn without the main window (a
+            playlist or a register was closed), so make sure the hints
+            follow the mode the program has just returned to
+        '''
+        self._draw_key_hints()
 
         # logger.error('DE window mode = {}'.format(self.ws.window_mode))
         # logger.error('DE operation mode = {}'.format(self.ws.operation_mode))
@@ -2892,7 +2669,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
     def ctrl_c_handler(self, signum, frame, save_playlist=True):
         # ok
-        self._stop_track_scroll()
         self.log.stop_timer()
         if self._cnf.titles_log.titles_handler:
             logger.critical('=== Logging stopped')
@@ -9153,18 +8929,16 @@ _____"|f|" to see the |free| keys you can use.
                         self._global_functions = add_l10n_to_functions_dict(self._global_functions_template)
                         self._local_functions = add_l10n_to_functions_dict(self._local_functions_template)
 
-                        ''' check if the key hints bar has to be created or
-                            destroyed / moved (the configuration option has
-                            changed)
+                        ''' update the key hints bar in the title line (the
+                            configuration option may have changed); the
+                            screen is not rebuilt, as the config window
+                            is still open
                         '''
-                        if self._display_key_hints != self._key_hints_enabled() or \
-                                (self._config_win and
-                                 self._config_win._old_key_hints_bottom !=
-                                 self._cnf.key_hints_bottom):
-                            self.setupAndDrawScreen()
-                            if self._config_win:
-                                self._config_win._old_key_hints_bottom = \
-                                    self._cnf.key_hints_bottom
+                        hints_enabled = self._key_hints_enabled()
+                        if self._display_key_hints != hints_enabled:
+                            self._display_key_hints = hints_enabled
+                            self.initHead(self._cnf.info)
+                            self.headWin.refresh()
 
                         ''' check if time has to be shown / restarted / stopped'''
                         if self._cnf.active_enable_clock:
@@ -11548,15 +11322,6 @@ _____"|f|" to see the |free| keys you can use.
                     self._player_select_win.show()
                     return
 
-                elif char == kbkey['key_hints'] or \
-                        check_localized(char, (kbkey['key_hints'], )):
-                    ''' d pressed - toggle key hints position '''
-                    self._random_requested = False
-                    self.jumpnr = ''
-                    self._reset_status_bar_right()
-                    self._toggle_key_hints_position()
-                    return
-
                 elif char == kbkey['jump'] or \
                         check_localized(char, (kbkey['jump'], )):
                     self._random_requested = False
@@ -12901,7 +12666,6 @@ _____"|f|" to see the |free| keys you can use.
         self._system_asked_to_terminate = True
         if logger.isEnabledFor(logging.INFO):
             logger.info('My terminal got closed... Terminating...')
-        self._stop_track_scroll()
         self.log.stop_timer()
         if self._remote_control_server is not None:
             self._remote_control_server.close_server()

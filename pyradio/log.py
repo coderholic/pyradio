@@ -312,15 +312,6 @@ class Log():
         self._muted = self._paused = False
         self._cnf = config
         self.width = None
-        ''' the right most column the status line may use; this is set
-        when the key hints are displayed at the bottom of the screen,
-        so that the status line does not overwrite them
-        '''
-        self.status_right_limit = None
-        ''' called at the end of write(), so that the key hints can be
-        redrawn after the status line has been updated
-        '''
-        self.after_write_function = None
         self._get_startup_window_title()
         self._enable_notifications = int(self._cnf.enable_notifications)
         self._repeat_notification = RepeatDesktopNotification(
@@ -363,12 +354,6 @@ class Log():
     def add_chapters_function(self, val):
         with self.lock:
             self._add_chapter_function = val
-
-    def _status_width(self):
-        ''' Return the width available to the status line '''
-        if self.status_right_limit is None:
-            return self.width
-        return min(self.width, self.status_right_limit)
 
     def setScreen(self, cursesScreen):
         self.cursesScreen = cursesScreen
@@ -620,7 +605,7 @@ class Log():
                         d_msg = fix_chars(self.msg.strip())
 
                         # Account for: space at start + 2 empty chars at end
-                        available_width = self._status_width() - self._x_start - 1
+                        available_width = self.width - self._x_start - 1
 
                         if available_width <= 0:
                             return
@@ -632,20 +617,8 @@ class Log():
                         dd_msg, remaining = cjkslices(d_msg, available_width)
                         self.cursesScreen.addstr(0, self._x_start, dd_msg)
 
-                        # clear the rest of the status area; when key hints
-                        # are displayed at the bottom, stop before their area
-                        if self.status_right_limit is None:
-                            # clrtoeol is generally safe - no need for nested try/except
-                            self.cursesScreen.clrtoeol()
-                        else:
-                            used = self._x_start + cjklen(dd_msg)
-                            right = self._status_width()
-                            if right > used:
-                                try:
-                                    self.cursesScreen.addstr(
-                                        0, used, ' ' * (right - used))
-                                except:
-                                    pass
+                        # clrtoeol is generally safe - no need for nested try/except
+                        self.cursesScreen.clrtoeol()
 
                     except Exception as e:
                         logger.error(f"Status bar update error: {e}")
@@ -697,7 +670,7 @@ class Log():
                             except:
                                 pass
 
-                self._active_width = self._status_width()
+                self._active_width = self.width
 
                 if self.asked_to_stop:
                     self.asked_to_stop = False
@@ -793,11 +766,6 @@ class Log():
                     return
                 self.cursesScreen.refresh()
                 # logger.error('DE _player_stopped = {}'.format(self._player_stopped))
-                if self.after_write_function is not None:
-                    try:
-                        self.after_write_function()
-                    except Exception as e:
-                        logger.error(f'after_write_function error: {e}')
 
     def readline(self):
         pass

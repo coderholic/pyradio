@@ -159,7 +159,6 @@ class PyRadioConfigWindow():
     _help_text.append(['This options will open the configuration window for the Shortcuts Definitions.', '|', 'Please keep in mind that if you customize the keyboard shortcuts, the documentation may no longer align with your personalized settings. While the in-program runtime help will always reflect your current key configurations, the static documentation will continue to display the default shortcuts.', '|', 'To ensure you have the best experience, refer to the runtime help for the most accurate information regarding your customized key bindings!'])
     _help_text.append(['The "Localized Shortcuts" option allows you to define and customize keyboard shortcuts based on your preferred language. This feature enhances your experience by providing a seamless way to interact with the program in your chosen language.', '|', 'You can choose a language name from the list to load the corresponding character mapping file. This file contains the relationship between English letters (A-Z, a-z) and the letters used in your selected language.', '|', 'If the language does not exit, you will be able to create it.'])
     _help_text.append(['If enabled, the most commonly used shortcuts will be displayed on the header line, between the program version and the project URL.', '|', 'The shortcuts are always displayed with their original (English) characters, even if a localized keyboard layout is in use; they do, however, follow any shortcut customizations made.', '|', r'They will not be displayed if the terminal is too narrow (less than 61 columns) or if there is not enough space left on the header line.', '|', 'Default value: True'])
-    _help_text.append(['If enabled, the key hints will be displayed on the status line (the bottom line of the screen), right aligned; the rest of the line will be used to scroll the current song title.', '|', r'This can also be toggled on the fly by pressing "d" while on Main mode.', '|', 'Default value: False'])
     _help_text.append(None)
     _help_text.append(['If enabled, PyRadio will automatically check online for updates to the stations.csv file and perform an update when a new version is available.', '|', 'If False, you will need to manually update with "pyradio -us"', '|', 'Default value: True'])
     _help_text.append(['This options will open the configuration window for the RadioBrowser Online Stations Directory.',])
@@ -314,7 +313,6 @@ class PyRadioConfigWindow():
         self._old_recording_dir = self._config_options['recording_dir'][1]
         self._old_enable_clock = self._config_options['enable_clock'][1]
         self._old_time_format = self._config_options['time_format'][1]
-        self._old_key_hints_bottom = self._config_options['key_hints_bottom'][1]
 
         self._cnf.get_player_params_from_backup()
 
@@ -1534,7 +1532,6 @@ class PyRadioConfigWindow():
                 'enable_clock',
                 'wheel_adjusts_volume',
                 'show_key_hints',
-                'key_hints_bottom',
                 'log_titles',
                 'remove_station_icons',
                 'mplayer_save_br',

@@ -131,7 +131,6 @@ Esc|, |{q}                                              <*>  Quit.
 {open_playlist}| / |{s}| / |{reload}            <*>  |O|pen / |S|ave / |R|eload playlist.
 {t}| / |{transp}| / | {t_calc_col}              <*>  Change |t|heme / |T|ransparency / Calc. Background.
 {open_config}                                   <*>  Open |C|onfiguration window.
-{key_hints}                                     <*>  Toggle key hints position (top / bottom).
 
 !Searching
 {search} |/ |{search_next}| / |{search_prev}    <*>  Search, go to next / previous result.

@@ -129,7 +129,6 @@ kbkey_orig['p_next']                   = ( curses.ascii.SO        , 'Play next s
 kbkey_orig['p_prev']                   = ( curses.ascii.DLE       , 'Play next station')                              # default: ^P
 kbkey_orig['Reload']                   = ( ord('R')               , 'Reload current playlist')
 kbkey_orig['fuzzy_search']             = ( ord('f')               , 'Open Fuzzy Search')
-kbkey_orig['key_hints']                = ( ord('d')               , 'Toggle key hints position')
 kbkey_orig['t_calc_col']               = ( ord('~')               , 'Toggle calculated colors')
 kbkey_orig['rec']                      = ( ord('|')               , 'Toggle recording')
 kbkey_orig['jump']                     = ( ord('J')               , 'Create a Jump tag')

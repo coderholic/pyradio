@@ -1381,7 +1381,6 @@ class PyRadioConfig(PyRadioStations):
         self.opts['shortcuts_keys'] = ['Shortcuts', '-']
         self.opts['localized_keys'] = ['Localized Shortcuts', '-']
         self.opts['show_key_hints'] = ['Show key hints bar: ', True]
-        self.opts['key_hints_bottom'] = ['  Key hints at bottom: ', False]
         self.opts['online_header'] = ['Online services', '']
         self.opts['auto_update_stations'] = ['Auto update stations: ', True]
         self.opts['radiobrowser'] = ['RadioBrowser', '-']
@@ -1663,17 +1662,6 @@ class PyRadioConfig(PyRadioStations):
     def show_key_hints(self, val):
         old_val = self.opts['show_key_hints'][1]
         self.opts['show_key_hints'][1] = val
-        if old_val != val:
-            self.dirty_config = True
-
-    @property
-    def key_hints_bottom(self):
-        return self.opts['key_hints_bottom'][1]
-
-    @key_hints_bottom.setter
-    def key_hints_bottom(self, val):
-        old_val = self.opts['key_hints_bottom'][1]
-        self.opts['key_hints_bottom'][1] = val
         if old_val != val:
             self.dirty_config = True
 
@@ -2875,11 +2863,6 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['show_key_hints'][1] = False
                 else:
                     self.opts['show_key_hints'][1] = True
-            elif sp[0] == 'key_hints_bottom':
-                if sp[1].lower() == 'false':
-                    self.opts['key_hints_bottom'][1] = False
-                else:
-                    self.opts['key_hints_bottom'][1] = True
             elif sp[0] == 'time_format':
                 tmp = sp[1].split(' ')[0]
                 try:
