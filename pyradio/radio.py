@@ -1335,6 +1335,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
 
     def setup(self, stdscr):
         self._stop_main_loop = False
+        self._system_asked_to_terminate = False
         self.stdscr = stdscr
         if logger.isEnabledFor(logging.INFO):
             if self.program_restart:
@@ -1513,6 +1514,11 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         self.playlist_selections[self.ws.PLAYLIST_MODE] = self.selections[self.ws.PLAYLIST_MODE][:-1][:]
         self.ll('setup')
         self.run()
+        ''' the program is terminating: a Ctrl-C from now on must not run
+            the cleanup again (or raise KeyboardInterrupt while Python is
+            joining threads at shutdown)
+        '''
+        self._system_asked_to_terminate = True
 
     def _redraw(self):
         self.footerWin.noutrefresh()
@@ -12496,9 +12502,31 @@ _____"|f|" to see the |free| keys you can use.
             except Exception as e:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug(f'SetConsoleCtrlHandler: Failed to register handler for signal {sig_name}: {e}')
+            ''' Ctrl-C performs the same clean shutdown as SIGTERM. It is
+                not added to handled_signals on purpose: the handler stays
+                installed until the process exits, so that a second Ctrl-C
+                cannot raise KeyboardInterrupt while Python is joining the
+                remaining threads (which prints a traceback on shutdown)
+            '''
+            try:
+                self.def_signal_handlers['SIGINT'] = signal.signal(
+                    signal.SIGINT, self._linux_signal_handler
+                )
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('SetConsoleCtrlHandler: Handler for signal SIGINT registered')
+            except Exception as e:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f'SetConsoleCtrlHandler: Failed to register handler for signal SIGINT: {e}')
 
     def _linux_signal_handler(self, a_signal, a_frame):
         logger.error('DE ----==== _linux_signal_handler  ====----')
+
+        if self._system_asked_to_terminate:
+            ''' a second Ctrl-C (or another signal) while terminating: do
+                not repeat the cleanup, just let the process finish
+            '''
+            return
+        self._system_asked_to_terminate = True
 
         if self._cnf.titles_log.titles_handler:
             logger.critical('=== Logging stopped')
@@ -12518,9 +12546,6 @@ _____"|f|" to see the |free| keys you can use.
                 show_message=False,
                 reset_playing=False
             )
-        if self._system_asked_to_terminate:
-            return
-        self._system_asked_to_terminate = True
         if logger.isEnabledFor(logging.INFO):
             logger.info('My terminal got closed... Terminating...')
         self.log.stop_timer()
