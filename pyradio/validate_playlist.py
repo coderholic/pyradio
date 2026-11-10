@@ -168,7 +168,8 @@ def check_playlist(file_path, mode="mark", threads=5, timeout=5, max_per_host=2,
         from .common import CsvReadWrite
         reader = CsvReadWrite(file_path)
         if not reader.read():
-            raise RuntimeError("Error reading CSV")
+            printer(f'[red]Error:[/red] Cannot open "{file_path}" for reading.')
+            sys.exit(1)
         items = reader.items
         input_type = "csv"
 
@@ -181,7 +182,8 @@ def check_playlist(file_path, mode="mark", threads=5, timeout=5, max_per_host=2,
         input_type = "m3u"
 
     else:
-        raise ValueError("Unsupported file type")
+        printer(f'[red]Error:[/red] Unsupported file type: "{file_path}" (expected a .csv or .m3u playlist).')
+        sys.exit(1)
 
     # Generate timestamp if requested
     timestamp = ""
